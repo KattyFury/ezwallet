@@ -1,7 +1,7 @@
 # HANDOFF — ezpay (ezwallet)
 
 **Cập nhật:** 2026-06-21  
-**Repo:** https://github.com/KattyFury/ezpay  
+**Repo:** https://github.com/KattyFury/ezwallet  
 **Local:** `D:\Claude\Build_on_Arc\ezpay`  
 **Dev:** `npm run dev` → http://localhost:5173
 
