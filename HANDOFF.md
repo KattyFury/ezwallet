@@ -19,6 +19,10 @@
 - **System emitter:** `0xfffffffffffffffffffffffffffffffffffffffe` — index toàn bộ USDC movements
 - **Gas:** ~$0.01/tx (~250 VND) · ERC-20 transfer ~65k gas · Memo tx ~100k gas
 - **Finality:** instant (pending → final, không cần confirm)
+- **App Kit:** `@circle-fin/app-kit ^1.7.0` + `@circle-fin/adapter-viem-v2` + `viem` — đã cài
+  - `kit.send()` cho luồng Gửi (không support Memo → dùng Memo contract thủ công)
+  - `kit.swap()` cho màn Đổi tiền (cần Kit Key từ Circle Console)
+  - Adapter: `@circle-fin/adapter-circle-wallets` cho User Controlled Wallet
 - **Circle skill:** `use-user-controlled-wallets` (Email OTP, embedded wallet, no seed phrase)
 - **Secrets:** `.env` local + Cloudflare Dashboard. KHÔNG hardcode.
 
