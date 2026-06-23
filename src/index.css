@@ -11,11 +11,13 @@
   --font-base: 'Roboto Condensed', sans-serif;
 
   /* Typography scale */
-  --fs-amount:   22px;   /* số tiền chính VND */
-  --fs-content:  16px;   /* nội dung, button */
-  --fs-item:     9.5px;  /* item list - tên */
-  --fs-label:    10px;   /* label, placeholder */
-  --fs-sub:       7px;   /* item list - phụ */
+  --fs-amount:   45px;   /* số tiền VND */
+  --fs-title:    22px;   /* tiêu đề màn hình */
+  --fs-body:     18px;   /* nội dung, button */
+  --fs-item:     16px;   /* item list */
+  --fs-label:    15px;   /* label, text phụ, placeholder */
+  --fs-content:  18px;   /* alias → dùng --fs-body */
+  --fs-sub:      15px;   /* alias → dùng --fs-label */
 
   /* Font weights */
   --fw-normal:  400;
