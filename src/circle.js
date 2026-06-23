@@ -5,7 +5,7 @@ let sdk = null;
 export function getSDK() {
   if (!sdk) {
     sdk = new W3SSdk({
-      appSettings: { appId: import.meta.env.VITE_CIRCLE_APP_ID },
+      appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' },
     });
   }
   return sdk;
