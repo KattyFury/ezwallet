@@ -33,6 +33,18 @@ export async function initializeWallet(userToken) {
   return data;
 }
 
+export async function fetchBalance() {
+  const userToken = localStorage.getItem('ez_user_token');
+  if (!userToken) return [];
+  const res = await fetch('/api/wallet', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'balance', userToken }),
+  });
+  const data = await res.json();
+  return data.balances || [];
+}
+
 export function executeChallenge(sdk, userToken, encryptionKey, challengeId) {
   return new Promise((resolve, reject) => {
     sdk.setAuthentication({ userToken, encryptionKey });

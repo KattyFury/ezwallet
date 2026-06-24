@@ -33,8 +33,13 @@ export async function onRequestPost(ctx) {
   }
 
   if (action === 'balance') {
-    const data = await circleReq('GET', '/user/wallets', undefined, apiKey, userToken);
-    return new Response(JSON.stringify(data), {
+    const wallets = await circleReq('GET', '/user/wallets', undefined, apiKey, userToken);
+    const walletId = wallets?.data?.wallets?.[0]?.id;
+    if (!walletId) return new Response(JSON.stringify({ balances: [] }), {
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+    const balData = await circleReq('GET', `/user/wallets/${walletId}/balances`, undefined, apiKey, userToken);
+    return new Response(JSON.stringify({ balances: balData?.data?.tokenBalances || [] }), {
       headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     });
   }

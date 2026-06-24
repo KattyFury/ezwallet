@@ -51,7 +51,7 @@ body {
   margin: 0 auto;
   background: var(--color-white);
   overflow: hidden;
-  padding: 0 16px;
+  padding: 15px;
 }
 
 /* Row helpers */
