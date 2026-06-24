@@ -15,36 +15,40 @@ export default function MenuScreen() {
 
   return (
     <div className="screen">
-      <div className="row-1 col" style={{ justifyContent: 'flex-end', paddingBottom: 4 }}>
+      {/* Row 1: Số dư khả dụng */}
+      <div className="row-1 col" style={{ justifyContent: 'center', borderBottom: '1px solid var(--color-gray)' }}>
         <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>Số dư khả dụng</span>
-        <span style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-bold)' }}>{fmtVND(MOCK_VND)}</span>
+        <span style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-bold)', lineHeight: 1.1 }}>{fmtVND(MOCK_VND)}</span>
       </div>
 
+      {/* Row 2: Số dư thực tế */}
       <div className="row-2 center">
-        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-gray)' }}>
+        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
           Số dư thực tế: {fmtVND(MOCK_VND)}
         </span>
       </div>
 
-      <div className="row-3 center" style={{ gap: 12, justifyContent: 'flex-start' }}>
-        <button className="btn btn-primary" style={{ flex: 1, height: 40, fontSize: 'var(--fs-label)' }}
-          onClick={() => navigate('Deposit')}>
+      {/* Row 3: Nạp / Rút */}
+      <div className="row-3" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <button className="btn btn-primary" style={{ flex: 1 }}
+          onClick={() => window.open('https://faucet.circle.com/', '_blank')}>
           Nạp tiền
         </button>
-        <button className="btn btn-secondary" style={{ flex: 1, height: 40, fontSize: 'var(--fs-label)', opacity: 0.4 }} disabled>
+        <button className="btn btn-secondary" style={{ flex: 1, opacity: 0.4 }} disabled>
           Rút tiền
         </button>
       </div>
 
-      <div className="row-4-9 col">
-        {ITEMS.map(({ id, Icon, label }) => (
-          <button key={id} className="menu-item" onClick={() => navigate(id)}>
+      {/* Rows 4-7: menu items */}
+      {ITEMS.map(({ id, Icon, label }, i) => (
+        <div key={id} className={`row-${i + 4}`} style={{ display: 'flex', alignItems: 'center' }}>
+          <button className="menu-item" style={{ width: '100%' }} onClick={() => navigate(id)}>
             <Icon size={20} />
-            <span style={{ flex: 1, fontSize: 'var(--fs-content)', fontWeight: 'var(--fw-medium)' }}>{label}</span>
+            <span style={{ flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>{label}</span>
             <IconChevron size={16} />
           </button>
-        ))}
-      </div>
+        </div>
+      ))}
 
       <NavBar active="MenuScreen" />
     </div>

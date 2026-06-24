@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import NavBar from '../components/NavBar'
 import { useNav } from '../nav'
@@ -6,32 +7,49 @@ import { IconShare, IconQRSaved } from '../icons'
 
 export default function HomeReceive() {
   const { navigate } = useNav()
+  const [copied, setCopied] = useState(false)
   const shortAddr = MOCK_ADDR.slice(0, 6) + '...' + MOCK_ADDR.slice(-4)
+
+  function copyAddr() {
+    navigator.clipboard.writeText(MOCK_ADDR)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
+  }
 
   return (
     <div className="screen">
-      <div className="row-1 col" style={{ justifyContent: 'flex-end', paddingBottom: 4 }}>
+      {/* Row 1: Số dư khả dụng */}
+      <div className="row-1 col" style={{ justifyContent: 'center', borderBottom: '1px solid var(--color-gray)' }}>
         <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>Số dư khả dụng</span>
-        <span style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-bold)' }}>{fmtVND(MOCK_VND)}</span>
+        <span style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-bold)', lineHeight: 1.1 }}>{fmtVND(MOCK_VND)}</span>
       </div>
 
+      {/* Row 2: Số dư thực tế */}
       <div className="row-2 center">
-        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-gray)' }}>
+        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
           Số dư thực tế: {fmtVND(MOCK_VND)}
         </span>
       </div>
 
-      <div className="row-3-6 center col" style={{ gap: 8 }}>
-        <QRCodeSVG value={MOCK_ADDR} size={150} level="M" />
-        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-gray)' }}>
-          {shortAddr} · địa chỉ ví của bạn
-        </span>
+      {/* Rows 3-6: QR */}
+      <div className="row-3-6 center col" style={{ gap: 10 }}>
+        <QRCodeSVG value={MOCK_ADDR} size={160} level="M" />
+        <button onClick={copyAddr} style={{
+          display: 'flex', alignItems: 'center', gap: 6,
+          border: '1px solid var(--color-gray)', borderRadius: 8,
+          padding: '5px 12px', background: 'none', cursor: 'pointer',
+        }}>
+          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-black)' }}>{shortAddr}</span>
+          <span style={{ fontSize: 14 }}>{copied ? '✓' : '📋'}</span>
+        </button>
       </div>
 
+      {/* Rows 7-8: tip */}
       <div className="row-7-8" style={{ padding: '6px 0' }}>
         <div className="tip-box">Cho người gửi quét QR này để nhận tiền trực tiếp</div>
       </div>
 
+      {/* Row 9: 2 buttons */}
       <div className="row-9 action-grid" style={{ gridTemplateColumns: '1fr 1fr' }}>
         <button className="action-card">
           <IconShare size={20} />
