@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNav } from '../nav';
 import { createSession, getSDK, initializeWallet, executeChallenge } from '../circle';
 
+const DOMAINS = ['@gmail.com', '@yahoo.com', '@outlook.com'];
+
 export default function EnterEmail() {
   const { navigate } = useNav();
   const [email, setEmail] = useState('');
@@ -9,6 +11,12 @@ export default function EnterEmail() {
   const [error, setError] = useState('');
 
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
+  const showDomains = email.length > 0 && !email.includes('@');
+
+  function applyDomain(domain) {
+    setEmail(e => e + domain);
+    setError('');
+  }
 
   async function handleSubmit() {
     if (!valid || loading) return;
@@ -23,11 +31,7 @@ export default function EnterEmail() {
       const sdk = getSDK();
       const walletData = await initializeWallet(userToken);
       const challengeId = walletData?.data?.challengeId;
-
-      if (challengeId) {
-        await executeChallenge(sdk, userToken, encryptionKey, challengeId);
-      }
-
+      if (challengeId) await executeChallenge(sdk, userToken, encryptionKey, challengeId);
       navigate('HomeSend');
     } catch (e) {
       setError(e.message || 'Có lỗi xảy ra');
@@ -42,8 +46,7 @@ export default function EnterEmail() {
         <span>Đăng nhập</span>
       </div>
 
-      <div className="row-2-5 col" style={{ justifyContent: 'center', gap: 12 }}>
-        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>Địa chỉ email</span>
+      <div className="row-5 col" style={{ justifyContent: 'center', gap: 10 }}>
         <input
           type="email"
           className="address-input"
@@ -52,20 +55,25 @@ export default function EnterEmail() {
           onChange={e => { setEmail(e.target.value); setError(''); }}
           onKeyDown={e => e.key === 'Enter' && handleSubmit()}
           autoFocus
-          style={{ height: 44, fontSize: 'var(--fs-body)' }}
+          style={{ height: 48, fontSize: 'var(--fs-body)' }}
         />
+        {showDomains && (
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {DOMAINS.map(d => (
+              <button key={d} onClick={() => applyDomain(d)}
+                className="btn btn-secondary"
+                style={{ height: 32, fontSize: 'var(--fs-label)', padding: '0 10px', flex: 'none' }}>
+                {d}
+              </button>
+            ))}
+          </div>
+        )}
         {error && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>{error}</span>}
       </div>
 
       <div className="row-9 row10-dual">
-        <button className="btn btn-secondary" onClick={() => navigate('Login')}>
-          Quay lại
-        </button>
-        <button
-          className="btn btn-primary"
-          disabled={!valid || loading}
-          onClick={handleSubmit}
-        >
+        <button className="btn btn-secondary" onClick={() => navigate('Login')}>Quay lại</button>
+        <button className="btn btn-primary" disabled={!valid || loading} onClick={handleSubmit}>
           {loading ? 'Đang xử lý...' : 'Tiếp tục'}
         </button>
       </div>

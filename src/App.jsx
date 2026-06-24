@@ -14,13 +14,16 @@ import SendAmount from './screens/SendAmount'
 import SendConfirm from './screens/SendConfirm'
 import SendReceipt from './screens/SendReceipt'
 import EnterEmail from './screens/EnterEmail'
+import CreateQR from './screens/CreateQR'
+import ShowQR from './screens/ShowQR'
+import SavedQRList from './screens/SavedQRList'
 
 const SCREENS = {
   Login, CreatePin, Recovery,
   EnterPin, PinLocked,
   HomeSend, HomeReceive, Swap, MenuScreen,
   PasteAddress, SendAmount, SendConfirm, SendReceipt,
-  EnterEmail,
+  EnterEmail, CreateQR, ShowQR, SavedQRList,
 }
 
 export default function App() {

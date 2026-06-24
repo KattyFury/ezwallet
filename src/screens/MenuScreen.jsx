@@ -15,25 +15,28 @@ export default function MenuScreen() {
 
   return (
     <div className="screen">
-      {/* Rows 1–2: balance + actions */}
-      <div className="row-1-2 col" style={{ justifyContent: 'center', gap: 6 }}>
-        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-gray)' }}>Số dư khả dụng</span>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-bold)' }}>{fmtVND(MOCK_VND)}</span>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary" style={{ height: 34, fontSize: 'var(--fs-label)', padding: '0 14px' }}
-              onClick={() => navigate('Deposit')}>
-              Nạp
-            </button>
-            <button className="btn btn-secondary" style={{ height: 34, fontSize: 'var(--fs-label)', padding: '0 14px', opacity: 0.4 }} disabled>
-              Rút
-            </button>
-          </div>
-        </div>
+      <div className="row-1 col" style={{ justifyContent: 'flex-end', paddingBottom: 4 }}>
+        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>Số dư khả dụng</span>
+        <span style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-bold)' }}>{fmtVND(MOCK_VND)}</span>
       </div>
 
-      {/* Rows 3–9: menu items */}
-      <div className="row-3-9 col">
+      <div className="row-2 center">
+        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-gray)' }}>
+          Số dư thực tế: {fmtVND(MOCK_VND)}
+        </span>
+      </div>
+
+      <div className="row-3 center" style={{ gap: 12, justifyContent: 'flex-start' }}>
+        <button className="btn btn-primary" style={{ flex: 1, height: 40, fontSize: 'var(--fs-label)' }}
+          onClick={() => navigate('Deposit')}>
+          Nạp tiền
+        </button>
+        <button className="btn btn-secondary" style={{ flex: 1, height: 40, fontSize: 'var(--fs-label)', opacity: 0.4 }} disabled>
+          Rút tiền
+        </button>
+      </div>
+
+      <div className="row-4-9 col">
         {ITEMS.map(({ id, Icon, label }) => (
           <button key={id} className="menu-item" onClick={() => navigate(id)}>
             <Icon size={20} />
