@@ -51,7 +51,7 @@ export default function HomeSend() {
             </div>
             <div className="token-amount">
               <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)' }}>{fmtVND(t.vnd)}</div>
-              <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{t.amount.toFixed(t.symbol === 'cirBTC' ? 6 : 2)} {t.symbol}</div>
+              <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{t.amount.toFixed(t.symbol === 'cirBTC' ? 6 : 2)}</div>
             </div>
           </div>
         ))}
