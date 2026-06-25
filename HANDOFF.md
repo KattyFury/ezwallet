@@ -158,15 +158,50 @@ ezpay/
 
 ---
 
-## Trạng thái hiện tại (2026-06-23)
+## Trạng thái hiện tại (2026-06-25)
 
 **Live:** https://ezwallet.pages.dev  
-**Auth flow hoạt động:** Login → nhập email → Circle SDK (OTP + PIN + security questions) → ví tạo xong  
-**Data:** vẫn mock (MOCK_VND, MOCK_ADDR) — chưa pull balance/tx thật từ Circle  
-**Tiếp theo:** review UI trên mobile → gom sửa → push
+**Auth flow:** Login → EnterEmail (domain suggestions @gmail/@yahoo/@outlook) → Circle SDK → HomeSend
+
+**Screens đã build theo spec v0.1:**
+- EnterEmail: input row 5, domain suggestions, buttons row 9
+- HomeSend: balance rows 1-2, token list rows 3-6, tip rows 7-8, actions row 9
+- HomeReceive: balance rows 1-2, QR rows 3-6, tip rows 7-8, 2 nút row 9, copy address
+- MenuScreen: balance rows 1-2, Nạp/Rút row 3, menu items rows 4-7, logout button
+- PasteAddress: title row 1, input row 5, clipboard row 6, buttons row 9
+- Swap: Market/Limit tabs, 2 card Từ/Đến, quick select 50%/75%/Max, numpad, OK button
+- CreateQR, ShowQR, SavedQRList: Custom QR flow
+
+**Tech đã setup:**
+- `src/chain.js`: viem public client cho Arc Testnet (RPC: https://rpc.testnet.arc.network), `getTokenBalances()` đọc ERC-20 balance thẳng từ chain
+- USDC: `0x3600000000000000000000000000000000000000` (6 decimals)
+- EURC: `0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a` (6 decimals)
+- cirBTC: chưa tìm được địa chỉ contract — cần lấy từ Arc faucet/explorer
+- Kit Key (Swap): đã lưu trong `.env.txt` và `.dev.vars` — cần add vào Cloudflare Dashboard env vars trước khi dùng
+- `dev-server.js`: local proxy cho Circle API (port 8787), chạy song song với Vite (port 5173)
+
+**Vấn đề chưa giải quyết:**
+- `GET /user/wallets` với `X-User-Token` trả về `{"code":-1,"message":"Resource not found"}` → `ez_wallet_addr` không được lưu → balance hiện 0₫
+- Circle SDK (W3S popup) không chạy được trên localhost do crypto polyfill thiếu. Chỉ chạy được trên deployed domain
+- Cần vào Circle Console → Wallets → USER CONTROLLED → Users → tìm email → copy wallet address → set thủ công vào code hoặc debug tại sao API fail
+- KIT_KEY chưa được add vào Cloudflare Pages env vars → Swap chưa hoạt động
+
+**Dev local:**
+- Terminal 1: `node dev-server.js` (port 8787)
+- Terminal 2: `npm run dev` (port 5173)
+- Test Circle flow đầy đủ: phải dùng `ezwallet.pages.dev`
+
+**Tiếp theo:**
+1. Debug `GET /user/wallets` — xem Console log `[getWalletAddress]` trên deployed sau login
+2. Add KIT_KEY vào Cloudflare Dashboard env vars
+3. Tìm cirBTC contract address
+4. UI polish theo spec v0.1
 
 ---
 
 ## Failed Approaches
 
 - 2026-06-22: Thử set `VITE_CIRCLE_APP_ID` qua Wrangler secret → không inject vào bundle (Vite cần build-time env) → hardcode App ID trực tiếp (App ID không phải secret)
+- 2026-06-25: Thử `wrangler pages dev` trên Windows → lỗi "write EOF" (bug wrangler Windows) → dùng `dev-server.js` (Node HTTP) + Vite proxy thay thế
+- 2026-06-25: Thử gọi Circle REST API `/user/wallets` để lấy wallet address → trả về `Resource not found` — nguyên nhân chưa rõ (userToken hết hạn? wallet chưa initialized trên Arc Testnet?)
+- 2026-06-25: Circle SDK (W3S popup) không chạy trên localhost → crypto polyfill thiếu dù đã thêm `vite-plugin-node-polyfills`
