@@ -60,14 +60,18 @@ export default function Swap() {
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await estimateSwap({ walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
-        if (res?.estimate) {
-          setEstAmt(res.estimate.estimatedOutput?.amount || null)
+        console.log('[swap estimate]', res)
+        if (res?.estimate?.estimatedOutput) {
+          setEstAmt(res.estimate.estimatedOutput.amount)
           setFee(res.estimate.fees?.map(f => `${f.amount} ${f.token}`).join(' + ') || null)
           setError('')
         } else if (res?.error) {
           setEstAmt(null); setError(res.error)
+        } else {
+          console.warn('[swap estimate] unexpected structure:', res)
+          setEstAmt(null)
         }
-      } catch { setEstAmt(null) }
+      } catch (e) { console.error('[swap estimate error]', e); setEstAmt(null); setError(e.message) }
     }, 600)
     return () => clearTimeout(debounceRef.current)
   }, [input, fromSym, toSym])
