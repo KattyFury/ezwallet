@@ -1,6 +1,7 @@
 ﻿import logoLong from '../../design/logo-long.png'
 import emailIcon from '../../icon/email.png'
 import googleIcon from '../../icon/google.png'
+import facebookIcon from '../../icon/facebook.png'
 import { useNav } from '../nav'
 import React, { useState, useEffect } from 'react'
 import { W3SSdk } from '@circle-fin/w3s-pw-web-sdk'
@@ -132,14 +133,16 @@ export default function Login() {
 
       <div className="row-9 center col" style={{ gap: '2dvh' }}>
         {[
-          { icon: emailIcon, label: 'Đăng nhập với Email', primary: true, onClick: () => navigate('EnterEmail') },
-          { icon: googleIcon, label: 'Đăng nhập với Google', primary: false, onClick: handleGoogleLogin },
-        ].map(({ icon, label, primary, onClick }) => (
+          { icon: emailIcon, label: 'Đăng nhập với Email', primary: true, onClick: () => navigate('EnterEmail'), disabled: false },
+          { icon: googleIcon, label: 'Đăng nhập với Google', primary: false, onClick: handleGoogleLogin, disabled: true },
+          { icon: facebookIcon, label: 'Đăng nhập với Facebook', primary: false, onClick: () => {}, disabled: true },
+        ].map(({ icon, label, primary, onClick, disabled }) => (
           <button key={label} className={`btn ${primary ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ width: '75%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
-            onClick={onClick}>
+            style={{ width: '75%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
+            disabled={disabled}
+            onClick={disabled ? undefined : onClick}>
             <img src={icon} alt="" style={{ width: 18, height: 18 }} />
-            <span>{label}</span>
+            <span>{label}{disabled ? ' (sắp ra mắt)' : ''}</span>
           </button>
         ))}
       </div>
