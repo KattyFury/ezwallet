@@ -18,15 +18,32 @@ const ERC20_ABI = [
   { name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'account', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ]
 
-// vndRate: tỷ giá tạm (mock) → 1 token = ? VND. Sau này thay bằng giá thật từ API.
 export const TOKENS = [
-  { symbol: 'USDC',   address: '0x3600000000000000000000000000000000000000', decimals: 6, color: '#2775CA', vndRate: 25000 },
-  { symbol: 'EURC',   address: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', decimals: 6, color: '#1A56DB', vndRate: 27000 },
-  { symbol: 'cirBTC', address: '0xf0c4a4ce82a5746abaad9425360ab04fbba432bf', decimals: 8, color: '#F7931A', vndRate: 2600000000 },
+  { symbol: 'USDC',   address: '0x3600000000000000000000000000000000000000', decimals: 6, color: '#2775CA', cgId: null,      vndRate: 25000 },
+  { symbol: 'EURC',   address: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', decimals: 6, color: '#1A56DB', cgId: null,      vndRate: 27000 },
+  { symbol: 'cirBTC', address: '0xf0c4a4ce82a5746abaad9425360ab04fbba432bf', decimals: 8, color: '#F7931A', cgId: 'bitcoin', vndRate: 2600000000 },
 ]
+
+let priceCache = {}
+let lastFetch = 0
+
+async function fetchPrices() {
+  if (Date.now() - lastFetch < 60000) return priceCache
+  try {
+    const ids = TOKENS.filter(t => t.cgId).map(t => t.cgId).join(',')
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=vnd`)
+    const data = await res.json()
+    TOKENS.forEach(t => {
+      if (t.cgId && data[t.cgId]?.vnd) priceCache[t.symbol] = data[t.cgId].vnd
+    })
+    lastFetch = Date.now()
+  } catch {}
+  return priceCache
+}
 
 export async function getTokenBalances(walletAddress) {
   if (!walletAddress) return []
+  const prices = await fetchPrices()
   const results = await Promise.all(
     TOKENS.map(async token => {
       try {
@@ -37,7 +54,8 @@ export async function getTokenBalances(walletAddress) {
           args: [walletAddress],
         })
         const amount = Number(raw) / Math.pow(10, token.decimals)
-        return { ...token, amount, vnd: Math.round(amount * token.vndRate) }
+        const rate = prices[token.symbol] ?? token.vndRate
+        return { ...token, amount, vnd: Math.round(amount * rate) }
       } catch {
         return { ...token, amount: 0, vnd: 0 }
       }
