@@ -78,14 +78,17 @@ export default function Login() {
       </div>
 
       <div className="row-9 center col" style={{ gap: 12 }}>
-        <button className="btn btn-primary" style={{ width: '75%' }} onClick={() => navigate('EnterEmail')}>
-          <img src={emailIcon} alt="" style={{ width: 20, height: 20, marginRight: 8, verticalAlign: 'middle' }} />
-          Đăng nhập với Email
-        </button>
-        <button className="btn btn-secondary" style={{ width: '75%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} onClick={handleGoogleLogin}>
-          <img src={googleIcon} alt="" style={{ width: 20, height: 20, marginRight: 8, verticalAlign: 'middle' }} />
-          Đăng nhập với Google
-        </button>
+        {[
+          { icon: emailIcon, label: 'Đăng nhập với Email', primary: true, onClick: () => navigate('EnterEmail') },
+          { icon: googleIcon, label: 'Đăng nhập với Google', primary: false, onClick: handleGoogleLogin },
+        ].map(({ icon, label, primary, onClick }) => (
+          <button key={label} className={`btn ${primary ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ width: '75%', display: 'grid', gridTemplateColumns: '24px 1fr', alignItems: 'center', gap: 8 }}
+            onClick={onClick}>
+            <img src={icon} alt="" style={{ width: 20, height: 20, justifySelf: 'center' }} />
+            <span style={{ textAlign: 'left' }}>{label}</span>
+          </button>
+        ))}
       </div>
     </div>
   )
