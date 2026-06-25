@@ -57,7 +57,13 @@ export default function HomeSend() {
       </div>
 
       <div className="row-7-8" style={{ padding: '6px 0' }}>
-        <div className="tip-box">Chọn danh bạ, quét QR, hoặc dán địa chỉ để gửi tiền</div>
+        {!loading && tokens.find(t => t.symbol === 'USDC')?.amount === 0 ? (
+          <div className="tip-box" style={{ borderColor: 'var(--color-warning)', color: 'var(--color-warning)' }}>
+            ⚠ Hết USDC — cần USDC để thanh toán phí giao dịch. Vào <b>Đổi tiền</b> để swap.
+          </div>
+        ) : (
+          <div className="tip-box">Chọn danh bạ, quét QR, hoặc dán địa chỉ để gửi tiền</div>
+        )}
       </div>
 
       <div className="row-9 action-grid">
