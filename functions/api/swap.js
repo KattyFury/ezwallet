@@ -20,6 +20,7 @@ export async function onRequestPost(ctx) {
   const toAddr   = TOKEN_ADDR[tokenOut]
 
   if (action === 'estimate') {
+    if (!kitKey) return new Response(JSON.stringify({ error: 'KIT_KEY not configured' }), { status: 500, headers: JSON_HEADERS })
     if (!fromAddr || !toAddr) return new Response(JSON.stringify({ error: 'unknown token' }), { status: 400, headers: JSON_HEADERS })
     const params = new URLSearchParams({
       tokenInAddress: fromAddr, tokenInChain: 'ARC-TESTNET',
