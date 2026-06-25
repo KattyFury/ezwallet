@@ -128,21 +128,21 @@ body {
   border: 1.5px solid var(--color-gray);
 }
 
-/* Row 10: 1 nút center 2/3, 2 nút trái/phải */
+/* Buttons span rows 9-10, centered vertically */
 .row10-single {
+  grid-row: 9 / 11;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 0;
 }
 .row10-single .btn { width: 66.67%; }
 
 .row10-dual {
+  grid-row: 9 / 11;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 8px 0;
 }
 .row10-dual .btn { width: 44%; }
 
