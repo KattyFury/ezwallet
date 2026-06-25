@@ -3,7 +3,6 @@ import emailIcon from '../../icon/email.png'
 import googleIcon from '../../icon/google.png'
 import { useNav } from '../nav'
 import { W3SSdk } from '@circle-fin/w3s-pw-web-sdk'
-import { SocialLoginProvider } from '@circle-fin/w3s-pw-web-sdk/dist/src/types'
 import { createSocialToken, initializeWallet, executeChallenge, getWalletAddress, GOOGLE_CLIENT_ID } from '../circle'
 
 const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
@@ -61,7 +60,8 @@ export default function Login() {
         }
       )
 
-      googleSdk.performLogin(SocialLoginProvider.GOOGLE)
+      // Đúng theo Circle docs: performLogin nhận deviceToken + deviceEncryptionKey
+      googleSdk.performLogin(deviceToken, deviceEncryptionKey)
     } catch (e) {
       console.error('Google login error:', e)
     }
