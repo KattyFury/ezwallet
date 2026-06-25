@@ -55,13 +55,8 @@ export default function Login() {
         navigate('HomeSend')
       }
     )
-    // DEBUG: log configs để verify loginConfigs được set đúng
-    console.log('[Google callback] SDK configs:', JSON.stringify({
-      hasLoginConfigs: !!googleSdk.configs?.loginConfigs,
-      hasGoogle: !!googleSdk.configs?.loginConfigs?.google,
-      deviceToken: !!freshToken,
-    }))
-    // Không gọi performLogin — SDK tự xử lý URL hash khi init
+    // Sau redirect: SDK constructor tự gọi execSocialLoginStatusCheck() đọc hash + socialLoginProvider
+    // từ localStorage → xử lý callback. KHÔNG gọi performLogin (sẽ tạo redirect mới).
   }, [])
 
   async function handleGoogleLogin() {
@@ -119,8 +114,8 @@ export default function Login() {
         }
       )
 
-      // Đúng theo Circle docs: performLogin nhận deviceToken + deviceEncryptionKey
-      googleSdk.performLogin(deviceToken, deviceEncryptionKey)
+      // performLogin nhận 1 tham số = provider (theo SDK source: performLogin(provider))
+      googleSdk.performLogin('Google')
     } catch (e) {
       console.error('Google login error:', e)
     }
