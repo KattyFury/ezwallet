@@ -199,11 +199,27 @@ ezpay/
 - Terminal 2: `npm run dev` (port 5173)
 - `.env.txt` dùng tên `API_KEY` + `KIT_KEY` (KHÔNG phải CIRCLE_API_KEY nữa)
 
-**Tiếp theo (sau khi verify wallet address OK):**
-1. Tìm cirBTC contract address → thêm vào TOKENS trong src/chain.js
-2. Build luồng Swap thật với kit.swap() (App Kit SDK)
-3. Build luồng Send thật (kit.send() + Arc Memo contract)
-4. UI polish theo spec v0.1
+**Đã build thêm (2026-06-25):**
+- cirBTC contract: `0xf0c4a4ce82a5746abaad9425360ab04fbba432bf` (8 decimals) — tìm qua Circle API `/wallets/{id}/balances`
+- Giá token: USDC/EURC hardcode (stablecoin), cirBTC fetch từ CoinGecko free API (no key), cache 60s
+- fmtVND: đổi từ `₫` sang `VND`
+- HomeSend: USDC ≤ 1 → cảnh báo "hết gas", gợi ý swap
+- Swap screen: estimate (App Kit + dummy private key adapter), token picker modal, quick select 25/50/75/Max dùng balance thật
+- Contacts screen: danh bạ local (localStorage `ez_contacts`), thêm/xóa/gửi thẳng
+- QRScanner: camera auto-scan mỗi 300ms, parse `0x...` và `ezwallet:0x...?amount=...`
+- HomeReceive: QR 200px, 3 nút (Chia sẻ/Custom QR/QR đã lưu), Web Share API + clipboard fallback
+- Swap execute: App Kit capture adapter → Circle `/user/transactions/contractExecution` → W3S SDK challenge
+
+**Vấn đề chưa giải quyết:**
+- Swap execute: capture adapter (`createViemAdapterFromPrivateKey` + overrides) chưa test đầy đủ — cần test trên deployed
+- Menu items (TxHistory, Language, Security, About) navigate đến screen chưa tồn tại → văng ra ngoài (fallback về Login)
+- Circle SDK (W3S popup) chỉ chạy trên ezwallet.pages.dev, không chạy localhost
+
+**Tiếp theo:**
+1. Fix Menu items → stub screens hoặc implement
+2. Test Swap execute trên deployed
+3. Build luồng Send thật (kit.send() từ frontend hoặc Worker)
+4. UI polish
 
 ---
 
