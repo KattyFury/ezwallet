@@ -44,7 +44,7 @@ function TokenCard({ side, symbol, amount, est, showQuick, onQuick, onToggle }) 
       </div>
       {showQuick && (
         <div style={{ display: 'flex', gap: 6 }}>
-          {['50%', '75%', 'Max'].map(v => (
+          {['25%', '50%', '75%', 'Max'].map(v => (
             <button key={v} onClick={() => onQuick(v)}
               style={{ flex: 1, height: 24, border: '1px solid var(--color-gray)', borderRadius: 6, background: 'none', cursor: 'pointer', fontSize: 'var(--fs-label)', fontFamily: 'inherit' }}>
               {v}

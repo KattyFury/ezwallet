@@ -156,7 +156,7 @@ body {
   align-items: center;
   justify-content: center;
   font-family: var(--font-base);
-  font-size: var(--fs-amount);
+  font-size: 24px;
   font-weight: var(--fw-medium);
   color: var(--color-black);
   background: none;
