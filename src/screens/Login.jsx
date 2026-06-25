@@ -10,7 +10,7 @@ export default function Login() {
       <div className="row-1-5 center col" style={{ gap: 12 }}>
         <img src={logoLong} alt="ezwallet" style={{ width: '50%' }} />
         <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>
-          Cách đơn giản nhất để dùng stablecoin
+          Công nghệ mới, trải nghiệm quen thuộc
         </span>
       </div>
 
