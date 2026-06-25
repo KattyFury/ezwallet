@@ -85,7 +85,7 @@ export default function Login() {
           <button key={label} className={`btn ${primary ? 'btn-primary' : 'btn-secondary'}`}
             style={{ width: '75%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}
             onClick={onClick}>
-            <img src={icon} alt="" style={{ width: 24, height: 24 }} />
+            <img src={icon} alt="" style={{ width: 18, height: 18 }} />
             <span>{label}</span>
           </button>
         ))}
