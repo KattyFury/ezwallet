@@ -130,6 +130,17 @@ export async function executeSwap({ walletId, walletAddress, tokenIn, tokenOut, 
   return res.json()
 }
 
+export async function resetPinChallenge(userToken) {
+  const res = await fetch('/api/wallet', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'resetPin', userToken }),
+  })
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
+  return data.challengeId
+}
+
 export function executeChallenge(sdk, userToken, encryptionKey, challengeId) {
   return new Promise((resolve, reject) => {
     sdk.setAuthentication({ userToken, encryptionKey })

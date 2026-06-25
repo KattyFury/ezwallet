@@ -39,6 +39,13 @@ export async function onRequestPost(ctx) {
     return new Response(JSON.stringify(data), { headers: JSON_HEADERS });
   }
 
+  if (action === 'resetPin') {
+    const data = await circleReq('PUT', '/user/pin', { idempotencyKey: crypto.randomUUID() }, apiKey, userToken);
+    const challengeId = data?.data?.challengeId;
+    if (!challengeId) return new Response(JSON.stringify({ error: 'no challengeId', detail: data }), { status: 500, headers: JSON_HEADERS });
+    return new Response(JSON.stringify({ challengeId }), { headers: JSON_HEADERS });
+  }
+
   if (action === 'getAddress') {
     // Đúng endpoint: GET /v1/w3s/wallets (X-User-Token), KHÔNG phải /user/wallets
     const wallets = await circleReq('GET', '/wallets', undefined, apiKey, userToken);

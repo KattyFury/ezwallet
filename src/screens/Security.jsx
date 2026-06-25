@@ -1,9 +1,26 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
+import { getSDK, executeChallenge, resetPinChallenge } from '../circle'
 
 export default function Security() {
   const { navigate } = useNav()
   const [copied, setCopied] = useState(false)
+  const [pinStatus, setPinStatus] = useState('')
+
+  async function handleResetPin() {
+    setPinStatus('Đang chuẩn bị...')
+    try {
+      const userToken = localStorage.getItem('ez_user_token')
+      const encryptionKey = localStorage.getItem('ez_encryption_key')
+      const challengeId = await resetPinChallenge(userToken)
+      setPinStatus('Nhập PIN...')
+      await executeChallenge(getSDK(), userToken, encryptionKey, challengeId)
+      setPinStatus('Đổi PIN thành công!')
+      setTimeout(() => setPinStatus(''), 2000)
+    } catch (e) {
+      setPinStatus('Lỗi: ' + (e.message || 'thử lại'))
+    }
+  }
 
   const email = localStorage.getItem('ez_email') || '—'
   const walletAddr = localStorage.getItem('ez_wallet_addr') || '—'
@@ -46,9 +63,9 @@ export default function Security() {
 
         {/* Change PIN */}
         <button style={{ ...ROW, width: '100%', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', borderBottom: '1px solid var(--color-gray)' }}
-          onClick={() => navigate('ComingSoon', { title: 'Đổi PIN' })}>
+          onClick={handleResetPin}>
           <span style={LABEL}>Đổi PIN</span>
-          <span style={{ fontSize: 16, color: 'var(--color-muted)' }}>›</span>
+          <span style={{ fontSize: 'var(--fs-label)', color: pinStatus ? 'var(--color-primary)' : 'var(--color-muted)' }}>{pinStatus || '›'}</span>
         </button>
 
         {/* Recovery method */}

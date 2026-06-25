@@ -27,19 +27,19 @@ export default function HomeSend() {
 
   return (
     <div className="screen">
-      <div className="row-1 center full-bleed" style={{ borderBottom: '1px solid var(--color-gray)', gap: 4 }}>
-        <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>Số dư</span>
-        <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-bold)' }}>
+      <div className="row-1 center full-bleed" style={{ borderBottom: '1px solid var(--color-gray)', gap: 6 }}>
+        <span style={{ fontSize: 18, color: 'var(--color-muted)' }}>Số dư</span>
+        <span style={{ fontSize: 36, fontWeight: 'var(--fw-bold)', color: 'var(--color-black)', lineHeight: 1 }}>
           {loading ? '...' : totalVND.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
         </span>
-        <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>VND</span>
+        <span style={{ fontSize: 18, color: 'var(--color-muted)' }}>VND</span>
       </div>
 
-      <div className="row-2-5" style={{ display: 'grid', gridTemplateRows: `repeat(${Math.max(tokens.length, 1)}, 1fr)`, overflowY: 'auto' }}>
+      <div className="row-2-5" style={{ display: 'grid', gridTemplateRows: 'repeat(4, 1fr)', overflowY: 'auto' }}>
         {loading ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>Đang tải...</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>Đang tải...</div>
         ) : tokens.length === 0 ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>
             {localStorage.getItem('ez_wallet_addr') ? 'Chưa có token' : 'Ví chưa được tạo — nạp USDC để kích hoạt'}
           </div>
         ) : tokens.map(t => (
@@ -56,13 +56,21 @@ export default function HomeSend() {
         ))}
       </div>
 
-      <div className="row-6-7" style={{ padding: '6px 0' }}>
+      <div className="row-7-8" style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '2dvh' }}>
         {!loading && (tokens.find(t => t.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
           <div className="tip-box" style={{ borderColor: 'var(--color-warning)', color: 'var(--color-warning)' }}>
             <img src={hintIcon} alt='' style={{ width: 16, height: 16, marginRight: 6 }} />Hết USDC — cần USDC để thanh toán phí giao dịch. Vào <b>Đổi tiền</b> để swap.
           </div>
         ) : (
-          <div className="tip-box"><img src={hintIcon} alt='' style={{ width: 16, height: 16, marginRight: 6, opacity: 0.6 }} />Chọn danh bạ, quét QR, hoặc dán địa chỉ để gửi tiền</div>
+          <div className="tip-box" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4, textAlign: 'left', padding: '10px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+              <img src={hintIcon} alt='' style={{ width: 16, height: 16 }} />
+              <b>Cách gửi tiền:</b>
+            </div>
+            <div><b>Danh bạ</b> — lưu địa chỉ ví quen thuộc để gửi nhanh</div>
+            <div><b>Quét QR</b> — quét mã người nhận để chuyển tiền tiện lợi</div>
+            <div><b>Dán để gửi</b> — dán địa chỉ ví người khác đưa cho bạn</div>
+          </div>
         )}
       </div>
 
