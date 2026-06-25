@@ -51,7 +51,6 @@ export default function HomeSend() {
             </div>
             <div className="token-amount">
               <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)' }}>{fmtVND(t.vnd)}</div>
-              <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{fmtAmount(t.amount)} {t.symbol}</div>
             </div>
           </div>
         ))}
