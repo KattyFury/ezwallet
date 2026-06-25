@@ -182,20 +182,27 @@ ezpay/
 
 **Env vars (đổi 2026-06-25):** `.env.txt` + `.dev.vars` giờ dùng tên `API_KEY` (trước `CIRCLE_API_KEY`) + `KIT_KEY`. Functions đọc `ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY` (tương thích cả 2). **PRODUCTION: phải vào Cloudflare Dashboard → ezwallet → Settings → Environment Variables cập nhật `API_KEY` = key mới + thêm `KIT_KEY`, nếu không deploy vẫn dùng key cũ.**
 
+**Cloudflare env vars (cập nhật 2026-06-25):** user ĐÃ cập nhật `API_KEY` (key mới) + `KIT_KEY` trên Cloudflare Dashboard. Đã push empty commit (35b09de) để trigger redeploy với env mới.
+
+**ĐANG CHỜ VERIFY (việc đầu tiên khi quay lại):**
+→ Vào `ezwallet.pages.dev` (sau khi deploy 35b09de xong) → Menu → Đăng xuất → login lại bằng email đã có ví → F12 Console xem `[getWalletAddress]`:
+  - Nếu trả address thật → balance hiện đúng từ Arc RPC → TECH CORE XONG ✅
+  - Nếu vẫn null → ví của user có thể nằm trên blockchain identifier khác `ARC-TESTNET`, hoặc ví chưa được tạo thật. Check Circle Console → Wallets → Users → email → xem blockchain + address thật, đối chiếu `pickArcWallet()` trong functions/api/wallet.js
+
 **Vấn đề chưa giải quyết:**
-- Circle SDK (W3S popup) không chạy được trên localhost do crypto polyfill thiếu. Chỉ chạy được trên deployed domain → tạo ví mới phải test trên ezwallet.pages.dev
-- KIT_KEY đã có trong .env.txt/.dev.vars nhưng chưa add vào Cloudflare Dashboard → Swap chưa hoạt động trên production
-- cirBTC contract address chưa tìm được
+- Circle SDK (W3S popup) không chạy trên localhost (crypto polyfill thiếu) → tạo ví MỚI phải test trên ezwallet.pages.dev. Balance đọc qua viem thì chạy được cả localhost.
+- cirBTC contract address chưa tìm được (USDC + EURC đã có trong src/chain.js)
+- Swap chưa test thật — cần verify kit.swap() với KIT_KEY sau khi wallet address chạy
 
 **Dev local:**
-- Terminal 1: `node dev-server.js` (port 8787)
+- Terminal 1: `node dev-server.js` (port 8787) — log key: "loaded"
 - Terminal 2: `npm run dev` (port 5173)
-- Test Circle flow đầy đủ: phải dùng `ezwallet.pages.dev`
+- `.env.txt` dùng tên `API_KEY` + `KIT_KEY` (KHÔNG phải CIRCLE_API_KEY nữa)
 
-**Tiếp theo:**
-1. Debug `GET /user/wallets` — xem Console log `[getWalletAddress]` trên deployed sau login
-2. Add KIT_KEY vào Cloudflare Dashboard env vars
-3. Tìm cirBTC contract address
+**Tiếp theo (sau khi verify wallet address OK):**
+1. Tìm cirBTC contract address → thêm vào TOKENS trong src/chain.js
+2. Build luồng Swap thật với kit.swap() (App Kit SDK)
+3. Build luồng Send thật (kit.send() + Arc Memo contract)
 4. UI polish theo spec v0.1
 
 ---
