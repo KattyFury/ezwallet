@@ -60,7 +60,7 @@ export default function Swap() {
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await estimateSwap({ walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
-        console.log('[swap estimate]', res)
+        console.log('[swap estimate full]', JSON.stringify(res))
         if (res?.estimate?.estimatedOutput) {
           setEstAmt(res.estimate.estimatedOutput.amount)
           setFee(res.estimate.fees?.map(f => `${f.amount} ${f.token}`).join(' + ') || null)
