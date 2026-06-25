@@ -1,6 +1,6 @@
-﻿import logoLong from '../../logo-long.png'
-import emailIcon from '../../email.png'
-import googleIcon from '../../google.png'
+﻿import logoLong from '../../design/logo-long.png'
+import emailIcon from '../../icon/email.png'
+import googleIcon from '../../icon/google.png'
 import { useNav } from '../nav'
 import { getSDK, createSocialToken, initializeWallet, executeChallenge, getWalletAddress, GOOGLE_CLIENT_ID } from '../circle'
 
