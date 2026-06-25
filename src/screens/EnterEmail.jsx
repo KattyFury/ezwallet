@@ -91,12 +91,13 @@ export default function EnterEmail() {
             {suggestions.map(s => (
               <button key={s} onClick={() => { setEmail(s); setError('') }}
                 style={{
-                  textAlign: 'left', padding: '10px 14px',
-                  border: '1px solid var(--color-gray)', borderRadius: 10,
-                  background: 'var(--color-white)', cursor: 'pointer',
-                  fontSize: 'var(--fs-body)', fontFamily: 'inherit', color: 'var(--color-black)',
+                  textAlign: 'left', padding: '8px 14px',
+                  border: 'none', borderRadius: 10,
+                  background: 'var(--color-gray)', cursor: 'pointer',
+                  fontSize: 'var(--fs-label)', fontFamily: 'inherit', color: 'var(--color-black)',
+                  opacity: 0.8,
                 }}>
-                {s}
+                ↩ {s}
               </button>
             ))}
           </div>
