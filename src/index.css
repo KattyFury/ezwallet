@@ -234,6 +234,7 @@ body {
 .row-4-9  { grid-row: 4 / 10; }
 .row-7-8  { grid-row: 7 / 9; }
 .row-2-8  { grid-row: 2 / 9; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.row-2-3  { grid-row: 2 / 4; }
 
 /* ── NavBar ── */
 .navbar {
