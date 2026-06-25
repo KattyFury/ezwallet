@@ -131,7 +131,7 @@ export default function Login() {
         </span>
       </div>
 
-      <div className="row-9 center col" style={{ gap: '2dvh' }}>
+      <div style={{ gridRow: '9 / 11', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2dvh' }}>
         {[
           { icon: emailIcon, label: 'Đăng nhập với Email', primary: true, onClick: () => navigate('EnterEmail'), disabled: false },
           { icon: googleIcon, label: 'Đăng nhập với Google', primary: false, onClick: handleGoogleLogin, disabled: true },
