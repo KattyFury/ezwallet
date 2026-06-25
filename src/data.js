@@ -15,5 +15,5 @@ export const SWAP_PAIRS = [
 ]
 
 export function fmtVND(n) {
-  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' ₫'
+  return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VND'
 }
