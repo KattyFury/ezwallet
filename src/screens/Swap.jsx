@@ -156,22 +156,20 @@ export default function Swap() {
         </div>
       </div>
 
-      {/* Row 5: error/status */}
-      <div className="row-5 center">
+      {/* Rows 5-6: error/status */}
+      <div className="row-5-6 center" style={{ flexDirection: 'column', gap: 4 }}>
         {error && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>{error}</span>}
         {status && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-primary)' }}>{status}</span>}
       </div>
 
-      {/* Row 6: Confirm button */}
-      <div className="row-6 center">
-        <button className="btn btn-primary" style={{ width: '100%' }} disabled={!canSwap} onClick={handleSwap}>
+      {/* Rows 7-9: confirm button + numpad */}
+      <div className="row-7-9" style={{ display: 'flex', flexDirection: 'column' }}>
+        <button className="btn btn-primary" style={{ width: '100%', height: 44, flexShrink: 0 }} disabled={!canSwap} onClick={handleSwap}>
           {loading ? 'Đang xử lý...' : 'Xác nhận giao dịch'}
         </button>
-      </div>
-
-      {/* Rows 7-9: numpad */}
-      <div className="row-7-9">
-        <Numpad onKey={handleKey} showComma />
+        <div style={{ flex: 1, minHeight: 0 }}>
+          <Numpad onKey={handleKey} showComma />
+        </div>
       </div>
 
       <NavBar active="Swap" />
