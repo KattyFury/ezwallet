@@ -180,11 +180,12 @@ ezpay/
 - Kit Key (Swap): đã lưu trong `.env.txt` và `.dev.vars` — cần add vào Cloudflare Dashboard env vars trước khi dùng
 - `dev-server.js`: local proxy cho Circle API (port 8787), chạy song song với Vite (port 5173)
 
+**Env vars (đổi 2026-06-25):** `.env.txt` + `.dev.vars` giờ dùng tên `API_KEY` (trước `CIRCLE_API_KEY`) + `KIT_KEY`. Functions đọc `ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY` (tương thích cả 2). **PRODUCTION: phải vào Cloudflare Dashboard → ezwallet → Settings → Environment Variables cập nhật `API_KEY` = key mới + thêm `KIT_KEY`, nếu không deploy vẫn dùng key cũ.**
+
 **Vấn đề chưa giải quyết:**
-- `GET /user/wallets` với `X-User-Token` trả về `{"code":-1,"message":"Resource not found"}` → `ez_wallet_addr` không được lưu → balance hiện 0₫
-- Circle SDK (W3S popup) không chạy được trên localhost do crypto polyfill thiếu. Chỉ chạy được trên deployed domain
-- Cần vào Circle Console → Wallets → USER CONTROLLED → Users → tìm email → copy wallet address → set thủ công vào code hoặc debug tại sao API fail
-- KIT_KEY chưa được add vào Cloudflare Pages env vars → Swap chưa hoạt động
+- Circle SDK (W3S popup) không chạy được trên localhost do crypto polyfill thiếu. Chỉ chạy được trên deployed domain → tạo ví mới phải test trên ezwallet.pages.dev
+- KIT_KEY đã có trong .env.txt/.dev.vars nhưng chưa add vào Cloudflare Dashboard → Swap chưa hoạt động trên production
+- cirBTC contract address chưa tìm được
 
 **Dev local:**
 - Terminal 1: `node dev-server.js` (port 8787)
@@ -203,5 +204,5 @@ ezpay/
 
 - 2026-06-22: Thử set `VITE_CIRCLE_APP_ID` qua Wrangler secret → không inject vào bundle (Vite cần build-time env) → hardcode App ID trực tiếp (App ID không phải secret)
 - 2026-06-25: Thử `wrangler pages dev` trên Windows → lỗi "write EOF" (bug wrangler Windows) → dùng `dev-server.js` (Node HTTP) + Vite proxy thay thế
-- 2026-06-25: Thử gọi Circle REST API `/user/wallets` để lấy wallet address → trả về `Resource not found` — nguyên nhân chưa rõ (userToken hết hạn? wallet chưa initialized trên Arc Testnet?)
+- 2026-06-25: Thử gọi Circle REST API `/user/wallets` để lấy wallet address → trả về `Resource not found`. **ĐÃ GIẢI QUYẾT 2026-06-25 (Opus):** endpoint `/user/wallets` KHÔNG tồn tại trong Circle W3S API. Đúng phải là `GET /v1/w3s/wallets` với header `X-User-Token`. Test end-to-end: session OK → getAddress trả `{address: null}` sạch cho user mới (không còn lỗi). User có ví sẽ trả address thật.
 - 2026-06-25: Circle SDK (W3S popup) không chạy trên localhost → crypto polyfill thiếu dù đã thêm `vite-plugin-node-polyfills`
