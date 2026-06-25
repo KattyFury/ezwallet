@@ -1,4 +1,4 @@
-import logoLong from '../../logo-long.png'
+﻿import logoLong from '../../logo-long.png'
 import emailIcon from '../../email.png'
 import googleIcon from '../../google.png'
 import { useNav } from '../nav'
@@ -73,7 +73,7 @@ export default function Login() {
       <div className="row-1-5 center col" style={{ gap: 12 }}>
         <img src={logoLong} alt="ezwallet" style={{ width: '50%' }} />
         <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>
-          Công nghệ mới, trải nghiệm quen thuộc
+          Tạo ví bằng email, gửi nhận tiền một cách dễ dàng
         </span>
       </div>
 
