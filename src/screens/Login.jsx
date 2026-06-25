@@ -122,7 +122,7 @@ export default function Login() {
 
   return (
     <div className="screen">
-      <div className="row-1-5 center col" style={{ gap: '4dvh' }}>
+      <div className="row-1-5 center col" style={{ gap: '3dvh' }}>
         <img src={logoLong} alt="ezwallet" style={{ width: '50%' }} />
         <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)', textAlign: 'center' }}>
           Tạo ví bằng email, gửi nhận tiền<br />một cách dễ dàng
