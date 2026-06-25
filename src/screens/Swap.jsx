@@ -96,10 +96,14 @@ export default function Swap() {
     try {
       const res = await executeSwap({ walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
       if (res.error) throw new Error(res.error)
-      setStatus('Xác nhận PIN...')
       const userToken = localStorage.getItem('ez_user_token')
       const encryptionKey = localStorage.getItem('ez_encryption_key')
-      await executeChallenge(getSDK(), userToken, encryptionKey, res.challengeId)
+      const sdk = getSDK()
+      const ids = res.challengeIds || (res.challengeId ? [res.challengeId] : [])
+      for (let i = 0; i < ids.length; i++) {
+        setStatus(`Xác nhận bước ${i + 1}/${ids.length}...`)
+        await executeChallenge(sdk, userToken, encryptionKey, ids[i])
+      }
       setStatus('Swap thành công!')
       setInput(''); setEstAmt(null)
     } catch (e) { setError(e.message); setStatus('') }

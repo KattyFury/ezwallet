@@ -58,24 +58,32 @@ export async function onRequestPost(ctx) {
       }),
     })
     const swapData = await swapRes.json()
-    const tx = swapData?.data?.transaction
-    if (!tx?.target || !tx?.callData) {
-      return new Response(JSON.stringify({ error: 'no tx data', detail: swapData }), { status: 500, headers: JSON_HEADERS })
+    // API trả instructions[] (multi-step: approve + swap)
+    const instructions = swapData?.transaction?.executionParams?.instructions
+      || swapData?.data?.transaction?.executionParams?.instructions
+    if (!instructions?.length) {
+      return new Response(JSON.stringify({ error: 'no instructions', detail: swapData }), { status: 500, headers: JSON_HEADERS })
     }
-    // Bước 2: tạo Circle user challenge từ calldata
-    const headers = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'X-User-Token': userToken }
-    const txRes = await fetch(`${W3S_API}/user/transactions/contractExecution`, {
-      method: 'POST', headers,
-      body: JSON.stringify({
-        idempotencyKey: crypto.randomUUID(),
-        walletId, contractAddress: tx.target, callData: tx.callData,
-        fee: { type: 'level', config: { feeLevel: 'MEDIUM' } },
-      }),
-    })
-    const txData = await txRes.json()
-    const challengeId = txData?.data?.challengeId
-    if (!challengeId) return new Response(JSON.stringify({ error: 'no challengeId', detail: txData }), { status: 500, headers: JSON_HEADERS })
-    return new Response(JSON.stringify({ challengeId }), { headers: JSON_HEADERS })
+    // Tạo challenge cho từng instruction (approve + swap), trả về mảng challengeIds
+    const w3sHeaders = { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'X-User-Token': userToken }
+    const challengeIds = []
+    for (const instr of instructions) {
+      const txRes = await fetch(`${W3S_API}/user/transactions/contractExecution`, {
+        method: 'POST', headers: w3sHeaders,
+        body: JSON.stringify({
+          idempotencyKey: crypto.randomUUID(),
+          walletId,
+          contractAddress: instr.target,
+          callData: instr.data,
+          fee: { type: 'level', config: { feeLevel: 'MEDIUM' } },
+        }),
+      })
+      const txData = await txRes.json()
+      const cid = txData?.data?.challengeId
+      if (!cid) return new Response(JSON.stringify({ error: 'no challengeId', detail: txData, instruction: instr.target }), { status: 500, headers: JSON_HEADERS })
+      challengeIds.push(cid)
+    }
+    return new Response(JSON.stringify({ challengeIds }), { headers: JSON_HEADERS })
   }
 
   return new Response(JSON.stringify({ error: 'unknown action' }), { status: 400, headers: JSON_HEADERS })
