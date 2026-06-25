@@ -49,7 +49,7 @@ export default function MenuScreen() {
       {/* Rows 4-7: menu items */}
       {ITEMS.map(({ id, Icon, label }, i) => (
         <div key={id} className={`row-${i + 4}`} style={{ display: 'flex', alignItems: 'center' }}>
-          <button className="menu-item" style={{ width: '100%' }} onClick={() => navigate(id)}>
+          <button className="menu-item" style={{ width: '100%' }} onClick={() => navigate(id, { title: label })}>
             <Icon size={20} />
             <span style={{ flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>{label}</span>
             <IconChevron size={16} />

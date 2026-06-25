@@ -19,6 +19,7 @@ import ShowQR from './screens/ShowQR'
 import SavedQRList from './screens/SavedQRList'
 import Contacts from './screens/Contacts'
 import QRScanner from './screens/QRScanner'
+import ComingSoon from './screens/ComingSoon'
 
 const SCREENS = {
   Login, CreatePin, Recovery,
@@ -27,6 +28,10 @@ const SCREENS = {
   PasteAddress, SendAmount, SendConfirm, SendReceipt,
   EnterEmail, CreateQR, ShowQR, SavedQRList,
   Contacts, QRScanner,
+  TxHistory: ComingSoon,
+  Language: ComingSoon,
+  Security: ComingSoon,
+  About: ComingSoon,
 }
 
 export default function App() {
@@ -39,7 +44,7 @@ export default function App() {
     setNav({ screen, params })
   }
 
-  const Screen = SCREENS[nav.screen] || Login
+  const Screen = SCREENS[nav.screen] || SCREENS['Login']
 
   return (
     <NavContext.Provider value={{ navigate, params: nav.params }}>
