@@ -92,11 +92,11 @@ export default function EnterEmail() {
             {suggestions.map(s => (
               <button key={s} onClick={() => { setEmail(s); setError('') }}
                 style={{
-                  textAlign: 'left', padding: '8px 14px',
+                  textAlign: 'left', padding: '6px 12px',
                   border: 'none', borderRadius: 10,
                   background: 'var(--color-gray)', cursor: 'pointer',
                   fontSize: 'var(--fs-label)', fontFamily: 'inherit', color: 'var(--color-black)',
-                  opacity: 0.8,
+                  opacity: 0.8, alignSelf: 'flex-start',
                 }}>
                 <img src={hintIcon} alt='' style={{ width: 15, height: 15, marginRight: 6, verticalAlign: 'middle' }} />{s}
               </button>
