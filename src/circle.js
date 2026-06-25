@@ -57,6 +57,19 @@ export function getSDK() {
   return sdk
 }
 
+export const GOOGLE_CLIENT_ID = '51031114717-f9chve1ge9bbo8j3kspj82qrga40342n.apps.googleusercontent.com'
+
+export async function createSocialToken(deviceId) {
+  const res = await fetch('/api/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'socialToken', deviceId }),
+  })
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
+  return data
+}
+
 export async function createSession(email) {
   const res = await fetch('/api/session', {
     method: 'POST',
