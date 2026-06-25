@@ -51,7 +51,7 @@ body {
   margin: 0 auto;
   background: var(--color-white);
   overflow: hidden;
-  padding: 15px;
+  padding: 0;
 }
 
 /* Row helpers */
@@ -71,6 +71,9 @@ body {
 .row-7-9    { grid-row: 7 / 10; }
 .row-8-9    { grid-row: 8 / 10; }
 .row-1-9    { grid-row: 1 / 10; }
+
+/* ── Content padding (horizontal only, không ảnh hưởng background) ── */
+.px { padding-left: 15px; padding-right: 15px; }
 
 /* ── Shared utilities ── */
 .center {
