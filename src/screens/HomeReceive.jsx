@@ -40,7 +40,7 @@ export default function HomeReceive() {
         <span style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-bold)', lineHeight: 1.1 }}>{fmtVND(totalVND)}</span>
       </div>
 
-      <div className="row-3-6 center col" style={{ gap: 12 }}>
+      <div className="row-2-5 center col" style={{ gap: 12 }}>
         <QRCodeSVG value={walletAddr || '0x'} size={200} level="M" />
         <button onClick={copyAddr} style={{
           display: 'flex', alignItems: 'center', gap: 6,
@@ -52,7 +52,7 @@ export default function HomeReceive() {
         </button>
       </div>
 
-      <div className="row-7-8" style={{ padding: '6px 0' }}>
+      <div className="row-6-7" style={{ padding: '6px 0' }}>
         <div className="tip-box">Cho người gửi quét QR này để nhận tiền</div>
       </div>
 

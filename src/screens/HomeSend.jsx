@@ -30,7 +30,7 @@ export default function HomeSend() {
         </span>
       </div>
 
-      <div className="row-3-6" style={{ display: 'grid', gridTemplateRows: `repeat(${Math.max(tokens.length, 1)}, 1fr)`, overflowY: 'auto' }}>
+      <div className="row-2-5" style={{ display: 'grid', gridTemplateRows: `repeat(${Math.max(tokens.length, 1)}, 1fr)`, overflowY: 'auto' }}>
         {loading ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>Đang tải...</div>
         ) : tokens.length === 0 ? (
@@ -51,7 +51,7 @@ export default function HomeSend() {
         ))}
       </div>
 
-      <div className="row-7-8" style={{ padding: '6px 0' }}>
+      <div className="row-6-7" style={{ padding: '6px 0' }}>
         {!loading && (tokens.find(t => t.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
           <div className="tip-box" style={{ borderColor: 'var(--color-warning)', color: 'var(--color-warning)' }}>
             ⚠ Hết USDC — cần USDC để thanh toán phí giao dịch. Vào <b>Đổi tiền</b> để swap.

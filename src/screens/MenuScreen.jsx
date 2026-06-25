@@ -30,7 +30,7 @@ export default function MenuScreen() {
 
       {/* Row 2: Số dư thực tế */}
       {/* Row 3: Nạp / Rút */}
-      <div className="row-3" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+      <div className="row-2" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
         <button className="btn btn-primary" style={{ flex: 1 }}
           onClick={() => window.open('https://faucet.circle.com/', '_blank')}>
           Nạp tiền
@@ -42,7 +42,7 @@ export default function MenuScreen() {
 
       {/* Rows 4-7: menu items */}
       {ITEMS.map(({ id, Icon, label }, i) => (
-        <div key={id} className={`row-${i + 4}`} style={{ display: 'flex', alignItems: 'center' }}>
+        <div key={id} className={`row-${i + 3}`} style={{ display: 'flex', alignItems: 'center' }}>
           <button className="menu-item" style={{ width: '100%' }} onClick={() => navigate(id, { title: label })}>
             <Icon size={20} />
             <span style={{ flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>{label}</span>
