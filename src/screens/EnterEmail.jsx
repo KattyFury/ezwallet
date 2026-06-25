@@ -97,7 +97,7 @@ export default function EnterEmail() {
                   fontSize: 'var(--fs-label)', fontFamily: 'inherit', color: 'var(--color-black)',
                   opacity: 0.8,
                 }}>
-                ↩ {s}
+                🕐 {s}
               </button>
             ))}
           </div>
