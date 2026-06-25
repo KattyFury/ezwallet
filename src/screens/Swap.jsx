@@ -107,7 +107,7 @@ export default function Swap() {
       {picker && <TokenPicker exclude={picker === 'from' ? toSym : fromSym} onSelect={sym => selectToken(picker, sym)} onClose={() => setPicker(null)} />}
 
       {/* Row 1: tabs */}
-      <div className="row-1" style={{ display: 'flex', borderBottom: '1px solid var(--color-gray)' }}>
+      <div className="row-1 full-bleed" style={{ display: 'flex', borderBottom: '1px solid var(--color-gray)' }}>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', borderBottom: '2px solid var(--color-primary)', color: 'var(--color-primary)', fontSize: 'var(--fs-label)', fontWeight: 700 }}>Market</div>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 'var(--fs-label)', color: 'var(--color-muted)', opacity: 0.4 }}>Limit</div>
       </div>
