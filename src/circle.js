@@ -108,82 +108,24 @@ export async function getWalletAddress(userToken) {
   }
 }
 
-// App Kit chạy ở browser (đã bundle sẵn trong Vite)
-// Workers chỉ nhận calldata và tạo Circle challenge
+// KIT_KEY di chuyển lên server-side (Cloudflare Worker env var)
+// Browser chỉ gọi /api/swap, Worker xử lý Circle Stablecoin Kit API
 
-let _kit = null
-let _adapter = null
-
-async function getSwapKit() {
-  if (_kit && _adapter) return { kit: _kit, adapter: _adapter }
-  const { AppKit } = await import('@circle-fin/app-kit')
-  const { createViemAdapterFromPrivateKey } = await import('@circle-fin/adapter-viem-v2')
-  _kit = new AppKit()
-  _kit.setLocalizations(VI)
-  // Dummy key chỉ để estimate (không ký thật)
-  _adapter = createViemAdapterFromPrivateKey({
-    privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-    rpcUrl: 'https://rpc.testnet.arc.network',
+export async function estimateSwap({ walletAddress, tokenIn, tokenOut, amountIn }) {
+  const res = await fetch('/api/swap', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'estimate', walletAddress, tokenIn, tokenOut, amountIn }),
   })
-  return { kit: _kit, adapter: _adapter }
-}
-
-const KIT_KEY = 'KIT_KEY:dc68927aafe42651bd4f51742e0f9843:7fb81ddeaa372d32450e6f1392abd5b8'
-
-export async function estimateSwap({ tokenIn, tokenOut, amountIn }) {
-  const { kit, adapter } = await getSwapKit()
-  const estimate = await kit.estimateSwap({
-    from: { adapter, chain: 'Arc_Testnet' },
-    tokenIn, tokenOut, amountIn: String(amountIn),
-    config: { kitKey: KIT_KEY, slippageBps: 300 },
-  })
-  return { estimate }
+  return res.json()
 }
 
 export async function executeSwap({ walletId, walletAddress, tokenIn, tokenOut, amountIn }) {
-  const { kit } = await getSwapKit()
-  const { createViemAdapterFromPrivateKey } = await import('@circle-fin/adapter-viem-v2')
-
-  let capturedTx = null
-  const captureAdapter = createViemAdapterFromPrivateKey({
-    privateKey: '0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80',
-    rpcUrl: 'https://rpc.testnet.arc.network',
-  })
-
-  // Override sendTransaction để capture calldata thay vì ký
-  const origGetWallet = captureAdapter.getWalletClient?.bind(captureAdapter)
-  if (origGetWallet) {
-    captureAdapter.getWalletClient = (params) => {
-      const wc = origGetWallet(params)
-      return {
-        ...wc,
-        sendTransaction: async (p) => { capturedTx = p; throw new Error('CAPTURE_DONE') },
-        writeContract: async (p) => { capturedTx = p; throw new Error('CAPTURE_DONE') },
-      }
-    }
-  }
-
-  try {
-    await kit.swap({
-      from: { adapter: captureAdapter, chain: 'Arc_Testnet' },
-      tokenIn, tokenOut, amountIn: String(amountIn),
-      config: { kitKey: KIT_KEY, slippageBps: 300 },
-    })
-  } catch (e) { if (!capturedTx) throw e }
-
-  if (!capturedTx) throw new Error('Không lấy được dữ liệu swap')
-
-  // Gửi calldata lên Worker để tạo Circle challenge
   const userToken = localStorage.getItem('ez_user_token')
   const res = await fetch('/api/swap', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: 'challenge',
-      userToken, walletId,
-      contractAddress: capturedTx.to || capturedTx.address,
-      callData: capturedTx.data,
-    }),
+    body: JSON.stringify({ action: 'execute', userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn }),
   })
   return res.json()
 }
