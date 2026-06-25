@@ -2,71 +2,59 @@ import { useState, useEffect } from 'react'
 import NavBar from '../components/NavBar'
 import { useNav } from '../nav'
 import { fmtVND } from '../data'
-import { fetchBalance } from '../circle'
+import { getTokenBalances, fmtAmount } from '../chain'
 import { IconContacts, IconScan, IconPaste } from '../icons'
-
-const USDC_RATE = 25000 // 1 USDC = 25,000 VND (mock rate)
-const TOKEN_COLORS = { USDC: '#2775CA', EURC: '#1A56DB', cirBTC: '#F7931A' }
-
-function TokenRow({ symbol, amount }) {
-  const vnd = parseFloat(amount || 0) * USDC_RATE
-  return (
-    <div className="token-item" style={{ height: '100%' }}>
-      <div className="token-icon" style={{ background: TOKEN_COLORS[symbol] || '#999' }}>
-        {symbol.slice(0, 2)}
-      </div>
-      <div className="token-info">
-        <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)' }}>{symbol}</div>
-      </div>
-      <div className="token-amount">
-        <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)' }}>{fmtVND(Math.round(vnd))}</div>
-        <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{parseFloat(amount || 0).toFixed(4)} {symbol}</div>
-      </div>
-    </div>
-  )
-}
 
 export default function HomeSend() {
   const { navigate } = useNav()
-  const [balances, setBalances] = useState([])
+  const [tokens, setTokens] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchBalance()
-      .then(b => setBalances(b))
-      .catch(() => {})
+    const addr = localStorage.getItem('ez_wallet_addr')
+    if (!addr) { setLoading(false); return }
+    getTokenBalances(addr)
+      .then(setTokens)
+      .catch(console.error)
       .finally(() => setLoading(false))
   }, [])
 
-  const totalVND = balances.reduce((sum, b) => sum + parseFloat(b.amount || 0) * USDC_RATE, 0)
+  const totalVND = tokens.reduce((s, t) => s + t.vnd, 0)
 
   return (
     <div className="screen">
       <div className="row-1 col" style={{ justifyContent: 'center', borderBottom: '1px solid var(--color-gray)' }}>
         <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>Số dư khả dụng</span>
         <span style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-bold)', lineHeight: 1.1 }}>
-          {loading ? '...' : fmtVND(Math.round(totalVND))}
+          {loading ? '...' : fmtVND(totalVND)}
         </span>
       </div>
 
       <div className="row-2 center">
         <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
-          Số dư thực tế: {loading ? '...' : fmtVND(Math.round(totalVND))}
+          Số dư thực tế: {loading ? '...' : fmtVND(totalVND)}
         </span>
       </div>
 
-      <div className="row-3-6" style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
+      <div className="row-3-6" style={{ display: 'flex', flexDirection: 'column', overflowY: 'auto', gap: 4 }}>
         {loading ? (
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>Đang tải...</div>
+        ) : tokens.length === 0 ? (
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>
-            Đang tải...
+            {localStorage.getItem('ez_wallet_addr') ? 'Chưa có token' : 'Vui lòng đăng nhập lại'}
           </div>
-        ) : balances.length === 0 ? (
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>
-            Chưa có token
+        ) : tokens.map(t => (
+          <div key={t.symbol} className="token-item">
+            <div className="token-icon" style={{ background: t.color }}>{t.symbol.slice(0, 2)}</div>
+            <div className="token-info">
+              <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)' }}>{t.symbol}</div>
+            </div>
+            <div className="token-amount">
+              <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)' }}>{fmtVND(t.vnd)}</div>
+              <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{fmtAmount(t.amount)} {t.symbol}</div>
+            </div>
           </div>
-        ) : (
-          balances.map(b => <TokenRow key={b.token?.id || b.token?.symbol} symbol={b.token?.symbol || 'USDC'} amount={b.amount} />)
-        )}
+        ))}
       </div>
 
       <div className="row-7-8" style={{ padding: '6px 0' }}>
@@ -74,18 +62,9 @@ export default function HomeSend() {
       </div>
 
       <div className="row-9 action-grid">
-        <button className="action-card">
-          <IconContacts size={20} />
-          <span>Danh bạ</span>
-        </button>
-        <button className="action-card primary">
-          <IconScan size={26} />
-          <span>Quét QR</span>
-        </button>
-        <button className="action-card" onClick={() => navigate('PasteAddress')}>
-          <IconPaste size={20} />
-          <span>Dán địa chỉ</span>
-        </button>
+        <button className="action-card"><IconContacts size={20} /><span>Danh bạ</span></button>
+        <button className="action-card primary"><IconScan size={26} /><span>Quét QR</span></button>
+        <button className="action-card" onClick={() => navigate('PasteAddress')}><IconPaste size={20} /><span>Dán địa chỉ</span></button>
       </div>
 
       <NavBar active="HomeSend" />

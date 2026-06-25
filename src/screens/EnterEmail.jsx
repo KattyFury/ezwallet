@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
-import { createSession, getSDK, initializeWallet, executeChallenge } from '../circle'
+import { createSession, getSDK, initializeWallet, executeChallenge, getWalletAddress } from '../circle'
 
 const DOMAINS = ['@gmail.com', '@yahoo.com', '@outlook.com']
 
@@ -27,6 +27,8 @@ export default function EnterEmail() {
       const walletData = await initializeWallet(userToken)
       const challengeId = walletData?.data?.challengeId
       if (challengeId) await executeChallenge(sdk, userToken, encryptionKey, challengeId)
+      const addr = await getWalletAddress(userToken)
+      if (addr) localStorage.setItem('ez_wallet_addr', addr)
       navigate('HomeSend')
     } catch (e) {
       setError(e.message || 'Có lỗi xảy ra')

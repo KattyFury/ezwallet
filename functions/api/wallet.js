@@ -32,6 +32,14 @@ export async function onRequestPost(ctx) {
     });
   }
 
+  if (action === 'getAddress') {
+    const wallets = await circleReq('GET', '/user/wallets', undefined, apiKey, userToken);
+    const address = wallets?.data?.wallets?.[0]?.address || null;
+    return new Response(JSON.stringify({ address }), {
+      headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    });
+  }
+
   if (action === 'balance') {
     const wallets = await circleReq('GET', '/user/wallets', undefined, apiKey, userToken);
     const walletId = wallets?.data?.wallets?.[0]?.id;

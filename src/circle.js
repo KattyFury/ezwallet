@@ -1,14 +1,10 @@
-import { W3SSdk } from '@circle-fin/w3s-pw-web-sdk';
+import { W3SSdk } from '@circle-fin/w3s-pw-web-sdk'
 
-let sdk = null;
+let sdk = null
 
 export function getSDK() {
-  if (!sdk) {
-    sdk = new W3SSdk({
-      appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' },
-    });
-  }
-  return sdk;
+  if (!sdk) sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
+  return sdk
 }
 
 export async function createSession(email) {
@@ -16,10 +12,10 @@ export async function createSession(email) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email }),
-  });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error);
-  return data;
+  })
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
+  return data
 }
 
 export async function initializeWallet(userToken) {
@@ -27,30 +23,28 @@ export async function initializeWallet(userToken) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'initialize', userToken }),
-  });
-  const data = await res.json();
-  if (data.error) throw new Error(data.error);
-  return data;
+  })
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
+  return data
 }
 
-export async function fetchBalance() {
-  const userToken = localStorage.getItem('ez_user_token');
-  if (!userToken) return [];
+export async function getWalletAddress(userToken) {
   const res = await fetch('/api/wallet', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'balance', userToken }),
-  });
-  const data = await res.json();
-  return data.balances || [];
+    body: JSON.stringify({ action: 'getAddress', userToken }),
+  })
+  const data = await res.json()
+  return data.address || null
 }
 
 export function executeChallenge(sdk, userToken, encryptionKey, challengeId) {
   return new Promise((resolve, reject) => {
-    sdk.setAuthentication({ userToken, encryptionKey });
+    sdk.setAuthentication({ userToken, encryptionKey })
     sdk.execute(challengeId, (err, result) => {
-      if (err) return reject(err);
-      resolve(result);
-    });
-  });
+      if (err) return reject(err)
+      resolve(result)
+    })
+  })
 }
