@@ -221,17 +221,43 @@ ezpay/
 - **Buttons**: `row10-single`/`row10-dual` span rows 9-10, centered. Height 6dvh.
 - **Swap estimate bug root cause found**: chain ID sai. Fix deployed nhưng cần test.
 
+**Google Social Login — root cause phân tích (2026-06-25):**
+- Circle W3S SDK `performLogin('Google')` → gọi `performGoogleLogin()` → LUÔN redirect (không có callback-processing mode riêng)
+- OAuth flow: app → Google → redirect về `ezwallet.pages.dev/#access_token=...`
+- Sau redirect, tạo SDK mới với loginConfigs → SDK tự scan URL hash → gọi `onLoginComplete`
+- NHƯNG: khi ta gọi thêm `performLogin('Google')` trong restore → tạo redirect MỚI → loop
+- Khi không gọi performLogin → callback không fire (cần debug thêm)
+- Lỗi `155140 Invalid social login provider`: có 2 nơi trong SDK throw:
+  1. `else` branch: provider không match → ta đang pass đúng `'Google'` → không phải đây
+  2. `performGoogleLogin`: `loginConfigs.google` chưa được set → CÓ THỂ đây là vấn đề
+- SDK lưu `state`+`nonce` vào sessionStorage trước redirect. Khi restore, cần SDK đọc lại để validate callback
+- **Next debug**: log `this.configs.loginConfigs` trong SDK instance để verify loginConfigs đang được set đúng
+
+**Google login setup (Circle Console + Google Cloud):**
+- Google Cloud: Web Application Client ID = `51031114717-f9chve1ge9bbo8j3kspj82qrga40342n.apps.googleusercontent.com`
+- Authorized redirect URIs: `https://ezwallet.pages.dev`  
+- Circle Console: Social Logins → Google → Client ID (Web) = same Web App ID
+- Code: `GOOGLE_CLIENT_ID` = same ID (trong `src/circle.js`)
+
+**Circle W3S SDK docs đã đọc:**
+- Auth methods: Email OTP, Social Login (Google/Apple/Facebook), PIN (6-digit)
+- Session token: 14 ngày, refresh qua `POST /users/token/refresh`
+- Transfer: dùng `tokenId` (Circle internal) + `destinationAddress` + `amounts`
+- Signature: `signMessage()`, `signTypedData()`, `signTransaction()`
+- Reset PIN: `updateUserPin()` → challengeId → W3S SDK
+- Recover account: security questions → `restoreUserPin()` → challengeId
+- Remove user: không có API, chỉ stop issuing tokens + xóa local record
+
 **Pending:**
-- Test Swap execute (PIN signing) trên deployed `ezwallet.pages.dev`
-- Test Send trên deployed
-- `icon/right.png` cho menu chevron + hints chưa áp dụng
-- TX history: chỉ ERC-20, chưa native USDC movements
-- Send: chỉ gửi USDC, chưa chọn token khác
+- Google Social Login callback chưa hoạt động — cần debug SDK init flow
+- Swap execute chưa test trên deployed
+- Send: chỉ USDC, chưa chọn token
+- Reset PIN, Recover account chưa build
 
 **Tiếp theo:**
-1. Test Swap + Send trên deployed
-2. Apply `icon/right.png` cho menu + hints
-3. UI polish tổng thể (spacing, typography)
+1. Debug Google login: log SDK configs sau init, xem callback có fire không khi không gọi performLogin
+2. Test Swap/Send trên deployed sau khi Google login OK
+3. Build Reset PIN + Account Recovery screens
 
 ---
 

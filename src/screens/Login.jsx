@@ -63,8 +63,13 @@ export default function Login() {
         navigate('HomeSend')
       }
     )
-    // Gọi performLogin với provider để SDK biết xử lý Google OAuth callback
-    googleSdk.performLogin('Google')
+    // DEBUG: log configs để verify loginConfigs được set đúng
+    console.log('[Google callback] SDK configs:', JSON.stringify({
+      hasLoginConfigs: !!googleSdk.configs?.loginConfigs,
+      hasGoogle: !!googleSdk.configs?.loginConfigs?.google,
+      deviceToken: !!freshToken,
+    }))
+    // Không gọi performLogin — SDK tự xử lý URL hash khi init
   }, [])
 
   async function handleGoogleLogin() {
