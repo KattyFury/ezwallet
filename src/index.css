@@ -307,8 +307,9 @@ body {
 .action-grid {
   display: grid;
   grid-template-columns: 1fr 1.5fr 1fr;
-  height: 6dvh;
-  align-self: center;
+  height: 8dvh;
+  align-self: end;
+  margin-bottom: 2dvh;
   gap: 8px;
 }
 

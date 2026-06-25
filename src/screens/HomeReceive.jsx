@@ -6,6 +6,7 @@ import { useNav } from '../nav'
 import { fmtVND } from '../data'
 import { getTokenBalances } from '../chain'
 import { IconScan } from '../icons'
+import qrWhiteIcon from '../../icon/qr-white.png'
 import copyIcon from '../../icon/copy.png'
 import shareIcon from '../../icon/share.png'
 import downloadIcon from '../../icon/download.png'
@@ -66,7 +67,7 @@ export default function HomeReceive() {
           <span>{copied ? 'Đã copy!' : 'Chia sẻ'}</span>
         </button>
         <button className="action-card primary" onClick={() => navigate('CreateQR')}>
-          <IconScan size={22} />
+          <img src={qrWhiteIcon} alt="" style={{ width: 22, height: 22 }} />
           <span>Custom QR</span>
         </button>
         <button className="action-card" onClick={() => navigate('SavedQRList')}>

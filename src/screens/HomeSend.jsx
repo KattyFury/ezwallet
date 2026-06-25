@@ -3,6 +3,7 @@ import NavBar from '../components/NavBar'
 import hintIcon from '../../icon/hint.png'
 import danhbaIcon from '../../icon/danhba.png'
 import qrIcon from '../../icon/qr.png'
+import qrWhiteIcon from '../../icon/qr-white.png'
 import { useNav } from '../nav'
 import { fmtVND } from '../data'
 import { getTokenBalances, fmtAmount } from '../chain'
@@ -66,8 +67,8 @@ export default function HomeSend() {
 
       <div className="row-9 action-grid">
         <button className="action-card" onClick={() => navigate('Contacts')}><img src={danhbaIcon} alt="" style={{ width: 20, height: 20 }} /><span>Danh bạ</span></button>
-        <button className="action-card primary" onClick={() => navigate('QRScanner')}><img src={qrIcon} alt="" style={{ width: 24, height: 24 }} /><span>Quét QR</span></button>
-        <button className="action-card" onClick={() => navigate('PasteAddress')}><IconPaste size={20} /><span>Dán địa chỉ</span></button>
+        <button className="action-card primary" onClick={() => navigate('QRScanner')}><img src={qrWhiteIcon} alt="" style={{ width: 24, height: 24 }} /><span>Quét QR</span></button>
+        <button className="action-card" onClick={() => navigate('PasteAddress')}><IconPaste size={20} /><span>Dán để gửi</span></button>
       </div>
 
       <NavBar active="HomeSend" />
