@@ -5,7 +5,7 @@ import downIcon from '../../icon/down.png'
 import menuIcon from '../../icon/menu.png'
 
 const TABS = [
-  { id: 'Swap',        label: 'Đổi tiền', icon: tradeIcon },
+  { id: 'Swap',        label: 'Đổi tiền', icon: tradeIcon, disabled: true },
   { id: 'HomeSend',    label: 'Gửi',      icon: upIcon },
   { id: 'HomeReceive', label: 'Nhận',     icon: downIcon },
   { id: 'MenuScreen',  label: 'Menu',     icon: menuIcon },
@@ -19,7 +19,9 @@ export default function NavBar({ active }) {
         <button
           key={t.id}
           className={`navbar-btn${active === t.id ? ' active' : ''}`}
-          onClick={() => navigate(t.id)}
+          disabled={t.disabled}
+          onClick={t.disabled ? undefined : () => navigate(t.id)}
+          style={t.disabled ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
         >
           {t.icon && <img src={t.icon} alt="" style={{ width: 18, height: 18, marginBottom: 2, opacity: active === t.id ? 1 : 0.4 }} />}
           {t.label}
