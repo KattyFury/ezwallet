@@ -71,7 +71,7 @@ export default function EnterEmail() {
   return (
     <div className="screen">
       <div className="row-1 center" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-bold)' }}>
-        Đăng nhập
+        Đăng nhập với Email
       </div>
 
       <div className="row-3" style={{ position: 'relative' }}>
