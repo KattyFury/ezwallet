@@ -67,6 +67,7 @@
 - **Row 10 — 2 nút:** class `row10-dual`, trái = phụ trắng, phải = chính xanh
 - **Numpad:** cố định hàng 7–8–9, layout 4 dòng: 123 / 456 / 789 / ,0←
 - **Padding an toàn:** `padding: 0 16px` trên `.screen`
+- **⚠ Input text (email, địa chỉ ví, tên danh bạ...) PHẢI đặt ở hàng 1–2–3–4.** Lý do: bàn phím iPhone bật lên che ~1/2 màn hình dưới (hàng 5–10), nếu input ở giữa/dưới sẽ bị che. Các màn có input: EnterEmail, PasteAddress, Contacts (form thêm) — đặt input + nút liên quan ở vùng trên cùng.
 
 ---
 
