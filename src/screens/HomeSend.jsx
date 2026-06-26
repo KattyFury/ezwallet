@@ -4,6 +4,7 @@ import hintIcon from '../../icon/hint.png'
 import danhbaIcon from '../../icon/danhba.png'
 import qrIcon from '../../icon/qr.png'
 import qrWhiteIcon from '../../icon/qr-white.png'
+import verifiedIcon from '../../icon/verified.png'
 import { useNav } from '../nav'
 import { fmtVND } from '../data'
 import { getTokenBalances, fmtAmount } from '../chain'
@@ -27,32 +28,39 @@ export default function HomeSend() {
 
   return (
     <div className="screen">
-      <div className="row-1 center full-bleed" style={{ borderBottom: '1px solid var(--color-gray)', gap: 6 }}>
-        <span style={{ fontSize: 18, color: 'var(--color-muted)' }}>Số dư</span>
-        <span style={{ fontSize: 36, fontWeight: 'var(--fw-bold)', color: 'var(--color-black)', lineHeight: 1 }}>
-          {loading ? '...' : totalVND.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
-        </span>
-        <span style={{ fontSize: 18, color: 'var(--color-muted)' }}>VND</span>
-      </div>
+      <div className="row-1-5" style={{ display: 'grid', gridTemplateRows: 'repeat(5, 1fr)', overflowY: 'auto' }}>
+        {/* Số dư — căn trái, cùng khoảng cách như mỗi token */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 2px' }}>
+          <span style={{ fontSize: 20, color: 'var(--color-muted)' }}>Số dư:</span>
+          <span style={{ fontSize: 28, fontWeight: 'var(--fw-bold)', color: 'var(--color-black)', lineHeight: 1 }}>
+            {loading ? '...' : totalVND.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+          </span>
+          <span style={{ fontSize: 20, color: 'var(--color-muted)' }}>VND</span>
+        </div>
 
-      <div className="row-2-5" style={{ display: 'grid', gridTemplateRows: 'repeat(4, 1fr)', overflowY: 'auto' }}>
         {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>Đang tải...</div>
+          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>Đang tải...</div>
         ) : tokens.length === 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>
             {localStorage.getItem('ez_wallet_addr') ? 'Chưa có token' : 'Ví chưa được tạo — nạp USDC để kích hoạt'}
           </div>
         ) : tokens.map(t => (
-          <div key={t.symbol} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 2px' }}>
-            <div className="token-icon" style={{ background: t.color, flexShrink: 0 }}>{t.symbol.slice(0, 2)}</div>
-            <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)' }}>
+          <div key={t.symbol} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 2px' }}>
+            <img
+              src={`/tokens/${t.symbol.toLowerCase()}.png`}
+              alt=""
+              style={{ width: 34, height: 34, borderRadius: '50%', flexShrink: 0 }}
+              onError={e => {
+                e.target.style.display = 'none'
+                e.target.nextSibling.style.display = 'flex'
+              }}
+            />
+            <div className="token-icon" style={{ background: t.color, flexShrink: 0, display: 'none' }}>{t.symbol.slice(0, 2)}</div>
+            <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>
               {t.amount.toFixed(t.symbol === 'cirBTC' ? 4 : 2)} {t.symbol}
             </span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="#2775CA" style={{ flexShrink: 0 }}>
-              <path d="M12 2l2.4 1.8 3 .2.9 2.9 2.4 1.8-.9 2.9.9 2.9-2.4 1.8-.9 2.9-3 .2L12 22l-2.4-1.8-3-.2-.9-2.9L3.3 15l.9-2.9-.9-2.9 2.4-1.8.9-2.9 3-.2L12 2z"/>
-              <path d="M10.5 14.6l-2-2 1-1 1 1 3-3 1 1z" fill="#fff"/>
-            </svg>
-            <span style={{ marginLeft: 'auto', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)' }}>{fmtVND(t.vnd)}</span>
+            <img src={verifiedIcon} alt="verified" style={{ width: 17, height: 17, flexShrink: 0 }} />
+            <span style={{ marginLeft: 'auto', fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>{fmtVND(t.vnd)}</span>
           </div>
         ))}
       </div>

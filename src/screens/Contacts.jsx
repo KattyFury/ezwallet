@@ -1,5 +1,6 @@
 ﻿import { useState } from 'react'
 import { useNav } from '../nav'
+import addWhiteIcon from '../../icon/add-white.png'
 
 function loadContacts() {
   try { return JSON.parse(localStorage.getItem('ez_contacts') || '[]') } catch { return [] }
@@ -71,22 +72,32 @@ export default function Contacts() {
           })
         )}
 
-        {adding && (
-          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 16 }}>
-            <input className="address-input" placeholder="Tên" value={name} onChange={e => setName(e.target.value)} style={{ fontSize: 'var(--fs-body)' }} />
-            <input className="address-input" placeholder="0x..." value={addr} onChange={e => setAddr(e.target.value)} style={{ fontSize: 'var(--fs-body)' }} />
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setAdding(false)}>Hủy</button>
-              <button className="btn btn-primary" style={{ flex: 1 }} disabled={!name.trim() || !isValid(addr)} onClick={handleAdd}>Lưu</button>
-            </div>
-          </div>
-        )}
       </div>
 
       <div className="row-10 row10-dual">
         <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>Quay lại</button>
-        <button className="btn btn-primary" onClick={() => setAdding(true)}>+ Thêm</button>
+        <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} onClick={() => setAdding(true)}>
+          <img src={addWhiteIcon} alt="" style={{ width: 18, height: 18 }} />Thêm
+        </button>
       </div>
+
+      {/* Popup thêm danh bạ — neo ở nửa trên (hàng 1-5), tránh bàn phím iPhone che nửa dưới */}
+      {adding && (
+        <div
+          onClick={() => setAdding(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '12dvh' }}
+        >
+          <div onClick={e => e.stopPropagation()} style={{ width: '88%', maxWidth: 360, background: 'var(--color-white)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-bold)', textAlign: 'center' }}>Thêm danh bạ</div>
+            <input className="address-input" placeholder="Tên" value={name} onChange={e => setName(e.target.value)} autoFocus style={{ fontSize: 'var(--fs-body)' }} />
+            <input className="address-input" placeholder="0x..." value={addr} onChange={e => setAddr(e.target.value)} style={{ fontSize: 'var(--fs-body)' }} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => { setAdding(false); setName(''); setAddr('') }}>Hủy</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} disabled={!name.trim() || !isValid(addr)} onClick={handleAdd}>Lưu</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
