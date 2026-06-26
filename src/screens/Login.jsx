@@ -1,7 +1,6 @@
 ﻿import logoLong from '../../design/logo-long.png'
 import emailIcon from '../../icon/email.png'
 import googleIcon from '../../icon/google.png'
-import facebookIcon from '../../icon/facebook.png'
 import { useNav } from '../nav'
 import React, { useState, useEffect } from 'react'
 import { W3SSdk } from '@circle-fin/w3s-pw-web-sdk'
@@ -135,7 +134,6 @@ export default function Login() {
         {[
           { icon: emailIcon, label: 'Đăng nhập với Email', primary: true, onClick: () => navigate('EnterEmail'), disabled: false },
           { icon: googleIcon, label: 'Đăng nhập với Google', primary: false, onClick: handleGoogleLogin, disabled: true },
-          { icon: facebookIcon, label: 'Đăng nhập với Facebook', primary: false, onClick: () => {}, disabled: true },
         ].map(({ icon, label, primary, onClick, disabled }) => (
           <button key={label} className={`btn ${primary ? 'btn-primary' : 'btn-secondary'}`}
             style={{ width: '75%', display: 'flex', justifyContent: 'center', alignItems: 'center', opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
