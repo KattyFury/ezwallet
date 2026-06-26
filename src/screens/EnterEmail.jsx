@@ -3,7 +3,7 @@ import hintIcon from '../../icon/hint.png'
 import { useNav } from '../nav'
 import { createSession, getSDK, initializeWallet, executeChallenge, getWalletAddress } from '../circle'
 
-const DOMAINS = ['@gmail.com', '@yahoo.com', '@outlook.com']
+const DOMAINS = ['@gmail.com', '@yahoo.com', '@icloud.com']
 
 function getEmailHistory() {
   try { return JSON.parse(localStorage.getItem('ez_email_history') || '[]') } catch { return [] }
