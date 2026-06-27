@@ -2,7 +2,9 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
 import { QRCodeSVG } from 'qrcode.react'
-import { MOCK_ADDR, fmtVND } from '../data'
+import { fmtVND } from '../data'
+
+const WALLET_ADDR = localStorage.getItem('ez_wallet_addr') || ''
 
 function loadQRs() {
   try { return JSON.parse(localStorage.getItem('ez_saved_qrs') || '[]') } catch { return [] }
@@ -51,7 +53,7 @@ export default function SavedQRList() {
                     fontSize: 16, color: 'var(--color-gray)', lineHeight: 1,
                   }}
                 >×</button>
-                <QRCodeSVG value={`ezwallet:${MOCK_ADDR}?amount=${q.amount}`} size={80} level="M" />
+                <QRCodeSVG value={`ezwallet:${WALLET_ADDR}?amount=${q.amount}`} size={80} level="M" />
                 <span style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-bold)', textAlign: 'center' }}>
                   {fmtVND(q.amount)}
                 </span>

@@ -90,7 +90,7 @@ export default function TxHistory() {
         Lịch sử giao dịch
       </div>
 
-      <div className="row-2-9" style={{ overflowY: 'auto', alignItems: 'flex-start', justifyContent: 'flex-start' }}>
+      <div className="row-2-9" style={{ overflowY: 'auto', justifyContent: 'flex-start' }}>
         {loading ? (
           <div style={{ width: '100%', textAlign: 'center', paddingTop: 40, color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>
             Đang tải...

@@ -21,12 +21,12 @@ export default function About() {
         About
       </div>
 
-      <div className="row-2-9" style={{ justifyContent: 'flex-start', alignItems: 'flex-start' }}>
+      <div className="row-2-9" style={{ justifyContent: 'flex-start' }}>
         {ITEMS.map(({ label, value, link }) => (
           <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 0', borderBottom: '1px solid var(--color-gray)', width: '100%' }}>
             <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{label}</span>
             {link ? (
-              <a href={link} target="_blank" rel="noopener" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-primary)', textDecoration: 'none', textAlign: 'right', maxWidth: '60%' }}>
+              <a href={link} target="_blank" rel="noopener" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-black)', textDecoration: 'none', textAlign: 'right', maxWidth: '60%' }}>
                 {value}
               </a>
             ) : (

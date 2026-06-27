@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import jsQR from 'jsqr'
 import { useNav } from '../nav'
 
 function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
@@ -14,6 +15,7 @@ function parseQR(text) {
 export default function QRScanner() {
   const { navigate } = useNav()
   const videoRef = useRef(null)
+  const canvasRef = useRef(null)
   const loopRef = useRef(null)
   const fileRef = useRef(null)
   const [error, setError] = useState('')
@@ -21,38 +23,44 @@ export default function QRScanner() {
 
   useEffect(() => {
     let stream = null
-    let detector = null
     let active = true
+    const canvas = document.createElement('canvas')
+    canvasRef.current = canvas
+    const ctx = canvas.getContext('2d', { willReadFrequently: true })
 
     async function start() {
       try {
-        if (!window.BarcodeDetector) { setError('Trình duyệt không hỗ trợ quét QR — chọn ảnh QR hoặc dán địa chỉ.'); return }
-        detector = new window.BarcodeDetector({ formats: ['qr_code'] })
         stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
         if (!videoRef.current) return
         videoRef.current.srcObject = stream
-
-        async function scan() {
-          if (!active || !videoRef.current) return
-          try {
-            const codes = await detector.detect(videoRef.current)
-            if (codes.length) {
-              const parsed = parseQR(codes[0].rawValue)
-              if (parsed) {
-                active = false
-                navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount })
-                return
-              } else {
-                setHint('QR không hợp lệ, thử lại')
-              }
-            }
-          } catch {}
-          loopRef.current = setTimeout(scan, 300)
-        }
+        await videoRef.current.play().catch(() => {})
         scan()
       } catch {
         setError('Không truy cập được camera — chọn ảnh QR hoặc dán địa chỉ.')
       }
+    }
+
+    function scan() {
+      if (!active) return
+      const v = videoRef.current
+      if (v && v.readyState === v.HAVE_ENOUGH_DATA && v.videoWidth) {
+        canvas.width = v.videoWidth
+        canvas.height = v.videoHeight
+        ctx.drawImage(v, 0, 0, canvas.width, canvas.height)
+        const img = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' })
+        if (code) {
+          const parsed = parseQR(code.data)
+          if (parsed) {
+            active = false
+            navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount })
+            return
+          } else {
+            setHint('QR không hợp lệ, thử lại')
+          }
+        }
+      }
+      loopRef.current = setTimeout(scan, 200)
     }
 
     start()
@@ -68,16 +76,23 @@ export default function QRScanner() {
     e.target.value = ''
     if (!file) return
     try {
-      if (!window.BarcodeDetector) { setHint('Trình duyệt không hỗ trợ đọc QR từ ảnh'); return }
-      const detector = new window.BarcodeDetector({ formats: ['qr_code'] })
-      const bitmap = await createImageBitmap(file)
-      const codes = await detector.detect(bitmap)
-      const parsed = codes.length ? parseQR(codes[0].rawValue) : null
-      if (parsed) {
-        navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount })
-      } else {
-        setHint('Không tìm thấy mã QR hợp lệ trong ảnh')
+      const url = URL.createObjectURL(file)
+      const img = new Image()
+      img.onload = () => {
+        const canvas = document.createElement('canvas')
+        canvas.width = img.naturalWidth
+        canvas.height = img.naturalHeight
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0)
+        const data = ctx.getImageData(0, 0, canvas.width, canvas.height)
+        URL.revokeObjectURL(url)
+        const code = jsQR(data.data, data.width, data.height)
+        const parsed = code ? parseQR(code.data) : null
+        if (parsed) navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount })
+        else setHint('Không tìm thấy mã QR hợp lệ trong ảnh')
       }
+      img.onerror = () => setHint('Không đọc được ảnh')
+      img.src = url
     } catch {
       setHint('Không đọc được ảnh QR')
     }

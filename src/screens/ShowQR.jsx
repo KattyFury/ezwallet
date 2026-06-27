@@ -1,7 +1,7 @@
 ﻿import backIcon from '../../icon/back.png'
 import { useNav } from '../nav'
 import { QRCodeSVG } from 'qrcode.react'
-import { MOCK_ADDR, fmtVND } from '../data'
+import { fmtVND } from '../data'
 
 function savedQRs() {
   try { return JSON.parse(localStorage.getItem('ez_saved_qrs') || '[]') } catch { return [] }
@@ -10,7 +10,8 @@ function savedQRs() {
 export default function ShowQR() {
   const { navigate, params } = useNav()
   const { amount } = params
-  const qrValue = `ezwallet:${MOCK_ADDR}?amount=${amount}`
+  const walletAddr = localStorage.getItem('ez_wallet_addr') || ''
+  const qrValue = `ezwallet:${walletAddr}?amount=${amount}`
 
   function handleSave() {
     const list = savedQRs()

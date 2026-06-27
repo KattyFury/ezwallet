@@ -24,7 +24,7 @@ export default function HomeReceive() {
 
   async function handleShare() {
     if (navigator.share) {
-      try { await navigator.share({ title: 'EZwallet', text: `Địa chỉ ví: ${walletAddr}` }); return } catch {}
+      try { await navigator.share({ text: walletAddr }); return } catch {}
     }
     await navigator.clipboard.writeText(walletAddr)
     setCopied(true)

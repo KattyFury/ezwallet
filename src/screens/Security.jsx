@@ -48,7 +48,7 @@ export default function Security() {
         Bảo mật
       </div>
 
-      <div className="row-2-9" style={{ justifyContent: 'flex-start', alignItems: 'flex-start' }}>
+      <div className="row-2-9" style={{ justifyContent: 'flex-start' }}>
         {/* Email */}
         <div style={ROW}>
           <span style={LABEL}>Email đăng nhập</span>
@@ -58,7 +58,7 @@ export default function Security() {
         {/* Wallet address */}
         <button onClick={copyAddr} style={{ ...ROW, width: '100%', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', borderBottom: '1px solid var(--color-gray)' }}>
           <span style={LABEL}>Địa chỉ ví</span>
-          <span style={{ ...VALUE, color: 'var(--color-primary)' }}>{copied ? '✓ Đã sao chép' : shortAddr}</span>
+          <span style={{ ...VALUE, color: copied ? 'var(--color-primary)' : 'var(--color-black)' }}>{copied ? '✓ Đã sao chép' : shortAddr}</span>
         </button>
 
         {/* Change PIN */}
