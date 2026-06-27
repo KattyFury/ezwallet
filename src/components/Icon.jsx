@@ -26,10 +26,11 @@ import share from '../../icon/share.svg?raw'
 import shield from '../../icon/shield.svg?raw'
 import trade from '../../icon/trade.svg?raw'
 import up from '../../icon/up.svg?raw'
+import x from '../../icon/x.svg?raw'
 
 const ICONS = {
   add, back, check, clock, copy, down, down2, download, facebook, globe, google, hint,
-  human, info, left, mail, menu, out, qr, right, right2, scan, share, shield, trade, up,
+  human, info, left, mail, menu, out, qr, right, right2, scan, share, shield, trade, up, x,
 }
 
 export default function Icon({ name, size = 24, color, style, className }) {

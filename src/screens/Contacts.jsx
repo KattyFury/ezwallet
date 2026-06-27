@@ -160,8 +160,8 @@ export default function Contacts() {
                   Gửi
                 </button>
                 <button onClick={() => handleDelete(c.id)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 24, color: 'var(--color-muted)', padding: '0 4px', flexShrink: 0 }}>
-                  ×
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', flexShrink: 0, display: 'flex' }}>
+                  <Icon name="x" size={18} color="var(--color-muted)" />
                 </button>
               </div>
             )

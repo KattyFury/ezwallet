@@ -81,6 +81,10 @@
 - `design/` — logo-long, logo-short, PFP, app-icon, pattern* (PNG, không phải icon)
 - `public/tokens/` — usdc.png, eurc.png, cirbtc.png (logo token thật, CoinGecko)
 
+**Brand assets (design/, dùng nguyên — KHÔNG ép currentColor):** `logo.svg` (logo màn Login), `icon.svg` (favicon vuông, → `public/icon.svg`), `pfp.svg` (app-icon tròn Apple/Android, → `public/pfp.svg`). index.html: favicon = `/icon.svg`, apple-touch-icon = `/pfp.svg`. ⚠️ **pfp/app-icon nên nền TRẮNG đặc, KHÔNG transparent** (iOS hiện nền đen sau transparent); apple-touch-icon lý tưởng là PNG 180×180 (SVG iOS hỗ trợ kém — cân nhắc export PNG sau). `x.svg` = dấu X (nút xóa Contacts/Kho QR).
+
+**Onboarding sau tạo ví (CHƯA làm, đã chốt LÀM):** màn chọn ngôn ngữ/tiền tệ mặc định + hướng dẫn sử dụng ngắn cho người già — thêm vào flow sau EnterEmail tạo ví lần đầu.
+
 **Icon system:** dùng `<Icon name="..." size={} color={} />` ([src/components/Icon.jsx](src/components/Icon.jsx)) — nhúng SVG qua `?raw` + `currentColor` → recolor bằng token. Thêm icon mới: bỏ SVG vào `icon/`, chuẩn hóa `stroke/fill="black"→currentColor` + `width/height 100%→`, rồi import vào Icon.jsx. KHÔNG dùng emoji (iOS render icon Apple xấu).
 
 ---

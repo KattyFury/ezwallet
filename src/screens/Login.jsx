@@ -1,4 +1,4 @@
-﻿import logoLong from '../../design/logo-long.png'
+﻿import logoLong from '../../design/logo.svg'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
 import React, { useState, useEffect } from 'react'

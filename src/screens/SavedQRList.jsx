@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
 import { QRCodeSVG } from 'qrcode.react'
+import Icon from '../components/Icon'
 import { fmtVND } from '../data'
 
 function loadQRs() {
@@ -36,7 +37,7 @@ export default function SavedQRList() {
             {list.map(q => (
               <button key={q.id} onClick={() => navigate('ShowQR', { amount: q.amount, from: 'SavedQRList' })}
                 style={{ position: 'relative', aspectRatio: '1', border: '1.5px solid var(--color-gray)', borderRadius: 12, background: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: 8, fontFamily: 'inherit' }}>
-                <span onClick={e => handleDelete(q.id, e)} style={{ position: 'absolute', top: 4, right: 8, fontSize: 20, color: 'var(--color-muted)', lineHeight: 1 }}>×</span>
+                <span onClick={e => handleDelete(q.id, e)} style={{ position: 'absolute', top: 6, right: 6, display: 'flex' }}><Icon name="x" size={14} color="var(--color-muted)" /></span>
                 <QRCodeSVG value={`ezwallet:${walletAddr}?amount=${q.amount}`} size={64} level="M" />
                 <span className="num" style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-bold)', color: 'var(--color-content)' }}>{fmtVND(q.amount)}</span>
               </button>
