@@ -32,6 +32,7 @@ export default function SendConfirm() {
           toAddress: address,
           token: 'USDC',
           amountDecimal: usdcAmount,
+          memo,
         }),
       })
       const data = await res.json()
