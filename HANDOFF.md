@@ -47,14 +47,16 @@
 
 ---
 
-## Design System — 🔒 KHÓA (2026-06-27)
+## Design System (2026-06-28)
 
-> Toàn app CHỈ dùng token dưới đây. KHÔNG hardcode px size / mã màu mới.
-> Định nghĩa ở `:root` trong `src/index.css`.
+> Định nghĩa ở `:root` trong `src/index.css`. FONT + MÀU khóa; **CỠ CHỮ mở khóa** (scale gợi ý, tùy chỉnh px được).
 
-**Font:** 100% **Roboto Condensed** (400 / 500 / 700). Không dùng font khác.
+**Font — hệ 2 font:**
+- **Barlow Condensed** (`--font-display`): logo, tiêu đề lớn (H1/H2, `.screen-title`/`.send-title`), số dư/số tiền/%/KPI (`.num`, numpad, `.amount-display`).
+- **IBM Plex Sans** (`--font-base`, mặc định body): toàn bộ UI — menu, tab, **nút (.btn)**, form, mô tả giao dịch, thông báo, cài đặt.
+- (alias `--font-condensed`/`--font-title` → Barlow). Lưu ý: nhãn rất nhỏ (12–14px) nên dùng IBM Plex (condensed khó đọc khi nhỏ).
 
-**Cỡ chữ (6 bậc duy nhất):**
+**Cỡ chữ (scale gợi ý — đã mở khóa):**
 | Token | px | Dùng cho |
 |---|---|---|
 | `--fs-amount` | 40 | số tiền lớn: số dư, nhập số gửi, biên lai |
@@ -64,15 +66,13 @@
 | `--fs-label` | 16 | label, text phụ, placeholder |
 | `--fs-tiny` | 13 | badge / ghi chú rất nhỏ |
 
-**Màu chữ (4 tầng phân cấp):**
+**Màu chữ — trắng/đen là chân ái:**
 | Token | Hex | Dùng cho |
 |---|---|---|
-| `--color-black` | #000000 | tiêu đề màn + chữ trên nút |
-| `--color-content` | #333333 | nội dung chính |
-| `--color-muted` | #808080 | nội dung phụ |
-| `--color-faint` | #B3B3B3 | super phụ / placeholder |
+| `--color-black` / `--color-content` | #000000 | text chính + tiêu đề + nút + nội dung |
+| `--color-muted` / `--color-faint` | #AEAEB2 | text phụ / placeholder / chevron (xám đậm) |
 
-**Màu chức năng:** `--color-primary #16A34A` (+`-soft #DCFCE7`) · `--color-error #DC2626` · `--color-warning #F59E0B` (+`-soft #FEF3C7`) · `--color-white` · `--color-gray #CCCCCC` (CHỈ border/nền, không làm màu chữ).
+**Màu chức năng:** `--color-primary #16A34A` (chủ đạo, +`-soft #DCFCE7`) · `--color-error #DC2626` (đỏ xóa) · `--color-warning #F59E0B` (+`-soft #FEF3C7`) · `--color-white` · `--color-gray #E5E5EA` (xám nhạt — CHỈ border/nền/divider).
 **Ngoại lệ:** màu thương hiệu token trong `src/chain.js` (USDC #2775CA, EURC #1A56DB, cirBTC #F7931A) — không phải token UI.
 **Số & tiền tệ:** class `.num` (= Roboto Condensed). Tiêu đề màn: class `.screen-title` (= đen).
 

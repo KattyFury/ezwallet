@@ -1,30 +1,33 @@
 ﻿/* ══════════════════════════════════════════════════════════
-   🔒 DESIGN TOKENS — KHÓA (2026-06-27). Toàn app CHỈ dùng các
-   token dưới đây. KHÔNG hardcode px màu/size mới ngoài bộ này.
-   Font: 100% Roboto Condensed.
+   DESIGN TOKENS (2026-06-28).
+   FONT (khóa): Barlow Condensed = display/số; IBM Plex Sans = UI.
+   MÀU (khóa): 4 tầng chữ + màu chức năng dưới đây.
+   CỠ CHỮ: ĐÃ MỞ KHÓA — scale dưới là gợi ý, được phép tùy chỉnh px theo từng chỗ.
    ══════════════════════════════════════════════════════════ */
 :root {
-  /* ── MÀU CHỮ (4 tầng, phân cấp bằng độ đậm) ── */
-  --color-black:      #000000;   /* tiêu đề màn + chữ trên nút */
-  --color-content:    #333333;   /* nội dung chính */
-  --color-muted:      #808080;   /* nội dung phụ */
-  --color-faint:      #B3B3B3;   /* nội dung super phụ / placeholder */
+  /* ── MÀU CHỮ — trắng/đen là chân ái ── */
+  --color-black:      #000000;   /* text chính + tiêu đề + nút */
+  --color-content:    #000000;   /* nội dung chính = đen */
+  --color-muted:      #AEAEB2;   /* text phụ (xám đậm) */
+  --color-faint:      #AEAEB2;   /* placeholder / chevron */
 
   /* ── MÀU CHỨC NĂNG ── */
-  --color-primary:      #16A34A; /* hành động chính, active */
+  --color-primary:      #16A34A; /* màu chủ đạo, active */
   --color-primary-soft: #DCFCE7; /* nền nhạt xanh (chọn / nhận) */
-  --color-error:        #DC2626; /* lỗi / gửi đi */
-  --color-warning:      #F59E0B; /* cảnh báo */
+  --color-error:        #DC2626; /* đỏ xóa bỏ / gửi đi */
+  --color-warning:      #F59E0B; /* vàng cảnh báo */
   --color-warning-soft: #FEF3C7; /* nền nhạt cảnh báo */
   --color-white:        #FFFFFF;
-  --color-gray:         #CCCCCC; /* CHỈ border / nền — KHÔNG dùng làm màu chữ */
+  --color-gray:         #E5E5EA; /* xám nhạt — border / nền / divider (KHÔNG làm màu chữ) */
 
   /* ── FONT ── */
-  --font-base:      'Roboto Condensed', sans-serif;
-  --font-title:     'Roboto Condensed', sans-serif;
-  --font-condensed: 'Roboto Condensed', sans-serif;
+  /* Hệ 2 font: Barlow Condensed = display/số; IBM Plex Sans = UI/nội dung */
+  --font-base:      'IBM Plex Sans', sans-serif;       /* toàn bộ UI: menu, tab, nút, form, mô tả, thông báo */
+  --font-display:   'Barlow Condensed', sans-serif;    /* logo, tiêu đề lớn, số dư/số tiền/%/KPI */
+  --font-title:     'Barlow Condensed', sans-serif;    /* alias → display (tiêu đề) */
+  --font-condensed: 'Barlow Condensed', sans-serif;    /* alias → display (số) */
 
-  /* ── CỠ CHỮ (KHÓA — chỉ 6 bậc) ── */
+  /* ── CỠ CHỮ (scale gợi ý — đã mở khóa, tùy chỉnh được) ── */
   --fs-amount:   40px;   /* số tiền lớn: số dư, nhập số gửi */
   --fs-title:    24px;   /* tiêu đề màn hình */
   --fs-body:     20px;   /* nội dung chính, chữ trên nút */
@@ -117,7 +120,7 @@ body {
 .text-success   { color: var(--color-primary); }
 
 /* ── Buttons ── */
-.screen-title { color: var(--color-black); }   /* tiêu đề màn = BLACK */
+.screen-title { font-family: var(--font-display); color: var(--color-black); }   /* tiêu đề màn = Barlow Condensed, BLACK */
 
 /* Mọi số & tiền tệ → Roboto Condensed (quy chuẩn) */
 .num { font-family: var(--font-condensed); }
@@ -126,7 +129,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-condensed);
+  font-family: var(--font-base);
   font-size: var(--fs-body);
   font-weight: var(--fw-medium);
   border-radius: 50px;
@@ -435,6 +438,7 @@ body {
 /* ── Send flow ── */
 .send-title {
   gap: 10px;
+  font-family: var(--font-display);
   font-size: var(--fs-title);
   font-weight: var(--fw-bold);
   color: var(--color-black);
