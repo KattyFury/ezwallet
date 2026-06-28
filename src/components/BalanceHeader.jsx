@@ -5,9 +5,9 @@ export default function BalanceHeader({ totalVND, loading }) {
   return (
     <div className="row-1-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       {/* Số dư căn giữa tuyệt đối; VND treo bên phải (absolute) + căn giữa dọc → không kéo lệch tâm */}
-      <span style={{ position: 'relative', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-bold)', color: 'var(--color-content)', lineHeight: 1 }}>
+      <span style={{ position: 'relative', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', lineHeight: 1 }}>
         {num}
-        <span style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: 10, fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-normal)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>VND</span>
+        <span style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: 10, fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-normal)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>VND</span>
       </span>
     </div>
   )
