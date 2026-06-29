@@ -75,19 +75,11 @@ const VI = {
   },
 }
 
-// 3 điểm lưu ý trên màn xác nhận câu hỏi bảo mật
-const SECURITY_CONFIRM_ITEMS = [
-  'Đây là cách duy nhất để khôi phục quyền truy cập tài khoản.',
-  'Circle không lưu câu trả lời — bạn có trách nhiệm ghi nhớ.',
-  'Quên câu trả lời đồng nghĩa mất quyền truy cập ví và tài sản.',
-]
 
 export function getSDK() {
   if (!sdk) {
     sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
     sdk.setLocalizations(VI)
-    // Circle default questions + chỉ 1 câu (custom question gây bug PC matching)
-    sdk.setCustomSecurityQuestions(null, 1, SECURITY_CONFIRM_ITEMS)
     // Đổi màu Circle SDK → xanh lá thay cho tím/xanh mặc định
     sdk.setThemeColor({
       mainBtnBg:         '#16A34A',
