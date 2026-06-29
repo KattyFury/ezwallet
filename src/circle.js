@@ -3,88 +3,56 @@ import { W3SSdk } from '@circle-fin/w3s-pw-web-sdk'
 let sdk = null
 
 const VI = {
-  common: {
-    continue: 'Tiếp tục',
-    confirm: 'Xác nhận',
-    sign: 'Ký',
-    retry: 'Thử lại',
-    showPin: 'Hiện PIN',
-    hidePin: 'Ẩn PIN',
-  },
-  // Tạo PIN lần đầu (khi khởi tạo ví)
-  initPincode: {
-    headline: 'Tạo mã PIN',
-    headline2: '',
-    subhead: 'Mã PIN 6 chữ số bảo vệ ví của bạn',
-  },
-  confirmInitPincode: {
-    headline: 'Nhập lại mã PIN',
-    headline2: '',
-    subhead: 'Nhập lại để xác nhận',
-  },
-  // Đổi PIN (từ màn Bảo mật)
-  newPincode: {
-    headline: 'Tạo mã PIN mới',
-    headline2: '',
-    subhead: 'Mã PIN 6 chữ số bảo vệ ví của bạn',
-  },
-  confirmNewPincode: {
-    headline: 'Nhập lại mã PIN mới',
-    headline2: '',
-    subhead: 'Nhập lại để xác nhận',
-  },
   enterPincode: {
     headline: 'Xác nhận giao dịch',
     headline2: '',
     subhead: 'Nhập mã PIN 6 chữ số của bạn',
     forgotPin: 'Quên PIN?',
   },
+  newPincode: {
+    headline: 'Tạo mã PIN',
+    headline2: 'Xác nhận mã PIN',
+    subhead: 'Mã PIN 6 chữ số bảo vệ ví của bạn',
+  },
   recoverPincode: {
     headline: 'Khôi phục PIN',
-    headline2: '',
-    subhead: 'Nhập câu trả lời bảo mật để đặt lại PIN',
+    headline2: 'Trả lời câu hỏi bảo mật',
+    subhead: 'Nhập câu trả lời để đặt lại PIN',
     answerInputHeader: 'Câu trả lời',
     answerInputPlaceholder: 'Nhập câu trả lời',
   },
   securityIntros: {
-    headline: 'Câu hỏi bảo mật',
-    headline2: '',
-    description: 'Dùng để khôi phục PIN nếu bạn quên. Ghi nhớ câu trả lời.',
+    headline: 'Thiết lập bảo mật',
+    headline2: 'Bảo vệ tài khoản của bạn',
+    description: 'Chọn câu hỏi bảo mật để khôi phục PIN khi cần',
     link: 'Tìm hiểu thêm',
   },
   securityQuestions: {
     title: 'Câu hỏi bảo mật',
     questionHeader: 'Câu hỏi',
     questionPlaceholder: 'Chọn câu hỏi',
-    requiredMark: '*',
     answerHeader: 'Câu trả lời',
-    answerPlaceholder: 'Nhập câu trả lời (nhớ viết hoa/thường đúng)',
+    answerPlaceholder: 'Nhập câu trả lời',
     answerHintHeader: 'Gợi ý (tuỳ chọn)',
-    answerHintPlaceholder: 'Ghi gợi ý để nhớ lại sau',
+    answerHintPlaceholder: 'Nhập gợi ý',
   },
   securityConfirm: {
-    title: 'Xác nhận câu trả lời',
-    headline: 'Nhập lại câu trả lời câu hỏi trên',
-    inputHeadline: 'Câu trả lời',
-    inputPlaceholder: 'Nhập lại y chang (phân biệt hoa/thường)',
-    inputMatch: 'Khớp ✓',
+    title: 'Xác nhận bảo mật',
+    headline: 'Xác nhận câu trả lời',
+    inputHeadline: 'Nhập lại câu trả lời',
+    inputPlaceholder: 'Xác nhận câu trả lời',
+    inputMatch: 'Câu trả lời khớp ✓',
   },
   securitySummary: {
-    title: 'Hoàn tất',
+    title: 'Tóm tắt bảo mật',
     question: 'Câu hỏi',
   },
 }
-
 
 export function getSDK() {
   if (!sdk) {
     sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
     sdk.setLocalizations(VI)
-    // CHỈ 1 câu hỏi bảo mật (mặc định Circle là 2 → bước xác nhận mơ hồ "câu nào?").
-    // null = giữ bộ câu hỏi mặc định của Circle; 1 = chỉ cần đặt + xác nhận 1 câu.
-    // ⚠️ KHÔNG truyền custom questions array hay setThemeColor — Sonnet thử và làm
-    // nút "Tiếp tục" không sáng trên PC. Đây là addition tối thiểu lên base đã chạy.
-    sdk.setCustomSecurityQuestions(null, 1)
   }
   return sdk
 }
