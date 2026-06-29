@@ -79,11 +79,12 @@ const VI = {
 export function getSDK() {
   if (!sdk) {
     sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
-    // CHỈ localization tiếng Việt — đây là config ĐÃ KIỂM CHỨNG tạo ví chạy tốt cả
-    // mobile lẫn PC. ⚠️ KHÔNG thêm setCustomSecurityQuestions hay setThemeColor:
-    // 2 cái đó làm NÚT "Tiếp tục" ở bước xác nhận câu trả lời KHÔNG sáng trên PC
-    // (matching trong iframe Circle vỡ với config custom). Xem HANDOFF "securityConfirm PC".
     sdk.setLocalizations(VI)
+    // CHỈ 1 câu hỏi bảo mật (mặc định Circle là 2 → bước xác nhận mơ hồ "câu nào?").
+    // null = giữ bộ câu hỏi mặc định của Circle; 1 = chỉ cần đặt + xác nhận 1 câu.
+    // ⚠️ KHÔNG truyền custom questions array hay setThemeColor — Sonnet thử và làm
+    // nút "Tiếp tục" không sáng trên PC. Đây là addition tối thiểu lên base đã chạy.
+    sdk.setCustomSecurityQuestions(null, 1)
   }
   return sdk
 }
