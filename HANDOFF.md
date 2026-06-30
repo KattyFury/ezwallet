@@ -81,6 +81,7 @@
 - **Thông báo & hint đồng bộ:** cùng kiểu `.tip-box` căn TRÁI (column, flex-start), nhãn đậm + mô tả xám. Warning (hết USDC) cũng dùng layout này (màu warning + phần clickable có `text-decoration: underline`).
 - **Mục danh sách trong sub-screen (Security/Language/About): MỖI MỤC 1 HÀNG GRID riêng** (`row-2`, `row-3`...). ĐỪNG nhồi hết vào 1 `.row-2-9` flex column — vì `.menu-item` có `flex:1` sẽ dàn đều kín trang (lỗi Security cũ).
 - **Nút lọc/toggle khi BẬT = nền trắng + viền xanh + chữ xanh** (`borderColor/color = --color-primary`), KHÔNG tô đặc xanh. Xem `activeFilter` trong TxHistory.
+- **Hệ THÔNG BÁO (NotifArea) + cảnh báo = NỀN MÀU NHẠT (iOS-style), KHÔNG viền:** `background: *-soft`, borderRadius 12, icon đậm màu, chữ đen. Màu theo loại: **Nhận = xanh lá** (`--color-primary` + `-soft`) · **Gửi = xanh dương** (`--color-info #2563EB` + `-soft #DBEAFE`) · **Lỗi = đỏ** (`--color-error` + `-soft #FEE2E2`, icon `warning`) · **Cảnh báo/Faucet = vàng** (`--color-warning` + `-soft`, icon `warning`, phần clickable underline). Icon: nhận `down`, gửi `up`, lỗi+cảnh báo `warning`. "Gửi = xanh dương" áp dụng cả icon TxHistory.
 - **Tiền tệ hiển thị theo `ez_currency`** (VND/USDC/EURC/CNY) toàn app: `getDisplayCurrency()`, `fmtDisplay()`, `displayNum()` (data.js), `getDisplayRates()` (chain.js). List token ẩn cột quy đổi khi token == tiền tệ hiển thị.
 
 **Assets:**

@@ -34,11 +34,11 @@ function pollIncoming(after) {
     }).catch(() => {})
 }
 
-// màu theo loại thông báo
+// Kiểu thông báo: NỀN MÀU NHẠT (iOS-style) + icon đậm màu, chữ đen
 const STYLE = {
-  received: { color: 'var(--color-primary)', icon: 'down' },  // nhận = xanh
-  sent:     { color: 'var(--color-muted)',   icon: 'up' },    // gửi = xám
-  error:    { color: 'var(--color-error)',   icon: 'hint' },  // lỗi = đỏ
+  received: { color: 'var(--color-primary)', bg: 'var(--color-primary-soft)', icon: 'down' },    // nhận = xanh lá
+  sent:     { color: 'var(--color-info)',    bg: 'var(--color-info-soft)',    icon: 'up' },       // gửi = xanh dương
+  error:    { color: 'var(--color-error)',   bg: 'var(--color-error-soft)',   icon: 'warning' },  // lỗi = đỏ
 }
 
 export default function NotifArea({ fallback }) {
@@ -57,12 +57,12 @@ export default function NotifArea({ fallback }) {
       {notifs.slice(0, 2).map(n => {
         const s = STYLE[n.type] || STYLE.sent
         return (
-          <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, border: `1.5px solid ${s.color}`, borderRadius: 10, padding: '12px 14px', cursor: 'pointer' }}>
+          <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: s.bg, borderRadius: 12, padding: '12px 14px', cursor: 'pointer' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-label)', color: 'var(--color-content)', textAlign: 'left' }}>
               <Icon name={s.icon} size={18} color={s.color} />
               {n.text}
             </span>
-            <button onClick={e => clear(n.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: 2 }}><Icon name="x" size={14} color="var(--color-muted)" /></button>
+            <button onClick={e => clear(n.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: 2 }}><Icon name="x" size={14} color={s.color} /></button>
           </div>
         )
       })}

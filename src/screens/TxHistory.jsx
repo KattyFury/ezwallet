@@ -60,10 +60,10 @@ function TxRow({ tx, walletAddr, contacts, onClick }) {
     }}>
       <div style={{
         width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-        background: isSend ? 'var(--color-warning-soft)' : 'var(--color-primary-soft)',
+        background: isSend ? 'var(--color-info-soft)' : 'var(--color-primary-soft)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <Icon name={isSend ? 'up' : 'down'} size={22} color={isSend ? 'var(--color-warning)' : 'var(--color-primary)'} />
+        <Icon name={isSend ? 'up' : 'down'} size={22} color={isSend ? 'var(--color-info)' : 'var(--color-primary)'} />
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>

@@ -12,9 +12,12 @@
   --color-faint:      #E5E5EA;   /* icon ẩn / chevron / placeholder (xám nhạt) */
 
   /* ── MÀU CHỨC NĂNG ── */
-  --color-primary:      #16A34A; /* màu chủ đạo, active */
-  --color-primary-soft: #DCFCE7; /* nền nhạt xanh (chọn / nhận) */
-  --color-error:        #DC2626; /* đỏ xóa bỏ / gửi đi */
+  --color-primary:      #16A34A; /* màu chủ đạo, active, NHẬN tiền */
+  --color-primary-soft: #DCFCE7; /* nền nhạt xanh lá (chọn / nhận) */
+  --color-info:         #2563EB; /* xanh dương — GỬI tiền (thông báo) */
+  --color-info-soft:    #DBEAFE; /* nền nhạt xanh dương */
+  --color-error:        #DC2626; /* đỏ — lỗi / xóa bỏ */
+  --color-error-soft:   #FEE2E2; /* nền nhạt đỏ */
   --color-warning:      #F59E0B; /* vàng cảnh báo */
   --color-warning-soft: #FEF3C7; /* nền nhạt cảnh báo */
   --color-white:        #FFFFFF;

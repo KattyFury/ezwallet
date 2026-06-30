@@ -66,13 +66,13 @@ export default function HomeSend() {
       <div className="row-7-8" style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '2dvh' }}>
         <NotifArea fallback={
           !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
-            <div className="tip-box" onClick={() => window.open('https://faucet.circle.com/', '_blank')}
-              style={{ borderColor: 'var(--color-warning)', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: 8, textAlign: 'left', padding: '12px 16px', cursor: 'pointer' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div onClick={() => window.open('https://faucet.circle.com/', '_blank')}
+              style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-label)', color: 'var(--color-content)' }}>
                 <Icon name="warning" size={18} color="var(--color-warning)" style={{ flexShrink: 0 }} />
-                <span style={{ color: 'var(--color-content)' }}>{t('Hết USDC để trả phí giao dịch')}</span>
+                {t('Hết USDC để trả phí giao dịch')}
               </span>
-              <span style={{ color: 'var(--color-warning)', textDecoration: 'underline', paddingLeft: 26 }}>{t('Bấm để nhận USDC testnet từ Faucet')}</span>
+              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-warning)', textDecoration: 'underline', paddingLeft: 26 }}>{t('Bấm để nhận USDC testnet từ Faucet')}</span>
             </div>
           ) : (
             <div className="tip-box" style={{ flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: 8, textAlign: 'left', padding: '12px 16px' }}>
