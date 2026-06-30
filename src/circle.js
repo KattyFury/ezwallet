@@ -51,11 +51,11 @@ const VI = {
 
 export function getSDK() {
   if (!sdk) {
+    // ⚠️ TEST MODE: Circle SDK default THUẦN (English, zero customization).
+    // Tách bạch xem flow gốc của Circle có chạy không — KHÔNG setLocalizations,
+    // KHÔNG setCustomSecurityQuestions, KHÔNG setThemeColor. Nếu default vẫn fail
+    // ở bước xác nhận câu trả lời → lỗi hoàn toàn phía Circle, không phải code mình.
     sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
-    sdk.setLocalizations(VI)
-    // 1 câu hỏi bảo mật (mặc định Circle = 2 → bước xác nhận mơ hồ). null = giữ bộ
-    // câu hỏi mặc định Circle; 1 = chỉ cần 1 câu. KHÔNG truyền custom array / theme.
-    sdk.setCustomSecurityQuestions(null, 1)
   }
   return sdk
 }
