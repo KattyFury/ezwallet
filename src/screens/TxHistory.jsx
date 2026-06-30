@@ -30,6 +30,13 @@ function shortAddr(addr) {
   return addr ? addr.slice(0, 6) + '...' + addr.slice(-4) : ''
 }
 
+// Style nút lọc đang bật: nền trắng + viền xanh + chữ xanh (không tô đặc)
+const activeFilter = {
+  borderColor: 'var(--color-primary)',
+  color: 'var(--color-primary)',
+  WebkitTextFillColor: 'var(--color-primary)',
+}
+
 // Tính thông tin chung của 1 giao dịch
 function txInfo(tx, walletAddr, contacts) {
   const token = TOKEN_MAP[tx.contractAddress?.toLowerCase()]
@@ -152,10 +159,11 @@ export default function TxHistory() {
       </div>
 
       <div style={{ gridRow: '9 / 11', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-        <button className={`btn ${filter === 'send' ? 'btn-primary' : 'btn-secondary'}`} style={{ flex: 1 }}
-          onClick={() => setFilter(f => f === 'send' ? 'all' : 'send')}>{t('Chỉ gửi')}</button>
-        <button className={`btn ${filter === 'receive' ? 'btn-primary' : 'btn-secondary'}`} style={{ flex: 1 }}
-          onClick={() => setFilter(f => f === 'receive' ? 'all' : 'receive')}>{t('Chỉ nhận')}</button>
+        {/* Lọc bật = nền trắng + VIỀN XANH (không tô đặc) */}
+        <button className="btn btn-secondary" style={{ flex: 1, ...(filter === 'send' ? activeFilter : {}) }}
+          onClick={() => setFilter(f => f === 'send' ? 'all' : 'send')}>{t('Gửi')}</button>
+        <button className="btn btn-secondary" style={{ flex: 1, ...(filter === 'receive' ? activeFilter : {}) }}
+          onClick={() => setFilter(f => f === 'receive' ? 'all' : 'receive')}>{t('Nhận')}</button>
         <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => navigate('MenuScreen')}>{t('Quay lại')}</button>
       </div>
 

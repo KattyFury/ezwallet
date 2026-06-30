@@ -13,7 +13,7 @@ export default function HomeReceive() {
   const [copied, setCopied] = useState(false)
   const [totalVND, setTotalVND] = useState(0)
   const walletAddr = localStorage.getItem('ez_wallet_addr') || ''
-  const shortAddr = walletAddr ? walletAddr.slice(0, 6) + '...' + walletAddr.slice(-4) : '—'
+  const shortAddr = walletAddr ? walletAddr.slice(0, 6) + '...' + walletAddr.slice(-4) : '…'
 
   useEffect(() => {
     if (!walletAddr) return

@@ -41,7 +41,7 @@ export default function PasteAddress() {
         />
         {showError && (
           <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>
-            {t('Địa chỉ không hợp lệ — bắt đầu bằng 0x, 42 ký tự')}
+            {t('Địa chỉ không hợp lệ – bắt đầu bằng 0x, 42 ký tự')}
           </span>
         )}
       </div>

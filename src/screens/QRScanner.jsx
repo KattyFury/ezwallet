@@ -37,7 +37,7 @@ export default function QRScanner() {
         await videoRef.current.play().catch(() => {})
         scan()
       } catch {
-        setError(t('Không truy cập được camera — chọn ảnh QR hoặc dán địa chỉ.'))
+        setError(t('Không truy cập được camera – chọn ảnh QR hoặc dán địa chỉ.'))
       }
     }
 

@@ -76,6 +76,13 @@
 **Ngoại lệ:** màu thương hiệu token trong `src/chain.js` (USDC #2775CA, EURC #1A56DB, cirBTC #F7931A) — không phải token UI.
 **Số & tiền tệ:** class `.num` (= Roboto Condensed). Tiêu đề màn: class `.screen-title` (= đen).
 
+**⚠️ QUY TẮC THIẾT KẾ (user yêu cầu — đừng vi phạm):**
+- **KHÔNG BAO GIỜ dùng em-dash `—`.** Dấu ngăn cách chuẩn của app là **en-dash `–`** (vd "Danh bạ – Nơi lưu địa chỉ"). Placeholder rỗng dùng `…` (không phải `—`). Đồng bộ mọi thông báo/hint, đừng chỗ en chỗ em.
+- **Thông báo & hint đồng bộ:** cùng kiểu `.tip-box` căn TRÁI (column, flex-start), nhãn đậm + mô tả xám. Warning (hết USDC) cũng dùng layout này (màu warning + phần clickable có `text-decoration: underline`).
+- **Mục danh sách trong sub-screen (Security/Language/About): MỖI MỤC 1 HÀNG GRID riêng** (`row-2`, `row-3`...). ĐỪNG nhồi hết vào 1 `.row-2-9` flex column — vì `.menu-item` có `flex:1` sẽ dàn đều kín trang (lỗi Security cũ).
+- **Nút lọc/toggle khi BẬT = nền trắng + viền xanh + chữ xanh** (`borderColor/color = --color-primary`), KHÔNG tô đặc xanh. Xem `activeFilter` trong TxHistory.
+- **Tiền tệ hiển thị theo `ez_currency`** (VND/USDC/EURC/CNY) toàn app: `getDisplayCurrency()`, `fmtDisplay()`, `displayNum()` (data.js), `getDisplayRates()` (chain.js). List token ẩn cột quy đổi khi token == tiền tệ hiển thị.
+
 **Assets:**
 - `icon/` — **SVG đơn sắc** (viewBox 100×100, `stroke/fill="currentColor"`, width/height 100%): add, back, check, clock, copy, down, down2 (tam giác đặc — dropdown), download, facebook, globe, google, hint, human, info, left, mail, menu, out, qr, right, scan, share, shield, trade, up. **PNG icon đã bỏ hoàn toàn.**
 - `design/` — logo-long, logo-short, PFP, app-icon, pattern* (PNG, không phải icon)
@@ -185,6 +192,9 @@
 **Đã xong (2026-06-29):**
 - ~~i18n (đa ngôn ngữ)~~ ✅ — VI/EN/ZH, mặc định theo trình duyệt (xem phần "Chạy thật").
 - ~~Đưa nút Đăng xuất ra Menu~~ ✅.
+
+**Đang làm tiếp (user yêu cầu — ƯU TIÊN):**
+- **TỐI GIẢN GIAO DIỆN cho người dùng phổ thông:** bỏ bớt "yếu tố ví" mang tính kỹ thuật/crypto (vd phơi địa chỉ `0x...` ra UI chính). Người già/phổ thông không cần thấy địa chỉ ví dài dòng. Giữ địa chỉ ở chỗ cần (nhận tiền/QR, danh bạ) nhưng ẩn/giảm ở các màn chính. Sẽ làm đợt tới.
 
 **Còn lại:**
 1. **Trạng thái giao dịch thật** — poll txHash → "✓ đã lên blockchain" (Arc finality <1s).

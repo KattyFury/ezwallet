@@ -36,7 +36,7 @@ export default function HomeSend() {
           <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>{t('Đang tải...')}</div>
         ) : tokens.length === 0 ? (
           <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>
-            {localStorage.getItem('ez_wallet_addr') ? t('Chưa có token') : t('Ví chưa được tạo — nạp USDC để kích hoạt')}
+            {t('Chưa có token nào')}
           </div>
         ) : tokens.map(tk => (
           <div key={tk.symbol} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 2px' }}>
@@ -67,8 +67,12 @@ export default function HomeSend() {
         <NotifArea fallback={
           !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
             <div className="tip-box" onClick={() => window.open('https://faucet.circle.com/', '_blank')}
-              style={{ borderColor: 'var(--color-warning)', color: 'var(--color-warning)', cursor: 'pointer', justifyContent: 'flex-start', textAlign: 'left', gap: 8 }}>
-              <Icon name="warning" size={18} color="var(--color-warning)" style={{ flexShrink: 0 }} />{t('Hết USDC để trả phí giao dịch — bấm để nhận USDC miễn phí từ Faucet')}
+              style={{ borderColor: 'var(--color-warning)', flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: 8, textAlign: 'left', padding: '12px 16px', cursor: 'pointer' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Icon name="warning" size={18} color="var(--color-warning)" style={{ flexShrink: 0 }} />
+                <span style={{ color: 'var(--color-content)' }}>{t('Hết USDC để trả phí giao dịch')}</span>
+              </span>
+              <span style={{ color: 'var(--color-warning)', textDecoration: 'underline', paddingLeft: 26 }}>{t('Bấm để nhận USDC testnet từ Faucet')}</span>
             </div>
           ) : (
             <div className="tip-box" style={{ flexDirection: 'column', alignItems: 'flex-start', justifyContent: 'center', gap: 8, textAlign: 'left', padding: '12px 16px' }}>
