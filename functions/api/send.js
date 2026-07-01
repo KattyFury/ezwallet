@@ -90,7 +90,13 @@ export async function onRequestPost(ctx) {
   const txResp = await circleReq('POST', '/user/transactions/contractExecution', execBody, apiKey, userToken)
 
   const challengeId = txResp?.data?.challengeId
-  if (!challengeId) return new Response(JSON.stringify({ error: 'no challengeId', detail: txResp }), { status: 500, headers: JSON_HEADERS })
+  if (!challengeId) {
+    // txResp.data thiếu challengeId nghĩa là Circle từ chối request (số dư, tham số, rate-limit...).
+    // Log full response để tra cứu, và trả message thật của Circle thay vì "no challengeId" mù mờ.
+    console.error('[send] contractExecution không trả challengeId:', JSON.stringify(txResp))
+    const msg = txResp?.message || txResp?.error?.message || (txResp?.code ? `Circle error ${txResp.code}` : 'no challengeId')
+    return new Response(JSON.stringify({ error: msg, detail: txResp }), { status: 500, headers: JSON_HEADERS })
+  }
 
   return new Response(JSON.stringify({ challengeId }), { headers: JSON_HEADERS })
 }

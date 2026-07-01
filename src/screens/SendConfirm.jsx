@@ -83,7 +83,7 @@ export default function SendConfirm() {
       // Ra ngoài màn nhập số tiền để làm LẠI TỪ ĐẦU: lần xác nhận mới sẽ tạo
       // challenge mới + idempotencyKey mới (component remount) → flow sạch.
       setLoading(false)
-      addNotif(`Gửi thất bại: ${e.message || 'có lỗi xảy ra'}`, 'error')
+      addNotif(`${t('Gửi thất bại:')} ${e.message || t('có lỗi xảy ra')}`, 'error')
       navigate('SendAmount', params)
     }
   }

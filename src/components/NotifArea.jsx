@@ -46,7 +46,9 @@ export default function NotifArea({ fallback }) {
   const [notifs, setNotifs] = useState(getNotifs())
   useEffect(() => { pollIncoming(() => setNotifs(getNotifs())) }, [])
   function clear(id, e) { e.stopPropagation(); dismissNotif(id); setNotifs(getNotifs()) }
+  // Chỉ giao dịch (nhận/gửi) mới có gì để xem trong Lịch sử — thông báo lỗi không dẫn đi đâu cả.
   function open(n) {
+    if (n.type !== 'received' && n.type !== 'sent') return
     navigate('TxHistory', n.hash ? { openHash: n.hash } : {})
   }
 
@@ -56,8 +58,9 @@ export default function NotifArea({ fallback }) {
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
       {notifs.slice(0, 2).map(n => {
         const s = STYLE[n.type] || STYLE.sent
+        const clickable = n.type === 'received' || n.type === 'sent'
         return (
-          <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: s.bg, borderRadius: 12, padding: '12px 14px', cursor: 'pointer' }}>
+          <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: s.bg, borderRadius: 12, padding: '12px 14px', cursor: clickable ? 'pointer' : 'default' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-label)', color: 'var(--color-content)', textAlign: 'left' }}>
               <Icon name={s.icon} size={18} color={s.color} />
               {n.text}
