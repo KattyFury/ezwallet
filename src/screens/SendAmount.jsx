@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
 import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
+import ErrorToast from '../components/ErrorToast'
 import { getTokenInfo, getVndRate } from '../chain'
 import { t } from '../i18n'
 import { findContactName } from '../store'
@@ -58,6 +59,8 @@ export default function SendAmount() {
 
   return (
     <div className="screen">
+      <ErrorToast message={params.sendError} />
+
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
         {t('Gửi tiền')}
       </div>

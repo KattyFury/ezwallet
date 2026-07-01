@@ -83,8 +83,11 @@ export default function SendConfirm() {
       // Ra ngoài màn nhập số tiền để làm LẠI TỪ ĐẦU: lần xác nhận mới sẽ tạo
       // challenge mới + idempotencyKey mới (component remount) → flow sạch.
       setLoading(false)
-      addNotif(`${t('Gửi thất bại:')} ${e.message || t('có lỗi xảy ra')}`, 'error')
-      navigate('SendAmount', params)
+      const msg = `${t('Gửi thất bại:')} ${e.message || t('có lỗi xảy ra')}`
+      addNotif(msg, 'error')
+      // SendAmount không có NotifArea → truyền lỗi qua params để màn đó tự hiện
+      // banner (nếu không, người dùng chỉ thấy "tự nhiên bị đá về", không rõ vì sao).
+      navigate('SendAmount', { ...params, sendError: msg })
     }
   }
 
