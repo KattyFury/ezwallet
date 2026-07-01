@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
-import { getSDK, executeChallenge, resetPinChallenge } from '../circle'
+import { getSDK, executeChallenge, resetPinChallenge, refreshSession } from '../circle'
 import { t } from '../i18n'
 
 export default function Security() {
@@ -12,8 +12,8 @@ export default function Security() {
   async function handleResetPin() {
     setPinStatus(t('Đang chuẩn bị...'))
     try {
-      const userToken = localStorage.getItem('ez_user_token')
-      const encryptionKey = localStorage.getItem('ez_encryption_key')
+      // Làm mới userToken trước — tránh "userToken had expired" (Circle token ~1h).
+      const { userToken, encryptionKey } = await refreshSession()
       const challengeId = await resetPinChallenge(userToken)
       setPinStatus(t('Nhập PIN...'))
       await executeChallenge(getSDK(), userToken, encryptionKey, challengeId)

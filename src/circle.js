@@ -129,6 +129,26 @@ export async function getWalletAddress(userToken) {
   }
 }
 
+// userToken Circle chỉ sống ~1 tiếng — ngắn hơn nhiều phiên sử dụng thực tế của
+// người dùng lớn tuổi (mở app, đi làm việc khác, quay lại gửi tiền). Token hết hạn
+// khiến W3S SDK từ chối NGAY TRƯỚC KHI hiện màn PIN → "userToken had expired",
+// người dùng chỉ thấy bị đá ra mà không hiểu vì sao. Gọi hàm này trước MỌI thao
+// tác cần ký PIN (gửi tiền, đổi PIN) để luôn có token mới — Circle cho tạo token
+// mới bất cứ lúc nào chỉ cần userId (= email), không cần mật khẩu.
+export async function refreshSession() {
+  const email = localStorage.getItem('ez_email')
+  const fallback = { userToken: localStorage.getItem('ez_user_token'), encryptionKey: localStorage.getItem('ez_encryption_key') }
+  if (!email) return fallback
+  try {
+    const { userToken, encryptionKey } = await createSession(email)
+    localStorage.setItem('ez_user_token', userToken)
+    localStorage.setItem('ez_encryption_key', encryptionKey)
+    return { userToken, encryptionKey }
+  } catch {
+    return fallback   // refresh lỗi (mất mạng...) → dùng token cũ, để lỗi thật lộ ra ở bước execute
+  }
+}
+
 // KIT_KEY di chuyển lên server-side (Cloudflare Worker env var)
 // Browser chỉ gọi /api/swap, Worker xử lý Circle Stablecoin Kit API
 

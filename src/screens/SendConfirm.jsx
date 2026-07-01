@@ -5,7 +5,7 @@ import { useNav } from '../nav'
 import { t } from '../i18n'
 import { fmtVND, getDisplayCurrency } from '../data'
 import { getVndRate, estimateFeeVnd } from '../chain'
-import { getSDK, executeChallenge } from '../circle'
+import { getSDK, executeChallenge, refreshSession } from '../circle'
 
 function shortenAddr(addr) {
   return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
@@ -53,8 +53,9 @@ export default function SendConfirm() {
     if (loading || done) return   // chặn bấm lặp / gửi trùng
     setLoading(true)
     try {
-      const userToken = localStorage.getItem('ez_user_token')
-      const encryptionKey = localStorage.getItem('ez_encryption_key')
+      // Làm mới userToken trước khi gửi — tránh "userToken had expired" nếu
+      // người dùng mở app lâu (userToken Circle chỉ sống ~1 tiếng).
+      const { userToken, encryptionKey } = await refreshSession()
       const walletId = localStorage.getItem('ez_wallet_id')
 
       // Tạo challenge gửi tiền — idempotencyKey cố định để Circle dedupe nếu gọi lại
