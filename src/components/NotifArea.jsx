@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Icon from './Icon'
 import { useNav } from '../nav'
 import { getNotifs, dismissNotif, addNotif } from '../notif'
+import { findContactName } from '../store'
 import { t } from '../i18n'
 
 // Phát hiện tiền vào (poll ArcScan) → tạo thông báo "đã nhận" (dùng chung mọi màn có NotifArea)
@@ -26,7 +27,9 @@ function pollIncoming(after) {
         const seen = notifiedHashes()
         recv.filter(tx => parseInt(tx.timeStamp) > lastSeen && !seen.has(tx.hash)).reverse().forEach(tx => {
           const amt = (parseFloat(tx.value) / Math.pow(10, parseInt(tx.tokenDecimal || 6))).toFixed(2)
-          addNotif(`${t('Đã nhận')} ${amt} ${tx.tokenSymbol || 'USDC'} ${t('từ')} ${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`, 'received', tx.hash)
+          // Hiện TÊN DANH BẠ nếu địa chỉ người gửi đã lưu (đồng bộ với thông báo "Đã gửi cho <tên>")
+          const fromName = findContactName(tx.from) || `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`
+          addNotif(`${t('Đã nhận')} ${amt} ${tx.tokenSymbol || 'USDC'} ${t('từ')} ${fromName}`, 'received', tx.hash)
           markNotified(tx.hash)
         })
         after()

@@ -152,7 +152,7 @@ export default function SendConfirm() {
         <button className="btn btn-secondary" disabled={loading || done} onClick={() => navigate('SendAmount', params)}>{t('Sửa')}</button>
         <button className="btn btn-primary" style={{ flex: 1 }}
           disabled={loading || done} onClick={handleConfirm}>
-          {loading ? t('Đang xử lý...') : t('Xác nhận · PIN')}
+          {loading ? t('Đang xử lý...') : t('Xác nhận PIN')}
         </button>
       </div>
     </div>

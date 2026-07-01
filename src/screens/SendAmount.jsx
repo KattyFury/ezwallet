@@ -117,7 +117,7 @@ export default function SendAmount() {
           value={memo}
           onChange={e => setMemo(e.target.value)}
           maxLength={100}
-          style={{ width: '100%', height: 48, fontSize: 'var(--fs-body)' }}
+          style={{ width: '100%', height: 52, fontSize: 'var(--fs-body)' }}
         />
       </div>
 

@@ -14,11 +14,13 @@ export default function ShowQR() {
   const amountText = currency === 'VND' ? fmtVND(amount) : `${amount} ${currency}`
   const wrapRef = useRef(null)
 
-  // Từ CreateQR → "Lưu vào thư viện" (lưu vào kho QR)
-  // Từ SavedQRList → "Lưu vào kho ảnh" (lưu ra Photos)
+  // Từ CreateQR → còn nút "Lưu vào kho QR" (lưu để dùng lại). Từ SavedQRList → đã có sẵn trong kho.
   const fromLibrary = from === 'SavedQRList'
 
-  function saveToPhotos() {
+  // "Chia sẻ": mở khay chia sẻ native (Web Share API) → iOS/Android hiện "Lưu ảnh vào Photos"
+  // + gửi qua các app social. Fallback (desktop) = tải ảnh về. Flow đúng: người tạo QR có thể
+  // GỬI ẢNH cho người khác qua social, không nhất thiết đưa họ quét trực tiếp.
+  function shareQR() {
     const canvas = wrapRef.current?.querySelector('canvas')
     if (!canvas) return
     saveImageToPhotos(canvas, `ezwallet-qr-${amount}.png`)
@@ -45,13 +47,15 @@ export default function ShowQR() {
         <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{t('Cho người gửi quét mã này')}</span>
       </div>
 
-      <div className="row10-dual">
-        {fromLibrary ? (
-          <button className="btn btn-secondary" onClick={saveToPhotos}>{t('Lưu vào kho ảnh')}</button>
-        ) : (
-          <button className="btn btn-secondary" onClick={saveToLibrary}>{t('Lưu vào thư viện')}</button>
-        )}
-        <button className="btn btn-primary" onClick={() => navigate(from === 'SavedQRList' ? 'SavedQRList' : 'HomeReceive')}>{t('Quay lại')}</button>
+      {/* Chia sẻ = hành động CHÍNH (gửi ảnh QR qua social / lưu Photos). "Lưu vào kho QR" phụ. */}
+      <div style={{ gridRow: '8 / 11', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+        <button className="btn btn-primary" style={{ width: '66%' }} onClick={shareQR}>{t('Chia sẻ')}</button>
+        <div style={{ display: 'flex', gap: 12, width: '100%', justifyContent: 'center' }}>
+          {!fromLibrary && (
+            <button className="btn btn-secondary" style={{ width: '44%' }} onClick={saveToLibrary}>{t('Lưu vào kho QR')}</button>
+          )}
+          <button className="btn btn-secondary" style={{ width: '44%' }} onClick={() => navigate(from === 'SavedQRList' ? 'SavedQRList' : 'HomeReceive')}>{t('Quay lại')}</button>
+        </div>
       </div>
     </div>
   )
