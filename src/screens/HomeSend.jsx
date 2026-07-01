@@ -33,36 +33,44 @@ export default function HomeSend() {
     <div className="screen">
       <BalanceHeader totalVND={totalVND} loading={loading} />
 
-      <div className="row-3-5" style={{ display: 'grid', gridTemplateRows: 'repeat(3, 1fr)', overflowY: 'auto' }}>
+      <div className="row-3-5" style={{ display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto', paddingTop: 2 }}>
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>{t('Đang tải...')}</div>
         ) : tokens.length === 0 ? (
           <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>
             {t('Chưa có token nào')}
           </div>
-        ) : tokens.map(tk => (
-          <div key={tk.symbol} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 2px' }}>
-            <img
-              src={`/tokens/${tk.symbol.toLowerCase()}.png`}
-              alt=""
-              style={{ width: 34, height: 34, borderRadius: '50%', flexShrink: 0 }}
-              onError={e => {
-                e.target.style.display = 'none'
-                e.target.nextSibling.style.display = 'flex'
-              }}
-            />
-            <div className="token-icon" style={{ background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
-            <span className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)' }}>
-              {tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)} {tk.symbol}
-            </span>
-            {/* Quy đổi sang tiền tệ mặc định; ẩn nếu token CHÍNH LÀ tiền tệ đang hiển thị */}
-            {tk.symbol !== cur && (
-              <span className="num" style={{ marginLeft: 'auto', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-normal)', color: 'var(--color-muted)' }}>
-                {rates ? fmtDisplay(tk.vnd, cur, rates) : '…'}
-              </span>
-            )}
-          </div>
-        ))}
+        ) : (
+          <>
+            {/* "Bao gồm" = tổng số dư (BalanceHeader) được cấu thành từ các token nào */}
+            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', paddingLeft: 2 }}>{t('Bao gồm')}</span>
+            {tokens.map(tk => (
+              <div key={tk.symbol} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 2px' }}>
+                <img
+                  src={`/tokens/${tk.symbol.toLowerCase()}.png`}
+                  alt=""
+                  style={{ width: 34, height: 34, borderRadius: '50%', flexShrink: 0 }}
+                  onError={e => {
+                    e.target.style.display = 'none'
+                    e.target.nextSibling.style.display = 'flex'
+                  }}
+                />
+                <div className="token-icon" style={{ background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
+                {/* Số token (dòng chính) + quy đổi tiền tệ mặc định bên dưới (ẩn nếu token CHÍNH LÀ tiền tệ hiển thị) */}
+                <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
+                  <span className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)' }}>
+                    {tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)} {tk.symbol}
+                  </span>
+                  {tk.symbol !== cur && (
+                    <span className="num" style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-normal)', color: 'var(--color-muted)' }}>
+                      {rates ? fmtDisplay(tk.vnd, cur, rates) : '…'}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+          </>
+        )}
       </div>
 
       <div className="row-7-8" style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '2dvh' }}>

@@ -56,7 +56,7 @@ export default function NotifArea({ fallback }) {
 
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {notifs.slice(0, 2).map(n => {
+      {notifs.slice(0, 3).map(n => {
         const s = STYLE[n.type] || STYLE.sent
         const clickable = n.type === 'received' || n.type === 'sent'
         return (

@@ -23,9 +23,16 @@ export default function SendAmount() {
   const { navigate, params } = useNav()
   const { address } = params
   const name = params.name || findContactName(address)
-  const [digits, setDigits] = useState(() => params.amount ? String(params.amount) : '')
+  // Tiền tệ hiển thị = tiền tệ MẶC ĐỊNH của người dùng này (không ép theo tiền tệ ghi trong QR).
+  // QR ghi VND mà người quét đang dùng USDC → hiện USDC tương đương cho đỡ rối (quy đổi ở effect).
+  const qrCurrency = params.currency
+  const userCurrency = localStorage.getItem('ez_currency') || 'VND'
+  const [cur, setCur] = useState(userCurrency)
+  // Cùng tiền tệ (hoặc không quét QR) → điền thẳng; khác tiền tệ → để trống, quy đổi sau khi có tỷ giá
+  const [digits, setDigits] = useState(() =>
+    params.amount && (!qrCurrency || qrCurrency === userCurrency) ? String(params.amount) : ''
+  )
   const [memo, setMemo] = useState(params.memo || '')
-  const [cur, setCur] = useState(params.currency || localStorage.getItem('ez_currency') || 'VND')
   const [showCur, setShowCur] = useState(false)
   const [availableVND, setAvailableVND] = useState(null) // số dư USDC quy ra VND
   const [rates, setRates] = useState({ VND: 1, USDC: 25000, EURC: 27000, CNY: 3448 })
@@ -35,7 +42,16 @@ export default function SendAmount() {
     if (addr) getTokenInfo(addr, 'USDC').then(i => setAvailableVND(i.vnd)).catch(() => setAvailableVND(0))
     else setAvailableVND(0)
     Promise.all([getVndRate('USDC'), getVndRate('EURC')])
-      .then(([u, e]) => setRates({ VND: 1, USDC: u, EURC: e, CNY: Math.round(u / 7.25) }))
+      .then(([u, e]) => {
+        const r = { VND: 1, USDC: u, EURC: e, CNY: Math.round(u / 7.25) }
+        setRates(r)
+        // Quét QR bằng tiền tệ KHÁC tiền tệ mặc định của người quét → quy đổi về tiền tệ của họ:
+        // giá trị QR quy ra VND (× tỷ giá tiền tệ QR) rồi chia tỷ giá tiền tệ của người quét.
+        if (params.amount && qrCurrency && qrCurrency !== userCurrency && r[qrCurrency] && r[userCurrency]) {
+          const vnd = params.amount * r[qrCurrency]
+          setDigits(String(Math.round(vnd / r[userCurrency])))
+        }
+      })
       .catch(() => {})
   }, [])
 

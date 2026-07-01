@@ -182,11 +182,28 @@ export async function resetPinChallenge(userToken) {
   return data.challengeId
 }
 
+// ⚠️ Mã lỗi Circle mà iframe GIỮ modal cho user nhập/sửa lại (KHÔNG đóng).
+// Nếu ta reject promise ở các lỗi này rồi điều hướng đi → khi user nhập ĐÚNG lại,
+// iframe (vẫn nổi trên cùng) bắn onComplete success NHƯNG promise đã reject → mất kết quả
+// → user bị "văng ra ngoài" dù nhập đúng. Đây LÀ root cause bug PIN.
+// → Bỏ qua các lỗi này (để iframe tự cho thử lại); CHỈ settle khi THÀNH CÔNG hoặc lỗi TERMINAL.
+// (Nguồn: đọc source @circle-fin/w3s-pw-web-sdk messageHandler — onError KHÔNG remove iframe.)
+const RETRYABLE_CODES = new Set([
+  155112, // incorrectUserPin — nhập sai PIN, iframe cho nhập lại
+  155703, // pinCodeNotMatched — 2 lần nhập PIN (tạo mới) không khớp
+  155704, // insecurePinCode — PIN quá yếu, chọn lại
+  155115, // incorrectSecurityAnswers — sai câu trả lời bảo mật
+  155705, // hintsMatchAnswers — gợi ý trùng câu trả lời
+])
+
 export function executeChallenge(sdk, userToken, encryptionKey, challengeId) {
   return new Promise((resolve, reject) => {
     sdk.setAuthentication({ userToken, encryptionKey })
     sdk.execute(challengeId, (err, result) => {
-      if (err) return reject(err)
+      if (err) {
+        if (RETRYABLE_CODES.has(err.code)) return   // để iframe cho user thử lại, đừng settle
+        return reject(err)
+      }
       resolve(result)
     })
   })

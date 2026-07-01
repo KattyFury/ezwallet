@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import Icon from '../components/Icon'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
@@ -18,8 +18,7 @@ export default function SendConfirm() {
   const [feeVnd, setFeeVnd] = useState(null)      // phí gas thật (null = đang tính)
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)         // đã gửi thành công → khóa, không gửi lại
-  // idempotencyKey CỐ ĐỊNH cho 1 lần mở màn xác nhận → bấm/retry không tạo 2 giao dịch
-  const idemKey = useRef(crypto.randomUUID()).current
+  const [error, setError] = useState('')          // lỗi terminal (hủy/mạng...) hiện tại chỗ
 
   useEffect(() => {
     Promise.all([getVndRate('USDC'), getVndRate('EURC')])
@@ -51,14 +50,16 @@ export default function SendConfirm() {
 
   async function handleConfirm() {
     if (loading || done) return   // chặn bấm lặp / gửi trùng
-    setLoading(true)
+    setLoading(true); setError('')
+    // idempotencyKey MỚI mỗi lần bấm → nếu lần trước hủy/lỗi, lần này tạo challenge SẠCH.
+    // Chống gửi trùng bằng cờ loading (đang gửi) + done (đã xong), KHÔNG bằng idemKey cố định.
+    const idempotencyKey = crypto.randomUUID()
     try {
       // Làm mới userToken trước khi gửi — tránh "userToken had expired" nếu
       // người dùng mở app lâu (userToken Circle chỉ sống ~1 tiếng).
       const { userToken, encryptionKey } = await refreshSession()
       const walletId = localStorage.getItem('ez_wallet_id')
 
-      // Tạo challenge gửi tiền — idempotencyKey cố định để Circle dedupe nếu gọi lại
       const res = await fetch('/api/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -68,31 +69,28 @@ export default function SendConfirm() {
           token,
           amountDecimal: sendAmountStr,
           memo,
-          idempotencyKey: idemKey,
+          idempotencyKey,
         }),
       })
       const data = await res.json()
       if (data.error) throw new Error(data.error)
 
-      // User ký bằng PIN qua W3S SDK
+      // User ký bằng PIN qua W3S SDK. executeChallenge (circle.js) đã xử lý: nhập SAI PIN
+      // → iframe tự cho nhập lại; nhập ĐÚNG → resolve → chạy tiếp xuống dưới (KHÔNG văng ra).
       await executeChallenge(getSDK(), userToken, encryptionKey, data.challengeId)
 
       setDone(true)   // ký thành công → khóa màn, không cho gửi lại
       navigate('SendReceipt', { address, name, amount, memo, currency, timestamp: Date.now() })
     } catch (e) {
-      // Sai PIN / hủy / lỗi → KHÔNG cho sửa tại chỗ (gây kẹt với challenge cũ).
-      // Ra ngoài màn nhập số tiền để làm LẠI TỪ ĐẦU: lần xác nhận mới sẽ tạo
-      // challenge mới + idempotencyKey mới (component remount) → flow sạch.
+      // Tới đây CHỈ còn lỗi TERMINAL (hủy PIN / token hết hạn / mạng...) — KHÔNG phải sai PIN
+      // (sai PIN đã được iframe cho nhập lại, không reject). Ở LẠI màn xác nhận để bấm gửi lại.
       setLoading(false)
-      // Lỗi từ W3S SDK không phải lúc nào cũng là Error chuẩn (có thể là
-      // {code,message} hoặc string) — dò nhiều dạng để không rớt về "có lỗi xảy ra" mù mờ.
+      if (e?.code === 155701) return   // user tự bấm hủy nhập PIN → im lặng, về màn xác nhận
       console.error('[SendConfirm] gửi thất bại:', e)
       const reason = e?.message || e?.error?.message || (typeof e === 'string' ? e : null) || (e?.code ? `code ${e.code}` : null) || t('có lỗi xảy ra')
       const msg = `${t('Gửi thất bại:')} ${reason}`
+      setError(msg)
       addNotif(msg, 'error')
-      // SendAmount không có NotifArea → truyền lỗi qua params để màn đó tự hiện
-      // banner (nếu không, người dùng chỉ thấy "tự nhiên bị đá về", không rõ vì sao).
-      navigate('SendAmount', { ...params, sendError: msg })
     }
   }
 
@@ -147,6 +145,7 @@ export default function SendConfirm() {
         </div>
 
         {loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>{t('Đang mở xác nhận PIN...')}</span>}
+        {error && !loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</span>}
       </div>
 
       <div className="row-10 row10-dual">
