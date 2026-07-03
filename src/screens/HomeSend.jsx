@@ -3,7 +3,7 @@ import NavBar from '../components/NavBar'
 import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
-import { getDisplayCurrency, fmtDisplay, displaySymbol } from '../data'
+import { getDisplayCurrency, displayNum, displaySymbol } from '../data'
 import { getTokenBalances, getDisplayRates } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import NotifArea from '../components/NotifArea'
@@ -57,12 +57,13 @@ export default function HomeSend() {
                 />
                 <div className="token-icon" style={{ background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
                 {/* Số token bên trái; quy đổi tiền tệ mặc định treo bên PHẢI cùng dòng (ẩn nếu token CHÍNH LÀ tiền tệ hiển thị) */}
+                {/* Số = Barlow Condensed (.num); ký hiệu tiền tệ = font chữ thường (--font-base) */}
                 <span className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)' }}>
-                  {tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)} {displaySymbol(tk.symbol)}
+                  {tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)} <span style={{ fontFamily: 'var(--font-base)', fontWeight: 'var(--fw-medium)' }}>{displaySymbol(tk.symbol)}</span>
                 </span>
                 {tk.symbol !== cur && (
                   <span className="num" style={{ marginLeft: 'auto', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>
-                    {rates ? fmtDisplay(tk.vnd, cur, rates) : '…'}
+                    {rates ? <>{displayNum(tk.vnd, cur, rates)} <span style={{ fontFamily: 'var(--font-base)' }}>{displaySymbol(cur)}</span></> : '…'}
                   </span>
                 )}
               </div>
