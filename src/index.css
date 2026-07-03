@@ -127,8 +127,8 @@ body {
 /* ── Buttons ── */
 .screen-title { font-family: var(--font-display); color: var(--color-black); }   /* tiêu đề màn = Barlow Condensed, BLACK */
 
-/* Mọi số & tiền tệ → Roboto Condensed (quy chuẩn) */
-.num { font-family: var(--font-condensed); }
+/* Mọi số & tiền tệ tiền tố ($/€) → Barlow (regular), ĐỒNG BỘ toàn app (user chốt 2026-07-03) */
+.num { font-family: var(--font-base); }
 
 .btn {
   display: flex;

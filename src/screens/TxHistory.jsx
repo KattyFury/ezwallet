@@ -50,11 +50,6 @@ function txInfo(tx, walletAddr, contacts) {
   return { isSend, amount, symbol, vnd, counter, name }
 }
 
-// Ký hiệu tiền tệ dùng font chữ (Barlow regular); số vẫn Barlow Condensed qua .num
-function Cur({ children }) {
-  return <span style={{ fontFamily: 'var(--font-base)', fontWeight: 'var(--fw-medium)' }}>{children}</span>
-}
-
 function TxRow({ tx, walletAddr, contacts, onClick, cur, rates }) {
   const { isSend, amount, symbol, vnd, counter, name } = txInfo(tx, walletAddr, contacts)
   return (
@@ -82,11 +77,11 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates }) {
 
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: isSend ? 'var(--color-error)' : 'var(--color-primary)' }}>
-          {isSend ? '-' : '+'}{amount.toFixed(amount < 0.01 ? 6 : 2)} <Cur>{symbol}</Cur>
+          {isSend ? '-' : '+'}{amount.toFixed(amount < 0.01 ? 6 : 2)} {symbol}
         </div>
-        {/* Quy đổi ra tiền hiển thị (USD) — giúp hiểu giá trị */}
+        {/* Quy đổi ra tiền hiển thị ($) — giúp hiểu giá trị */}
         <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
-          {rates ? <>{displayNum(vnd, cur, rates)} <Cur>{displaySymbol(cur)}</Cur></> : '…'}
+          {rates ? `${displaySymbol(cur)}${displayNum(vnd, cur, rates)}` : '…'}
         </div>
       </div>
     </button>
@@ -196,10 +191,10 @@ export default function TxHistory() {
             </DetailRow>
             <DetailRow label={t('Số tiền')}>
               <span className="num" style={{ color: d.isSend ? 'var(--color-error)' : 'var(--color-primary)' }}>
-                {d.isSend ? '-' : '+'}{d.amount.toFixed(d.amount < 0.01 ? 6 : 2)} <Cur>{d.symbol}</Cur>
+                {d.isSend ? '-' : '+'}{d.amount.toFixed(d.amount < 0.01 ? 6 : 2)} {d.symbol}
               </span>
             </DetailRow>
-            <DetailRow label={t('Quy đổi')}><span className="num">{rates ? <>{displayNum(d.vnd, cur, rates)} <Cur>{displaySymbol(cur)}</Cur></> : '…'}</span></DetailRow>
+            <DetailRow label={t('Quy đổi')}><span className="num">{rates ? `${displaySymbol(cur)}${displayNum(d.vnd, cur, rates)}` : '…'}</span></DetailRow>
             <DetailRow label={t('Thời gian')}>{new Date(selected.timeStamp * 1000).toLocaleString('vi-VN')}</DetailRow>
             {memoLoading ? <DetailRow label={t('Nội dung')}>{t('Đang tải...')}</DetailRow> : memo ? <DetailRow label={t('Nội dung')}>{memo}</DetailRow> : null}
             <button className="btn btn-secondary" style={{ width: '100%', marginTop: 14 }}

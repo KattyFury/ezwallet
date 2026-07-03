@@ -15,8 +15,11 @@ export default function HomeSend() {
   const [loading, setLoading] = useState(true)
   const cur = getDisplayCurrency()
   const [rates, setRates] = useState(cur === 'VND' ? { VND: 1 } : null)
-  // Mắt (per-token): mặc định false = hiện quy đổi USD; bấm → true = hiện số lượng token thật
+  // Mắt (per-token): mặc định false = hiện quy đổi USD; NHẤN GIỮ → true = hiện số lượng token
+  // thật; nhả tay → về lại USD. Không phải click-toggle.
   const [revealMap, setRevealMap] = useState({})
+  const holdStart = sym => setRevealMap(m => ({ ...m, [sym]: true }))
+  const holdEnd = sym => setRevealMap(m => ({ ...m, [sym]: false }))
 
   useEffect(() => {
     ensureWalletAddress().then(addr => {
@@ -61,20 +64,29 @@ export default function HomeSend() {
                 />
                 <div className="token-icon" style={{ background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
 
-                {/* Tên token thật (USDC/EURC/cirBTC) — số lượng chuyển sang bên phải, đổi qua nút mắt */}
+                {/* Tên token thật (USDC/EURC/cirBTC) + huy hiệu đã xác minh (xanh lá của app) */}
                 <span style={{ fontFamily: 'var(--font-base)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)' }}>{tk.symbol}</span>
+                <Icon name="check" size={14} color="var(--color-primary)" />
 
-                {/* Mắt: đen = đang hiện quy đổi USD; xám = đang hiện số lượng token thật */}
-                <button onClick={() => setRevealMap(m => ({ ...m, [tk.symbol]: !m[tk.symbol] }))}
-                  style={{ background: 'none', border: 'none', padding: 4, margin: 0, display: 'flex', cursor: 'pointer' }}
-                  aria-label="toggle amount">
-                  <Icon name="eye" size={18} color={revealed ? 'var(--color-muted)' : 'var(--color-content)'} />
+                {/* Mắt (xám, NHẤN GIỮ để xem số lượng token thật, nhả tay về lại quy đổi USD) */}
+                <button
+                  onMouseDown={() => holdStart(tk.symbol)}
+                  onMouseUp={() => holdEnd(tk.symbol)}
+                  onMouseLeave={() => holdEnd(tk.symbol)}
+                  onTouchStart={() => holdStart(tk.symbol)}
+                  onTouchEnd={() => holdEnd(tk.symbol)}
+                  onTouchCancel={() => holdEnd(tk.symbol)}
+                  onContextMenu={e => e.preventDefault()}
+                  style={{ background: 'none', border: 'none', padding: 4, margin: 0, display: 'flex', cursor: 'pointer', WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
+                  aria-label="hold to reveal token amount">
+                  <Icon name="eye" size={18} color="var(--color-muted)" />
                 </button>
 
+                {/* Cùng font + cùng màu ở cả 2 trạng thái — chỉ đổi NỘI DUNG khi nhấn giữ */}
                 <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-base)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>
                   {revealed
                     ? tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)
-                    : (rates ? <>{displayNum(tk.vnd, cur, rates)} {displaySymbol(cur)}</> : '…')}
+                    : (rates ? `${displaySymbol(cur)}${displayNum(tk.vnd, cur, rates)}` : '…')}
                 </span>
               </div>
               )

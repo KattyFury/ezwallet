@@ -14,10 +14,11 @@ export function fmtVND(n) {
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VND'
 }
 
-// Nhãn tiền tệ THÂN THIỆN cho người dùng phổ thông: USDC≈USD, EURC≈EUR (stablecoin 1:1).
-// Người già biết USD/EUR chứ không biết USDC/EURC → chỉ đổi CHỮ HIỂN THỊ; chain/API/lưu trữ
-// vẫn dùng symbol thật (USDC/EURC). Dùng ở mọi chỗ người dùng thấy ký hiệu tiền tệ.
-const CURRENCY_LABEL = { USDC: 'USD', EURC: 'EUR' }
+// Ký hiệu tiền tệ THÂN THIỆN cho người dùng phổ thông: USDC≈USD, EURC≈EUR (stablecoin 1:1).
+// Người già biết $/€ chứ không biết USDC/EURC → chỉ đổi CHỮ HIỂN THỊ (tiền tố, vd "$127.66");
+// chain/API/lưu trữ vẫn dùng symbol thật (USDC/EURC). CHỈ dùng cho TIỀN HIỂN THỊ (tổng, quy
+// đổi, phí) — KHÔNG áp cho tên token thật (USDC/EURC/cirBTC vẫn hiện nguyên trong danh sách token).
+const CURRENCY_LABEL = { USDC: '$', EURC: '€' }
 export function displaySymbol(sym) { return CURRENCY_LABEL[sym] || sym }
 
 // Tiền tệ hiển thị toàn app (số dư, quy đổi, phí) — anh chọn ở Onboarding/Cài đặt.
@@ -34,7 +35,7 @@ export function fmtDisplay(vnd, cur, rates) {
   if (!cur || cur === 'VND') return fmtVND(Math.round(vnd || 0))
   const rate = (rates && rates[cur]) || 1
   const v = (vnd || 0) / rate
-  return `${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${displaySymbol(cur)}`
+  return `${displaySymbol(cur)}${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 // Số dạng (không kèm ký hiệu) theo tiền tệ hiển thị — để layout số to + ký hiệu treo riêng

@@ -50,7 +50,8 @@ export default function SendConfirm() {
     if (feeVnd === null) return t('Đang tính...')
     if (displayCur === 'VND') return feeVnd < 1 ? '< 1đ' : fmtVND(feeVnd)
     const v = feeVnd / (dispRates[displayCur] || 1)
-    return <>{v < 0.01 ? '< 0.01' : v.toFixed(2)} <Cur>{displaySymbol(displayCur)}</Cur></>
+    const sign = displaySymbol(displayCur)
+    return v < 0.01 ? `< ${sign}0.01` : `${sign}${v.toFixed(2)}`
   }
 
   async function handleConfirm() {

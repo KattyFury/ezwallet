@@ -13,13 +13,13 @@ export default function BalanceHeader({ totalVND, loading }) {
   }, [cur])
 
   const num = (loading || (cur !== 'VND' && !rates)) ? '...' : displayNum(totalVND, cur, rates)
+  const sign = loading ? '' : displaySymbol(cur)
 
   return (
     <div className="row-1-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      {/* Số dư căn giữa tuyệt đối; ký hiệu tiền tệ treo bên phải (absolute) + căn giữa dọc */}
-      <span style={{ position: 'relative', fontFamily: 'var(--font-base)', fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', lineHeight: 1 }}>
-        {num}
-        <span style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: 10, fontFamily: 'var(--font-base)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-normal)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>{displaySymbol(cur)}</span>
+      {/* Ký hiệu tiền tệ = TIỀN TỐ dính liền số (vd "$127.66") — cả cụm căn giữa như 1 khối, không tách suffix riêng */}
+      <span style={{ fontFamily: 'var(--font-base)', fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', lineHeight: 1 }}>
+        {sign}{num}
       </span>
     </div>
   )
