@@ -9,9 +9,13 @@ export function getNotifs() {
   } catch { return [] }
 }
 
-export function addNotif(text, type = 'info', hash = null) {
+// dedupeKey: chống thông báo bị NHÂN ĐÔI — chủ yếu do React.StrictMode (dev) gọi useEffect 2 lần
+// (mount→unmount ảo→mount lại), khiến addNotif() gọi 2 lần cho CÙNG 1 sự kiện thật. Có dedupeKey
+// trùng với thông báo đã có → bỏ qua, không thêm nữa.
+export function addNotif(text, type = 'info', hash = null, dedupeKey = null) {
   const list = getNotifs()
-  list.unshift({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, text, type, hash, ts: Date.now() })
+  if (dedupeKey && list.some(n => n.dedupeKey === dedupeKey)) return
+  list.unshift({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, text, type, hash, dedupeKey, ts: Date.now() })
   localStorage.setItem(KEY, JSON.stringify(list.slice(0, 10)))
 }
 

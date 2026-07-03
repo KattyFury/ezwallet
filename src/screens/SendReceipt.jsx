@@ -30,9 +30,10 @@ export default function SendReceipt() {
   const to = name || shortenAddr(address)
   const amountText = currency === 'VND' ? fmtVND(amount) : `${amount} ${currency}`
 
-  // Lưu thông báo "đã gửi" để HomeSend hiện
+  // Lưu thông báo "đã gửi" để HomeSend hiện. dedupeKey theo timestamp (duy nhất mỗi lần gửi thật)
+  // → chống nhân đôi do React.StrictMode gọi effect 2 lần ở dev mode.
   useEffect(() => {
-    addNotif(`${t('Đã gửi')} ${amountText} ${t('cho')} ${to}`, 'sent')
+    addNotif(`${t('Đã gửi')} ${amountText} ${t('cho')} ${to}`, 'sent', null, `sent-${timestamp}`)
   }, [])
 
   // Vẽ biên lai ra canvas rồi tải về kho ảnh

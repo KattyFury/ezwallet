@@ -29,7 +29,9 @@ function pollIncoming(after) {
           const amt = (parseFloat(tx.value) / Math.pow(10, parseInt(tx.tokenDecimal || 6))).toFixed(2)
           // Hiện TÊN DANH BẠ nếu địa chỉ người gửi đã lưu (đồng bộ với thông báo "Đã gửi cho <tên>")
           const fromName = findContactName(tx.from) || `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`
-          addNotif(`${t('Đã nhận')} ${amt} ${tx.tokenSymbol || 'USDC'} ${t('từ')} ${fromName}`, 'received', tx.hash)
+          // dedupeKey theo hash — lớp phòng thủ thêm (ngoài seen-set) chống race khi StrictMode
+          // chạy 2 fetch poll song song lúc dev.
+          addNotif(`${t('Đã nhận')} ${amt} ${tx.tokenSymbol || 'USDC'} ${t('từ')} ${fromName}`, 'received', tx.hash, `recv-${tx.hash}`)
           markNotified(tx.hash)
         })
         after()
@@ -53,7 +55,7 @@ const ROW_TEXT = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'elli
 // (như 1 khối) khi hết chỗ hiển thị. Nền VÀNG theo đúng màu cảnh báo/hint quy định của app.
 function HintBlock({ lines }) {
   return (
-    <div style={{ background: 'var(--color-warning-soft)', borderRadius: 12, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 3, fontSize: 'var(--fs-label)', color: 'var(--color-content)', textAlign: 'left' }}>
+    <div style={{ background: 'var(--color-warning-soft)', borderRadius: 12, padding: '8px 14px', display: 'flex', flexDirection: 'column', gap: 2, fontSize: 'var(--fs-label)', color: 'var(--color-content)', textAlign: 'left' }}>
       {lines.map((h, i) => (
         <div key={i} style={ROW_TEXT}><span style={{ fontWeight: 'var(--fw-medium)' }}>{h.label}</span> = {h.desc}</div>
       ))}
@@ -100,13 +102,15 @@ export default function NotifArea({ hints = [], warning = null }) {
       WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black calc(100dvh / 30))',
       maskImage: 'linear-gradient(to bottom, transparent 0, black calc(100dvh / 30))',
     }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: '100%', justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minHeight: '100%', justifyContent: 'flex-end' }}>
         {items.map(n => {
           if (n.type === 'hint') return <HintBlock key={n.id} lines={n.hints} />
           const s = STYLE[n.type] || STYLE.sent
           const clickable = n.type === 'received' || n.type === 'sent'
           return (
-            <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: s.bg, borderRadius: 12, padding: '12px 14px', cursor: clickable ? 'pointer' : 'default' }}>
+            // Chiều cao = đúng nút "Gửi" trong Contacts.jsx (height 40, cố định) — đỡ tốn space,
+            // hiện được nhiều thông báo hơn trong vùng cố định (hàng 7-8).
+            <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: s.bg, borderRadius: 12, height: 40, minHeight: 40, padding: '0 14px', cursor: clickable ? 'pointer' : 'default' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-label)', color: 'var(--color-content)', ...ROW_TEXT }}>
                 <Icon name={s.icon} size={18} color={s.color} style={{ flexShrink: 0 }} />
                 <span style={ROW_TEXT}>{n.text}</span>
