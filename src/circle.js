@@ -134,7 +134,10 @@ export async function resetPinChallenge(userToken) {
     body: JSON.stringify({ action: 'resetPin', userToken }),
   })
   const data = await res.json()
-  if (data.error) throw new Error(data.error)
+  if (data.error) {
+    console.error('[resetPinChallenge]', data.error, data.detail)
+    throw new Error(data.error)
+  }
   return data.challengeId
 }
 

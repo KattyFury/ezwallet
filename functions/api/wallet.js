@@ -42,7 +42,13 @@ export async function onRequestPost(ctx) {
   if (action === 'resetPin') {
     const data = await circleReq('PUT', '/user/pin', { idempotencyKey: crypto.randomUUID() }, apiKey, userToken);
     const challengeId = data?.data?.challengeId;
-    if (!challengeId) return new Response(JSON.stringify({ error: 'no challengeId', detail: data }), { status: 500, headers: JSON_HEADERS });
+    if (!challengeId) {
+      // Lộ lỗi THẬT của Circle (vd "user has no wallet", "PIN not set"...) thay vì "no challengeId"
+      // mù mờ — cùng pattern đã fix cho luồng gửi tiền (functions/api/send.js).
+      console.error('[resetPin] không trả challengeId:', JSON.stringify(data));
+      const msg = data?.message || data?.error?.message || (data?.code ? `Circle error ${data.code}` : 'no challengeId');
+      return new Response(JSON.stringify({ error: msg, detail: data }), { status: 500, headers: JSON_HEADERS });
+    }
     return new Response(JSON.stringify({ challengeId }), { headers: JSON_HEADERS });
   }
 
