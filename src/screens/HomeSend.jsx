@@ -9,6 +9,10 @@ import { ensureWalletAddress } from '../circle'
 import NotifArea from '../components/NotifArea'
 import { t } from '../i18n'
 
+// USDC (trái) và $98.59 (phải) phải CÙNG font + CÙNG màu — dùng chung 1 style object
+// để không lệch (thay vì khai riêng, dễ chỉnh nhầm 1 bên).
+const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-base)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
+
 export default function HomeSend() {
   const { navigate } = useNav()
   const [tokens, setTokens] = useState([])
@@ -65,7 +69,7 @@ export default function HomeSend() {
                 <div className="token-icon" style={{ background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
 
                 {/* Tên token thật (USDC/EURC/cirBTC) + huy hiệu đã xác minh (xanh lá của app) */}
-                <span style={{ fontFamily: 'var(--font-base)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)' }}>{tk.symbol}</span>
+                <span style={TOKEN_TEXT_STYLE}>{tk.symbol}</span>
                 <Icon name="check" size={14} color="var(--color-primary)" />
 
                 {/* Mắt (xám, NHẤN GIỮ để xem số lượng token thật, nhả tay về lại quy đổi USD) */}
@@ -82,8 +86,8 @@ export default function HomeSend() {
                   <Icon name="eye" size={18} color="var(--color-muted)" />
                 </button>
 
-                {/* Cùng font + cùng màu ở cả 2 trạng thái — chỉ đổi NỘI DUNG khi nhấn giữ */}
-                <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-base)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>
+                {/* CÙNG font + CÙNG màu với "USDC" bên trái (TOKEN_TEXT_STYLE) — kể cả khi nhấn giữ */}
+                <span style={{ ...TOKEN_TEXT_STYLE, marginLeft: 'auto' }}>
                   {revealed
                     ? tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)
                     : (rates ? `${displaySymbol(cur)}${displayNum(tk.vnd, cur, rates)}` : '…')}
