@@ -139,6 +139,11 @@ export default function Login() {
             <span style={{ whiteSpace: 'nowrap' }}>{t(label)}</span>
           </button>
         ))}
+        {/* Circle coi Email và Google là 2 danh tính riêng biệt (không có cơ chế nối tài khoản) —
+            cảnh báo để người dùng không bất ngờ như trường hợp anh gặp (ví Google trắng, khác ví email) */}
+        <span style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)', textAlign: 'center', maxWidth: '85%' }}>
+          Note: signing in with Google creates a separate wallet from email sign-in.
+        </span>
       </div>
     </div>
   )
