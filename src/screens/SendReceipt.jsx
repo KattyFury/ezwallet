@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNav } from '../nav'
-import { fmtVND } from '../data'
+import { fmtVND, fmtMoney } from '../data'
 import { addNotif } from '../notif'
 import { saveImageToPhotos } from '../saveImage'
 import { t } from '../i18n'
@@ -28,7 +28,12 @@ export default function SendReceipt() {
   const { navigate, params } = useNav()
   const { address, name, amount, memo, currency = 'VND', timestamp } = params
   const to = name || shortenAddr(address)
-  const amountText = currency === 'VND' ? fmtVND(amount) : `${amount} ${currency}`
+  // "$2" một chuỗi một style (KHÔNG tách "2" đậm + "USD" thường — user chốt)
+  const amountText = currency === 'VND' ? fmtVND(amount) : fmtMoney(amount, currency)
+  // Token THẬT đã chuyển on-chain (USD = nhãn, thực chuyển USDC 1:1) — hiện rõ trong biên lai
+  // để người nhận/gửi đối soát đúng tài sản (tránh "bị hố" nhìn nhãn tưởng token khác).
+  const realToken = currency === 'USD' ? 'USDC' : currency
+  const realAmountText = `${realToken === 'cirBTC' ? Number(amount).toFixed(8) : Number(amount).toFixed(2)} ${realToken}`
 
   // Lưu thông báo "đã gửi" để HomeSend hiện. dedupeKey theo timestamp (duy nhất mỗi lần gửi thật)
   // → chống nhân đôi do React.StrictMode gọi effect 2 lần ở dev mode.
@@ -38,7 +43,7 @@ export default function SendReceipt() {
 
   // Vẽ biên lai ra canvas rồi tải về kho ảnh
   function saveReceipt() {
-    const W = 620, H = memo ? 540 : 480
+    const W = 620, H = memo ? 600 : 540   // +60 cho dòng Amount mới
     const cv = document.createElement('canvas')
     cv.width = W; cv.height = H
     const x = cv.getContext('2d')
@@ -59,6 +64,7 @@ export default function SendReceipt() {
       yy += 60
     }
     row(t('Gửi đến'), to)
+    row('Amount', realAmountText)
     if (memo) row(t('Nội dung'), memo)
     row(t('Thời gian'), fmtTime(timestamp))
     x.textAlign = 'center'; x.fillStyle = '#16A34A'; x.font = '700 26px sans-serif'; x.fillText('EZ Wallet', W / 2, H - 30)
@@ -74,13 +80,18 @@ export default function SendReceipt() {
       <div className="row-2-8 col center" style={{ gap: 12 }}>
         <CheckIcon />
         <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>{t('Đã gửi thành công')}</span>
+        {/* MỘT span, MỘT font/size/weight — "$2" liền khối */}
         <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-primary)' }}>
-          {currency === 'VND' ? amountText : <>{amount} <span style={{ fontFamily: 'var(--font-condensed)', fontWeight: 'var(--fw-medium)' }}>{currency}</span></>}
+          {amountText}
         </span>
         <div className="confirm-box" style={{ width: '100%' }}>
           <div className="confirm-row">
             <span className="confirm-label">{t('Gửi đến')}</span>
             <span className="confirm-value">{to}</span>
+          </div>
+          <div className="confirm-row">
+            <span className="confirm-label">Amount</span>
+            <span className="confirm-value num">{realAmountText}</span>
           </div>
           {memo ? (
             <div className="confirm-row">

@@ -1,15 +1,3 @@
-export const TOKENS = [
-  { symbol: 'USDC',   name: 'USD Coin',   vnd: 1_234_567, amount: 50.0,  color: '#2775CA' },
-  { symbol: 'EURC',   name: 'EUR Coin',   vnd: 0,         amount: 0,     color: '#1A56DB' },
-  { symbol: 'cirBTC', name: 'Circle BTC', vnd: 0,         amount: 0,     color: '#F7931A' },
-]
-
-export const SWAP_PAIRS = [
-  ['USDC', 'EURC'],
-  ['USDC', 'cirBTC'],
-  ['EURC', 'cirBTC'],
-]
-
 export function fmtVND(n) {
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VND'
 }
@@ -30,6 +18,15 @@ export function spendableOf(symbol, balance) {
 const CURRENCY_LABEL = { USDC: '$', EURC: '€' }
 export function displaySymbol(sym) { return CURRENCY_LABEL[sym] || sym }
 
+// Format tiền MỘT CHUỖI MỘT STYLE: "$2" (không phải "2 USD" tách số đậm + đơn vị thường —
+// user chốt 2026-07-03: lệch font weight/size giữa số và đơn vị là LỖI). USD/EUR đứng TRƯỚC
+// dạng ký hiệu; token thật (USDC/EURC/cirBTC) đứng SAU cách 1 space.
+export function fmtMoney(amount, currency) {
+  if (currency === 'USD' || currency === 'USDC') return `$${amount}`
+  if (currency === 'EUR') return `€${amount}`
+  return `${amount} ${currency}`
+}
+
 // Tiền tệ hiển thị toàn app (số dư, quy đổi, phí) — anh chọn ở Onboarding/Cài đặt.
 // Hiện chỉ hỗ trợ stablecoin USDC/EURC (mặc định USDC). Giá trị cũ (VND/CNY) tự quy về USDC.
 const SUPPORTED_CURRENCIES = ['USDC', 'EURC']
@@ -38,16 +35,8 @@ export function getDisplayCurrency() {
   return SUPPORTED_CURRENCIES.includes(c) ? c : 'USDC'
 }
 
-// Quy 1 giá trị VND về tiền tệ hiển thị. rates = { USDC, EURC, CNY } (VND mỗi 1 đơn vị).
-// VND → giữ nguyên (chấm ngăn nghìn). Token → 2 số lẻ.
-export function fmtDisplay(vnd, cur, rates) {
-  if (!cur || cur === 'VND') return fmtVND(Math.round(vnd || 0))
-  const rate = (rates && rates[cur]) || 1
-  const v = (vnd || 0) / rate
-  return `${displaySymbol(cur)}${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-}
-
-// Số dạng (không kèm ký hiệu) theo tiền tệ hiển thị — để layout số to + ký hiệu treo riêng
+// Số dạng (không kèm ký hiệu) theo tiền tệ hiển thị — để layout số to + ký hiệu treo riêng.
+// rates = { USDC, EURC, cirBTC, CNY } (VND mỗi 1 đơn vị, từ getDisplayRates).
 export function displayNum(vnd, cur, rates) {
   if (!cur || cur === 'VND') return Math.round(vnd || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
   const rate = (rates && rates[cur]) || 1

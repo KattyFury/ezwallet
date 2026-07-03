@@ -22,6 +22,13 @@ const TOKEN_ADDR = {
   EURC:   '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a',
   cirBTC: '0xf0c4a4ce82a5746abaad9425360ab04fbba432bf',
 }
+// ⚠️⚠️ Kit API nhận amount = SỐ NGUYÊN BASE UNITS (verify bằng gọi thật 2026-07-03:
+// "88.57" → 400 "amount must be an integer in base units"; còn "20" bị hiểu là 20 PHẦN TRIỆU
+// token → dust → quote sai / swap "No route available"). Client gửi decimal (token thật),
+// server quy ra base units TRƯỚC KHI gọi Kit, và quy estimatedAmount NGƯỢC LẠI khi trả về.
+const TOKEN_DEC = { USDC: 6, EURC: 6, cirBTC: 8 }
+const toBase = (decStr, sym) => String(BigInt(Math.round(parseFloat(decStr) * 10 ** TOKEN_DEC[sym])))
+const fromBase = (baseStr, sym) => (Number(baseStr) / 10 ** TOKEN_DEC[sym]).toString()
 
 const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 const err = (msg, detail, status = 500) =>
@@ -63,14 +70,17 @@ export async function onRequestPost(ctx) {
         tokenInAddress: fromAddr, tokenInChain: 'Arc_Testnet',
         tokenOutAddress: toAddr,  tokenOutChain: 'Arc_Testnet',
         fromAddress: walletAddress || '0x0000000000000000000000000000000000000001',
-        amount: String(amountIn), slippageBps: '300',
+        amount: toBase(amountIn, tokenIn), slippageBps: '300',
       })
       const res = await fetch(`${CIRCLE_API}/v1/stablecoinKits/quote?${params}`, {
         headers: { 'Authorization': `Bearer ${kitKey}` },
       })
       const data = await res.json()
-      if (!res.ok) return err(`Circle API ${res.status}`, data)
-      return new Response(JSON.stringify({ estimate: data?.data || data }), { headers: JSON_HEADERS })
+      if (!res.ok) return err(data?.message || `Circle API ${res.status}`, data)
+      const q = data?.data?.quote || data?.quote || data?.data || data
+      // amountOut = decimal token thật cho client hiển thị (estimatedAmount là base units)
+      const amountOut = q?.estimatedAmount ? fromBase(q.estimatedAmount, tokenOut) : null
+      return new Response(JSON.stringify({ estimate: data?.data || data, amountOut }), { headers: JSON_HEADERS })
     }
 
     if (action === 'execute') {
@@ -85,7 +95,7 @@ export async function onRequestPost(ctx) {
           tokenInAddress: fromAddr, tokenInChain: 'Arc_Testnet',
           tokenOutAddress: toAddr,  tokenOutChain: 'Arc_Testnet',
           fromAddress: walletAddress, toAddress: walletAddress,
-          amount: String(amountIn), slippageBps: 300,
+          amount: toBase(amountIn, tokenIn), slippageBps: 300,
         }),
       })
       const swapData = await swapRes.json()
@@ -123,9 +133,11 @@ export async function onRequestPost(ctx) {
         const msg = `${txData?.message || txData?.error?.message || 'no challengeId'} (HTTP ${txRes.status}${txData?.code ? `, code ${txData.code}` : ''})`
         return err(msg, txData)
       }
-      // Trả kèm quote để client hiện biên nhận
-      const quote = swapData?.quote || swapData?.data?.quote || null
-      return new Response(JSON.stringify({ challengeId, batched: instructions.length > 1, quote }), { headers: JSON_HEADERS })
+      // amountOut (decimal token thật) để client hiện thông báo "nhận về ~X"
+      // (swap response có estimatedAmount ở top-level — verify bằng gọi thật)
+      const estOut = swapData?.estimatedAmount || swapData?.data?.estimatedAmount || swapData?.quote?.estimatedAmount
+      const amountOut = estOut ? fromBase(estOut, tokenOut) : null
+      return new Response(JSON.stringify({ challengeId, batched: instructions.length > 1, amountOut }), { headers: JSON_HEADERS })
     }
 
     return err('unknown action', null, 400)

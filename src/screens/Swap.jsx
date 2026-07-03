@@ -5,6 +5,7 @@ import Icon from '../components/Icon'
 import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession } from '../circle'
 import { getTokenBalances } from '../chain'
 import { spendableOf, GAS_RESERVE_USDC } from '../data'
+import { addNotif } from '../notif'
 import { t } from '../i18n'
 
 // App khóa English (session 5) — chuỗi mới trong màn này hardcode English,
@@ -23,16 +24,18 @@ function TokenRow({ sym, onClick }) {
   )
 }
 
-// Popup chọn token — cùng kiểu popup tiền tệ của SendAmount (neo nửa trên)
-function TokenPicker({ exclude, onSelect, onClose }) {
+// Popup chọn token — cùng kiểu popup tiền tệ của SendAmount (neo nửa trên).
+// Hiện ĐỦ 3 token (user chốt: đừng ẩn token đang ở phía kia — chọn trùng phía kia
+// thì 2 phía tự đảo cho nhau, selectToken đã xử lý).
+function TokenPicker({ current, onSelect, onClose }) {
   return (
     <div onClick={onClose}
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '14dvh' }}>
       <div onClick={e => e.stopPropagation()}
         style={{ width: '70%', maxWidth: 300, background: 'var(--color-white)', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center', padding: '6px 0' }}>Select token</div>
-        {SWAP_TOKENS.filter(s => s !== exclude).map(sym => (
-          <button key={sym} onClick={() => { onSelect(sym); onClose() }} className="btn btn-secondary"
+        {SWAP_TOKENS.map(sym => (
+          <button key={sym} onClick={() => { onSelect(sym); onClose() }} className={`btn ${sym === current ? 'btn-primary' : 'btn-secondary'}`}
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
             <img src={`/tokens/${sym.toLowerCase()}.png`} alt="" style={{ width: 24, height: 24, borderRadius: '50%' }} />
             {sym}
@@ -78,8 +81,8 @@ export default function Swap() {
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await estimateSwap({ walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
-        const quote = res?.estimate?.quote
-        if (quote?.estimatedAmount) { setEstAmt(quote.estimatedAmount); setError('') }
+        // amountOut = decimal token thật (server đã quy từ base units — estimatedAmount thô là base units, ĐỪNG hiện thẳng)
+        if (res?.amountOut) { setEstAmt(res.amountOut); setError('') }
         else if (res?.error) { setEstAmt(null); setError(res.error) }
         else setEstAmt(null)
       } catch (e) { setEstAmt(null); setError(e.message) }
@@ -112,10 +115,14 @@ export default function Swap() {
       if (res.error) throw new Error(res.error)
       setStatus('Enter PIN to confirm...')
       await executeChallenge(getSDK(), userToken, encryptionKey, res.challengeId)
+      const outTxt = res.amountOut ? ` → ≈${parseFloat(res.amountOut).toFixed(decimalsFor(toSym))} ${toSym}` : ` → ${toSym}`
+      const msg = `Swapped ${amountNum} ${fromSym}${outTxt}`
+      addNotif(msg, 'sent', null, `swap-${Date.now()}`)   // hiện ở NotifArea (HomeSend/HomeReceive)
       setStatus('Swap submitted!')
       setInput(''); setEstAmt(null)
       setTimeout(() => { loadBalances(); setStatus('') }, 4000)
     } catch (e) {
+      if (e?.code === 155701) { setStatus(''); setLoading(false); return }  // user tự hủy PIN → im lặng
       const msg = e?.message || e?.error?.message || (typeof e === 'string' ? e : 'Swap failed')
       setError(msg); setStatus('')
     } finally { setLoading(false) }
@@ -125,7 +132,7 @@ export default function Swap() {
 
   return (
     <div className="screen">
-      {picker && <TokenPicker exclude={picker === 'from' ? toSym : fromSym} onSelect={sym => selectToken(picker, sym)} onClose={() => setPicker(null)} />}
+      {picker && <TokenPicker current={picker === 'from' ? fromSym : toSym} onSelect={sym => selectToken(picker, sym)} onClose={() => setPicker(null)} />}
 
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
         {t('Đổi tiền')}
@@ -167,6 +174,12 @@ export default function Swap() {
           </span>
         </div>
 
+        {/* Nút Swap NGAY DƯỚI card nhận, TRÊN numpad (thứ tự user chốt: from / icon / to / nút / numpad) */}
+        <button className="btn btn-primary" style={{ width: '66.67%', alignSelf: 'center' }}
+          disabled={!canSwap} onClick={handleSwap}>
+          {loading ? 'Processing...' : 'Swap'}
+        </button>
+
         {/* Trạng thái / lỗi / ghi chú giữ phí */}
         <div style={{ textAlign: 'center', fontSize: 'var(--fs-label)', minHeight: 22 }}>
           {error && <span style={{ color: 'var(--color-error)' }}>{error}</span>}
@@ -177,15 +190,13 @@ export default function Swap() {
         </div>
       </div>
 
-      {/* Numpad + nút — main screen nên NavBar giữ hàng 10, numpad gói trong 7-9 */}
-      <div className="row-7-9" style={{ display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 1, minHeight: 0 }}>
+      {/* Numpad ĐỒNG BỘ các màn khác (SendAmount/CreateQR): chiếm 2.5 hàng từ hàng 7
+          (hàng 7, 8, nửa 9) — khác mỗi chỗ hàng 10 là NavBar nên container 7/10 thay vì 7/11 */}
+      <div style={{ gridRow: '7 / 10', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 2.5, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />
         </div>
-        <button className="btn btn-primary" style={{ width: '66.67%', alignSelf: 'center', flexShrink: 0 }}
-          disabled={!canSwap} onClick={handleSwap}>
-          {loading ? 'Processing...' : 'Swap'}
-        </button>
+        <div style={{ flex: 0.5 }} />
       </div>
 
       <NavBar active="Swap" />

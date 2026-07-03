@@ -37,21 +37,26 @@ const activeFilter = {
   WebkitTextFillColor: 'var(--color-primary)',
 }
 
-// Tính thông tin chung của 1 giao dịch
-function txInfo(tx, walletAddr, contacts) {
+// Tính thông tin chung của 1 giao dịch. vnd quy từ CÙNG NGUỒN rates với cột hiển thị
+// (trước dùng token.vndRate cache lệch nguồn → 1 USDC hiện $0.95 — user báo lỗi).
+function txInfo(tx, walletAddr, contacts, rates) {
   const token = TOKEN_MAP[tx.contractAddress?.toLowerCase()]
   const decimals = parseInt(tx.tokenDecimal || 6)
   const amount = parseFloat(tx.value) / Math.pow(10, decimals)
   const isSend = tx.from?.toLowerCase() === walletAddr?.toLowerCase()
   const symbol = tx.tokenSymbol || token?.symbol || '?'
-  const vnd = Math.round(amount * (token?.vndRate || 25000))
+  const vnd = amount * (rates?.[symbol] ?? token?.vndRate ?? 25000)
   const counter = isSend ? tx.to : tx.from
   const name = contacts[counter?.toLowerCase()] || null
   return { isSend, amount, symbol, vnd, counter, name }
 }
 
-function TxRow({ tx, walletAddr, contacts, onClick, cur, rates }) {
-  const { isSend, amount, symbol, vnd, counter, name } = txInfo(tx, walletAddr, contacts)
+// Layout user chốt (2026-07-03): icon đã nói lên gửi/nhận —
+//   [icon] Sent USDC to hieu · 5 min ago      | -$1.00   (tiền hiển thị, chính)
+//          (lời nhắn nếu có — để đối soát)     | 1.00 USDC (token thật, xám nhỏ)
+function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo }) {
+  const { isSend, amount, symbol, vnd, counter, name } = txInfo(tx, walletAddr, contacts, rates)
+  const who = name || shortAddr(counter)
   return (
     <button onClick={onClick} style={{
       display: 'flex', alignItems: 'center', gap: 12, width: '100%',
@@ -67,21 +72,23 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates }) {
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>
-          {isSend ? t('Đã gửi') : t('Đã nhận')} {symbol}
+        <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {isSend ? 'Sent' : 'Received'} {symbol} {isSend ? 'to' : 'from'} {who} <span style={{ color: 'var(--color-muted)', fontWeight: 'var(--fw-regular)' }}>· {timeAgo(tx.timeStamp)}</span>
         </div>
-        <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {isSend ? t('Đến') : t('Từ')} {name || shortAddr(counter)} · {timeAgo(tx.timeStamp)}
-        </div>
+        {memo && (
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {memo}
+          </div>
+        )}
       </div>
 
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
+        {/* Chính: tiền hiển thị ($). Phụ: token thật, xám mờ */}
         <div className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: isSend ? 'var(--color-error)' : 'var(--color-primary)' }}>
-          {isSend ? '-' : '+'}{amount.toFixed(amount < 0.01 ? 6 : 2)} {symbol}
+          {isSend ? '-' : '+'}{rates ? `${displaySymbol(cur)}${displayNum(vnd, cur, rates)}` : '…'}
         </div>
-        {/* Quy đổi ra tiền hiển thị ($) — giúp hiểu giá trị */}
         <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
-          {rates ? `${displaySymbol(cur)}${displayNum(vnd, cur, rates)}` : '…'}
+          {amount.toFixed(amount < 0.01 ? 6 : 2)} {symbol}
         </div>
       </div>
     </button>
@@ -105,6 +112,7 @@ export default function TxHistory() {
   const [selected, setSelected] = useState(null)
   const [memo, setMemo] = useState(null)
   const [memoLoading, setMemoLoading] = useState(false)
+  const [memos, setMemos] = useState({})   // hash → memo text (lời nhắn hiện ngay trong list để đối soát)
   const [copied, setCopied] = useState(false)
   const cur = getDisplayCurrency()
   const [rates, setRates] = useState(null)  // tỷ giá VND→tiền hiển thị (fetch), null khi chưa xong
@@ -122,6 +130,17 @@ export default function TxHistory() {
     setMemo(null); setMemoLoading(true)
     getTxMemo(selected.hash).then(setMemo).catch(() => {}).finally(() => setMemoLoading(false))
   }, [selected])
+
+  // Lời nhắn cho TỪNG DÒNG list (user yêu cầu: hiện memo ngay dưới tiêu đề để đối soát).
+  // Fetch nền 30 tx đầu, mỗi tx 1 RPC đọc Memo event — testnet nhẹ, lỗi thì bỏ qua im lặng.
+  useEffect(() => {
+    txs.slice(0, 30).forEach(tx => {
+      if (memos[tx.hash] !== undefined) return
+      getTxMemo(tx.hash)
+        .then(m => setMemos(prev => ({ ...prev, [tx.hash]: m || null })))
+        .catch(() => setMemos(prev => ({ ...prev, [tx.hash]: null })))
+    })
+  }, [txs])
 
   const isSendTx = tx => tx.from?.toLowerCase() === walletAddr?.toLowerCase()
   const filtered = txs.filter(tx => filter === 'all' ? true : filter === 'send' ? isSendTx(tx) : !isSendTx(tx))
@@ -144,7 +163,7 @@ export default function TxHistory() {
     }
   }, [txs, params?.openHash])
 
-  const d = selected ? txInfo(selected, walletAddr, contacts) : null
+  const d = selected ? txInfo(selected, walletAddr, contacts, rates) : null
 
   return (
     <div className="screen">
@@ -160,7 +179,7 @@ export default function TxHistory() {
             <div style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{emptyMsg}</div>
           </div>
         ) : (
-          filtered.map(tx => <TxRow key={tx.hash} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} cur={cur} rates={rates} />)
+          filtered.map(tx => <TxRow key={tx.hash} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} cur={cur} rates={rates} memo={memos[tx.hash]} />)
         )}
       </div>
 

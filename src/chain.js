@@ -78,10 +78,12 @@ export async function getVndRate(symbol = 'USDC') {
   return prices[symbol] ?? token?.vndRate ?? 25000
 }
 
-// Tỷ giá cho tiền tệ hiển thị: VND mỗi 1 đơn vị {USDC, EURC, CNY}. CNY suy từ USDC/7.25.
+// Tỷ giá cho tiền tệ hiển thị: VND mỗi 1 đơn vị {USDC, EURC, cirBTC, CNY}. CNY suy từ USDC/7.25.
+// cirBTC thêm để TxHistory quy đổi giao dịch cirBTC — dùng CHUNG 1 nguồn tỷ giá với cột hiển thị
+// (trước đây txInfo dùng token.vndRate cache lệch nguồn → 1 USDC hiện $0.95, user báo lỗi).
 export async function getDisplayRates() {
-  const [u, e] = await Promise.all([getVndRate('USDC'), getVndRate('EURC')])
-  return { VND: 1, USDC: u, EURC: e, CNY: Math.round(u / 7.25) }
+  const [u, e, b] = await Promise.all([getVndRate('USDC'), getVndRate('EURC'), getVndRate('cirBTC')])
+  return { VND: 1, USDC: u, EURC: e, cirBTC: b, CNY: Math.round(u / 7.25) }
 }
 
 // Số dư 1 token + tỷ giá (USDC = token dùng để gửi)
