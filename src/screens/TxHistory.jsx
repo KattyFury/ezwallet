@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
-import { fmtVND, displaySymbol } from '../data'
-import { TOKENS, getTxMemo } from '../chain'
+import { getDisplayCurrency, displayNum, displaySymbol } from '../data'
+import { TOKENS, getTxMemo, getDisplayRates } from '../chain'
 import Icon from '../components/Icon'
 import { t } from '../i18n'
 import { loadContacts } from '../store'
@@ -50,7 +50,12 @@ function txInfo(tx, walletAddr, contacts) {
   return { isSend, amount, symbol, vnd, counter, name }
 }
 
-function TxRow({ tx, walletAddr, contacts, onClick }) {
+// Ký hiệu tiền tệ dùng font chữ (Barlow regular); số vẫn Barlow Condensed qua .num
+function Cur({ children }) {
+  return <span style={{ fontFamily: 'var(--font-base)', fontWeight: 'var(--fw-medium)' }}>{children}</span>
+}
+
+function TxRow({ tx, walletAddr, contacts, onClick, cur, rates }) {
   const { isSend, amount, symbol, vnd, counter, name } = txInfo(tx, walletAddr, contacts)
   return (
     <button onClick={onClick} style={{
@@ -77,9 +82,11 @@ function TxRow({ tx, walletAddr, contacts, onClick }) {
 
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: isSend ? 'var(--color-error)' : 'var(--color-primary)' }}>
-          {isSend ? '-' : '+'}{amount.toFixed(amount < 0.01 ? 6 : 2)} {displaySymbol(symbol)}
+          {isSend ? '-' : '+'}{amount.toFixed(amount < 0.01 ? 6 : 2)} <Cur>{displaySymbol(symbol)}</Cur>
         </div>
-        <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{fmtVND(vnd)}</div>
+        <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
+          {rates ? <>{displayNum(vnd, cur, rates)} <Cur>{displaySymbol(cur)}</Cur></> : '…'}
+        </div>
       </div>
     </button>
   )
@@ -103,6 +110,9 @@ export default function TxHistory() {
   const [memo, setMemo] = useState(null)
   const [memoLoading, setMemoLoading] = useState(false)
   const [copied, setCopied] = useState(false)
+  const cur = getDisplayCurrency()
+  const [rates, setRates] = useState(null)  // tỷ giá VND→tiền hiển thị (fetch), null khi chưa xong
+  useEffect(() => { getDisplayRates().then(setRates).catch(() => setRates({ VND: 1 })) }, [])
 
   function copyCounter(addr) {
     navigator.clipboard.writeText(addr)
@@ -154,7 +164,7 @@ export default function TxHistory() {
             <div style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{emptyMsg}</div>
           </div>
         ) : (
-          filtered.map(tx => <TxRow key={tx.hash} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} />)
+          filtered.map(tx => <TxRow key={tx.hash} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} cur={cur} rates={rates} />)
         )}
       </div>
 
@@ -185,10 +195,10 @@ export default function TxHistory() {
             </DetailRow>
             <DetailRow label={t('Số tiền')}>
               <span className="num" style={{ color: d.isSend ? 'var(--color-error)' : 'var(--color-primary)' }}>
-                {d.isSend ? '-' : '+'}{d.amount.toFixed(d.amount < 0.01 ? 6 : 2)} {displaySymbol(d.symbol)}
+                {d.isSend ? '-' : '+'}{d.amount.toFixed(d.amount < 0.01 ? 6 : 2)} <Cur>{displaySymbol(d.symbol)}</Cur>
               </span>
             </DetailRow>
-            <DetailRow label={t('Quy đổi')}><span className="num">{fmtVND(d.vnd)}</span></DetailRow>
+            <DetailRow label={t('Quy đổi')}><span className="num">{rates ? <>{displayNum(d.vnd, cur, rates)} <Cur>{displaySymbol(cur)}</Cur></> : '…'}</span></DetailRow>
             <DetailRow label={t('Thời gian')}>{new Date(selected.timeStamp * 1000).toLocaleString('vi-VN')}</DetailRow>
             {memoLoading ? <DetailRow label={t('Nội dung')}>{t('Đang tải...')}</DetailRow> : memo ? <DetailRow label={t('Nội dung')}>{memo}</DetailRow> : null}
             <button className="btn btn-secondary" style={{ width: '100%', marginTop: 14 }}

@@ -11,6 +11,11 @@ function shortenAddr(addr) {
   return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
 }
 
+// Ký hiệu tiền tệ dùng font chữ (Barlow regular); số vẫn Barlow Condensed qua .num
+function Cur({ children }) {
+  return <span style={{ fontFamily: 'var(--font-base)', fontWeight: 'var(--fw-medium)' }}>{children}</span>
+}
+
 export default function SendConfirm() {
   const { navigate, params } = useNav()
   const { address, name, amount, memo, currency = 'VND' } = params
@@ -33,19 +38,19 @@ export default function SendConfirm() {
                    : currency === 'CNY' ? (amount * rates.CNY) / rates.USDC
                    : amount
   const sendAmountStr = (currency === 'VND' || currency === 'CNY') ? sendAmount.toFixed(4) : sendAmount.toFixed(2)
-  const mainText = currency === 'VND' ? fmtVND(amount) : `${amount} ${displaySymbol(currency)}`
+  const mainEl = currency === 'VND' ? fmtVND(amount) : <>{amount} <Cur>{displaySymbol(currency)}</Cur></>
   // "Quy đổi" = lượng token thật chuyển đi; chỉ hiện khi nhập bằng tiền pháp định (VND/CNY)
-  const convText = `${sendAmountStr} ${displaySymbol(token)}`
+  const convEl = <>{sendAmountStr} <Cur>{displaySymbol(token)}</Cur></>
   const showConv = currency === 'VND' || currency === 'CNY'
 
   // Phí mạng theo TIỀN TỆ MẶC ĐỊNH (ez_currency), không cứng VND
   const displayCur = getDisplayCurrency()
   const dispRates = { VND: 1, ...rates }
-  function feeStr() {
+  function feeEl() {
     if (feeVnd === null) return t('Đang tính...')
     if (displayCur === 'VND') return feeVnd < 1 ? '< 1đ' : fmtVND(feeVnd)
     const v = feeVnd / (dispRates[displayCur] || 1)
-    return v < 0.01 ? `< 0.01 ${displaySymbol(displayCur)}` : `${v.toFixed(2)} ${displaySymbol(displayCur)}`
+    return <>{v < 0.01 ? '< 0.01' : v.toFixed(2)} <Cur>{displaySymbol(displayCur)}</Cur></>
   }
 
   async function handleConfirm() {
@@ -115,14 +120,14 @@ export default function SendConfirm() {
           <div className="confirm-row">
             <span className="confirm-label">{t('Số tiền')}</span>
             <span className="confirm-value num" style={{ fontWeight: 'var(--fw-bold)', color: 'var(--color-primary)' }}>
-              {mainText}
+              {mainEl}
             </span>
           </div>
           {showConv && (
             <div className="confirm-row">
               <span className="confirm-label">{t('Quy đổi')}</span>
               <span className="confirm-value num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
-                {convText}
+                {convEl}
               </span>
             </div>
           )}
@@ -135,7 +140,7 @@ export default function SendConfirm() {
           <div className="confirm-row">
             <span className="confirm-label">{t('Phí mạng')}</span>
             <span className="confirm-value num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
-              {feeStr()}
+              {feeEl()}
             </span>
           </div>
         </div>

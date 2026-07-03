@@ -74,7 +74,7 @@ export default function SendReceipt() {
         <CheckIcon />
         <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>{t('Đã gửi thành công')}</span>
         <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-primary)' }}>
-          {amountText}
+          {currency === 'VND' ? amountText : <>{amount} <span style={{ fontFamily: 'var(--font-base)', fontWeight: 'var(--fw-medium)' }}>{displaySymbol(currency)}</span></>}
         </span>
         <div className="confirm-box" style={{ width: '100%' }}>
           <div className="confirm-row">

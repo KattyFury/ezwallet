@@ -43,7 +43,7 @@ export default function ShowQR() {
 
       <div ref={wrapRef} className="row-3-6 center col" style={{ gap: 12 }}>
         <QRCodeCanvas value={qrValue} size={200} level="M" />
-        <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)' }}>{amountText}</span>
+        <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)' }}>{currency === 'VND' ? amountText : <>{amount} <span style={{ fontFamily: 'var(--font-base)', fontWeight: 'var(--fw-medium)' }}>{displaySymbol(currency)}</span></>}</span>
         <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{t('Cho người gửi quét mã này')}</span>
       </div>
 

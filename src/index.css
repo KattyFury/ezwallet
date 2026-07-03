@@ -1,6 +1,6 @@
 ﻿/* ══════════════════════════════════════════════════════════
    DESIGN TOKENS (2026-06-28).
-   FONT (khóa): Barlow Condensed = display/số; IBM Plex Sans = UI.
+   FONT (khóa): cùng họ Barlow — Barlow Condensed = display/số; Barlow (regular) = UI/chữ.
    MÀU (khóa): 4 tầng chữ + màu chức năng dưới đây.
    CỠ CHỮ: ĐÃ MỞ KHÓA — scale dưới là gợi ý, được phép tùy chỉnh px theo từng chỗ.
    ══════════════════════════════════════════════════════════ */
@@ -24,8 +24,8 @@
   --color-gray:         #E5E5EA; /* xám nhạt — border / nền / divider (KHÔNG làm màu chữ) */
 
   /* ── FONT ── */
-  /* Hệ 2 font: Barlow Condensed = display/số; IBM Plex Sans = UI/nội dung */
-  --font-base:      'IBM Plex Sans', sans-serif;       /* toàn bộ UI: menu, tab, nút, form, mô tả, thông báo */
+  /* Hệ 2 font cùng họ Barlow: Barlow Condensed = display/số; Barlow (regular) = UI/nội dung */
+  --font-base:      'Barlow', sans-serif;              /* toàn bộ UI: menu, tab, nút, form, mô tả, thông báo, ký hiệu tiền tệ */
   --font-display:   'Barlow Condensed', sans-serif;    /* logo, tiêu đề lớn, số dư/số tiền/%/KPI */
   --font-title:     'Barlow Condensed', sans-serif;    /* alias → display (tiêu đề) */
   --font-condensed: 'Barlow Condensed', sans-serif;    /* alias → display (số) */
