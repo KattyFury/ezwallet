@@ -33,7 +33,7 @@ export default function HomeSend() {
     <div className="screen">
       <BalanceHeader totalVND={totalVND} loading={loading} />
 
-      <div className="row-3-5" style={{ display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto', paddingTop: 2 }}>
+      <div className="row-3-5" style={{ display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto', paddingTop: 2 }}>
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>{t('Đang tải...')}</div>
         ) : tokens.length === 0 ? (
@@ -61,7 +61,7 @@ export default function HomeSend() {
                   {tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)} {tk.symbol}
                 </span>
                 {tk.symbol !== cur && (
-                  <span className="num" style={{ marginLeft: 'auto', fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-normal)', color: 'var(--color-muted)' }}>
+                  <span className="num" style={{ marginLeft: 'auto', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>
                     {rates ? fmtDisplay(tk.vnd, cur, rates) : '…'}
                   </span>
                 )}
