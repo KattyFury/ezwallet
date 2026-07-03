@@ -94,7 +94,7 @@ export default function HomeSend() {
 
                 {/* Tên token thật (USDC/EURC/cirBTC) + huy hiệu đã xác minh (xanh lá của app) */}
                 <span style={TOKEN_TEXT_STYLE}>{tk.symbol}</span>
-                <Icon name="check" size={14} color="var(--color-primary)" />
+                <Icon name="check" size={20} color="var(--color-primary)" />
 
                 {/* CÙNG font + CÙNG màu với "USDC" bên trái (TOKEN_TEXT_STYLE) — theo toggle chung ở trên */}
                 <span style={{ ...TOKEN_TEXT_STYLE, marginLeft: 'auto' }}>
@@ -115,28 +115,29 @@ export default function HomeSend() {
         )}
       </div>
 
-      <div className="row-7-8" style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '2dvh' }}>
-        <NotifArea fallback={
-          !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
-            <div onClick={() => window.open('https://faucet.circle.com/', '_blank')}
-              style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-label)', color: 'var(--color-content)' }}>
-                <Icon name="warning" size={18} color="var(--color-warning)" style={{ flexShrink: 0 }} />
-                {t('Hết USDC để trả phí giao dịch')}
-              </span>
-              <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-content)', paddingLeft: 26 }}>
-                {t('Bấm để nhận USDC testnet từ')}{' '}
-                <span style={{ color: 'var(--color-warning)', textDecoration: 'underline' }}>Faucet</span>
-              </span>
-            </div>
-          ) : (
-            <div style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 3, fontSize: 'var(--fs-label)', textAlign: 'left', color: 'var(--color-content)' }}>
-              <div><span style={{ fontWeight: 'var(--fw-medium)' }}>Contacts</span> = save people's wallet addresses</div>
-              <div><span style={{ fontWeight: 'var(--fw-medium)' }}>Scan QR</span> = scan the recipient's QR</div>
-              <div><span style={{ fontWeight: 'var(--fw-medium)' }}>Paste address</span> = paste the recipient's address</div>
-            </div>
-          )
-        } />
+      <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
+        <NotifArea
+          hints={[
+            { label: 'Contacts', desc: "save people's wallet addresses" },
+            { label: 'Scan QR', desc: "scan the recipient's QR" },
+            { label: 'Paste', desc: "paste the recipient's address" },
+          ]}
+          warning={
+            !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
+              <div onClick={() => window.open('https://faucet.circle.com/', '_blank')}
+                style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-label)', color: 'var(--color-content)' }}>
+                  <Icon name="warning" size={18} color="var(--color-warning)" style={{ flexShrink: 0 }} />
+                  {t('Hết USDC để trả phí giao dịch')}
+                </span>
+                <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-content)', paddingLeft: 26 }}>
+                  {t('Bấm để nhận USDC testnet từ')}{' '}
+                  <span style={{ color: 'var(--color-warning)', textDecoration: 'underline' }}>Faucet</span>
+                </span>
+              </div>
+            ) : null
+          }
+        />
       </div>
 
       <div className="row-9 action-grid">

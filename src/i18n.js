@@ -17,7 +17,7 @@ const EN = {
   'Bao gồm': 'Including',
   'Danh bạ': 'Contacts',
   'Quét QR': 'Scan QR',
-  'Dán để gửi': 'Paste to send',
+  'Dán để gửi': 'Paste',
   'Nơi bạn lưu địa chỉ ví của người quen': 'Save wallet addresses of people you know',
   'Bấm để quét mã QR của người nhận': "Tap to scan the recipient's QR code",
   'Bấm để dán địa chỉ ví của người nhận': "Tap to paste the recipient's wallet address",

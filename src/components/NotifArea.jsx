@@ -44,7 +44,24 @@ const STYLE = {
   error:    { color: 'var(--color-error)',   bg: 'var(--color-error-soft)',   icon: 'warning' },  // lỗi = đỏ
 }
 
-export default function NotifArea({ fallback }) {
+// 1 dòng — bắt buộc 1 hàng (không xuống dòng), cắt "..." nếu dài, để tối đa số thông báo
+// hiện được trong vùng cố định (rows 7-8).
+const ROW_TEXT = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
+
+// Hint = thông báo có mức ưu tiên THẤP NHẤT, KHÔNG nút X, không bấm được — luôn tồn tại,
+// bị các thông báo thật (nhận/gửi/lỗi) đẩy lên trên rồi mờ dần khi hết chỗ hiển thị.
+function HintRow({ label, desc }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', background: 'var(--color-gray)', borderRadius: 12, padding: '12px 14px', fontSize: 'var(--fs-label)', color: 'var(--color-muted)', ...ROW_TEXT }}>
+      <span style={{ fontWeight: 'var(--fw-medium)' }}>{label}</span>&nbsp;=&nbsp;{desc}
+    </div>
+  )
+}
+
+// hints: [{label, desc}] — luôn hiện (không phải fallback nữa). warning: JSX | null — cảnh báo
+// ưu tiên cao (vd hết USDC trả phí); giữ đúng logic CŨ = chỉ hiện khi CHƯA có thông báo thật nào,
+// để không đổi hành vi đã có (user không yêu cầu đổi phần này).
+export default function NotifArea({ hints = [], warning = null }) {
   const { navigate } = useNav()
   const [notifs, setNotifs] = useState(getNotifs())
   useEffect(() => { pollIncoming(() => setNotifs(getNotifs())) }, [])
@@ -55,23 +72,36 @@ export default function NotifArea({ fallback }) {
     navigate('TxHistory', n.hash ? { openHash: n.hash } : {})
   }
 
-  if (notifs.length === 0) return fallback
+  if (notifs.length === 0 && warning) return warning
+
+  // notifs lưu MỚI NHẤT ở ĐẦU (unshift trong notif.js). Hiển thị theo dòng thời gian: CŨ (hint)
+  // ở TRÊN cùng — mờ/mất trước — MỚI NHẤT ở DƯỚI cùng (gần hàng nút, luôn thấy trước tiên).
+  const items = [...hints.map((h, i) => ({ ...h, id: `hint-${i}`, type: 'hint' })), ...[...notifs].reverse()]
 
   return (
-    <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {notifs.slice(0, 3).map(n => {
-        const s = STYLE[n.type] || STYLE.sent
-        const clickable = n.type === 'received' || n.type === 'sent'
-        return (
-          <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: s.bg, borderRadius: 12, padding: '12px 14px', cursor: clickable ? 'pointer' : 'default' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-label)', color: 'var(--color-content)', textAlign: 'left' }}>
-              <Icon name={s.icon} size={18} color={s.color} />
-              {n.text}
-            </span>
-            <button onClick={e => clear(n.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: 2 }}><Icon name="x" size={14} color={s.color} /></button>
-          </div>
-        )
-      })}
+    // overflow:hidden + mask fade ở mép TRÊN (biên hàng 6/7) — thông báo bị đẩy lên quá cao
+    // mờ dần rồi biến mất, thay vì lấn/đè lên nút "Show tokens" phía trên.
+    <div style={{
+      flex: 1, minHeight: 0, width: '100%', overflow: 'hidden',
+      WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black 28px)',
+      maskImage: 'linear-gradient(to bottom, transparent 0, black 28px)',
+    }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: '100%', justifyContent: 'flex-end' }}>
+        {items.map(n => {
+          if (n.type === 'hint') return <HintRow key={n.id} label={n.label} desc={n.desc} />
+          const s = STYLE[n.type] || STYLE.sent
+          const clickable = n.type === 'received' || n.type === 'sent'
+          return (
+            <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: s.bg, borderRadius: 12, padding: '12px 14px', cursor: clickable ? 'pointer' : 'default' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-label)', color: 'var(--color-content)', ...ROW_TEXT }}>
+                <Icon name={s.icon} size={18} color={s.color} style={{ flexShrink: 0 }} />
+                <span style={ROW_TEXT}>{n.text}</span>
+              </span>
+              <button onClick={e => clear(n.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: 2 }}><Icon name="x" size={14} color={s.color} /></button>
+            </div>
+          )
+        })}
+      </div>
     </div>
   )
 }

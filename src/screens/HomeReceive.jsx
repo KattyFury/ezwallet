@@ -46,14 +46,12 @@ export default function HomeReceive() {
         </span>
       </div>
 
-      <div className="row-7-8" style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '2dvh' }}>
-        <NotifArea fallback={
-          <div style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 3, fontSize: 'var(--fs-label)', textAlign: 'left', color: 'var(--color-content)' }}>
-            <div><span style={{ fontWeight: 'var(--fw-medium)' }}>Share</span> = share your wallet address</div>
-            <div><span style={{ fontWeight: 'var(--fw-medium)' }}>Create QR</span> = make a QR for the exact amount</div>
-            <div><span style={{ fontWeight: 'var(--fw-medium)' }}>QR Library</span> = keep your frequently used QRs</div>
-          </div>
-        } />
+      <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
+        <NotifArea hints={[
+          { label: 'Share', desc: 'share your wallet address' },
+          { label: 'Create QR', desc: 'make a QR for the exact amount' },
+          { label: 'QR Library', desc: 'keep your frequently used QRs' },
+        ]} />
       </div>
 
       <div className="row-9 action-grid">
