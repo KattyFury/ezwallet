@@ -43,7 +43,7 @@ export default function HomeSend() {
         ) : (
           <>
             {/* "Bao gồm" = tổng số dư (BalanceHeader) được cấu thành từ các token nào */}
-            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', paddingLeft: 2 }}>{t('Bao gồm')}</span>
+            <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)', paddingLeft: 2 }}>{t('Bao gồm')}</span>
             {tokens.map(tk => (
               <div key={tk.symbol} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 2px' }}>
                 <img
@@ -56,17 +56,15 @@ export default function HomeSend() {
                   }}
                 />
                 <div className="token-icon" style={{ background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
-                {/* Số token (dòng chính) + quy đổi tiền tệ mặc định bên dưới (ẩn nếu token CHÍNH LÀ tiền tệ hiển thị) */}
-                <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
-                  <span className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)' }}>
-                    {tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)} {tk.symbol}
+                {/* Số token bên trái; quy đổi tiền tệ mặc định treo bên PHẢI cùng dòng (ẩn nếu token CHÍNH LÀ tiền tệ hiển thị) */}
+                <span className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)' }}>
+                  {tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)} {tk.symbol}
+                </span>
+                {tk.symbol !== cur && (
+                  <span className="num" style={{ marginLeft: 'auto', fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-normal)', color: 'var(--color-muted)' }}>
+                    {rates ? fmtDisplay(tk.vnd, cur, rates) : '…'}
                   </span>
-                  {tk.symbol !== cur && (
-                    <span className="num" style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-normal)', color: 'var(--color-muted)' }}>
-                      {rates ? fmtDisplay(tk.vnd, cur, rates) : '…'}
-                    </span>
-                  )}
-                </div>
+                )}
               </div>
             ))}
           </>
@@ -88,13 +86,11 @@ export default function HomeSend() {
               </span>
             </div>
           ) : (
-            <div style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '12px 14px', display: 'flex', gap: 10, alignItems: 'center' }}>
-              <Icon name="hint" size={18} color="var(--color-warning)" style={{ flexShrink: 0 }} />
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 'var(--fs-label)', textAlign: 'left', color: 'var(--color-content)' }}>
-                <div>{t('Danh bạ: Nơi lưu địa chỉ ví của người quen')}</div>
-                <div>{t('Quét QR: Bấm để quét QR của người nhận')}</div>
-                <div>{t('Dán để gửi: Bấm để dán địa chỉ ví của người nhận')}</div>
-              </div>
+            <div style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 3, fontSize: 'var(--fs-label)', textAlign: 'left', color: 'var(--color-content)' }}>
+              <span style={{ fontWeight: 'var(--fw-semibold)' }}>Hint:</span>
+              <div><span style={{ fontWeight: 'var(--fw-medium)' }}>Contacts</span> = save people's wallet addresses</div>
+              <div><span style={{ fontWeight: 'var(--fw-medium)' }}>Scan QR</span> = scan the recipient's QR</div>
+              <div><span style={{ fontWeight: 'var(--fw-medium)' }}>Paste address</span> = paste the recipient's address</div>
             </div>
           )
         } />
