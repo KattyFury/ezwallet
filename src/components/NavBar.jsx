@@ -3,7 +3,7 @@ import Icon from './Icon'
 import { t } from '../i18n'
 
 const TABS = [
-  { id: 'Swap',        label: 'Đổi tiền', icon: 'trade', disabled: true },
+  { id: 'Swap',        label: 'Đổi tiền', icon: 'trade' },
   { id: 'HomeSend',    label: 'Gửi',      icon: 'up' },
   { id: 'HomeReceive', label: 'Nhận',     icon: 'down' },
   { id: 'MenuScreen',  label: 'Menu',     icon: 'menu' },

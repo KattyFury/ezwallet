@@ -153,8 +153,8 @@ export async function estimateSwap({ walletAddress, tokenIn, tokenOut, amountIn 
   return res.json()
 }
 
-export async function executeSwap({ walletId, walletAddress, tokenIn, tokenOut, amountIn }) {
-  const userToken = localStorage.getItem('ez_user_token')
+// userToken truyền vào từ refreshSession() (đừng đọc thẳng localStorage — token 60' có thể chết)
+export async function executeSwap({ userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn }) {
   const res = await fetch('/api/swap', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

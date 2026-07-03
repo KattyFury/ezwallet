@@ -1,28 +1,41 @@
-﻿import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import NavBar from '../components/NavBar'
 import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
-import { estimateSwap, executeSwap, getSDK, executeChallenge } from '../circle'
+import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession } from '../circle'
 import { getTokenBalances } from '../chain'
+import { spendableOf, GAS_RESERVE_USDC } from '../data'
 import { t } from '../i18n'
 
+// App khóa English (session 5) — chuỗi mới trong màn này hardcode English,
+// t() chỉ giữ cho các key cũ đã có trong từ điển (Đổi tiền, Quay lại...).
 const SWAP_TOKENS = ['USDC', 'EURC', 'cirBTC']
-const COLORS = { USDC: '#2775CA', EURC: '#1A56DB', cirBTC: '#F7931A' }
+const decimalsFor = sym => (sym === 'cirBTC' ? 6 : 2)
 
+function TokenRow({ sym, onClick }) {
+  return (
+    <button onClick={onClick}
+      style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
+      <img src={`/tokens/${sym.toLowerCase()}.png`} alt={sym} style={{ width: 32, height: 32, borderRadius: '50%' }} />
+      <span className="num" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
+      <Icon name="down2" size={11} color="var(--color-muted)" />
+    </button>
+  )
+}
+
+// Popup chọn token — cùng kiểu popup tiền tệ của SendAmount (neo nửa trên)
 function TokenPicker({ exclude, onSelect, onClose }) {
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
-      onClick={onClose}>
-      <div style={{ background: '#fff', width: '100%', maxWidth: 430, margin: '0 auto', borderRadius: '16px 16px 0 0', padding: 20 }}
-        onClick={e => e.stopPropagation()}>
-        <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-bold)', marginBottom: 16 }}>Chọn token</div>
-        {SWAP_TOKENS.filter(t => t !== exclude).map(sym => (
-          <button key={sym} onClick={() => { onSelect(sym); onClose() }}
-            style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '12px 0', border: 'none', background: 'none', cursor: 'pointer', borderBottom: '1px solid var(--color-gray)', fontFamily: 'inherit' }}>
-            <div style={{ width: 36, height: 36, borderRadius: '50%', background: COLORS[sym], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#fff' }}>
-              {sym.slice(0, 2)}
-            </div>
-            <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)' }}>{sym}</span>
+    <div onClick={onClose}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '14dvh' }}>
+      <div onClick={e => e.stopPropagation()}
+        style={{ width: '70%', maxWidth: 300, background: 'var(--color-white)', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center', padding: '6px 0' }}>Select token</div>
+        {SWAP_TOKENS.filter(s => s !== exclude).map(sym => (
+          <button key={sym} onClick={() => { onSelect(sym); onClose() }} className="btn btn-secondary"
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+            <img src={`/tokens/${sym.toLowerCase()}.png`} alt="" style={{ width: 24, height: 24, borderRadius: '50%' }} />
+            {sym}
           </button>
         ))}
       </div>
@@ -31,11 +44,10 @@ function TokenPicker({ exclude, onSelect, onClose }) {
 }
 
 export default function Swap() {
-  const [fromSym, setFromSym] = useState('USDC')
-  const [toSym, setToSym] = useState('EURC')
+  const [fromSym, setFromSym] = useState('EURC') // mặc định: cứu cánh "hết USDC" → đổi token khác VỀ USDC
+  const [toSym, setToSym] = useState('USDC')
   const [input, setInput] = useState('')
   const [estAmt, setEstAmt] = useState(null)
-  const [fee, setFee] = useState(null)
   const [balances, setBalances] = useState({})
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -45,140 +57,135 @@ export default function Swap() {
 
   const walletAddress = localStorage.getItem('ez_wallet_addr')
   const walletId = localStorage.getItem('ez_wallet_id')
-  const amountNum = parseFloat(input.replace(',', '.') || '0')
-  const canSwap = amountNum > 0 && !loading
+  const amountNum = parseFloat(input || '0')
+  // Khả dụng: USDC chừa lại 1 làm phí mạng (gas Arc = USDC) — không cho swap hết
+  const available = spendableOf(fromSym, balances[fromSym])
+  const overBalance = amountNum > available
+  const canSwap = amountNum > 0 && !overBalance && !loading
 
-  useEffect(() => {
+  function loadBalances() {
     if (!walletAddress) return
     getTokenBalances(walletAddress).then(ts => {
-      const map = {}; ts.forEach(t => { map[t.symbol] = t.amount }); setBalances(map)
-    })
-  }, [walletAddress])
+      const map = {}; ts.forEach(tk => { map[tk.symbol] = tk.amount }); setBalances(map)
+    }).catch(() => {})
+  }
+  useEffect(loadBalances, [walletAddress])
 
-  // Auto-estimate on input change
+  // Ước tính tự động khi gõ (debounce 600ms)
   useEffect(() => {
     clearTimeout(debounceRef.current)
-    if (!amountNum || amountNum <= 0) { setEstAmt(null); setFee(null); return }
+    if (!amountNum || amountNum <= 0) { setEstAmt(null); return }
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await estimateSwap({ walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
         const quote = res?.estimate?.quote
-        if (quote?.estimatedAmount) {
-          setEstAmt(quote.estimatedAmount)
-          const gasUSD = quote.route?.steps?.[0]?.estimate?.gasCostUSD
-          setFee(gasUSD ? `~$${gasUSD} gas` : null)
-          setError('')
-        } else if (res?.error) {
-          setEstAmt(null); setError(res.error)
-        } else {
-          setEstAmt(null)
-        }
-      } catch (e) { console.error('[swap estimate error]', e); setEstAmt(null); setError(e.message) }
+        if (quote?.estimatedAmount) { setEstAmt(quote.estimatedAmount); setError('') }
+        else if (res?.error) { setEstAmt(null); setError(res.error) }
+        else setEstAmt(null)
+      } catch (e) { setEstAmt(null); setError(e.message) }
     }, 600)
     return () => clearTimeout(debounceRef.current)
   }, [input, fromSym, toSym])
 
   function handleKey(key) {
-    if (key === 'BACK') { setInput(p => p.slice(0, -1)); return }
-    if (key === '.' && input.includes('.')) return
-    if (input.length >= 10) return
-    setInput(p => p + key)
+    if (key === 'BACK') { setInput(d => d.slice(0, -1)); return }
+    if (key === '.') { setInput(d => (d.includes('.') ? d : (d === '' ? '0.' : d + '.'))); return }
+    if (input.length >= 12) return
+    if (input === '0') { setInput(key); return }
+    setInput(d => d + key)
   }
 
-  function swapDir() { setFromSym(toSym); setToSym(fromSym); setInput(''); setEstAmt(null) }
+  function swapDir() { setFromSym(toSym); setToSym(fromSym); setInput(''); setEstAmt(null); setError('') }
 
   function selectToken(side, sym) {
     if (side === 'from') { if (sym === toSym) setToSym(fromSym); setFromSym(sym) }
     else { if (sym === fromSym) setFromSym(toSym); setToSym(sym) }
-    setInput(''); setEstAmt(null)
+    setInput(''); setEstAmt(null); setError('')
   }
 
   async function handleSwap() {
-    setLoading(true); setError(''); setStatus(t('Đang chuẩn bị...'))
+    setLoading(true); setError(''); setStatus('Preparing...')
     try {
-      const res = await executeSwap({ walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
+      // Token 60' có thể đã hết hạn giữa phiên → làm mới TRƯỚC khi tạo challenge cần PIN
+      const { userToken, encryptionKey } = await refreshSession()
+      const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
       if (res.error) throw new Error(res.error)
-      const userToken = localStorage.getItem('ez_user_token')
-      const encryptionKey = localStorage.getItem('ez_encryption_key')
-      const sdk = getSDK()
-      const ids = res.challengeIds || (res.challengeId ? [res.challengeId] : [])
-      for (let i = 0; i < ids.length; i++) {
-        setStatus(`Xác nhận bước ${i + 1}/${ids.length}...`)
-        await executeChallenge(sdk, userToken, encryptionKey, ids[i])
-      }
-      setStatus(t('Swap thành công!'))
+      setStatus('Enter PIN to confirm...')
+      await executeChallenge(getSDK(), userToken, encryptionKey, res.challengeId)
+      setStatus('Swap submitted!')
       setInput(''); setEstAmt(null)
-    } catch (e) { setError(e.message); setStatus('') }
-    finally { setLoading(false) }
+      setTimeout(() => { loadBalances(); setStatus('') }, 4000)
+    } catch (e) {
+      const msg = e?.message || e?.error?.message || (typeof e === 'string' ? e : 'Swap failed')
+      setError(msg); setStatus('')
+    } finally { setLoading(false) }
   }
+
+  const CARD = { border: '1.5px solid var(--color-gray)', borderRadius: 14, background: 'var(--color-white)', padding: '12px 14px' }
 
   return (
     <div className="screen">
       {picker && <TokenPicker exclude={picker === 'from' ? toSym : fromSym} onSelect={sym => selectToken(picker, sym)} onClose={() => setPicker(null)} />}
 
-      {/* Rows 2-6: centered content */}
-      <div className="row-2-6" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 8 }}>
-
-        {/* FROM card */}
-        <div style={{ border: '1.5px solid var(--color-gray)', borderRadius: 14, background: '#fff', display: 'flex', flexDirection: 'column', gap: 10, padding: '14px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <button onClick={() => setPicker('from')} style={{ display: 'flex', alignItems: 'center', gap: 10, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
-              <div style={{ width: 36, height: 36, borderRadius: '50%', background: COLORS[fromSym], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff' }}>{fromSym.slice(0, 2)}</div>
-              <div>
-                <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-semibold)', display: 'flex', alignItems: 'center', gap: 4 }}>{fromSym} <Icon name="down2" size={12} color="var(--color-muted)" /></div>
-                <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{(balances[fromSym] || 0).toFixed(2)}</div>
-              </div>
-            </button>
-            <div style={{ fontSize: 31, fontWeight: 700, color: input ? 'var(--color-content)' : 'var(--color-gray)' }}>{input || '0'}</div>
-          </div>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {['25%', '50%', '75%', 'Max'].map(v => (
-              <button key={v} onClick={() => { const bal = balances[fromSym] || 0; const pct = v === 'Max' ? 1 : parseFloat(v) / 100; setInput(String((bal * pct).toFixed(6).replace(/\.?0+$/, ''))) }}
-                style={{ flex: 1, padding: '4px 0', border: '1px solid var(--color-gray)', borderRadius: 8, background: 'none', cursor: 'pointer', fontSize: 'var(--fs-label)', fontFamily: 'inherit' }}>{v}</button>
-            ))}
-          </div>
-        </div>
-
-        {/* ⇅ swap button */}
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <button onClick={swapDir} style={{ width: 44, height: 44, borderRadius: '50%', border: '1.5px solid var(--color-gray)', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><Icon name="trade" size={20} color="var(--color-content)" /></button>
-        </div>
-
-        {/* TO card */}
-        <div style={{ border: '1.5px solid var(--color-gray)', borderRadius: 14, background: '#fff', padding: '14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <button onClick={() => setPicker('to')} style={{ display: 'flex', alignItems: 'center', gap: 10, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
-            <div style={{ width: 36, height: 36, borderRadius: '50%', background: COLORS[toSym], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: '#fff' }}>{toSym.slice(0, 2)}</div>
-            <div>
-              <div style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-semibold)', display: 'flex', alignItems: 'center', gap: 4 }}>{toSym} <Icon name="down2" size={12} color="var(--color-muted)" /></div>
-              <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{(balances[toSym] || 0).toFixed(2)}</div>
-            </div>
-          </button>
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 31, fontWeight: 700, color: estAmt ? 'var(--color-content)' : 'var(--color-gray)' }}>
-              {loading ? '...' : estAmt ? `~${parseFloat(estAmt).toFixed(4)}` : '0'}
-            </div>
-            {fee && <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>phí mạng: {fee.split(' + ').find(f => f.includes('USDC')) || fee}</div>}
-          </div>
-        </div>
-
-        {/* Error/status */}
-        {(error || status) && (
-          <div style={{ textAlign: 'center', fontSize: 'var(--fs-label)' }}>
-            {error && <span style={{ color: 'var(--color-error)' }}>{error}</span>}
-            {status && <span style={{ color: 'var(--color-primary)' }}>{status}</span>}
-          </div>
-        )}
+      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
+        {t('Đổi tiền')}
       </div>
 
-      {/* Rows 7-9: confirm button + numpad */}
+      <div className="row-2-6" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 8 }}>
+        {/* FROM */}
+        <div style={CARD}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <TokenRow sym={fromSym} onClick={() => setPicker('from')} />
+            <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: overBalance ? 'var(--color-error)' : input ? 'var(--color-content)' : 'var(--color-faint)' }}>
+              {input || '0'}
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
+              Available: <span className="num">{(available).toFixed(decimalsFor(fromSym))}</span>
+            </span>
+            <button onClick={() => setInput(String(parseFloat(available.toFixed(decimalsFor(fromSym)))))}
+              style={{ border: '1.5px solid var(--color-primary)', color: 'var(--color-primary)', background: 'var(--color-white)', borderRadius: 8, padding: '3px 12px', fontSize: 'var(--fs-label)', fontFamily: 'inherit', cursor: 'pointer' }}>
+              Max
+            </button>
+          </div>
+        </div>
+
+        {/* Đổi chiều */}
+        <div style={{ display: 'flex', justifyContent: 'center', margin: '-4px 0' }}>
+          <button onClick={swapDir}
+            style={{ width: 40, height: 40, borderRadius: '50%', border: '1.5px solid var(--color-gray)', background: 'var(--color-white)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <Icon name="trade" size={18} color="var(--color-content)" />
+          </button>
+        </div>
+
+        {/* TO */}
+        <div style={{ ...CARD, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <TokenRow sym={toSym} onClick={() => setPicker('to')} />
+          <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: estAmt ? 'var(--color-content)' : 'var(--color-faint)' }}>
+            {estAmt ? `≈${parseFloat(estAmt).toFixed(decimalsFor(toSym))}` : '0'}
+          </span>
+        </div>
+
+        {/* Trạng thái / lỗi / ghi chú giữ phí */}
+        <div style={{ textAlign: 'center', fontSize: 'var(--fs-label)', minHeight: 22 }}>
+          {error && <span style={{ color: 'var(--color-error)' }}>{error}</span>}
+          {!error && status && <span style={{ color: 'var(--color-primary)' }}>{status}</span>}
+          {!error && !status && fromSym === 'USDC' && (
+            <span style={{ color: 'var(--color-muted)' }}>{GAS_RESERVE_USDC} USDC is kept for network fees</span>
+          )}
+        </div>
+      </div>
+
+      {/* Numpad + nút — main screen nên NavBar giữ hàng 10, numpad gói trong 7-9 */}
       <div className="row-7-9" style={{ display: 'flex', flexDirection: 'column' }}>
-        <button className="btn btn-primary" style={{ width: '66.67%', alignSelf: 'center', height: 44, flexShrink: 0, opacity: 0.4 }} disabled
-          title={t('Swap đang hoàn thiện')}>
-          {loading ? t('Đang xử lý...') : t('Swap (sắp ra mắt)')}
-        </button>
         <div style={{ flex: 1, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />
         </div>
+        <button className="btn btn-primary" style={{ width: '66.67%', alignSelf: 'center', flexShrink: 0 }}
+          disabled={!canSwap} onClick={handleSwap}>
+          {loading ? 'Processing...' : 'Swap'}
+        </button>
       </div>
 
       <NavBar active="Swap" />

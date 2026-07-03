@@ -14,6 +14,15 @@ export function fmtVND(n) {
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VND'
 }
 
+// ⚠️ Gas trên Arc trả bằng USDC → LUÔN chừa lại 1 USDC không cho tiêu (gửi/swap),
+// kẻo khách bấm "gửi hết"/"swap hết" xong không còn phí giao dịch, kẹt ví (user chốt 2026-07-03).
+// Chỉ áp cho USDC (token gas); EURC/cirBTC tiêu hết được. Dùng ở MỌI chỗ tính "khả dụng".
+export const GAS_RESERVE_USDC = 1
+export function spendableOf(symbol, balance) {
+  const b = balance || 0
+  return symbol === 'USDC' ? Math.max(0, b - GAS_RESERVE_USDC) : b
+}
+
 // Ký hiệu tiền tệ THÂN THIỆN cho người dùng phổ thông: USDC≈USD, EURC≈EUR (stablecoin 1:1).
 // Người già biết $/€ chứ không biết USDC/EURC → chỉ đổi CHỮ HIỂN THỊ (tiền tố, vd "$127.66");
 // chain/API/lưu trữ vẫn dùng symbol thật (USDC/EURC). CHỈ dùng cho TIỀN HIỂN THỊ (tổng, quy

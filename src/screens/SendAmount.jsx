@@ -6,7 +6,7 @@ import ErrorToast from '../components/ErrorToast'
 import { getTokenInfo, getVndRate } from '../chain'
 import { t } from '../i18n'
 import { findContactName } from '../store'
-import { displaySymbol } from '../data'
+import { displaySymbol, spendableOf } from '../data'
 
 function shortenAddr(addr) {
   return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
@@ -38,7 +38,8 @@ export default function SendAmount() {
     const tok = effectiveToken(cur)
     if (!addr) { setAvailableAmt(0); return }
     setAvailableAmt(null)
-    getTokenInfo(addr, tok).then(i => setAvailableAmt(i.balance)).catch(() => setAvailableAmt(0))
+    // spendableOf: USDC chừa lại 1 làm phí mạng (gas Arc trả bằng USDC) — khách không gửi hết được
+    getTokenInfo(addr, tok).then(i => setAvailableAmt(spendableOf(tok, i.balance))).catch(() => setAvailableAmt(0))
   }, [cur])
 
   useEffect(() => {
