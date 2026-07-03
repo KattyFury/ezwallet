@@ -15,6 +15,8 @@ export default function HomeSend() {
   const [loading, setLoading] = useState(true)
   const cur = getDisplayCurrency()
   const [rates, setRates] = useState(cur === 'VND' ? { VND: 1 } : null)
+  // Mắt (per-token): mặc định false = hiện quy đổi USD; bấm → true = hiện số lượng token thật
+  const [revealMap, setRevealMap] = useState({})
 
   useEffect(() => {
     ensureWalletAddress().then(addr => {
@@ -43,8 +45,10 @@ export default function HomeSend() {
         ) : (
           <>
             {/* "Bao gồm" = tổng số dư (BalanceHeader) được cấu thành từ các token nào */}
-            <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)', paddingLeft: 2 }}>{t('Bao gồm')}</span>
-            {tokens.map(tk => (
+            <span style={{ fontFamily: 'var(--font-base)', fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)', paddingLeft: 2 }}>{t('Bao gồm')}</span>
+            {tokens.map(tk => {
+              const revealed = !!revealMap[tk.symbol]
+              return (
               <div key={tk.symbol} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 2px' }}>
                 <img
                   src={`/tokens/${tk.symbol.toLowerCase()}.png`}
@@ -56,16 +60,25 @@ export default function HomeSend() {
                   }}
                 />
                 <div className="token-icon" style={{ background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
-                {/* TRÁI = token thật (USDC/EURC/cirBTC); PHẢI = quy đổi ra tiền hiển thị (USD) cho MỌI token. */}
-                {/* Số = Barlow Condensed (.num); ký hiệu = font chữ thường (--font-base) */}
-                <span className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)' }}>
-                  {tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)} <span style={{ fontFamily: 'var(--font-base)', fontWeight: 'var(--fw-medium)' }}>{tk.symbol}</span>
-                </span>
-                <span className="num" style={{ marginLeft: 'auto', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>
-                  {rates ? <>{displayNum(tk.vnd, cur, rates)} <span style={{ fontFamily: 'var(--font-base)' }}>{displaySymbol(cur)}</span></> : '…'}
+
+                {/* Tên token thật (USDC/EURC/cirBTC) — số lượng chuyển sang bên phải, đổi qua nút mắt */}
+                <span style={{ fontFamily: 'var(--font-base)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)' }}>{tk.symbol}</span>
+
+                {/* Mắt: đen = đang hiện quy đổi USD; xám = đang hiện số lượng token thật */}
+                <button onClick={() => setRevealMap(m => ({ ...m, [tk.symbol]: !m[tk.symbol] }))}
+                  style={{ background: 'none', border: 'none', padding: 4, margin: 0, display: 'flex', cursor: 'pointer' }}
+                  aria-label="toggle amount">
+                  <Icon name="eye" size={18} color={revealed ? 'var(--color-muted)' : 'var(--color-content)'} />
+                </button>
+
+                <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-base)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>
+                  {revealed
+                    ? tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)
+                    : (rates ? <>{displayNum(tk.vnd, cur, rates)} {displaySymbol(cur)}</> : '…')}
                 </span>
               </div>
-            ))}
+              )
+            })}
           </>
         )}
       </div>

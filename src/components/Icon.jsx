@@ -8,6 +8,7 @@ import copy from '../../icon/copy.svg?raw'
 import down from '../../icon/down.svg?raw'
 import down2 from '../../icon/down2.svg?raw'
 import download from '../../icon/download.svg?raw'
+import eye from '../../icon/eye.svg?raw'
 import facebook from '../../icon/facebook.svg?raw'
 import globe from '../../icon/globe.svg?raw'
 import google from '../../icon/google.svg?raw'
@@ -30,7 +31,7 @@ import warning from '../../icon/warning.svg?raw'
 import x from '../../icon/x.svg?raw'
 
 const ICONS = {
-  add, back, check, clock, copy, down, down2, download, facebook, globe, google, hint,
+  add, back, check, clock, copy, down, down2, download, eye, facebook, globe, google, hint,
   human, info, left, mail, menu, out, qr, right, right2, scan, share, shield, trade, up, warning, x,
 }
 
