@@ -8,6 +8,12 @@ import { spendableOf, GAS_RESERVE_USDC } from '../data'
 import { addNotif } from '../notif'
 import { t } from '../i18n'
 
+// 🔴 SWAP EXECUTE ĐANG SAI (làm mất tiền — bóc instructions bỏ qua adapter settlement,
+// USDC output kẹt ở adapter 0xBBD70b01, không về ví). DISABLE tới khi execute qua ADAPTER
+// contract đúng cách (xem HANDOFF mục SWAP). UI + estimate vẫn chạy để giữ giao diện.
+// Bật lại: đổi SWAP_ENABLED = true SAU KHI sửa functions/api/swap.js gọi adapter + verify eth_simulateV1.
+const SWAP_ENABLED = false
+
 // App khóa English (session 5) — chuỗi mới trong màn này hardcode English,
 // t() chỉ giữ cho các key cũ đã có trong từ điển (Đổi tiền, Quay lại...).
 const SWAP_TOKENS = ['USDC', 'EURC', 'cirBTC']
@@ -64,7 +70,7 @@ export default function Swap() {
   // Khả dụng: USDC chừa lại 1 làm phí mạng (gas Arc = USDC) — không cho swap hết
   const available = spendableOf(fromSym, balances[fromSym])
   const overBalance = amountNum > available
-  const canSwap = amountNum > 0 && !overBalance && !loading
+  const canSwap = SWAP_ENABLED && amountNum > 0 && !overBalance && !loading
 
   function loadBalances() {
     if (!walletAddress) return
@@ -186,12 +192,13 @@ export default function Swap() {
       {/* Nút Swap + trạng thái — hàng 6 (trên numpad) */}
       <div style={{ gridRow: '6 / 7', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
         <button className="btn btn-primary" style={{ width: '66.67%' }} disabled={!canSwap} onClick={handleSwap}>
-          {loading ? 'Processing...' : 'Swap'}
+          {loading ? 'Processing...' : SWAP_ENABLED ? 'Swap' : 'Swap (under repair)'}
         </button>
         <div style={{ textAlign: 'center', fontSize: 'var(--fs-tiny)', minHeight: 14 }}>
-          {error && <span style={{ color: 'var(--color-error)' }}>{error}</span>}
-          {!error && status && <span style={{ color: 'var(--color-primary)' }}>{status}</span>}
-          {!error && !status && fromSym === 'USDC' && (
+          {!SWAP_ENABLED && <span style={{ color: 'var(--color-muted)' }}>Swap is temporarily disabled while we fix settlement</span>}
+          {SWAP_ENABLED && error && <span style={{ color: 'var(--color-error)' }}>{error}</span>}
+          {SWAP_ENABLED && !error && status && <span style={{ color: 'var(--color-primary)' }}>{status}</span>}
+          {SWAP_ENABLED && !error && !status && fromSym === 'USDC' && (
             <span style={{ color: 'var(--color-muted)' }}>{GAS_RESERVE_USDC} USDC is kept for network fees</span>
           )}
         </div>

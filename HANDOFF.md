@@ -57,12 +57,31 @@
 - **Đổi PIN** (user email): `PUT /v1/w3s/user/pin` → challenge → PIN cũ + PIN mới. ✅ verify bằng gọi API thật.
 - **refreshSession()** (`circle.js`): gọi TRƯỚC MỌI thao tác cần PIN — email user tạo token mới qua userId=email; Google user đổi `refreshToken` qua `POST /users/token/refresh` (body `{idempotencyKey, refreshToken, deviceId}` + header X-User-Token).
 
-**🆕 SWAP (build lại session 11-12, CHƯA test on-chain bằng PIN thật):**
-- Luồng: Kit `/v1/stablecoinKits/swap` → `instructions[]` → gộp hết vào **1 tx** `Multicall3From.aggregate3` → **1 challenge → 1 lần PIN**. (2 challenge riêng = swap simulate trước khi approve mine → revert — root cause fail cũ.)
-- Encoder aggregate3 tự viết trong `functions/api/swap.js` — **verified khớp byte với viem** (3 case).
-- ⚠️⚠️ **Kit API nhận `amount` = SỐ NGUYÊN BASE UNITS** ("88.57" → 400 validation; "20" bị hiểu 20/10⁶ token → dust → "No route available" 404). Server quy decimal↔base units 2 chiều (`toBase`/`fromBase`), client chỉ dùng `amountOut` decimal. Verify gọi thật: đủ route 2 chiều USDC↔EURC↔cirBTC với amount đúng.
-- Swap quá nhỏ → Kit 422 `code 331001` "insufficient after fees".
-- UI: from/icon/to/nút Swap/numpad (numpad đồng bộ vị trí SendAmount, container gridRow 7/10 vì NavBar chiếm 10), picker hiện đủ 3 token (chọn trùng phía kia = tự đảo), Max theo spendable, addNotif sau swap.
+**❌🔴 SWAP — HIỆN ĐANG SAI, LÀM MẤT TIỀN. ĐÃ DISABLE (session 14, 2026-07-04). PHẢI SỬA THEO CÁCH DƯỚI TRƯỚC KHI BẬT LẠI.**
+
+> ⚠️⚠️⚠️ **ROOT CAUSE THẬT (tìm ra 2026-07-04 sau khi mổ on-chain + đọc source SDK — KHÔNG đoán):**
+> Response `/v1/stablecoinKits/swap` KHÔNG phải để bóc `instructions[]` chạy tay. Nó là 1 **intent có CHỮ KÝ** (`transaction.signature`) phải nộp cho **1 ADAPTER CONTRACT của Circle**. Adapter mới là thứ chạy instructions, GOM output, rồi **ghi có cho `beneficiary` (ví)**. Bóc instructions chạy tay (dù trực tiếp hay qua Multicall3From) = **bỏ qua bước settlement** → token vào bị tiêu, USDC output KẸT Ở ADAPTER, KHÔNG BAO GIỜ VỀ VÍ.
+>
+> **Bằng chứng cứng:**
+> - Trace log tx swap thật (status=1): `USDC 85.09 [router] → 0xBBD70b01...` — output bay tới **`0xBBD70b01a1CAbc96d5b7b129Ae1AAabdf50dd40b`**.
+> - Địa chỉ đó = `ADAPTER_CONTRACT_EVM_TESTNET` trong source `@circle-fin/provider-stablecoin-service-swap/index.mjs` dòng ~595. Đó là adapter settlement, KHÔNG phải ví user.
+> - `eth_simulateV1` bundle [approve+instructions] gọi TRỰC TIẾP từ ví: EURC 5→2 (bị tiêu 3) nhưng **USDC ĐỨNG YÊN** → kể cả gọi trực tiếp, bóc-instructions vẫn không giao USDC.
+>
+> **Cấu trúc response đúng (dump thật):** top-level `{tokenIn/OutAddress, tokenIn/OutChain, fromAddress, toAddress, amount, stopLimit, estimatedAmount, fees, route(provider:"lifi",tool:"fly"), transaction}`. `transaction = { signature, gasLimit, executionParams: { execId, deadline, metadata, tokens:[{token, beneficiary:ví}], instructions:[{target,data,value,tokenIn,amountToApprove,tokenOut,minTokenOut}] } }`. **`transaction.to` và `transaction.data` = undefined** → mình PHẢI tự dựng lệnh gọi ADAPTER với `(executionParams, signature)`.
+>
+> **CÁCH ĐÚNG cần làm (session sau):**
+> 1. Gọi **ADAPTER `0xBBD70b01a1CAbc96d5b7b129Ae1AAabdf50dd40b`** (Arc Testnet) bằng hàm nhận `(executionParams, signature)` — 1 tx / 1 PIN qua `contractExecution` (contractAddress=adapter, callData=encode hàm execute). Có thể vẫn cần `approve(tokenIn → adapter, amount)` trước → gộp approve+execute vào Multicall3From CÓ THỂ vẫn hỏng recipient (đã thấy), nên **kiểm bằng eth_simulateV1 rằng USDC VỀ VÍ trước khi ship**.
+> 2. **CHƯA CÓ ABI/tên hàm của adapter.** Lấy từ: **(a) Circle codegen MCP** `https://api.circle.com/v1/codegen/mcp` (đã `claude mcp add` scope user vào `C:\Users\Dell\.claude.json`, cần RESTART để nạp) — hỏi nó cách execute stablecoin-kit swap cho on-chain; **(b) hoặc đọc source** `@circle-fin/app-kit` + `@circle-fin/adapter-viem-v2` + `@circle-fin/provider-stablecoin-service-swap` (đã `npm install --no-save`, nằm trong node_modules NHƯNG chưa lưu package.json — `npm ci` sẽ mất, cài lại để đọc) — tìm chỗ nó build tx tới ADAPTER_CONTRACT (functionName + abi encode executionParams+signature).
+> 3. **BẮT BUỘC: sau khi build, verify bằng `eth_simulateV1`** (bundle approve+execute từ ví, đọc `balanceOf(USDC, ví)` trước/sau) — chỉ ship khi USDC ví TĂNG đúng. Đừng tin "tx status=1" (tx cũ status=1 mà vẫn mất tiền).
+>
+> **CÁC HƯỚNG ĐÃ THỬ & THẤT BẠI (đừng lặp):**
+> - Bóc `instructions[]` gộp `Multicall3From.aggregate3` (S11-13) → tx status=1 nhưng USDC về ADAPTER (msg.sender = proxy CallFrom), MẤT TIỀN.
+> - Thêm `approve` trước mỗi instruction (S13) → sửa được revert "exceeds allowance" nhưng VẪN mất tiền (vì gốc là thiếu adapter settlement, không phải thiếu approve).
+> - Gọi instructions trực tiếp từ ví (sim S14) → EURC bị tiêu, USDC không về. Bóc-instructions về bản chất SAI.
+>
+> **Đã verify ĐÚNG (giữ lại):** Kit `amount` = **SỐ NGUYÊN BASE UNITS** (decimal "88.57" → 400; số nhỏ → "No route" 404). Server `toBase`/`fromBase` 2 chiều — GIỮ. Swap quá nhỏ → 422 `331001`. Route đủ 2 chiều USDC↔EURC↔cirBTC.
+> **UI Swap đã đẹp (giữ):** FROM h2-3, arrow h4, TO h5, nút Swap h6, numpad chuẩn h7-9; chip 50%/100%; `~` thay `≈`; picker 3 token. **CHỈ phần EXECUTE ở `functions/api/swap.js` (action 'execute') + `dev-server.js` là SAI** — cần thay bằng gọi adapter.
+> **Đã DISABLE:** `SWAP_ENABLED=false` trong `Swap.jsx` (nút Swap mờ + báo "Swap tạm khóa"), tránh mất thêm tiền testnet tới khi execute đúng.
 
 **❌ Google login — DISABLED (user chốt 2026-07-03, nút mờ trong Login.jsx `disabled: true`):**
 - Login + tạo ví + OAuth redirect ĐÃ CHẠY (fix qua 3 session: cookies persist config qua redirect, `getDeviceId()` thật của SDK, lưu refreshToken).
@@ -141,7 +160,7 @@ Bền: `ez_contacts`, `ez_saved_qrs`, `ez_lang`, `ez_currency`, `ez_onboarded`.
 
 ## 8. Việc tiếp theo
 
-1. **TEST SWAP trên deploy** (user, cần PIN): EURC→USDC vài đơn vị → 1 lần PIN → check số dư + thông báo + ArcScan. Nếu revert: đọc tx trên ArcScan xem subcall nào fail.
+1. **🔴 SỬA SWAP EXECUTE (ưu tiên số 1)** — gọi ADAPTER `0xBBD70b01a1CAbc96d5b7b129Ae1AAabdf50dd40b` với `(executionParams, signature)` thay vì bóc instructions. Lấy ABI từ Circle codegen MCP (đã add, restart để nạp) hoặc source `@circle-fin/app-kit`/`adapter-viem-v2`. VERIFY bằng eth_simulateV1 (USDC ví tăng) TRƯỚC khi bật `SWAP_ENABLED`. Chi tiết đầy đủ ở mục 3 (SWAP).
 2. Test biên lai `$2` + Amount row + TxHistory layout mới + memo trong list.
 3. **Trạng thái giao dịch thật** — poll txHash sau gửi/swap → "đã lên blockchain" (Arc finality <1s).
 4. **Google login làm lại** qua Google Identity Services → luồng email (khi user yêu cầu — xem mục 3).
@@ -158,6 +177,7 @@ Bền: `ez_contacts`, `ez_saved_qrs`, `ez_lang`, `ez_currency`, `ez_onboarded`.
 - **S8-10 (07-03):** Google login chạy; phát hiện SSO ≠ email (2 ví); Đổi PIN 403 cho SSO → verify bằng gọi API thật (email OK, SSO bị chặn platform) → **disable Google login**; scrollbar ẩn.
 - **S11 (07-03):** Swap build lại: Multicall3From batch 1 tx 1 PIN, encoder verified vs viem, chừa 1 USDC phí, UI theo design system.
 - **S12 (07-03):** Kit amount = base units (root cause "No route"/400); biên lai `$2` + Amount token thật; TxHistory layout mới + cùng nguồn tỷ giá + memo trong list; Swap layout chuẩn numpad + picker 3 token + notif; dọn code chết (mock TOKENS/SWAP_PAIRS/fmtDisplay, wireframe spec, 3 icon); viết lại HANDOFF.
+- **S14 (07-04):** 🔴 **Đào ra ROOT CAUSE swap mất tiền** = phải gọi ADAPTER contract (`0xBBD70b01`) với intent có chữ ký, KHÔNG bóc instructions chạy tay (bỏ qua settlement → USDC kẹt ở adapter). Bằng chứng: trace log tx + eth_simulateV1 (input tiêu, output không về). **Đã DISABLE swap** (`SWAP_ENABLED=false`). Thêm Circle codegen MCP (`claude mcp add`, cần restart). Layout Swap theo spec user (h2-3/4/5/6 + 50%/100% + `~`). **Cách sửa đúng đã note kỹ ở mục 3.**
 - **S13 (07-04):** 16 UX fix (email hint giữ khi đăng xuất, Hold to show tokens, Security divider, Recovery/Currency làm mờ, TxHistory gọn bỏ chữ token, check.svg, CreateQR chip phải + USD default + cirBTC + numpad phẩy, QR số 1 style, quét-gì-hiện-đó, ShowQR chỉ Share/Back + auto-save kho). Swap layout theo spec user (FROM h2-3, arrow h4, TO h5, Swap h6, numpad chuẩn h7-9; 50%/100% thay Max; `~` thay `≈`).
 
 ## Quyết định & hướng đã thử (Decisions / Failed Approaches)
