@@ -73,7 +73,7 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates }) {
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>
-          {isSend ? t('Đã gửi') : t('Đã nhận')} {displaySymbol(symbol)}
+          {isSend ? t('Đã gửi') : t('Đã nhận')} {symbol}
         </div>
         <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {isSend ? t('Đến') : t('Từ')} {name || shortAddr(counter)} · {timeAgo(tx.timeStamp)}
@@ -82,14 +82,12 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates }) {
 
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         <div className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: isSend ? 'var(--color-error)' : 'var(--color-primary)' }}>
-          {isSend ? '-' : '+'}{amount.toFixed(amount < 0.01 ? 6 : 2)} <Cur>{displaySymbol(symbol)}</Cur>
+          {isSend ? '-' : '+'}{amount.toFixed(amount < 0.01 ? 6 : 2)} <Cur>{symbol}</Cur>
         </div>
-        {/* Quy đổi ra tiền hiển thị — ẩn nếu token CHÍNH LÀ tiền hiển thị (tránh trùng) */}
-        {symbol !== cur && (
-          <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
-            {rates ? <>{displayNum(vnd, cur, rates)} <Cur>{displaySymbol(cur)}</Cur></> : '…'}
-          </div>
-        )}
+        {/* Quy đổi ra tiền hiển thị (USD) — giúp hiểu giá trị */}
+        <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
+          {rates ? <>{displayNum(vnd, cur, rates)} <Cur>{displaySymbol(cur)}</Cur></> : '…'}
+        </div>
       </div>
     </button>
   )
@@ -186,7 +184,7 @@ export default function TxHistory() {
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
           <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 360, background: 'var(--color-white)', borderRadius: 16, padding: 20 }}>
             <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center', marginBottom: 8 }}>{t('Chi tiết giao dịch')}</div>
-            <DetailRow label={t('Loại')}>{d.isSend ? t('Đã gửi') : t('Đã nhận')} {displaySymbol(d.symbol)}</DetailRow>
+            <DetailRow label={t('Loại')}>{d.isSend ? t('Đã gửi') : t('Đã nhận')} {d.symbol}</DetailRow>
             {d.name && <DetailRow label={d.isSend ? t('Người nhận') : t('Người gửi')}>{d.name}</DetailRow>}
             <DetailRow label={t('Địa chỉ ví')}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
@@ -198,10 +196,10 @@ export default function TxHistory() {
             </DetailRow>
             <DetailRow label={t('Số tiền')}>
               <span className="num" style={{ color: d.isSend ? 'var(--color-error)' : 'var(--color-primary)' }}>
-                {d.isSend ? '-' : '+'}{d.amount.toFixed(d.amount < 0.01 ? 6 : 2)} <Cur>{displaySymbol(d.symbol)}</Cur>
+                {d.isSend ? '-' : '+'}{d.amount.toFixed(d.amount < 0.01 ? 6 : 2)} <Cur>{d.symbol}</Cur>
               </span>
             </DetailRow>
-            {d.symbol !== cur && <DetailRow label={t('Quy đổi')}><span className="num">{rates ? <>{displayNum(d.vnd, cur, rates)} <Cur>{displaySymbol(cur)}</Cur></> : '…'}</span></DetailRow>}
+            <DetailRow label={t('Quy đổi')}><span className="num">{rates ? <>{displayNum(d.vnd, cur, rates)} <Cur>{displaySymbol(cur)}</Cur></> : '…'}</span></DetailRow>
             <DetailRow label={t('Thời gian')}>{new Date(selected.timeStamp * 1000).toLocaleString('vi-VN')}</DetailRow>
             {memoLoading ? <DetailRow label={t('Nội dung')}>{t('Đang tải...')}</DetailRow> : memo ? <DetailRow label={t('Nội dung')}>{memo}</DetailRow> : null}
             <button className="btn btn-secondary" style={{ width: '100%', marginTop: 14 }}

@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNav } from '../nav'
-import { fmtVND, displaySymbol } from '../data'
+import { fmtVND } from '../data'
 import { addNotif } from '../notif'
 import { saveImageToPhotos } from '../saveImage'
 import { t } from '../i18n'
@@ -28,7 +28,7 @@ export default function SendReceipt() {
   const { navigate, params } = useNav()
   const { address, name, amount, memo, currency = 'VND', timestamp } = params
   const to = name || shortenAddr(address)
-  const amountText = currency === 'VND' ? fmtVND(amount) : `${amount} ${displaySymbol(currency)}`
+  const amountText = currency === 'VND' ? fmtVND(amount) : `${amount} ${currency}`
 
   // Lưu thông báo "đã gửi" để HomeSend hiện
   useEffect(() => {
@@ -74,7 +74,7 @@ export default function SendReceipt() {
         <CheckIcon />
         <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>{t('Đã gửi thành công')}</span>
         <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-primary)' }}>
-          {currency === 'VND' ? amountText : <>{amount} <span style={{ fontFamily: 'var(--font-base)', fontWeight: 'var(--fw-medium)' }}>{displaySymbol(currency)}</span></>}
+          {currency === 'VND' ? amountText : <>{amount} <span style={{ fontFamily: 'var(--font-base)', fontWeight: 'var(--fw-medium)' }}>{currency}</span></>}
         </span>
         <div className="confirm-box" style={{ width: '100%' }}>
           <div className="confirm-row">

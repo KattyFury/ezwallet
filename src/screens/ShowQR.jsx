@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useNav } from '../nav'
 import { QRCodeCanvas } from 'qrcode.react'
-import { fmtVND, displaySymbol } from '../data'
+import { fmtVND } from '../data'
 import { saveImageToPhotos } from '../saveImage'
 import { t } from '../i18n'
 import { loadSavedQRs, saveSavedQRs } from '../store'
@@ -11,7 +11,7 @@ export default function ShowQR() {
   const { amount, currency = 'VND', from } = params
   const walletAddr = localStorage.getItem('ez_wallet_addr') || ''
   const qrValue = `ezwallet:${walletAddr}?amount=${amount}&cur=${currency}`
-  const amountText = currency === 'VND' ? fmtVND(amount) : `${amount} ${displaySymbol(currency)}`
+  const amountText = currency === 'VND' ? fmtVND(amount) : `${amount} ${currency}`
   const wrapRef = useRef(null)
 
   // Từ CreateQR → còn nút "Lưu vào kho QR" (lưu để dùng lại). Từ SavedQRList → đã có sẵn trong kho.
@@ -43,7 +43,7 @@ export default function ShowQR() {
 
       <div ref={wrapRef} className="row-3-6 center col" style={{ gap: 12 }}>
         <QRCodeCanvas value={qrValue} size={200} level="M" />
-        <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)' }}>{currency === 'VND' ? amountText : <>{amount} <span style={{ fontFamily: 'var(--font-base)', fontWeight: 'var(--fw-medium)' }}>{displaySymbol(currency)}</span></>}</span>
+        <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)' }}>{currency === 'VND' ? amountText : <>{amount} <span style={{ fontFamily: 'var(--font-base)', fontWeight: 'var(--fw-medium)' }}>{currency}</span></>}</span>
         <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{t('Cho người gửi quét mã này')}</span>
       </div>
 

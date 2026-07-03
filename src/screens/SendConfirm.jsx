@@ -38,9 +38,9 @@ export default function SendConfirm() {
                    : currency === 'CNY' ? (amount * rates.CNY) / rates.USDC
                    : amount
   const sendAmountStr = (currency === 'VND' || currency === 'CNY') ? sendAmount.toFixed(4) : sendAmount.toFixed(2)
-  const mainEl = currency === 'VND' ? fmtVND(amount) : <>{amount} <Cur>{displaySymbol(currency)}</Cur></>
+  const mainEl = currency === 'VND' ? fmtVND(amount) : <>{amount} <Cur>{currency}</Cur></>
   // "Quy đổi" = lượng token thật chuyển đi; chỉ hiện khi nhập bằng tiền pháp định (VND/CNY)
-  const convEl = <>{sendAmountStr} <Cur>{displaySymbol(token)}</Cur></>
+  const convEl = <>{sendAmountStr} <Cur>{token}</Cur></>
   const showConv = currency === 'VND' || currency === 'CNY'
 
   // Phí mạng theo TIỀN TỆ MẶC ĐỊNH (ez_currency), không cứng VND
