@@ -49,7 +49,6 @@ export default function HomeReceive() {
       <div className="row-7-8" style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: '2dvh' }}>
         <NotifArea fallback={
           <div style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 3, fontSize: 'var(--fs-label)', textAlign: 'left', color: 'var(--color-content)' }}>
-            <span style={{ fontWeight: 'var(--fw-semibold)' }}>Hint:</span>
             <div><span style={{ fontWeight: 'var(--fw-medium)' }}>Share</span> = share your wallet address</div>
             <div><span style={{ fontWeight: 'var(--fw-medium)' }}>Create QR</span> = make a QR for the exact amount</div>
             <div><span style={{ fontWeight: 'var(--fw-medium)' }}>QR Library</span> = keep your frequently used QRs</div>
