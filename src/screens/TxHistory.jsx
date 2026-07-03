@@ -84,9 +84,12 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates }) {
         <div className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: isSend ? 'var(--color-error)' : 'var(--color-primary)' }}>
           {isSend ? '-' : '+'}{amount.toFixed(amount < 0.01 ? 6 : 2)} <Cur>{displaySymbol(symbol)}</Cur>
         </div>
-        <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
-          {rates ? <>{displayNum(vnd, cur, rates)} <Cur>{displaySymbol(cur)}</Cur></> : '…'}
-        </div>
+        {/* Quy đổi ra tiền hiển thị — ẩn nếu token CHÍNH LÀ tiền hiển thị (tránh trùng) */}
+        {symbol !== cur && (
+          <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
+            {rates ? <>{displayNum(vnd, cur, rates)} <Cur>{displaySymbol(cur)}</Cur></> : '…'}
+          </div>
+        )}
       </div>
     </button>
   )
@@ -198,7 +201,7 @@ export default function TxHistory() {
                 {d.isSend ? '-' : '+'}{d.amount.toFixed(d.amount < 0.01 ? 6 : 2)} <Cur>{displaySymbol(d.symbol)}</Cur>
               </span>
             </DetailRow>
-            <DetailRow label={t('Quy đổi')}><span className="num">{rates ? <>{displayNum(d.vnd, cur, rates)} <Cur>{displaySymbol(cur)}</Cur></> : '…'}</span></DetailRow>
+            {d.symbol !== cur && <DetailRow label={t('Quy đổi')}><span className="num">{rates ? <>{displayNum(d.vnd, cur, rates)} <Cur>{displaySymbol(cur)}</Cur></> : '…'}</span></DetailRow>}
             <DetailRow label={t('Thời gian')}>{new Date(selected.timeStamp * 1000).toLocaleString('vi-VN')}</DetailRow>
             {memoLoading ? <DetailRow label={t('Nội dung')}>{t('Đang tải...')}</DetailRow> : memo ? <DetailRow label={t('Nội dung')}>{memo}</DetailRow> : null}
             <button className="btn btn-secondary" style={{ width: '100%', marginTop: 14 }}
