@@ -63,9 +63,9 @@ function HintBlock({ lines }) {
   )
 }
 
-// hints: [{label, desc}] — render CHUNG thành 1 khối (luôn hiện, không phải fallback nữa).
-// warning: JSX | null — cảnh báo ưu tiên cao (vd hết USDC trả phí); giữ đúng logic CŨ = chỉ
-// hiện khi CHƯA có thông báo thật nào, để không đổi hành vi đã có.
+// hints: [{label, desc}] — render CHUNG thành 1 khối. warning: JSX | null — cảnh báo (vd hết
+// USDC trả phí). Cả 2 giờ là ITEM trong CÙNG 1 stack với thông báo thật (không early-return
+// thay thế nữa) — luôn cuộn+căn đáy+mờ đồng bộ, warning không đè mất hint.
 export default function NotifArea({ hints = [], warning = null }) {
   const { navigate } = useNav()
   const [notifs, setNotifs] = useState(getNotifs())
@@ -83,13 +83,14 @@ export default function NotifArea({ hints = [], warning = null }) {
     navigate('TxHistory', n.hash ? { openHash: n.hash } : {})
   }
 
-  if (notifs.length === 0 && warning) return warning
-
-  // notifs lưu MỚI NHẤT ở ĐẦU (unshift trong notif.js). Hiển thị theo dòng thời gian: CŨ (hint —
-  // 1 KHỐI nhiều dòng, không phải nhiều thông báo riêng) ở TRÊN cùng — mờ/mất trước — MỚI NHẤT
-  // ở DƯỚI cùng (gần hàng nút, luôn thấy trước tiên).
+  // notifs lưu MỚI NHẤT ở ĐẦU (unshift trong notif.js). Hiển thị theo dòng thời gian, TẤT CẢ
+  // CÙNG 1 STACK (không early-return thay thế nữa — đó là bug khiến warning "văng" lên đầu box
+  // và đè mất hint): CŨ/ưu tiên thấp nhất ở TRÊN cùng (mờ/mất trước) → MỚI/ưu tiên cao ở DƯỚI
+  // cùng (gần hàng nút, luôn thấy trước tiên). Thứ tự ưu tiên: hint (thấp nhất) → warning (vd hết
+  // USDC) → thông báo thật (nhận/gửi/lỗi), mới nhất nằm đáy cùng.
   const items = [
     ...(hints.length ? [{ id: 'hint', type: 'hint', hints }] : []),
+    ...(warning ? [{ id: 'warning', type: 'warning', node: warning }] : []),
     ...[...notifs].reverse(),
   ]
 
@@ -105,6 +106,7 @@ export default function NotifArea({ hints = [], warning = null }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minHeight: '100%', justifyContent: 'flex-end' }}>
         {items.map(n => {
           if (n.type === 'hint') return <HintBlock key={n.id} lines={n.hints} />
+          if (n.type === 'warning') return <div key={n.id}>{n.node}</div>
           const s = STYLE[n.type] || STYLE.sent
           const clickable = n.type === 'received' || n.type === 'sent'
           return (

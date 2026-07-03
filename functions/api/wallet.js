@@ -40,7 +40,9 @@ export async function onRequestPost(ctx) {
   }
 
   if (action === 'resetPin') {
-    const data = await circleReq('PUT', '/user/pin', { idempotencyKey: crypto.randomUUID() }, apiKey, userToken);
+    // Xác nhận từ API reference Circle (create-user-pin-challenge): endpoint này là POST, KHÔNG
+    // phải PUT — code cũ gọi sai method → Circle trả 403 Forbidden (không phải lỗi trạng thái ví).
+    const data = await circleReq('POST', '/user/pin', { idempotencyKey: crypto.randomUUID() }, apiKey, userToken);
     const challengeId = data?.data?.challengeId;
     if (!challengeId) {
       // Lộ lỗi THẬT của Circle (vd "user has no wallet", "PIN not set"...) thay vì "no challengeId"
