@@ -43,7 +43,7 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
       }}
       aria-label="hold to show token amounts instead of $"
     >
-      Show tokens
+      Hold to show tokens
     </button>
   )
 }

@@ -42,6 +42,9 @@ export default function Security() {
 
   const LABEL = { flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }
   const VALUE = { fontSize: 'var(--fs-label)', color: 'var(--color-muted)', maxWidth: '55%', textAlign: 'right', wordBreak: 'break-all' }
+  // Mỗi mục nằm 1 grid row riêng → .menu-item luôn là :last-child của div cha → CSS bỏ border.
+  // Thêm lại line xám thủ công cho đồng bộ với About/TxHistory (user báo Security thiếu divider).
+  const DIVIDER = { borderBottom: '1px solid rgba(204,204,204,0.5)' }
 
   return (
     <div className="screen">
@@ -51,31 +54,32 @@ export default function Security() {
 
       {/* Mỗi mục 1 hàng (đồng bộ màn Ngôn ngữ & tiền tệ) — không dàn đều cả trang */}
       <div className="row-2" style={{ display: 'flex', alignItems: 'center' }}>
-        <div className="menu-item">
+        <div className="menu-item" style={DIVIDER}>
           <span style={LABEL}>{t('Email đăng nhập')}</span>
           <span style={VALUE}>{email}</span>
         </div>
       </div>
       <div className="row-3" style={{ display: 'flex', alignItems: 'center' }}>
-        <button className="menu-item" onClick={copyAddr}>
+        <button className="menu-item" style={DIVIDER} onClick={copyAddr}>
           <span style={LABEL}>{t('Địa chỉ ví')}</span>
           <span style={{ ...VALUE, color: copied ? 'var(--color-primary)' : 'var(--color-muted)' }}>{copied ? t('Đã sao chép') : shortAddr}</span>
           <Icon name="copy" size={16} color="var(--color-faint)" />
         </button>
       </div>
       <div className="row-4" style={{ display: 'flex', alignItems: 'center' }}>
-        <button className="menu-item" onClick={handleResetPin}>
+        <button className="menu-item" style={DIVIDER} onClick={handleResetPin}>
           <span style={LABEL}>{t('Đổi PIN')}</span>
           {pinStatus
             ? <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-primary)' }}>{pinStatus}</span>
             : <Icon name="right2" size={15} color="var(--color-faint)" />}
         </button>
       </div>
+      {/* Phương thức khôi phục CHƯA build → làm mờ, không bấm được (user: cái gì chưa xong thì làm mờ) */}
       <div className="row-5" style={{ display: 'flex', alignItems: 'center' }}>
-        <button className="menu-item" onClick={() => navigate('ComingSoon', { title: t('Phương thức khôi phục') })}>
+        <div className="menu-item" style={{ opacity: 0.4, cursor: 'not-allowed' }}>
           <span style={LABEL}>{t('Phương thức khôi phục')}</span>
-          <Icon name="right2" size={15} color="var(--color-faint)" />
-        </button>
+          <span style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)' }}>Coming soon</span>
+        </div>
       </div>
 
       <div className="row-10 row10-single">

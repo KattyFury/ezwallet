@@ -1,16 +1,17 @@
 import { useEffect } from 'react'
 import { useNav } from '../nav'
+import Icon from '../components/Icon'
 import { fmtVND, fmtMoney } from '../data'
 import { addNotif } from '../notif'
 import { saveImageToPhotos } from '../saveImage'
 import { t } from '../i18n'
 
+// Vòng tròn xanh + check.svg trắng (dùng chung icon hệ thống, không vẽ path riêng)
 function CheckIcon() {
   return (
-    <svg width="52" height="52" viewBox="0 0 24 24" fill="none">
-      <circle cx="12" cy="12" r="11" fill="var(--color-primary)" />
-      <path d="M7 12l4 4 6-6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
+    <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <Icon name="check" size={34} color="var(--color-white)" />
+    </div>
   )
 }
 

@@ -3,7 +3,7 @@ import { useNav } from '../nav'
 import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
 import ErrorToast from '../components/ErrorToast'
-import { getTokenInfo, getVndRate } from '../chain'
+import { getTokenInfo } from '../chain'
 import { t } from '../i18n'
 import { findContactName } from '../store'
 import { displaySymbol, spendableOf } from '../data'
@@ -20,17 +20,14 @@ export default function SendAmount() {
   const { navigate, params } = useNav()
   const { address } = params
   const name = params.name || findContactName(address)
-  const qrCurrency = params.currency
-  // Mặc định LUÔN là USD (dễ hiểu nhất) — không phụ thuộc tiền tệ hiển thị ở Cài đặt.
-  const [cur, setCur] = useState('USD')
-  // QR cùng token với mặc định (USDC, vì USD≈USDC) → điền thẳng; khác token → để trống, quy đổi sau khi có tỷ giá.
-  const [digits, setDigits] = useState(() =>
-    params.amount && (!qrCurrency || qrCurrency === 'USDC') ? String(params.amount) : ''
-  )
+  // QUÉT GÌ HIỆN ĐÓ: nếu QR có tiền tệ hợp lệ → mở đúng tiền tệ đó (2 USDC hiện "2 USDC",
+  // KHÔNG quy về USD). QR cũ/không rõ (vd 'VND') → mặc định USD.
+  const qrCurrency = CURRENCIES.includes(params.currency) ? params.currency : null
+  const [cur, setCur] = useState(qrCurrency || 'USD')
+  const [digits, setDigits] = useState(params.amount ? String(params.amount) : '')
   const [memo, setMemo] = useState(params.memo || '')
   const [showCur, setShowCur] = useState(false)
   const [availableAmt, setAvailableAmt] = useState(null) // số dư của TOKEN đang chọn (đơn vị token thật)
-  const [rates, setRates] = useState({ USDC: 25000, EURC: 27000, cirBTC: 2_600_000_000 })
 
   // Số dư khả dụng: theo ĐÚNG token đang chọn (USD/USDC → USDC; EURC → EURC; cirBTC → cirBTC)
   useEffect(() => {
@@ -41,21 +38,6 @@ export default function SendAmount() {
     // spendableOf: USDC chừa lại 1 làm phí mạng (gas Arc trả bằng USDC) — khách không gửi hết được
     getTokenInfo(addr, tok).then(i => setAvailableAmt(spendableOf(tok, i.balance))).catch(() => setAvailableAmt(0))
   }, [cur])
-
-  useEffect(() => {
-    Promise.all([getVndRate('USDC'), getVndRate('EURC'), getVndRate('cirBTC')])
-      .then(([u, e, b]) => {
-        const r = { USDC: u, EURC: e, cirBTC: b }
-        setRates(r)
-        // Quét QR bằng token KHÁC mặc định (USDC) → quy đổi về USDC-equivalent qua VND:
-        // giá trị QR quy ra VND (× tỷ giá token QR) rồi chia tỷ giá USDC.
-        if (params.amount && qrCurrency && qrCurrency !== 'USDC' && r[qrCurrency]) {
-          const vnd = params.amount * r[qrCurrency]
-          setDigits((vnd / r.USDC).toFixed(2))
-        }
-      })
-      .catch(() => {})
-  }, [])
 
   const amount = parseFloat(digits || '0')
   const overBalance = availableAmt !== null && amount > availableAmt

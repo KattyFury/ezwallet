@@ -37,10 +37,19 @@ const err = (msg, detail, status = 500) =>
 // Encode aggregate3(Call3[]) THỦ CÔNG (không kéo viem vào Cloudflare Function —
 // tránh rủi ro bundle). ĐÃ VERIFY khớp byte-một với viem encodeFunctionData
 // (3 test case: 2 call lệch độ dài, 1 call, 3 call có bytes rỗng — 2026-07-03).
+const _word = (hex) => hex.replace(/^0x/, '').padStart(64, '0')
+const _num = (n) => BigInt(n).toString(16).padStart(64, '0')
+// ERC-20 approve(spender, amount) — 0x095ea7b3. Kit instruction cần token được approve cho
+// `target` (amountToApprove) TRƯỚC, nếu không revert "transfer amount exceeds allowance"
+// (verified bằng eth_call 2026-07-04). Chèn approve trước mỗi bước swap trong cùng batch.
+function encodeApprove(spender, amount) {
+  return '0x095ea7b3' + _word(spender) + _num(amount)
+}
+
 function encodeAggregate3(calls) {
   const SELECTOR = '82ad56cb'
-  const word = (hex) => hex.replace(/^0x/, '').padStart(64, '0')
-  const num = (n) => BigInt(n).toString(16).padStart(64, '0')
+  const word = _word
+  const num = _num
 
   // tuple (address,bool,bytes): head 3 word (addr, bool, offset bytes = 0x60) + bytes tail
   const tuples = calls.map(c => {
@@ -104,16 +113,23 @@ export async function onRequestPost(ctx) {
         || swapData?.data?.transaction?.executionParams?.instructions
       if (!instructions?.length) return err('no instructions', swapData)
 
-      // Bước 2: 1 instruction → gọi thẳng; nhiều → gộp Multicall3From (1 tx, 1 PIN, atomic)
+      // Bước 2: mỗi instruction cần APPROVE token cho target trước (Kit trả amountToApprove +
+      // tokenIn). Thiếu approve = revert "exceeds allowance" → tx lên chain nhưng FAIL, user thấy
+      // "báo xong mà không swap". Gộp [approve, call, approve, call...] vào 1 batch atomic.
+      const calls = []
+      for (const i of instructions) {
+        if (i.amountToApprove && BigInt(i.amountToApprove) > 0n && i.tokenIn) {
+          calls.push({ target: i.tokenIn, allowFailure: false, callData: encodeApprove(i.target, i.amountToApprove) })
+        }
+        calls.push({ target: i.target, allowFailure: false, callData: i.data })
+      }
       let contractAddress, callData
-      if (instructions.length === 1) {
-        contractAddress = instructions[0].target
-        callData = instructions[0].data
+      if (calls.length === 1) {
+        contractAddress = calls[0].target
+        callData = calls[0].callData
       } else {
         contractAddress = MULTICALL3FROM
-        callData = encodeAggregate3(instructions.map(i => ({
-          target: i.target, allowFailure: false, callData: i.data,
-        })))
+        callData = encodeAggregate3(calls)
       }
 
       // Bước 3: MỘT contractExecution challenge
@@ -137,7 +153,7 @@ export async function onRequestPost(ctx) {
       // (swap response có estimatedAmount ở top-level — verify bằng gọi thật)
       const estOut = swapData?.estimatedAmount || swapData?.data?.estimatedAmount || swapData?.quote?.estimatedAmount
       const amountOut = estOut ? fromBase(estOut, tokenOut) : null
-      return new Response(JSON.stringify({ challengeId, batched: instructions.length > 1, amountOut }), { headers: JSON_HEADERS })
+      return new Response(JSON.stringify({ challengeId, batched: calls.length > 1, amountOut }), { headers: JSON_HEADERS })
     }
 
     return err('unknown action', null, 400)

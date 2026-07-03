@@ -72,8 +72,9 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo }) {
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {isSend ? 'Sent' : 'Received'} {symbol} {isSend ? 'to' : 'from'} {who} <span style={{ color: 'var(--color-muted)', fontWeight: 'var(--fw-regular)' }}>· {timeAgo(tx.timeStamp)}</span>
+        {/* Bỏ chữ token (USDC) — đã hiện ở cột phải; dòng gọn hơn (fs-label) tiết kiệm chỗ */}
+        <div style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {isSend ? 'Sent to' : 'Received from'} {who} <span style={{ color: 'var(--color-muted)', fontWeight: 'var(--fw-regular)' }}>· {timeAgo(tx.timeStamp)}</span>
         </div>
         {memo && (
           <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
