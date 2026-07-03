@@ -8,6 +8,18 @@ import { createSocialToken, initializeWallet, executeChallenge, getWalletAddress
 import { t } from '../i18n'
 
 const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
+
+// Dịch mã lỗi Circle → thông báo rõ nguyên nhân (thay vì chuỗi "Failed to validate..."
+// khó hiểu). 155140 gần như luôn là redirect URI chưa được allowlist ở Circle Console
+// hoặc origin chưa đăng ký ở Google Cloud Console — KHÔNG phải bug code (đã verify với
+// SDK 1.1.11 source). Log full object để lần test trên deploy đọc được mã thật.
+function googleErrMsg(error) {
+  console.error('[GoogleLogin]', error?.code, error, JSON.stringify(error || {}))
+  const code = error?.code
+  if (code === 155140) return `Google sign-in bị Circle từ chối (mã 155140). Nguyên nhân gần như chắc chắn: origin "${window.location.origin}" chưa được thêm vào allowlist redirect URI ở Circle Console và/hoặc Authorized origins ở Google Cloud Console (clientId).`
+  if (code === 155706) return 'Lỗi mạng khi xác thực với Circle (mã 155706). Thử lại.'
+  return error?.message || 'Google sign-in failed'
+}
 // Config cần cho SDK rehydrate sau redirect — lưu/xóa qua COOKIES (sống qua full page reload
 // của OAuth redirect; sessionStorage KHÔNG sống → đó là root cause lỗi 155140, theo Circle support).
 const COOKIE_KEYS = ['appId', 'google.clientId', 'deviceToken', 'deviceEncryptionKey']
@@ -36,7 +48,7 @@ export default function Login() {
   useEffect(() => {
     const onLoginComplete = async (error, result) => {
       COOKIE_KEYS.forEach(k => deleteCookie(k))   // deviceToken dùng 1 lần → dọn ngay
-      if (error) { setGoogleErr(error.message || 'Google sign-in failed'); setRestoring(false); return }
+      if (error) { setGoogleErr(googleErrMsg(error)); setRestoring(false); return }
       if (!result?.userToken) { setRestoring(false); return }
       try {
         const { userToken, encryptionKey } = result
@@ -105,7 +117,7 @@ export default function Login() {
       })
       sdk.performLogin('Google')  // = SocialLoginProvider.GOOGLE ('Google')
     } catch (e) {
-      setGoogleErr(e.message || 'Google sign-in failed')
+      setGoogleErr(googleErrMsg(e))
     }
   }
 
