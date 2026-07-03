@@ -72,10 +72,16 @@ export default function NotifArea({ hints = [], warning = null }) {
   const scrollRef = useRef(null)
   useEffect(() => { pollIncoming(() => setNotifs(getNotifs())) }, [])
   // Mặc định cuộn tới ĐÁY (thông báo mới nhất) mỗi khi danh sách đổi — cũ hơn phải cuộn lên mới thấy.
+  // BUG đã sửa: thiếu `warning` trong dependency → khi warning xuất hiện SAU (vd sau khi tải xong
+  // số dư token, async, trễ hơn lần render đầu) thì effect không chạy lại, để scroll bị "kẹt" giữa
+  // chừng thay vì tụt xuống đáy mới — khiến cả 2 thông báo không cái nào hiện trọn.
+  // Dùng !!warning (boolean) + hints.length (number) — KHÔNG dùng thẳng object/array (warning/hints
+  // là JSX/array MỚI mỗi lần cha re-render, vd lúc giữ nút "Show tokens" — nếu dùng reference sẽ
+  // kéo cuộn về đáy MỌI LẦN re-render không liên quan, làm gián đoạn người đang đọc thông báo cũ).
   useEffect(() => {
     const el = scrollRef.current
     if (el) el.scrollTop = el.scrollHeight
-  }, [notifs])
+  }, [notifs, !!warning, hints.length])
   function clear(id, e) { e.stopPropagation(); dismissNotif(id); setNotifs(getNotifs()) }
   // Chỉ giao dịch (nhận/gửi) mới có gì để xem trong Lịch sử — thông báo lỗi không dẫn đi đâu cả.
   function open(n) {

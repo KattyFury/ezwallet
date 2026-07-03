@@ -151,8 +151,6 @@ const EN = {
   'Đang xây dựng': 'Coming soon',
   'Tính năng này sẽ sớm có trong bản cập nhật tiếp theo.': 'This feature will be available in an upcoming update.',
   'Tính năng này': 'This feature',
-  // HomeReceive slogan (dưới QR)
-  'Cho người khác quét để nhận tiền': 'Others scan this to pay you',
   // Swap (sắp ra mắt)
   'Swap thành công!': 'Swap successful!',
   'Swap đang hoàn thiện': 'Swap is being finalized',

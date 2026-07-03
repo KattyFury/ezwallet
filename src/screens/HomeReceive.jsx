@@ -9,9 +9,14 @@ import { getTokenBalances } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import { t } from '../i18n'
 
+function shortenAddr(addr) {
+  return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
+}
+
 export default function HomeReceive() {
   const { navigate } = useNav()
   const [copied, setCopied] = useState(false)
+  const [addrCopied, setAddrCopied] = useState(false)   // copy riêng cho nút dưới QR (khác nút "Chia sẻ")
   const [totalVND, setTotalVND] = useState(0)
   const [walletAddr, setWalletAddr] = useState(localStorage.getItem('ez_wallet_addr') || '')
 
@@ -35,15 +40,24 @@ export default function HomeReceive() {
     setTimeout(() => setCopied(false), 2000)
   }
 
+  async function handleCopyAddr() {
+    await navigator.clipboard.writeText(walletAddr)
+    setAddrCopied(true)
+    setTimeout(() => setAddrCopied(false), 1500)
+  }
+
   return (
     <div className="screen">
       <BalanceHeader totalVND={totalVND} loading={false} />
 
       <div className="row-3-5 center col" style={{ gap: 14 }}>
         <QRCodeSVG value={walletAddr || '0x'} size={200} level="M" />
-        <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', textAlign: 'center' }}>
-          {t('Cho người khác quét để nhận tiền')}
-        </span>
+        <button onClick={handleCopyAddr} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+          <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>
+            {shortenAddr(walletAddr)}
+          </span>
+          <Icon name={addrCopied ? 'check' : 'copy'} size={18} color={addrCopied ? 'var(--color-primary)' : 'var(--color-muted)'} />
+        </button>
       </div>
 
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>

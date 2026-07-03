@@ -40,9 +40,12 @@ export async function onRequestPost(ctx) {
   }
 
   if (action === 'resetPin') {
-    // Xác nhận từ API reference Circle (create-user-pin-challenge): endpoint này là POST, KHÔNG
-    // phải PUT — code cũ gọi sai method → Circle trả 403 Forbidden (không phải lỗi trạng thái ví).
-    const data = await circleReq('POST', '/user/pin', { idempotencyKey: crypto.randomUUID() }, apiKey, userToken);
+    // Circle có 2 endpoint PIN RIÊNG BIỆT (xác nhận từ API reference):
+    // - POST /user/pin          = tạo PIN LẦN ĐẦU (lúc mới tạo ví) — user đã có ví thì bị từ chối
+    //   "The user had already been initialized".
+    // - POST /user/pin/restore  = KHÔI PHỤC/ĐỔI PIN cho user đã có (xác minh qua câu hỏi bảo mật)
+    //   — đây mới là endpoint đúng cho nút "Đổi PIN".
+    const data = await circleReq('POST', '/user/pin/restore', { idempotencyKey: crypto.randomUUID() }, apiKey, userToken);
     const challengeId = data?.data?.challengeId;
     if (!challengeId) {
       // Lộ lỗi THẬT của Circle (vd "user has no wallet", "PIN not set"...) thay vì "no challengeId"
