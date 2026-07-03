@@ -19,8 +19,10 @@ const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-condensed)', fontSize: 'var(-
 // giữ tay mới hiện số lượng token thật; nhả tay tự động quay lại $ — tránh việc bấm xong quên
 // đổi lại rồi không hiểu "0.0001 cirBTC" là gì.
 // Xám cả nền lẫn chữ — nút phụ, không quan trọng bằng nội dung chính.
-// NỔI đúng RANH GIỚI hàng 6/7 (position:absolute, top:60% của .screen) — không chiếm hàng riêng;
-// hàng 3-6 (token) và hàng 7-8 (thông báo) mờ dần khi tiến sát nút này (xem TOKEN_FADE/style NotifArea).
+// NẰM TRONG PHẠM VI hàng 3-6 (vùng token), ĐÁY của hàng 6 — KHÔNG lấn qua hàng 7 (vùng thông
+// báo), tránh hiểu lầm nút này liên quan tới lịch sử giao dịch. top:60% = đúng đáy hàng 6 của
+// .screen (10 hàng đều nhau); translateY(-100%) đẩy trọn thân nút lên TRÊN mốc đó (không phải
+// -50% cắt đôi ranh giới như trước) + chừa thêm 6px đệm cho thoáng.
 function ShowTokensButton({ onHoldStart, onHoldEnd }) {
   return (
     <button
@@ -32,7 +34,7 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
       onTouchCancel={onHoldEnd}
       onContextMenu={e => e.preventDefault()}
       style={{
-        position: 'absolute', left: '50%', top: '60%', transform: 'translate(-50%, -50%)', zIndex: 10,
+        position: 'absolute', left: '50%', top: '60%', transform: 'translate(-50%, calc(-100% - 6px))', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
         padding: '0 22px', borderRadius: 50, border: 'none', background: 'var(--color-gray)',
         color: 'var(--color-muted)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
