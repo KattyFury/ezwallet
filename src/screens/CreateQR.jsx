@@ -4,7 +4,7 @@ import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
 import AmountSuggest from '../components/AmountSuggest'
 import { t } from '../i18n'
-import { getDisplayCurrency } from '../data'
+import { getDisplayCurrency, displaySymbol } from '../data'
 
 const CURRENCIES = ['USDC', 'EURC']
 function fmtNum(n, cur) {
@@ -43,7 +43,7 @@ export default function CreateQR() {
             {fmtNum(amount, cur)}
             <button onClick={() => setShowCur(true)}
               style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: 10, display: 'inline-flex', alignItems: 'center', gap: 4, border: '1.5px solid var(--color-gray)', borderRadius: 10, padding: '6px 10px', background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
-              {cur}<Icon name="down2" size={12} color="var(--color-muted)" />
+              {displaySymbol(cur)}<Icon name="down2" size={12} color="var(--color-muted)" />
             </button>
           </span>
         </div>
@@ -72,7 +72,7 @@ export default function CreateQR() {
             <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center', padding: '6px 0' }}>{t('Chọn tiền tệ')}</div>
             {CURRENCIES.map(c => (
               <button key={c} onClick={() => { setCur(c); setShowCur(false) }}
-                className={`btn ${c === cur ? 'btn-primary' : 'btn-secondary'}`} style={{ width: '100%' }}>{c}</button>
+                className={`btn ${c === cur ? 'btn-primary' : 'btn-secondary'}`} style={{ width: '100%' }}>{displaySymbol(c)}</button>
             ))}
           </div>
         </div>

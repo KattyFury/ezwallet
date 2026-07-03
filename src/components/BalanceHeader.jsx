@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getDisplayCurrency, displayNum } from '../data'
+import { getDisplayCurrency, displayNum, displaySymbol } from '../data'
 import { getDisplayRates } from '../chain'
 
 // Cụm số dư dùng chung cho HomeSend / HomeReceive / MenuScreen — chiếm 2 hàng (row-1-2),
@@ -19,7 +19,7 @@ export default function BalanceHeader({ totalVND, loading }) {
       {/* Số dư căn giữa tuyệt đối; ký hiệu tiền tệ treo bên phải (absolute) + căn giữa dọc */}
       <span style={{ position: 'relative', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', lineHeight: 1 }}>
         {num}
-        <span style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: 10, fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-normal)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>{cur}</span>
+        <span style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: 10, fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-normal)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>{displaySymbol(cur)}</span>
       </span>
     </div>
   )

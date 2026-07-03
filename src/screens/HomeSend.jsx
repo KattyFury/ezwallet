@@ -3,7 +3,7 @@ import NavBar from '../components/NavBar'
 import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
-import { getDisplayCurrency, fmtDisplay } from '../data'
+import { getDisplayCurrency, fmtDisplay, displaySymbol } from '../data'
 import { getTokenBalances, getDisplayRates } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import NotifArea from '../components/NotifArea'
@@ -58,7 +58,7 @@ export default function HomeSend() {
                 <div className="token-icon" style={{ background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
                 {/* Số token bên trái; quy đổi tiền tệ mặc định treo bên PHẢI cùng dòng (ẩn nếu token CHÍNH LÀ tiền tệ hiển thị) */}
                 <span className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)' }}>
-                  {tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)} {tk.symbol}
+                  {tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)} {displaySymbol(tk.symbol)}
                 </span>
                 {tk.symbol !== cur && (
                   <span className="num" style={{ marginLeft: 'auto', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>

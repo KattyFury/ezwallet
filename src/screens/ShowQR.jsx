@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { useNav } from '../nav'
 import { QRCodeCanvas } from 'qrcode.react'
-import { fmtVND } from '../data'
+import { fmtVND, displaySymbol } from '../data'
 import { saveImageToPhotos } from '../saveImage'
 import { t } from '../i18n'
 import { loadSavedQRs, saveSavedQRs } from '../store'
@@ -11,7 +11,7 @@ export default function ShowQR() {
   const { amount, currency = 'VND', from } = params
   const walletAddr = localStorage.getItem('ez_wallet_addr') || ''
   const qrValue = `ezwallet:${walletAddr}?amount=${amount}&cur=${currency}`
-  const amountText = currency === 'VND' ? fmtVND(amount) : `${amount} ${currency}`
+  const amountText = currency === 'VND' ? fmtVND(amount) : `${amount} ${displaySymbol(currency)}`
   const wrapRef = useRef(null)
 
   // Từ CreateQR → còn nút "Lưu vào kho QR" (lưu để dùng lại). Từ SavedQRList → đã có sẵn trong kho.

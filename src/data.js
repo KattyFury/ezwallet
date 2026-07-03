@@ -14,6 +14,12 @@ export function fmtVND(n) {
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VND'
 }
 
+// Nhãn tiền tệ THÂN THIỆN cho người dùng phổ thông: USDC≈USD, EURC≈EUR (stablecoin 1:1).
+// Người già biết USD/EUR chứ không biết USDC/EURC → chỉ đổi CHỮ HIỂN THỊ; chain/API/lưu trữ
+// vẫn dùng symbol thật (USDC/EURC). Dùng ở mọi chỗ người dùng thấy ký hiệu tiền tệ.
+const CURRENCY_LABEL = { USDC: 'USD', EURC: 'EUR' }
+export function displaySymbol(sym) { return CURRENCY_LABEL[sym] || sym }
+
 // Tiền tệ hiển thị toàn app (số dư, quy đổi, phí) — anh chọn ở Onboarding/Cài đặt.
 // Hiện chỉ hỗ trợ stablecoin USDC/EURC (mặc định USDC). Giá trị cũ (VND/CNY) tự quy về USDC.
 const SUPPORTED_CURRENCIES = ['USDC', 'EURC']
@@ -28,7 +34,7 @@ export function fmtDisplay(vnd, cur, rates) {
   if (!cur || cur === 'VND') return fmtVND(Math.round(vnd || 0))
   const rate = (rates && rates[cur]) || 1
   const v = (vnd || 0) / rate
-  return `${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${cur}`
+  return `${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${displaySymbol(cur)}`
 }
 
 // Số dạng (không kèm ký hiệu) theo tiền tệ hiển thị — để layout số to + ký hiệu treo riêng

@@ -4,8 +4,8 @@ import Icon from '../components/Icon'
 // Circle Wallet hiện chỉ hỗ trợ tiếng Anh + stablecoin → Onboarding khóa English,
 // chỉ để người dùng chọn tiền tệ hiển thị mặc định (USDC/EURC). Ngôn ngữ luôn = 'en'.
 const CURRENCIES = [
-  { code: 'USDC', label: 'USDC', sub: 'USD Stablecoin' },
-  { code: 'EURC', label: 'EURC', sub: 'Euro Stablecoin' },
+  { code: 'USDC', label: 'USD', sub: 'US Dollar' },
+  { code: 'EURC', label: 'EUR', sub: 'Euro' },
 ]
 
 export default function Onboarding() {

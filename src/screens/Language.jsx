@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
 import { t } from '../i18n'
-import { getDisplayCurrency } from '../data'
+import { getDisplayCurrency, displaySymbol } from '../data'
 
-// Hiện chỉ hỗ trợ stablecoin (Circle Wallet chưa hỗ trợ tiền pháp định khác).
-// Ngôn ngữ đang khóa English → không có ô chọn ngôn ngữ. Sẽ mở lại khi Circle hoàn thiện.
+// Hiện chỉ hỗ trợ stablecoin (Circle Wallet chưa hỗ trợ tiền pháp định khác), hiển thị nhãn
+// thân thiện USD/EUR (chain vẫn dùng USDC/EURC). Ngôn ngữ đang khóa English → không có ô chọn.
 const CURRENCIES = [
-  { code: 'USDC', label: 'USDC – USD stablecoin' },
-  { code: 'EURC', label: 'EURC – Euro stablecoin' },
+  { code: 'USDC', label: 'USD – US Dollar' },
+  { code: 'EURC', label: 'EUR – Euro' },
 ]
 
 export default function Language() {
@@ -33,7 +33,7 @@ export default function Language() {
       </div>
 
       <div className="row-3" style={{ display: 'flex', alignItems: 'center' }}>
-        <Row label={t('Tiền tệ')} value={currency} onClick={() => setPicker(true)} />
+        <Row label={t('Tiền tệ')} value={displaySymbol(currency)} onClick={() => setPicker(true)} />
       </div>
 
       <div className="row-10 row10-single">

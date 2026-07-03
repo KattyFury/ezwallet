@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { useNav } from '../nav'
-import { fmtVND } from '../data'
+import { fmtVND, displaySymbol } from '../data'
 import { addNotif } from '../notif'
 import { saveImageToPhotos } from '../saveImage'
 import { t } from '../i18n'
@@ -28,7 +28,7 @@ export default function SendReceipt() {
   const { navigate, params } = useNav()
   const { address, name, amount, memo, currency = 'VND', timestamp } = params
   const to = name || shortenAddr(address)
-  const amountText = currency === 'VND' ? fmtVND(amount) : `${amount} ${currency}`
+  const amountText = currency === 'VND' ? fmtVND(amount) : `${amount} ${displaySymbol(currency)}`
 
   // Lưu thông báo "đã gửi" để HomeSend hiện
   useEffect(() => {

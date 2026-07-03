@@ -7,7 +7,7 @@ import AmountSuggest from '../components/AmountSuggest'
 import { getTokenInfo, getVndRate } from '../chain'
 import { t } from '../i18n'
 import { findContactName } from '../store'
-import { getDisplayCurrency } from '../data'
+import { getDisplayCurrency, displaySymbol } from '../data'
 
 function shortenAddr(addr) {
   return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
@@ -64,7 +64,7 @@ export default function SendAmount() {
   const availableCur = cur === 'VND' ? (availableVND || 0) : (availableVND || 0) / (rates[cur] || 1)
   const availableStr = cur === 'VND'
     ? `${fmtNum(Math.round(availableCur), 'VND')} VND`
-    : `${availableCur.toFixed(2)} ${cur}`
+    : `${availableCur.toFixed(2)} ${displaySymbol(cur)}`
 
   function handleKey(key) {
     if (key === 'BACK') { setDigits(d => d.slice(0, -1)); return }
@@ -97,7 +97,7 @@ export default function SendAmount() {
             {fmtNum(amount, cur)}
             <button onClick={() => setShowCur(true)}
               style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: 10, display: 'inline-flex', alignItems: 'center', gap: 4, border: '1.5px solid var(--color-gray)', borderRadius: 10, padding: '6px 10px', background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
-              {cur}<Icon name="down2" size={12} color="var(--color-muted)" />
+              {displaySymbol(cur)}<Icon name="down2" size={12} color="var(--color-muted)" />
             </button>
           </span>
         </div>
@@ -145,7 +145,7 @@ export default function SendAmount() {
             {CURRENCIES.map(c => (
               <button key={c} onClick={() => { setCur(c); setShowCur(false) }}
                 className={`btn ${c === cur ? 'btn-primary' : 'btn-secondary'}`} style={{ width: '100%' }}>
-                {c}
+                {displaySymbol(c)}
               </button>
             ))}
           </div>

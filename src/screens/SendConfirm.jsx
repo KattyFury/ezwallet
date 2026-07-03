@@ -3,7 +3,7 @@ import Icon from '../components/Icon'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
 import { t } from '../i18n'
-import { fmtVND, getDisplayCurrency } from '../data'
+import { fmtVND, getDisplayCurrency, displaySymbol } from '../data'
 import { getVndRate, estimateFeeVnd } from '../chain'
 import { getSDK, executeChallenge, refreshSession } from '../circle'
 
@@ -33,9 +33,9 @@ export default function SendConfirm() {
                    : currency === 'CNY' ? (amount * rates.CNY) / rates.USDC
                    : amount
   const sendAmountStr = (currency === 'VND' || currency === 'CNY') ? sendAmount.toFixed(4) : sendAmount.toFixed(2)
-  const mainText = currency === 'VND' ? fmtVND(amount) : `${amount} ${currency}`
+  const mainText = currency === 'VND' ? fmtVND(amount) : `${amount} ${displaySymbol(currency)}`
   // "Quy đổi" = lượng token thật chuyển đi; chỉ hiện khi nhập bằng tiền pháp định (VND/CNY)
-  const convText = `${sendAmountStr} ${token}`
+  const convText = `${sendAmountStr} ${displaySymbol(token)}`
   const showConv = currency === 'VND' || currency === 'CNY'
 
   // Phí mạng theo TIỀN TỆ MẶC ĐỊNH (ez_currency), không cứng VND
@@ -45,7 +45,7 @@ export default function SendConfirm() {
     if (feeVnd === null) return t('Đang tính...')
     if (displayCur === 'VND') return feeVnd < 1 ? '< 1đ' : fmtVND(feeVnd)
     const v = feeVnd / (dispRates[displayCur] || 1)
-    return v < 0.01 ? `< 0.01 ${displayCur}` : `${v.toFixed(2)} ${displayCur}`
+    return v < 0.01 ? `< 0.01 ${displaySymbol(displayCur)}` : `${v.toFixed(2)} ${displaySymbol(displayCur)}`
   }
 
   async function handleConfirm() {
