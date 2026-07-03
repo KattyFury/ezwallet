@@ -151,6 +151,19 @@ const EN = {
   'Đang xây dựng': 'Coming soon',
   'Tính năng này sẽ sớm có trong bản cập nhật tiếp theo.': 'This feature will be available in an upcoming update.',
   'Tính năng này': 'This feature',
+  // HomeReceive / HomeSend – help text (nhãn: mô tả)
+  'Cho người khác quét để nhận tiền': 'Others scan this to pay you',
+  'QR mặc định chính là địa chỉ ví của bạn': 'The default QR is your wallet address',
+  'Chia sẻ: Bấm để chia sẻ địa chỉ ví của bạn': 'Share: tap to share your wallet address',
+  'Tạo QR: Tạo mã QR nhận đúng số tiền bạn muốn': 'Create QR: make a QR for the exact amount you want',
+  'Kho QR: Nơi bạn lưu trữ những QR hay dùng': 'QR Library: keep your frequently used QRs',
+  'Danh bạ: Nơi lưu địa chỉ ví của người quen': 'Contacts: save wallet addresses of people you know',
+  'Quét QR: Bấm để quét QR của người nhận': "Scan QR: tap to scan the recipient's QR",
+  'Dán để gửi: Bấm để dán địa chỉ ví của người nhận': "Paste to send: tap to paste the recipient's address",
+  // Swap (sắp ra mắt)
+  'Swap thành công!': 'Swap successful!',
+  'Swap đang hoàn thiện': 'Swap is being finalized',
+  'Swap (sắp ra mắt)': 'Swap (coming soon)',
 }
 
 // Tiếng Trung (giản thể)
@@ -218,7 +231,10 @@ const ZH = {
 
 const DICTS = { en: EN, zh: ZH }
 
-// Mặc định theo trình duyệt; chỉ nhận vi/zh/en, còn lại → English
+// KHÓA English: Circle Wallet hiện chỉ hỗ trợ tiếng Anh nên toàn app dùng 'en',
+// bất kể quốc gia / trình duyệt / lựa chọn cũ trong localStorage.
+// Hạ tầng đa ngôn ngữ (từ điển VN/ZH, detect() bên dưới) được giữ nguyên;
+// khi Circle hỗ trợ thêm ngôn ngữ, chỉ cần cho LANG = detect() trở lại.
 function detect() {
   const stored = localStorage.getItem('ez_lang')
   if (stored) return stored
@@ -228,7 +244,7 @@ function detect() {
   return 'en'
 }
 
-let LANG = detect()
+let LANG = 'en'
 
 export function getLang() { return LANG }
 export function setLang(l) { localStorage.setItem('ez_lang', l); window.location.reload() }

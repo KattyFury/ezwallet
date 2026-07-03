@@ -4,17 +4,17 @@ import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
 import AmountSuggest from '../components/AmountSuggest'
 import { t } from '../i18n'
+import { getDisplayCurrency } from '../data'
 
-const CURRENCIES = ['VND', 'USDC', 'EURC', 'CNY']
+const CURRENCIES = ['USDC', 'EURC']
 function fmtNum(n, cur) {
-  if (cur === 'VND') return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
   return String(n)
 }
 
 export default function CreateQR() {
   const { navigate } = useNav()
   const [digits, setDigits] = useState('')
-  const [cur, setCur] = useState(localStorage.getItem('ez_currency') || 'VND')
+  const [cur, setCur] = useState(getDisplayCurrency())
   const [showCur, setShowCur] = useState(false)
 
   const amount = parseInt(digits || '0')

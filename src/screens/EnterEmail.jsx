@@ -63,7 +63,7 @@ export default function EnterEmail() {
       saveEmailHistory(email.trim())
       navigate(localStorage.getItem('ez_onboarded') ? 'HomeSend' : 'Onboarding')
     } catch (e) {
-      setError(e.message || 'Có lỗi xảy ra')
+      setError(e.message || t('Có lỗi xảy ra'))
     } finally {
       setLoading(false)
     }

@@ -8,7 +8,7 @@ import { t } from '../i18n'
 
 const ITEMS = [
   { id: 'TxHistory', icon: 'clock',  label: 'Lịch sử giao dịch' },
-  { id: 'Language',  icon: 'globe',  label: 'Ngôn ngữ & tiền tệ' },
+  { id: 'Language',  icon: 'globe',  label: 'Tiền tệ' },
   { id: 'Security',  icon: 'shield', label: 'Bảo mật' },
   { id: 'About',     icon: 'info',   label: 'About' },
 ]

@@ -14,9 +14,12 @@ export function fmtVND(n) {
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VND'
 }
 
-// Tiền tệ hiển thị toàn app (số dư, quy đổi, phí) — anh chọn ở Onboarding/Cài đặt
+// Tiền tệ hiển thị toàn app (số dư, quy đổi, phí) — anh chọn ở Onboarding/Cài đặt.
+// Hiện chỉ hỗ trợ stablecoin USDC/EURC (mặc định USDC). Giá trị cũ (VND/CNY) tự quy về USDC.
+const SUPPORTED_CURRENCIES = ['USDC', 'EURC']
 export function getDisplayCurrency() {
-  return localStorage.getItem('ez_currency') || 'VND'
+  const c = localStorage.getItem('ez_currency')
+  return SUPPORTED_CURRENCIES.includes(c) ? c : 'USDC'
 }
 
 // Quy 1 giá trị VND về tiền tệ hiển thị. rates = { USDC, EURC, CNY } (VND mỗi 1 đơn vị).

@@ -4,6 +4,7 @@ import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
 import { estimateSwap, executeSwap, getSDK, executeChallenge } from '../circle'
 import { getTokenBalances } from '../chain'
+import { t } from '../i18n'
 
 const SWAP_TOKENS = ['USDC', 'EURC', 'cirBTC']
 const COLORS = { USDC: '#2775CA', EURC: '#1A56DB', cirBTC: '#F7931A' }
@@ -93,7 +94,7 @@ export default function Swap() {
   }
 
   async function handleSwap() {
-    setLoading(true); setError(''); setStatus('Đang chuẩn bị...')
+    setLoading(true); setError(''); setStatus(t('Đang chuẩn bị...'))
     try {
       const res = await executeSwap({ walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
       if (res.error) throw new Error(res.error)
@@ -105,7 +106,7 @@ export default function Swap() {
         setStatus(`Xác nhận bước ${i + 1}/${ids.length}...`)
         await executeChallenge(sdk, userToken, encryptionKey, ids[i])
       }
-      setStatus('Swap thành công!')
+      setStatus(t('Swap thành công!'))
       setInput(''); setEstAmt(null)
     } catch (e) { setError(e.message); setStatus('') }
     finally { setLoading(false) }
@@ -172,8 +173,8 @@ export default function Swap() {
       {/* Rows 7-9: confirm button + numpad */}
       <div className="row-7-9" style={{ display: 'flex', flexDirection: 'column' }}>
         <button className="btn btn-primary" style={{ width: '66.67%', alignSelf: 'center', height: 44, flexShrink: 0, opacity: 0.4 }} disabled
-          title="Swap đang hoàn thiện">
-          {loading ? 'Đang xử lý...' : 'Swap (sắp ra mắt)'}
+          title={t('Swap đang hoàn thiện')}>
+          {loading ? t('Đang xử lý...') : t('Swap (sắp ra mắt)')}
         </button>
         <div style={{ flex: 1, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />

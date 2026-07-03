@@ -7,15 +7,15 @@ import AmountSuggest from '../components/AmountSuggest'
 import { getTokenInfo, getVndRate } from '../chain'
 import { t } from '../i18n'
 import { findContactName } from '../store'
+import { getDisplayCurrency } from '../data'
 
 function shortenAddr(addr) {
   return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
 }
 
-const CURRENCIES = ['VND', 'USDC', 'EURC', 'CNY']
-// định dạng số theo tiền tệ: VND có dấu chấm ngăn nghìn; token để nguyên
+const CURRENCIES = ['USDC', 'EURC']
+// định dạng số theo tiền tệ: token để nguyên (USDC/EURC)
 function fmtNum(n, cur) {
-  if (cur === 'VND') return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
   return String(n)
 }
 
@@ -26,7 +26,7 @@ export default function SendAmount() {
   // Tiền tệ hiển thị = tiền tệ MẶC ĐỊNH của người dùng này (không ép theo tiền tệ ghi trong QR).
   // QR ghi VND mà người quét đang dùng USDC → hiện USDC tương đương cho đỡ rối (quy đổi ở effect).
   const qrCurrency = params.currency
-  const userCurrency = localStorage.getItem('ez_currency') || 'VND'
+  const userCurrency = getDisplayCurrency()
   const [cur, setCur] = useState(userCurrency)
   // Cùng tiền tệ (hoặc không quét QR) → điền thẳng; khác tiền tệ → để trống, quy đổi sau khi có tỷ giá
   const [digits, setDigits] = useState(() =>
