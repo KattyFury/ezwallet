@@ -13,17 +13,41 @@ import { t } from '../i18n'
 // để không lệch (thay vì khai riêng, dễ chỉnh nhầm 1 bên).
 const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-base)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
 
+// Đồng bộ với nút "Gửi" trong Contacts.jsx (height 40, fs-item, Barlow medium — .btn) để cùng
+// hệ thiết kế. Chiều ngang KHÔNG cố định — tự giãn theo nội dung 2 nhãn.
+const SEGMENT_STYLE = { height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px', borderRadius: 50, fontFamily: 'var(--font-base)', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', whiteSpace: 'nowrap', transition: 'background .12s, color .12s' }
+
+// Toggle NHẤN GIỮ (không phải bật/tắt cố định): mặc định hiện $ (dễ hiểu với người dùng phổ
+// thông); giữ tay mới hiện số lượng token thật; nhả tay tự động quay lại $ — tránh việc bấm
+// xong quên đổi lại rồi không hiểu "0.0001 cirBTC" là gì.
+function DisplayToggle({ showToken, onHoldStart, onHoldEnd }) {
+  return (
+    <div
+      onMouseDown={onHoldStart}
+      onMouseUp={onHoldEnd}
+      onMouseLeave={onHoldEnd}
+      onTouchStart={onHoldStart}
+      onTouchEnd={onHoldEnd}
+      onTouchCancel={onHoldEnd}
+      onContextMenu={e => e.preventDefault()}
+      style={{ display: 'inline-flex', alignItems: 'center', height: 40, borderRadius: 50, background: 'var(--color-gray)', padding: 3, cursor: 'pointer', WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
+      aria-label="hold to show token amounts instead of $"
+    >
+      <span style={{ ...SEGMENT_STYLE, background: showToken ? 'transparent' : 'var(--color-primary)', color: showToken ? 'var(--color-muted)' : 'var(--color-white)' }}>Hiển thị $</span>
+      <span style={{ ...SEGMENT_STYLE, background: showToken ? 'var(--color-primary)' : 'transparent', color: showToken ? 'var(--color-white)' : 'var(--color-muted)' }}>Hiển thị token</span>
+    </div>
+  )
+}
+
 export default function HomeSend() {
   const { navigate } = useNav()
   const [tokens, setTokens] = useState([])
   const [loading, setLoading] = useState(true)
   const cur = getDisplayCurrency()
   const [rates, setRates] = useState(cur === 'VND' ? { VND: 1 } : null)
-  // Mắt (per-token): mặc định false = hiện quy đổi USD; NHẤN GIỮ → true = hiện số lượng token
-  // thật; nhả tay → về lại USD. Không phải click-toggle.
-  const [revealMap, setRevealMap] = useState({})
-  const holdStart = sym => setRevealMap(m => ({ ...m, [sym]: true }))
-  const holdEnd = sym => setRevealMap(m => ({ ...m, [sym]: false }))
+  // Toggle CHUNG cho cả danh sách (không còn per-token): mặc định false = hiện $; nhấn giữ
+  // DisplayToggle → true = hiện số lượng token thật; nhả tay → về lại $.
+  const [showToken, setShowToken] = useState(false)
 
   useEffect(() => {
     ensureWalletAddress().then(addr => {
@@ -51,11 +75,9 @@ export default function HomeSend() {
           </div>
         ) : (
           <>
-            {/* "Bao gồm" = tổng số dư (BalanceHeader) được cấu thành từ các token nào */}
-            <span style={{ fontFamily: 'var(--font-base)', fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)', paddingLeft: 2 }}>{t('Bao gồm')}</span>
-            {tokens.map(tk => {
-              const revealed = !!revealMap[tk.symbol]
-              return (
+            {/* Thay "Bao gồm" bằng toggle NHẤN GIỮ — chọn hiện $ hay hiện token thật cho CẢ danh sách */}
+            <DisplayToggle showToken={showToken} onHoldStart={() => setShowToken(true)} onHoldEnd={() => setShowToken(false)} />
+            {tokens.map(tk => (
               <div key={tk.symbol} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 2px' }}>
                 <img
                   src={`/tokens/${tk.symbol.toLowerCase()}.png`}
@@ -72,29 +94,14 @@ export default function HomeSend() {
                 <span style={TOKEN_TEXT_STYLE}>{tk.symbol}</span>
                 <Icon name="check" size={14} color="var(--color-primary)" />
 
-                {/* Mắt (xám, NHẤN GIỮ để xem số lượng token thật, nhả tay về lại quy đổi USD) */}
-                <button
-                  onMouseDown={() => holdStart(tk.symbol)}
-                  onMouseUp={() => holdEnd(tk.symbol)}
-                  onMouseLeave={() => holdEnd(tk.symbol)}
-                  onTouchStart={() => holdStart(tk.symbol)}
-                  onTouchEnd={() => holdEnd(tk.symbol)}
-                  onTouchCancel={() => holdEnd(tk.symbol)}
-                  onContextMenu={e => e.preventDefault()}
-                  style={{ background: 'none', border: 'none', padding: 4, margin: 0, display: 'flex', cursor: 'pointer', WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
-                  aria-label="hold to reveal token amount">
-                  <Icon name="eye" size={18} color="var(--color-muted)" />
-                </button>
-
-                {/* CÙNG font + CÙNG màu với "USDC" bên trái (TOKEN_TEXT_STYLE) — kể cả khi nhấn giữ */}
+                {/* CÙNG font + CÙNG màu với "USDC" bên trái (TOKEN_TEXT_STYLE) — theo toggle chung ở trên */}
                 <span style={{ ...TOKEN_TEXT_STYLE, marginLeft: 'auto' }}>
-                  {revealed
+                  {showToken
                     ? tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)
                     : (rates ? `${displaySymbol(cur)}${displayNum(tk.vnd, cur, rates)}` : '…')}
                 </span>
               </div>
-              )
-            })}
+            ))}
           </>
         )}
       </div>
