@@ -214,7 +214,7 @@
 **Còn lại:**
 1. **Trạng thái giao dịch thật** — poll txHash → "✓ đã lên blockchain" (Arc finality <1s).
 2. **Batch (Multicall3From `0x522f...47D0`)** — gửi nhiều người / gộp approve+swap.
-3. Send: mới chỉ USDC/EURC/VND/CNY theo currency — chưa chọn token tự do (cirBTC).
+3. Send: hiển thị chỉ USDC/EURC (mặc định USDC) — chưa chọn token tự do (cirBTC). VND/CNY tạm gỡ tới khi Circle hỗ trợ đa tiền tệ.
 4. **Blocked (chờ Circle):** Google/Facebook login + Swap execute (xem Blocked + mục "SẼ BUILD" trên).
 
 > **Session 1 (2026-06-29):** i18n VI/EN/ZH, bọc t() toàn bộ màn, Đăng xuất ra Menu, memo on-chain, tỷ giá live, jsQR iOS.
@@ -228,3 +228,8 @@
 > 7. **Bug PIN thật sự (đào sâu 3 vòng):** (a) `send.js` từng trả lỗi mù mờ "no challengeId" → giờ log full response + trả message thật của Circle; (b) SendAmount không có `NotifArea` nên lỗi bị nuốt mất → thêm `components/ErrorToast.jsx` (banner đỏ nổi); (c) **root cause thật:** Circle `userToken` hết hạn sau ~1h, SDK từ chối trước khi hiện PIN → `refreshSession()` mới trong `circle.js`, gọi trước mọi thao tác cần PIN (SendConfirm + Security đổi PIN).
 > 8. **`components/AmountSuggest.jsx`** (mới): nhập VND ≤3 chữ số → gợi ý x1.000/x10.000/x100.000 ngay dưới ô nhập (SendAmount + CreateQR).
 > Còn tồn: bug PIN userToken **chưa được user xác nhận đã hết hẳn** sau fix `refreshSession()` — cần test lại thực tế trên deploy mới nhất.
+> **Session 5 (2026-07-03):** **KHÓA English + tiền tệ USDC/EURC.** Lý do: Circle Wallet hiện chỉ hỗ trợ tiếng Anh → dùng English cho mọi user (hết cảnh "chỗ Việt chỗ Anh"), mở lại đa ngôn ngữ/tiền tệ khi Circle hoàn thiện.
+> - `i18n.js`: `LANG = 'en'` cứng — bỏ auto-detect trình duyệt + bỏ qua `ez_lang` cũ. Hạ tầng VN/ZH + `detect()` GIỮ NGUYÊN (mở lại chỉ cần `LANG = detect()`). Root cause "lẫn ngôn ngữ" = **8 chuỗi help text (Home Send/Receive) thiếu key trong từ điển EN** → `t()` fallback về tiếng Việt gốc; đã thêm đủ 8 bản dịch. Audit bằng script (scratchpad) xác nhận 0 key EN còn thiếu.
+> - `data.js` `getDisplayCurrency()`: mặc định **USDC**, chỉ nhận USDC/EURC, **tự quy giá trị cũ VND/CNY → USDC** (`SUPPORTED_CURRENCIES`). Các picker gỡ VND/CNY: `Onboarding` (English-only, chỉ USDC/EURC), `Language`/Cài đặt (bỏ ô ngôn ngữ, đổi tên menu "Ngôn ngữ & tiền tệ"→"Tiền tệ"/Currency), `CreateQR`, `SendAmount` (đều dùng `getDisplayCurrency()` thay `|| 'VND'`).
+> - Fix 3 chỗ render trực tiếp không qua `t()`: `ComingSoon` (tiêu đề `{t(label)}`), `EnterEmail` (fallback lỗi), `Swap` (nút "coming soon" + status — Swap vẫn disabled).
+> - Verify: `vite build` pass; test runtime (import i18n/data với stub localStorage `vi`/`VND` + navigator `vi-VN`) → getLang='en', getDisplayCurrency='USDC', 8 key help trả English → **7/7 pass**. Chưa verify trực quan trên browser (login Circle không chạy localhost). Đã push `main` (`8ea36ef`).
