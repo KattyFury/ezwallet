@@ -19,6 +19,8 @@ const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-condensed)', fontSize: 'var(-
 // giữ tay mới hiện số lượng token thật; nhả tay tự động quay lại $ — tránh việc bấm xong quên
 // đổi lại rồi không hiểu "0.0001 cirBTC" là gì.
 // Xám cả nền lẫn chữ — nút phụ, không quan trọng bằng nội dung chính.
+// NỔI đúng RANH GIỚI hàng 6/7 (position:absolute, top:60% của .screen) — không chiếm hàng riêng;
+// hàng 3-6 (token) và hàng 7-8 (thông báo) mờ dần khi tiến sát nút này (xem TOKEN_FADE/style NotifArea).
 function ShowTokensButton({ onHoldStart, onHoldEnd }) {
   return (
     <button
@@ -30,6 +32,7 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
       onTouchCancel={onHoldEnd}
       onContextMenu={e => e.preventDefault()}
       style={{
+        position: 'absolute', left: '50%', top: '60%', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
         padding: '0 22px', borderRadius: 50, border: 'none', background: 'var(--color-gray)',
         color: 'var(--color-muted)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
@@ -70,7 +73,12 @@ export default function HomeSend() {
     <div className="screen">
       <BalanceHeader totalVND={totalVND} loading={loading} />
 
-      <div className="row-3-5" style={{ display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto', paddingTop: 2 }}>
+      {/* Hàng 3-6: danh sách token, cuộn được; mờ dần 1/3 hàng ở ĐÁY khi tiến sát nút Show tokens */}
+      <div className="row-3-6 scroll-thin" style={{
+        display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto', paddingTop: 2, paddingBottom: 8,
+        WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
+        maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
+      }}>
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>{t('Đang tải...')}</div>
         ) : tokens.length === 0 ? (
@@ -108,12 +116,10 @@ export default function HomeSend() {
         )}
       </div>
 
-      {/* Hàng 6 riêng, căn giữa, ngay trên vùng thông báo (7-8) */}
-      <div className="row-6" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        {tokens.length > 0 && (
-          <ShowTokensButton onHoldStart={() => setShowToken(true)} onHoldEnd={() => setShowToken(false)} />
-        )}
-      </div>
+      {/* Nổi đúng ranh giới hàng 6/7 (position:absolute trong ShowTokensButton) — KHÔNG chiếm hàng riêng */}
+      {tokens.length > 0 && (
+        <ShowTokensButton onHoldStart={() => setShowToken(true)} onHoldEnd={() => setShowToken(false)} />
+      )}
 
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
         <NotifArea

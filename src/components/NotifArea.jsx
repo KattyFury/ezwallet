@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Icon from './Icon'
 import { useNav } from '../nav'
 import { getNotifs, dismissNotif, addNotif } from '../notif'
@@ -67,7 +67,13 @@ function HintBlock({ lines }) {
 export default function NotifArea({ hints = [], warning = null }) {
   const { navigate } = useNav()
   const [notifs, setNotifs] = useState(getNotifs())
+  const scrollRef = useRef(null)
   useEffect(() => { pollIncoming(() => setNotifs(getNotifs())) }, [])
+  // Mặc định cuộn tới ĐÁY (thông báo mới nhất) mỗi khi danh sách đổi — cũ hơn phải cuộn lên mới thấy.
+  useEffect(() => {
+    const el = scrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [notifs])
   function clear(id, e) { e.stopPropagation(); dismissNotif(id); setNotifs(getNotifs()) }
   // Chỉ giao dịch (nhận/gửi) mới có gì để xem trong Lịch sử — thông báo lỗi không dẫn đi đâu cả.
   function open(n) {
@@ -86,12 +92,13 @@ export default function NotifArea({ hints = [], warning = null }) {
   ]
 
   return (
-    // overflow:hidden + mask fade ở mép TRÊN (biên hàng 6/7) — thông báo bị đẩy lên quá cao
-    // mờ dần rồi biến mất, thay vì lấn/đè lên nút "Show tokens" phía trên.
-    <div style={{
-      flex: 1, minHeight: 0, width: '100%', overflow: 'hidden',
-      WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black 28px)',
-      maskImage: 'linear-gradient(to bottom, transparent 0, black 28px)',
+    // CUỘN ĐƯỢC (overflowY:auto, không phải hidden) — đầy thì kéo lên xem thêm. Mờ 1/3 hàng
+    // (calc(100dvh/30)) ở mép TRÊN (ranh giới hàng 6/7) khi tiến sát nút "Show tokens" phía trên,
+    // KHÔNG mờ quá nhiều kẻo mất chỗ đọc nội dung. Scrollbar mảnh (.scroll-thin) cho gọn layout.
+    <div ref={scrollRef} className="scroll-thin" style={{
+      flex: 1, minHeight: 0, width: '100%', overflowY: 'auto',
+      WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black calc(100dvh / 30))',
+      maskImage: 'linear-gradient(to bottom, transparent 0, black calc(100dvh / 30))',
     }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: '100%', justifyContent: 'flex-end' }}>
         {items.map(n => {
