@@ -10,6 +10,13 @@ export default function Security() {
   const [pinStatus, setPinStatus] = useState('')
 
   async function handleResetPin() {
+    // User Google (SSO, không có ez_email): Circle chặn PUT /user/pin ở tầng platform
+    // (403 code 3 dù token tươi + PIN tồn tại — verify session 10). Không gọi cho đỡ tốn 1 vòng lỗi.
+    if (!localStorage.getItem('ez_email')) {
+      setPinStatus('Not available for Google accounts')
+      setTimeout(() => setPinStatus(''), 3000)
+      return
+    }
     setPinStatus(t('Đang chuẩn bị...'))
     try {
       // Làm mới userToken trước — tránh "userToken had expired" (Circle token ~1h).

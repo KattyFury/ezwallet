@@ -132,9 +132,15 @@ export default function Login() {
     }
   }
 
+  // ⚠️ Google login DISABLED (2026-07-03, user chốt sau session 10). Bản thân login CHẠY ĐƯỢC
+  // (OAuth redirect + tạo ví SSO + PIN đều ok), nhưng Circle CHẶN đổi PIN cho user SSO ở tầng
+  // platform: PUT /user/pin → 403 code 3 dù token tươi + pinStatus ENABLED (verify bằng gọi API
+  // thật). User quyết định tắt tới khi có hướng xử lý (hoặc Circle mở, hoặc chuyển kiến trúc
+  // lấy email từ Google Identity Services rồi đi luồng email — xem HANDOFF session 8).
+  // Bật lại: disabled: true → false. TOÀN BỘ hạ tầng (cookies, deviceId, refreshToken) giữ nguyên.
   const BUTTONS = [
     { icon: <Icon name="mail" size={22} />, label: 'Đăng nhập với Email', primary: true, onClick: () => navigate('EnterEmail'), disabled: false },
-    { icon: <Icon name="google" size={22} />, label: 'Đăng nhập với Google', primary: false, onClick: handleGoogleLogin, disabled: false },
+    { icon: <Icon name="google" size={22} />, label: 'Đăng nhập với Google', primary: false, onClick: handleGoogleLogin, disabled: true },
   ]
 
   return (
@@ -162,10 +168,8 @@ export default function Login() {
             <span style={{ whiteSpace: 'nowrap' }}>{t(label)}</span>
           </button>
         ))}
-        {/* Circle coi Email và Google là 2 danh tính riêng biệt (không có cơ chế nối tài khoản) —
-            cảnh báo để người dùng không bất ngờ như trường hợp anh gặp (ví Google trắng, khác ví email) */}
         <span style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)', textAlign: 'center', maxWidth: '85%' }}>
-          Note: signing in with Google creates a separate wallet from email sign-in.
+          Google sign-in is temporarily unavailable.
         </span>
       </div>
     </div>
