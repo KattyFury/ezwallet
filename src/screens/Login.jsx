@@ -18,6 +18,18 @@ export default function Login() {
   const [restoring, setRestoring] = useState(false)  // đang hoàn tất sau redirect
   const [googleErr, setGoogleErr] = useState('')
 
+  // deviceId PHẢI lấy qua sdk.getDeviceId() (Circle tự fingerprint qua iframe riêng) — KHÔNG
+  // được tự bịa (vd crypto.randomUUID()), vì Circle backend không biết tới ID tự chế → lỗi
+  // "Provided device ID is not found in the system" khi performLogin. Theo đúng mẫu Circle Web
+  // quickstart 3.4: gọi 1 lần, cache vào localStorage để không phải xin lại mỗi lần bấm nút.
+  async function ensureDeviceId(sdk) {
+    let id = localStorage.getItem('ez_google_deviceId')
+    if (id) return id
+    id = await sdk.getDeviceId()
+    localStorage.setItem('ez_google_deviceId', id)
+    return id
+  }
+
   // Khởi tạo SDK 1 lần lúc mount với config restore từ cookies + callback onLoginComplete.
   // Lần đầu (cookies rỗng) → vô hại. Sau redirect Google (cookies còn + URL có hash token)
   // → SDK constructor tự đọc hash và gọi onLoginComplete để hoàn tất đăng nhập.
@@ -69,12 +81,14 @@ export default function Login() {
 
     // Đang quay lại từ redirect (URL có token) → hiện trạng thái "đang đăng nhập"
     if (/access_token|id_token|code=/.test(window.location.hash + window.location.search)) setRestoring(true)
+    else ensureDeviceId(sdk).catch(() => {})   // xin trước cho đỡ trễ lúc bấm nút (không phải lúc restore)
   }, [])
 
   async function handleGoogleLogin() {
     setGoogleErr('')
     try {
-      const deviceId = crypto.randomUUID()
+      const sdk = sdkRef.current
+      const deviceId = await ensureDeviceId(sdk)
       const { deviceToken, deviceEncryptionKey } = await createSocialToken(deviceId)
       // Lưu config vào COOKIES để SDK rehydrate sau redirect (theo Circle Web quickstart 3.6)
       setCookie('appId', APP_ID)
@@ -82,7 +96,6 @@ export default function Login() {
       setCookie('deviceToken', deviceToken)
       setCookie('deviceEncryptionKey', deviceEncryptionKey)
 
-      const sdk = sdkRef.current
       sdk.updateConfigs({
         appSettings: { appId: APP_ID },
         loginConfigs: {
