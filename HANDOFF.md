@@ -1,11 +1,29 @@
 # HANDOFF — EZwallet
 
-**Cập nhật:** 2026-07-03 (viết lại toàn bộ, session 12)
+**Cập nhật:** 2026-07-04 (session 15 — sửa swap đúng cách adapter, chờ verify)
 **Repo:** https://github.com/KattyFury/ezwallet · **Live:** https://ezwallet.pages.dev (Cloudflare Pages, auto-deploy từ `main`)
 **Local:** `D:\Files\Claude_laptop\Build_on_Arc\ezwallet`
 
 > Ví stablecoin cho người dùng phổ thông / người già. UX đơn giản, mobile-first.
 > Nguyên tắc: **CHẠY TECH CHUẨN của Circle/Arc, đọc docs + verify bằng gọi API thật trước khi làm, không đoán.**
+
+---
+
+## 0. ⭐ COMBO ĐỂ BUILD ON ARC (quan trọng nhất — nạp bộ này TRƯỚC MỖI SESSION)
+
+> Bộ 3 tài nguyên chính chủ cho AI, mỗi bên (Circle + Arc): **Skills** (agent skill), **MCP** (server tra cứu live), **llms.txt** (bản đồ docs full-text cho LLM). Đọc/nạp đủ 6 link này = có tech chuẩn, đỡ đoán.
+
+**Circle:**
+- Skills: https://developers.circle.com/ai/skills
+- MCP: https://developers.circle.com/ai/mcp
+- llms.txt: https://developers.circle.com/llms.txt
+
+**Arc:**
+- Skills: https://docs.arc.io/ai/skills
+- MCP: https://docs.arc.io/ai/mcp
+- llms.txt: https://docs.arc.io/llms.txt
+
+> Trạng thái local hiện tại: Circle Skill (`circle:*`) ✅ · Circle MCP (`mcp__circle__*`) ✅ · Arc MCP (`mcp__arc-docs__*`) ✅ — đã kiểm 2026-07-04, đủ 3/3.
 
 ---
 
@@ -57,7 +75,32 @@
 - **Đổi PIN** (user email): `PUT /v1/w3s/user/pin` → challenge → PIN cũ + PIN mới. ✅ verify bằng gọi API thật.
 - **refreshSession()** (`circle.js`): gọi TRƯỚC MỌI thao tác cần PIN — email user tạo token mới qua userId=email; Google user đổi `refreshToken` qua `POST /users/token/refresh` (body `{idempotencyKey, refreshToken, deviceId}` + header X-User-Token).
 
-**❌🔴 SWAP — HIỆN ĐANG SAI, LÀM MẤT TIỀN. ĐÃ DISABLE (session 14, 2026-07-04). PHẢI SỬA THEO CÁCH DƯỚI TRƯỚC KHI BẬT LẠI.**
+**✅ SWAP — ĐÃ SỬA ĐÚNG + VERIFY + BẬT (S15, 2026-07-04). `SWAP_ENABLED=true`.**
+
+> **VERIFY ĐÃ ĐẠT (verify-swap.mjs, eth_simulateV1, ví `0x29eb…d03d`):** 2 EURC→USDC → số dư USDC
+> ví TĂNG **+3.12254**, KHỚP CHÍNH XÁC Kit estimate, swap không revert, gas ~538k. Tiền THỰC SỰ
+> về ví (cách cũ bóc-instructions không bao giờ đạt). Đã bật `SWAP_ENABLED=true` trong Swap.jsx.
+> Nên user test 1 lần swap số nhỏ trên deploy (ký PIN thật) để xác nhận luồng UI đầu-cuối.
+>
+> **S15 đã làm (đúng cách adapter, KHÔNG còn bóc instructions):** viết lại `execute` gọi
+> `ADAPTER.execute(executionParams, tokenInputs, signature)` — lấy `executionParams`+`signature`
+> nguyên từ response `/swap`; `tokenInputs=[{permitType:0(NONE), token:tokenIn, amount, permitCalldata:'0x'}]`
+> (chiến lược 'approve'); batch `[approve(tokenIn→adapter, amount), adapter.execute(...)]` qua
+> Multicall3From = 1 PIN. ABI `execute` copy nguyên từ source `@circle-fin/adapter-viem-v2`
+> (`adapterContractAbi`, hàm `execute(ExecutionParams,TokenInput[],bytes)`). Encode bằng **viem**
+> (tuple lồng dynamic bytes — hand-roll dễ sai offset). **Round-trip encode→decode đã test khớp byte.**
+> Lõi encode/verify tách ra `functions/api/_swapCore.js` (dùng chung swap.js + dev-server.js, hết footgun sync tay).
+>
+> **⚠️ CÒN 1 BƯỚC BẮT BUỘC trước khi bật:** chạy verify (không tốn tiền, không PIN):
+> `cd ezwallet && node verify-swap.mjs <địa_chỉ_ví> EURC USDC 2` — gọi `/swap` thật + `eth_simulateV1`
+> đọc số dư USDC ví TRƯỚC/SAU. **Chỉ đổi `SWAP_ENABLED=true` (Swap.jsx) khi thấy USDC ví TĂNG.**
+> Nếu delta=0 (Multicall3From/CallFrom không giữ msg.sender cho adapter.execute) → fallback tách
+> approve/execute thành 2 PIN tuần tự (không qua Multicall3From). Cũng có action `simulate` trong
+> swap.js/dev-server để verify từ app/deploy.
+>
+> ── Dưới đây là root-cause & bằng chứng gốc (S14), giữ lại để hiểu vì sao làm vậy ──
+
+**❌🔴 (LỊCH SỬ S14) SWAP bóc instructions = SAI, LÀM MẤT TIỀN.**
 
 > ⚠️⚠️⚠️ **ROOT CAUSE THẬT (tìm ra 2026-07-04 sau khi mổ on-chain + đọc source SDK — KHÔNG đoán):**
 > Response `/v1/stablecoinKits/swap` KHÔNG phải để bóc `instructions[]` chạy tay. Nó là 1 **intent có CHỮ KÝ** (`transaction.signature`) phải nộp cho **1 ADAPTER CONTRACT của Circle**. Adapter mới là thứ chạy instructions, GOM output, rồi **ghi có cho `beneficiary` (ví)**. Bóc instructions chạy tay (dù trực tiếp hay qua Multicall3From) = **bỏ qua bước settlement** → token vào bị tiêu, USDC output KẸT Ở ADAPTER, KHÔNG BAO GIỜ VỀ VÍ.
@@ -160,7 +203,7 @@ Bền: `ez_contacts`, `ez_saved_qrs`, `ez_lang`, `ez_currency`, `ez_onboarded`.
 
 ## 8. Việc tiếp theo
 
-1. **🔴 SỬA SWAP EXECUTE (ưu tiên số 1)** — gọi ADAPTER `0xBBD70b01a1CAbc96d5b7b129Ae1AAabdf50dd40b` với `(executionParams, signature)` thay vì bóc instructions. Lấy ABI từ Circle codegen MCP (đã add, restart để nạp) hoặc source `@circle-fin/app-kit`/`adapter-viem-v2`. VERIFY bằng eth_simulateV1 (USDC ví tăng) TRƯỚC khi bật `SWAP_ENABLED`. Chi tiết đầy đủ ở mục 3 (SWAP).
+1. **✅ SWAP đã bật** — code đúng (S15, `ADAPTER.execute`), verify eth_simulateV1 ĐẠT (USDC về ví +3.12254), `SWAP_ENABLED=true`. Còn lại: **user test 1 swap số nhỏ trên deploy** (ký PIN thật) xác nhận luồng UI đầu-cuối; nếu lỗi PIN thật khác mô phỏng → dán lỗi để mình sửa.
 2. Test biên lai `$2` + Amount row + TxHistory layout mới + memo trong list.
 3. **Trạng thái giao dịch thật** — poll txHash sau gửi/swap → "đã lên blockchain" (Arc finality <1s).
 4. **Google login làm lại** qua Google Identity Services → luồng email (khi user yêu cầu — xem mục 3).
@@ -177,11 +220,15 @@ Bền: `ez_contacts`, `ez_saved_qrs`, `ez_lang`, `ez_currency`, `ez_onboarded`.
 - **S8-10 (07-03):** Google login chạy; phát hiện SSO ≠ email (2 ví); Đổi PIN 403 cho SSO → verify bằng gọi API thật (email OK, SSO bị chặn platform) → **disable Google login**; scrollbar ẩn.
 - **S11 (07-03):** Swap build lại: Multicall3From batch 1 tx 1 PIN, encoder verified vs viem, chừa 1 USDC phí, UI theo design system.
 - **S12 (07-03):** Kit amount = base units (root cause "No route"/400); biên lai `$2` + Amount token thật; TxHistory layout mới + cùng nguồn tỷ giá + memo trong list; Swap layout chuẩn numpad + picker 3 token + notif; dọn code chết (mock TOKENS/SWAP_PAIRS/fmtDisplay, wireframe spec, 3 icon); viết lại HANDOFF.
+- **S15 (07-04):** ✅ **Sửa swap đúng cách adapter** (đọc source SDK, không đoán): gọi `ADAPTER.execute(executionParams, tokenInputs, signature)` — ABI copy từ `@circle-fin/adapter-viem-v2`; chiến lược 'approve' (tokenInputs permitType=NONE + approve riêng); batch qua Multicall3From 1 PIN; encode bằng viem; round-trip encode→decode test khớp byte. Tách lõi `functions/api/_swapCore.js` (chung swap.js + dev-server, hết footgun sync). Thêm action `simulate` + script `verify-swap.mjs` (eth_simulateV1, không tốn tiền/PIN). **VERIFY ĐẠT: 2 EURC→USDC, USDC ví +3.12254 khớp Kit → bật `SWAP_ENABLED=true`.** Thêm mục 0 (combo build-on-Arc: 6 link Circle+Arc skills/mcp/llms.txt).
 - **S14 (07-04):** 🔴 **Đào ra ROOT CAUSE swap mất tiền** = phải gọi ADAPTER contract (`0xBBD70b01`) với intent có chữ ký, KHÔNG bóc instructions chạy tay (bỏ qua settlement → USDC kẹt ở adapter). Bằng chứng: trace log tx + eth_simulateV1 (input tiêu, output không về). **Đã DISABLE swap** (`SWAP_ENABLED=false`). Thêm Circle codegen MCP (`claude mcp add`, cần restart). Layout Swap theo spec user (h2-3/4/5/6 + 50%/100% + `~`). **Cách sửa đúng đã note kỹ ở mục 3.**
 - **S13 (07-04):** 16 UX fix (email hint giữ khi đăng xuất, Hold to show tokens, Security divider, Recovery/Currency làm mờ, TxHistory gọn bỏ chữ token, check.svg, CreateQR chip phải + USD default + cirBTC + numpad phẩy, QR số 1 style, quét-gì-hiện-đó, ShowQR chỉ Share/Back + auto-save kho). Swap layout theo spec user (FROM h2-3, arrow h4, TO h5, Swap h6, numpad chuẩn h7-9; 50%/100% thay Max; `~` thay `≈`).
 
 ## Quyết định & hướng đã thử (Decisions / Failed Approaches)
 
+- **[07-04] S15 — CÁCH ĐÚNG execute swap = gọi `ADAPTER.execute(ExecutionParams, TokenInput[], bytes sig)`.** Nguồn: source `@circle-fin/adapter-viem-v2` (`adapterContractAbi` + `executeSwap`) và `provider-stablecoin-service-swap` (`prepareEvmSwapAction`/`buildTokenInputs`). Ví PIN không có adapter SDK → replay REST: lấy `transaction.executionParams`+`signature` nguyên xi, tự dựng `tokenInputs` (chiến lược 'approve' = `[{permitType:NONE, token:tokenIn, amount:inputBase, permitCalldata:'0x'}]`) + `approve(tokenIn→adapter, inputBase)` trước. Adapter tự settlement (kéo token, chạy instructions, ghi có beneficiary=ví). Encode bằng viem; **KHÔNG hand-roll** (tuple lồng bytes dễ sai → mất tiền). **Chưa verify eth_simulateV1 với ví thật** (cần user chạy `verify-swap.mjs`).
+- **[07-04] Quyết định: dùng viem trong Cloudflare Function** (lệch ghi chú cũ "no viem in CF function"). Lý do: encode `execute()` có tuple[] lồng dynamic bytes, hand-roll rủi ro sai offset cao trên đúng đoạn code mất tiền; viem đã là dep, CF Pages bundle được. Giữ hand-roll cho các chỗ đơn giản khác (send.js memo).
+- **[07-04] Tried (S11-14):** bóc `instructions[]` chạy tay (trực tiếp / qua Multicall3From) → bỏ qua settlement adapter → USDC kẹt ở adapter, MẤT TIỀN. **Switched to:** gọi `ADAPTER.execute` với intent có chữ ký (S15).
 - **[07-04] SWAP THIẾU APPROVE = root cause "báo xong nhưng không nhận USDC".** Kit instruction có `tokenIn`+`amountToApprove`; router gọi `transferFrom` nên PHẢI approve token cho `target` trước. Thiếu → on-chain revert `ERC20: transfer amount exceeds allowance` (tx vẫn lên chain, EURC ra, USDC không về). **Fix:** chèn `approve(target, amountToApprove)` trước mỗi instruction, gộp chung Multicall3From atomic. **Verify:** `eth_call` Arc RPC 2 chiều EURC↔USDC → OK; router tự ép `minTokenOut`. Grounded docs: `/app-kit/quickstarts/swap-tokens-same-chain` — `kit.swap()` tự approve; **KHÔNG có adapter cho ví User-Controlled (PIN)** → buộc replay REST thủ công. **CHƯA verify swap ký PIN thật giao USDC** (cần user test trên deploy — mô phỏng OK ≠ chạy thật 100%).
 - **[07-04] Tried:** batch swap KHÔNG approve (S11-12) → on-chain revert allowance. **Switched to:** approve prepend (S13).
 - **[07-03] Tried:** 2 challenge approve+swap RỜI → swap simulate trước khi approve mine → revert. **Switched to:** gộp 1 tx Multicall3From atomic.

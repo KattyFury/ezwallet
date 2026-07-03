@@ -8,11 +8,11 @@ import { spendableOf, GAS_RESERVE_USDC } from '../data'
 import { addNotif } from '../notif'
 import { t } from '../i18n'
 
-// 🔴 SWAP EXECUTE ĐANG SAI (làm mất tiền — bóc instructions bỏ qua adapter settlement,
-// USDC output kẹt ở adapter 0xBBD70b01, không về ví). DISABLE tới khi execute qua ADAPTER
-// contract đúng cách (xem HANDOFF mục SWAP). UI + estimate vẫn chạy để giữ giao diện.
-// Bật lại: đổi SWAP_ENABLED = true SAU KHI sửa functions/api/swap.js gọi adapter + verify eth_simulateV1.
-const SWAP_ENABLED = false
+// ✅ SWAP execute qua ADAPTER.execute(intent có chữ ký) — đúng cách, adapter settlement ghi
+// có USDC về ví (xem HANDOFF mục SWAP + functions/api/_swapCore.js). VERIFY bằng eth_simulateV1
+// (verify-swap.mjs, 2026-07-04): 2 EURC→USDC, số dư USDC ví TĂNG +3.12254 = khớp Kit estimate.
+// Tắt lại nếu cần: đổi SWAP_ENABLED = false.
+const SWAP_ENABLED = true
 
 // App khóa English (session 5) — chuỗi mới trong màn này hardcode English,
 // t() chỉ giữ cho các key cũ đã có trong từ điển (Đổi tiền, Quay lại...).
