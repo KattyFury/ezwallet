@@ -14,15 +14,14 @@ import { t } from '../i18n'
 const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-base)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
 
 // Đồng bộ với nút "Gửi" trong Contacts.jsx (height 40, fs-item, Barlow medium — .btn) để cùng
-// hệ thiết kế. Chiều ngang KHÔNG cố định — tự giãn theo nội dung 2 nhãn.
-const SEGMENT_STYLE = { height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px', borderRadius: 50, fontFamily: 'var(--font-base)', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', whiteSpace: 'nowrap', transition: 'background .12s, color .12s' }
-
-// Toggle NHẤN GIỮ (không phải bật/tắt cố định): mặc định hiện $ (dễ hiểu với người dùng phổ
-// thông); giữ tay mới hiện số lượng token thật; nhả tay tự động quay lại $ — tránh việc bấm
-// xong quên đổi lại rồi không hiểu "0.0001 cirBTC" là gì.
-function DisplayToggle({ showToken, onHoldStart, onHoldEnd }) {
+// hệ thiết kế. Chiều ngang KHÔNG cố định — tự giãn theo nội dung.
+// NHẤN GIỮ (không phải bật/tắt cố định): mặc định hiện $ (dễ hiểu với người dùng phổ thông);
+// giữ tay mới hiện số lượng token thật; nhả tay tự động quay lại $ — tránh việc bấm xong quên
+// đổi lại rồi không hiểu "0.0001 cirBTC" là gì.
+// Xám cả nền lẫn chữ — nút phụ, không quan trọng bằng nội dung chính.
+function ShowTokensButton({ onHoldStart, onHoldEnd }) {
   return (
-    <div
+    <button
       onMouseDown={onHoldStart}
       onMouseUp={onHoldEnd}
       onMouseLeave={onHoldEnd}
@@ -30,12 +29,17 @@ function DisplayToggle({ showToken, onHoldStart, onHoldEnd }) {
       onTouchEnd={onHoldEnd}
       onTouchCancel={onHoldEnd}
       onContextMenu={e => e.preventDefault()}
-      style={{ display: 'inline-flex', alignItems: 'center', height: 40, borderRadius: 50, background: 'var(--color-gray)', padding: 3, cursor: 'pointer', WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none' }}
+      style={{
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
+        padding: '0 22px', borderRadius: 50, border: 'none', background: 'var(--color-gray)',
+        color: 'var(--color-muted)', fontFamily: 'var(--font-base)', fontSize: 'var(--fs-item)',
+        fontWeight: 'var(--fw-medium)', cursor: 'pointer',
+        WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
+      }}
       aria-label="hold to show token amounts instead of $"
     >
-      <span style={{ ...SEGMENT_STYLE, background: showToken ? 'transparent' : 'var(--color-primary)', color: showToken ? 'var(--color-muted)' : 'var(--color-white)' }}>Hiển thị $</span>
-      <span style={{ ...SEGMENT_STYLE, background: showToken ? 'var(--color-primary)' : 'transparent', color: showToken ? 'var(--color-white)' : 'var(--color-muted)' }}>Hiển thị token</span>
-    </div>
+      Show tokens
+    </button>
   )
 }
 
@@ -46,7 +50,7 @@ export default function HomeSend() {
   const cur = getDisplayCurrency()
   const [rates, setRates] = useState(cur === 'VND' ? { VND: 1 } : null)
   // Toggle CHUNG cho cả danh sách (không còn per-token): mặc định false = hiện $; nhấn giữ
-  // DisplayToggle → true = hiện số lượng token thật; nhả tay → về lại $.
+  // ShowTokensButton → true = hiện số lượng token thật; nhả tay → về lại $.
   const [showToken, setShowToken] = useState(false)
 
   useEffect(() => {
@@ -75,8 +79,6 @@ export default function HomeSend() {
           </div>
         ) : (
           <>
-            {/* Thay "Bao gồm" bằng toggle NHẤN GIỮ — chọn hiện $ hay hiện token thật cho CẢ danh sách */}
-            <DisplayToggle showToken={showToken} onHoldStart={() => setShowToken(true)} onHoldEnd={() => setShowToken(false)} />
             {tokens.map(tk => (
               <div key={tk.symbol} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 2px' }}>
                 <img
@@ -103,6 +105,13 @@ export default function HomeSend() {
               </div>
             ))}
           </>
+        )}
+      </div>
+
+      {/* Hàng 6 riêng, căn giữa, ngay trên vùng thông báo (7-8) */}
+      <div className="row-6" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {tokens.length > 0 && (
+          <ShowTokensButton onHoldStart={() => setShowToken(true)} onHoldEnd={() => setShowToken(false)} />
         )}
       </div>
 
