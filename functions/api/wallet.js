@@ -11,7 +11,9 @@ async function circleReq(method, path, body, apiKey, userToken) {
     headers,
     body: body ? JSON.stringify(body) : undefined,
   });
-  return res.json();
+  // Trả kèm HTTP status — message Circle kiểu "Forbidden" một mình vô dụng khi debug.
+  let data; try { data = await res.json(); } catch { data = { message: `non-JSON response (HTTP ${res.status})` }; }
+  return { status: res.status, data };
 }
 
 const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
@@ -31,7 +33,7 @@ export async function onRequestPost(ctx) {
   }
 
   if (action === 'initialize') {
-    const data = await circleReq('POST', '/user/initialize', {
+    const { data } = await circleReq('POST', '/user/initialize', {
       idempotencyKey: crypto.randomUUID(),
       accountType: 'EOA',
       blockchains: ['ARC-TESTNET'],
@@ -40,18 +42,21 @@ export async function onRequestPost(ctx) {
   }
 
   if (action === 'resetPin') {
-    // Circle có 2 endpoint PIN RIÊNG BIỆT (xác nhận từ API reference):
-    // - POST /user/pin          = tạo PIN LẦN ĐẦU (lúc mới tạo ví) — user đã có ví thì bị từ chối
-    //   "The user had already been initialized".
-    // - POST /user/pin/restore  = KHÔI PHỤC/ĐỔI PIN cho user đã có (xác minh qua câu hỏi bảo mật)
-    //   — đây mới là endpoint đúng cho nút "Đổi PIN".
-    const data = await circleReq('POST', '/user/pin/restore', { idempotencyKey: crypto.randomUUID() }, apiKey, userToken);
+    // Circle có 3 endpoint PIN RIÊNG BIỆT (đã VERIFY BẰNG GỌI THẬT 2026-07-03, không đoán):
+    // - POST /user/pin         = đặt PIN LẦN ĐẦU — user có ví rồi thì "already been initialized".
+    // - PUT  /user/pin         = ĐỔI PIN (update-user-pin-challenge): challenge bắt nhập PIN CŨ
+    //   rồi PIN mới → tự xác thực. Test thật với user email: 201 + challengeId. ĐÂY là endpoint
+    //   đúng cho nút "Đổi PIN". (Session 9 sửa PUT→POST là đọc nhầm doc create ≠ update.)
+    // - POST /user/pin/restore = QUÊN PIN (bỏ qua PIN cũ, xác minh bằng câu hỏi bảo mật).
+    //   User SSO (Google) bị Circle trả 403 Forbidden ở endpoint này kể cả token tươi —
+    //   hợp lý về bảo mật: bypass PIN đòi tin cậy cao hơn token 60'. ĐỪNG dùng cho Đổi PIN.
+    const { status, data } = await circleReq('PUT', '/user/pin', { idempotencyKey: crypto.randomUUID() }, apiKey, userToken);
     const challengeId = data?.data?.challengeId;
     if (!challengeId) {
-      // Lộ lỗi THẬT của Circle (vd "user has no wallet", "PIN not set"...) thay vì "no challengeId"
-      // mù mờ — cùng pattern đã fix cho luồng gửi tiền (functions/api/send.js).
-      console.error('[resetPin] không trả challengeId:', JSON.stringify(data));
-      const msg = data?.message || data?.error?.message || (data?.code ? `Circle error ${data.code}` : 'no challengeId');
+      // Lộ NGUYÊN VĂN lỗi Circle (HTTP status + code + message) — "Forbidden" trần trụi đã làm
+      // tốn 3 session debug. Screenshot lỗi giờ phải tự nói được nó là gì.
+      console.error('[resetPin] không trả challengeId:', status, JSON.stringify(data));
+      const msg = `${data?.message || data?.error?.message || 'no challengeId'} (HTTP ${status}${data?.code ? `, code ${data.code}` : ''})`;
       return new Response(JSON.stringify({ error: msg, detail: data }), { status: 500, headers: JSON_HEADERS });
     }
     return new Response(JSON.stringify({ challengeId }), { headers: JSON_HEADERS });
@@ -59,7 +64,7 @@ export async function onRequestPost(ctx) {
 
   if (action === 'getAddress') {
     // Đúng endpoint: GET /v1/w3s/wallets (X-User-Token), KHÔNG phải /user/wallets
-    const wallets = await circleReq('GET', '/wallets', undefined, apiKey, userToken);
+    const { data: wallets } = await circleReq('GET', '/wallets', undefined, apiKey, userToken);
     const wallet = pickArcWallet(wallets);
     return new Response(JSON.stringify({
       address: wallet?.address || null,
