@@ -1,6 +1,9 @@
 ﻿/* ══════════════════════════════════════════════════════════
    DESIGN TOKENS (2026-06-28).
-   FONT (khóa): cùng họ Barlow — Barlow Condensed = display/số; Barlow (regular) = UI/chữ.
+   FONT (khóa, 2026-07-03): IBM Plex Sans = NỘI DUNG cho người đọc (mô tả, hint, thông báo,
+   menu, input). Barlow (họ Barlow) CHỈ dùng cho: số, ký hiệu tiền tệ (USD/USDC/EURC/cirBTC),
+   tiêu đề chính màn (vd "Send money"), và BUTTON. Titles = Barlow Condensed; số/tiền tệ/button
+   = Barlow thường (biến --font-condensed, tên cũ nhưng giá trị đã đổi sang non-condensed).
    MÀU (khóa): 4 tầng chữ + màu chức năng dưới đây.
    CỠ CHỮ: ĐÃ MỞ KHÓA — scale dưới là gợi ý, được phép tùy chỉnh px theo từng chỗ.
    ══════════════════════════════════════════════════════════ */
@@ -24,11 +27,10 @@
   --color-gray:         #E5E5EA; /* xám nhạt — border / nền / divider (KHÔNG làm màu chữ) */
 
   /* ── FONT ── */
-  /* Hệ 2 font cùng họ Barlow: Barlow Condensed = display/số; Barlow (regular) = UI/nội dung */
-  --font-base:      'Barlow', sans-serif;              /* toàn bộ UI: menu, tab, nút, form, mô tả, thông báo, ký hiệu tiền tệ */
-  --font-display:   'Barlow Condensed', sans-serif;    /* logo, tiêu đề lớn, số dư/số tiền/%/KPI */
+  --font-base:      'IBM Plex Sans', sans-serif;       /* NỘI DUNG cho người đọc: menu, mô tả, hint, thông báo, input, memo */
+  --font-display:   'Barlow Condensed', sans-serif;    /* logo, TIÊU ĐỀ chính màn (vd "Send money") */
   --font-title:     'Barlow Condensed', sans-serif;    /* alias → display (tiêu đề) */
-  --font-condensed: 'Barlow Condensed', sans-serif;    /* alias → display (số) */
+  --font-condensed: 'Barlow', sans-serif;              /* TÊN CŨ, giá trị đã đổi: Barlow (regular, KHÔNG condensed) — số, ký hiệu tiền tệ (USD/USDC/EURC/cirBTC), BUTTON */
 
   /* ── CỠ CHỮ (scale gợi ý — đã mở khóa, tùy chỉnh được) ── */
   --fs-amount:   52px;   /* Barlow display — số tiền lớn */
@@ -127,14 +129,14 @@ body {
 /* ── Buttons ── */
 .screen-title { font-family: var(--font-display); color: var(--color-black); }   /* tiêu đề màn = Barlow Condensed, BLACK */
 
-/* Mọi số & tiền tệ tiền tố ($/€) → Barlow (regular), ĐỒNG BỘ toàn app (user chốt 2026-07-03) */
-.num { font-family: var(--font-base); }
+/* Mọi số & ký hiệu tiền tệ ($/USDC/EURC/cirBTC) → Barlow (--font-condensed, regular) */
+.num { font-family: var(--font-condensed); }
 
 .btn {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-base);
+  font-family: var(--font-condensed);
   font-size: var(--fs-body);
   font-weight: var(--fw-medium);
   border-radius: 50px;
@@ -292,7 +294,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-family: var(--font-base);
+  font-family: var(--font-condensed);
   font-size: var(--fs-label);
   font-weight: var(--fw-medium);
   color: var(--color-muted);
@@ -354,7 +356,7 @@ body {
   border: 1.5px solid var(--color-gray);
   background: var(--color-white);
   color: var(--color-black);
-  font-family: var(--font-base);
+  font-family: var(--font-condensed);
   font-size: var(--fs-item);
   font-weight: var(--fw-medium);
   cursor: pointer;

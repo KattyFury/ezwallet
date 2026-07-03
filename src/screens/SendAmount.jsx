@@ -3,72 +3,69 @@ import { useNav } from '../nav'
 import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
 import ErrorToast from '../components/ErrorToast'
-import AmountSuggest from '../components/AmountSuggest'
 import { getTokenInfo, getVndRate } from '../chain'
 import { t } from '../i18n'
 import { findContactName } from '../store'
-import { getDisplayCurrency } from '../data'
+import { displaySymbol } from '../data'
 
 function shortenAddr(addr) {
   return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
 }
 
-const CURRENCIES = ['USDC', 'EURC']
-// định dạng số theo tiền tệ: token để nguyên (USDC/EURC)
-function fmtNum(n, cur) {
-  return String(n)
-}
+// USD = nhãn thân thiện, gửi = USDC (1:1). 3 token còn lại gửi đúng token đó.
+const CURRENCIES = ['USD', 'USDC', 'EURC', 'cirBTC']
+const effectiveToken = c => (c === 'USD' ? 'USDC' : c)
 
 export default function SendAmount() {
   const { navigate, params } = useNav()
   const { address } = params
   const name = params.name || findContactName(address)
-  // Tiền tệ hiển thị = tiền tệ MẶC ĐỊNH của người dùng này (không ép theo tiền tệ ghi trong QR).
-  // QR ghi VND mà người quét đang dùng USDC → hiện USDC tương đương cho đỡ rối (quy đổi ở effect).
   const qrCurrency = params.currency
-  const userCurrency = getDisplayCurrency()
-  const [cur, setCur] = useState(userCurrency)
-  // Cùng tiền tệ (hoặc không quét QR) → điền thẳng; khác tiền tệ → để trống, quy đổi sau khi có tỷ giá
+  // Mặc định LUÔN là USD (dễ hiểu nhất) — không phụ thuộc tiền tệ hiển thị ở Cài đặt.
+  const [cur, setCur] = useState('USD')
+  // QR cùng token với mặc định (USDC, vì USD≈USDC) → điền thẳng; khác token → để trống, quy đổi sau khi có tỷ giá.
   const [digits, setDigits] = useState(() =>
-    params.amount && (!qrCurrency || qrCurrency === userCurrency) ? String(params.amount) : ''
+    params.amount && (!qrCurrency || qrCurrency === 'USDC') ? String(params.amount) : ''
   )
   const [memo, setMemo] = useState(params.memo || '')
   const [showCur, setShowCur] = useState(false)
-  const [availableVND, setAvailableVND] = useState(null) // số dư USDC quy ra VND
-  const [rates, setRates] = useState({ VND: 1, USDC: 25000, EURC: 27000, CNY: 3448 })
+  const [availableAmt, setAvailableAmt] = useState(null) // số dư của TOKEN đang chọn (đơn vị token thật)
+  const [rates, setRates] = useState({ USDC: 25000, EURC: 27000, cirBTC: 2_600_000_000 })
 
+  // Số dư khả dụng: theo ĐÚNG token đang chọn (USD/USDC → USDC; EURC → EURC; cirBTC → cirBTC)
   useEffect(() => {
     const addr = localStorage.getItem('ez_wallet_addr')
-    if (addr) getTokenInfo(addr, 'USDC').then(i => setAvailableVND(i.vnd)).catch(() => setAvailableVND(0))
-    else setAvailableVND(0)
-    Promise.all([getVndRate('USDC'), getVndRate('EURC')])
-      .then(([u, e]) => {
-        const r = { VND: 1, USDC: u, EURC: e, CNY: Math.round(u / 7.25) }
+    const tok = effectiveToken(cur)
+    if (!addr) { setAvailableAmt(0); return }
+    setAvailableAmt(null)
+    getTokenInfo(addr, tok).then(i => setAvailableAmt(i.balance)).catch(() => setAvailableAmt(0))
+  }, [cur])
+
+  useEffect(() => {
+    Promise.all([getVndRate('USDC'), getVndRate('EURC'), getVndRate('cirBTC')])
+      .then(([u, e, b]) => {
+        const r = { USDC: u, EURC: e, cirBTC: b }
         setRates(r)
-        // Quét QR bằng tiền tệ KHÁC tiền tệ mặc định của người quét → quy đổi về tiền tệ của họ:
-        // giá trị QR quy ra VND (× tỷ giá tiền tệ QR) rồi chia tỷ giá tiền tệ của người quét.
-        if (params.amount && qrCurrency && qrCurrency !== userCurrency && r[qrCurrency] && r[userCurrency]) {
+        // Quét QR bằng token KHÁC mặc định (USDC) → quy đổi về USDC-equivalent qua VND:
+        // giá trị QR quy ra VND (× tỷ giá token QR) rồi chia tỷ giá USDC.
+        if (params.amount && qrCurrency && qrCurrency !== 'USDC' && r[qrCurrency]) {
           const vnd = params.amount * r[qrCurrency]
-          setDigits(String(Math.round(vnd / r[userCurrency])))
+          setDigits((vnd / r.USDC).toFixed(2))
         }
       })
       .catch(() => {})
   }, [])
 
-  const amount = parseInt(digits || '0')
-  const amountVND = Math.round(amount * (rates[cur] || 1))
-  const overBalance = availableVND !== null && amountVND > availableVND
-  const canContinue = amount > 0 && !overBalance && availableVND !== null
+  const amount = parseFloat(digits || '0')
+  const overBalance = availableAmt !== null && amount > availableAmt
+  const canContinue = amount > 0 && !overBalance && availableAmt !== null
+  const decimalsFor = c => (effectiveToken(c) === 'cirBTC' ? 8 : 2)
+  const availableStr = `${availableAmt !== null ? availableAmt.toFixed(decimalsFor(cur)) : '…'} ${cur}`
 
-  // số dư khả dụng hiển thị theo đúng tiền tệ đang chọn
-  const availableCur = cur === 'VND' ? (availableVND || 0) : (availableVND || 0) / (rates[cur] || 1)
-  const availableStr = cur === 'VND'
-    ? `${fmtNum(Math.round(availableCur), 'VND')} VND`
-    : `${availableCur.toFixed(2)} ${cur}`
-
+  // Numpad: '.' = dấu thập phân (chỉ 1 lần); BACK xóa từng ký tự.
   function handleKey(key) {
     if (key === 'BACK') { setDigits(d => d.slice(0, -1)); return }
-    if (key === ',') return
+    if (key === '.') { setDigits(d => (d.includes('.') ? d : (d === '' ? '0.' : d + '.'))); return }
     if (digits.length >= 12) return
     if (digits === '0') { setDigits(key); return }
     setDigits(d => d + key)
@@ -90,13 +87,13 @@ export default function SendAmount() {
       </div>
 
       <div className="row-3-4 center col" style={{ gap: 6 }}>
-        {/* Số to như màn số dư; VND là NÚT đổi tiền tệ (nhỏ, xám, mũi tên xuống) */}
+        {/* Số to như màn số dư; chip tiền tệ (USD/USDC/EURC/cirBTC) là NÚT đổi (nhỏ, xám, mũi tên xuống) */}
         <div style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {/* số căn giữa tuyệt đối; chip VND treo SÁT bên phải số (absolute left:100%) */}
+          {/* số căn giữa tuyệt đối; chip treo SÁT bên phải số (absolute left:100%) */}
           <span className="num" style={{ position: 'relative', fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: overBalance ? 'var(--color-error)' : digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
-            {fmtNum(amount, cur)}
+            {cur === 'USD' ? displaySymbol('USDC') : ''}{digits || '0'}
             <button onClick={() => setShowCur(true)}
-              style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: 10, display: 'inline-flex', alignItems: 'center', gap: 4, border: '1.5px solid var(--color-gray)', borderRadius: 10, padding: '6px 10px', background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'var(--font-base)', fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
+              style={{ position: 'absolute', left: '100%', top: '50%', transform: 'translateY(-50%)', marginLeft: 10, display: 'inline-flex', alignItems: 'center', gap: 4, border: '1.5px solid var(--color-gray)', borderRadius: 10, padding: '6px 10px', background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
               {cur}<Icon name="down2" size={12} color="var(--color-muted)" />
             </button>
           </span>
@@ -107,8 +104,6 @@ export default function SendAmount() {
           </span>
         )}
       </div>
-
-      <AmountSuggest cur={cur} amount={amount} digits={digits} fmtNum={fmtNum} onPick={v => setDigits(String(v))} />
 
       <div className="row-5 center">
         <input
@@ -124,7 +119,7 @@ export default function SendAmount() {
       {/* Numpad 2.5 hàng (7,8,nửa 9) + nút ở ranh giới 9/10 — gộp rows 7-10 thành flex 2.5 / 1.5 */}
       <div style={{ gridRow: '7 / 11', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 2.5, minHeight: 0 }}>
-          <Numpad onKey={handleKey} showComma={false} />
+          <Numpad onKey={handleKey} showComma />
         </div>
         <div style={{ flex: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
           <button className="btn btn-secondary" style={{ width: '44%' }} onClick={() => navigate('HomeSend')}>{t('Quay lại')}</button>

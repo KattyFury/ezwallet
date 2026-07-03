@@ -18,7 +18,7 @@ export default function BalanceHeader({ totalVND, loading }) {
   return (
     <div className="row-1-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       {/* Ký hiệu tiền tệ = TIỀN TỐ dính liền số (vd "$127.66") — cả cụm căn giữa như 1 khối, không tách suffix riêng */}
-      <span style={{ fontFamily: 'var(--font-base)', fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', lineHeight: 1 }}>
+      <span style={{ fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', lineHeight: 1 }}>
         {sign}{num}
       </span>
     </div>

@@ -80,7 +80,7 @@ export default function Swap() {
 
   function handleKey(key) {
     if (key === 'BACK') { setInput(p => p.slice(0, -1)); return }
-    if (key === ',' && input.includes(',')) return
+    if (key === '.' && input.includes('.')) return
     if (input.length >= 10) return
     setInput(p => p + key)
   }

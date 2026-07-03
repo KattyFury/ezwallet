@@ -48,19 +48,22 @@ const STYLE = {
 // hiện được trong vùng cố định (rows 7-8).
 const ROW_TEXT = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
 
-// Hint = thông báo có mức ưu tiên THẤP NHẤT, KHÔNG nút X, không bấm được — luôn tồn tại,
-// bị các thông báo thật (nhận/gửi/lỗi) đẩy lên trên rồi mờ dần khi hết chỗ hiển thị.
-function HintRow({ label, desc }) {
+// Hint = MỘT thông báo dài nhiều dòng (không phải nhiều thông báo riêng), mức ưu tiên THẤP
+// NHẤT, KHÔNG nút X, không bấm được — luôn tồn tại, bị thông báo thật đẩy lên rồi mờ dần
+// (như 1 khối) khi hết chỗ hiển thị. Nền VÀNG theo đúng màu cảnh báo/hint quy định của app.
+function HintBlock({ lines }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', background: 'var(--color-gray)', borderRadius: 12, padding: '12px 14px', fontSize: 'var(--fs-label)', color: 'var(--color-muted)', ...ROW_TEXT }}>
-      <span style={{ fontWeight: 'var(--fw-medium)' }}>{label}</span>&nbsp;=&nbsp;{desc}
+    <div style={{ background: 'var(--color-warning-soft)', borderRadius: 12, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 3, fontSize: 'var(--fs-label)', color: 'var(--color-content)', textAlign: 'left' }}>
+      {lines.map((h, i) => (
+        <div key={i} style={ROW_TEXT}><span style={{ fontWeight: 'var(--fw-medium)' }}>{h.label}</span> = {h.desc}</div>
+      ))}
     </div>
   )
 }
 
-// hints: [{label, desc}] — luôn hiện (không phải fallback nữa). warning: JSX | null — cảnh báo
-// ưu tiên cao (vd hết USDC trả phí); giữ đúng logic CŨ = chỉ hiện khi CHƯA có thông báo thật nào,
-// để không đổi hành vi đã có (user không yêu cầu đổi phần này).
+// hints: [{label, desc}] — render CHUNG thành 1 khối (luôn hiện, không phải fallback nữa).
+// warning: JSX | null — cảnh báo ưu tiên cao (vd hết USDC trả phí); giữ đúng logic CŨ = chỉ
+// hiện khi CHƯA có thông báo thật nào, để không đổi hành vi đã có.
 export default function NotifArea({ hints = [], warning = null }) {
   const { navigate } = useNav()
   const [notifs, setNotifs] = useState(getNotifs())
@@ -74,9 +77,13 @@ export default function NotifArea({ hints = [], warning = null }) {
 
   if (notifs.length === 0 && warning) return warning
 
-  // notifs lưu MỚI NHẤT ở ĐẦU (unshift trong notif.js). Hiển thị theo dòng thời gian: CŨ (hint)
-  // ở TRÊN cùng — mờ/mất trước — MỚI NHẤT ở DƯỚI cùng (gần hàng nút, luôn thấy trước tiên).
-  const items = [...hints.map((h, i) => ({ ...h, id: `hint-${i}`, type: 'hint' })), ...[...notifs].reverse()]
+  // notifs lưu MỚI NHẤT ở ĐẦU (unshift trong notif.js). Hiển thị theo dòng thời gian: CŨ (hint —
+  // 1 KHỐI nhiều dòng, không phải nhiều thông báo riêng) ở TRÊN cùng — mờ/mất trước — MỚI NHẤT
+  // ở DƯỚI cùng (gần hàng nút, luôn thấy trước tiên).
+  const items = [
+    ...(hints.length ? [{ id: 'hint', type: 'hint', hints }] : []),
+    ...[...notifs].reverse(),
+  ]
 
   return (
     // overflow:hidden + mask fade ở mép TRÊN (biên hàng 6/7) — thông báo bị đẩy lên quá cao
@@ -88,7 +95,7 @@ export default function NotifArea({ hints = [], warning = null }) {
     }}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minHeight: '100%', justifyContent: 'flex-end' }}>
         {items.map(n => {
-          if (n.type === 'hint') return <HintRow key={n.id} label={n.label} desc={n.desc} />
+          if (n.type === 'hint') return <HintBlock key={n.id} lines={n.hints} />
           const s = STYLE[n.type] || STYLE.sent
           const clickable = n.type === 'received' || n.type === 'sent'
           return (

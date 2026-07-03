@@ -11,7 +11,7 @@ import { t } from '../i18n'
 
 // USDC (trái) và $98.59 (phải) phải CÙNG font + CÙNG màu — dùng chung 1 style object
 // để không lệch (thay vì khai riêng, dễ chỉnh nhầm 1 bên).
-const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-base)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
+const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
 
 // Đồng bộ với nút "Gửi" trong Contacts.jsx (height 40, fs-item, Barlow medium — .btn) để cùng
 // hệ thiết kế. Chiều ngang KHÔNG cố định — tự giãn theo nội dung.
@@ -32,7 +32,7 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
       style={{
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
         padding: '0 22px', borderRadius: 50, border: 'none', background: 'var(--color-gray)',
-        color: 'var(--color-muted)', fontFamily: 'var(--font-base)', fontSize: 'var(--fs-item)',
+        color: 'var(--color-muted)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
         fontWeight: 'var(--fw-medium)', cursor: 'pointer',
         WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
       }}

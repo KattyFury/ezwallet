@@ -3,7 +3,7 @@ import Icon from '../components/Icon'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
 import { t } from '../i18n'
-import { fmtVND, getDisplayCurrency, displaySymbol } from '../data'
+import { getDisplayCurrency, displaySymbol } from '../data'
 import { getVndRate, estimateFeeVnd } from '../chain'
 import { getSDK, executeChallenge, refreshSession } from '../circle'
 
@@ -11,45 +11,39 @@ function shortenAddr(addr) {
   return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
 }
 
-// Ký hiệu tiền tệ dùng font chữ (Barlow regular); số vẫn Barlow Condensed qua .num
+// Ký hiệu tiền tệ / tên token dùng font Barlow (--font-condensed); số vẫn Barlow qua .num
 function Cur({ children }) {
-  return <span style={{ fontFamily: 'var(--font-base)', fontWeight: 'var(--fw-medium)' }}>{children}</span>
+  return <span style={{ fontFamily: 'var(--font-condensed)', fontWeight: 'var(--fw-medium)' }}>{children}</span>
 }
 
 export default function SendConfirm() {
   const { navigate, params } = useNav()
-  const { address, name, amount, memo, currency = 'VND' } = params
-  const [rates, setRates] = useState({ USDC: 25000, EURC: 27000, CNY: 3448 })
+  // currency = 'USD' (nhãn thân thiện, gửi USDC) hoặc token thật (USDC/EURC/cirBTC) — đến từ SendAmount.
+  const { address, name, amount, memo, currency = 'USD' } = params
   const [feeVnd, setFeeVnd] = useState(null)      // phí gas thật (null = đang tính)
+  // Tỷ giá riêng cho PHÍ (hiển thị theo tiền tệ mặc định ở Cài đặt — luôn USDC/EURC, không VND)
+  const [feeRates, setFeeRates] = useState({ USDC: 25000, EURC: 27000 })
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)         // đã gửi thành công → khóa, không gửi lại
   const [error, setError] = useState('')          // lỗi terminal (hủy/mạng...) hiện tại chỗ
 
   useEffect(() => {
     Promise.all([getVndRate('USDC'), getVndRate('EURC')])
-      .then(([u, e]) => setRates({ USDC: u, EURC: e, CNY: Math.round(u / 7.25) })).catch(() => {})
+      .then(([u, e]) => setFeeRates({ USDC: u, EURC: e })).catch(() => {})
     // memo đi qua Memo contract → tốn gas hơn (~110k) so với transfer thường (~65k)
     estimateFeeVnd(memo && memo.trim() ? 110000 : 65000).then(setFeeVnd).catch(() => setFeeVnd(0))
   }, [memo])
 
-  // VND/CNY → gửi USDC (quy đổi); USDC/EURC → gửi đúng token đó
-  const token = currency === 'EURC' ? 'EURC' : 'USDC'
-  const sendAmount = currency === 'VND' ? amount / rates.USDC
-                   : currency === 'CNY' ? (amount * rates.CNY) / rates.USDC
-                   : amount
-  const sendAmountStr = (currency === 'VND' || currency === 'CNY') ? sendAmount.toFixed(4) : sendAmount.toFixed(2)
-  const mainEl = currency === 'VND' ? fmtVND(amount) : <>{amount} <Cur>{currency}</Cur></>
-  // "Quy đổi" = lượng token thật chuyển đi; chỉ hiện khi nhập bằng tiền pháp định (VND/CNY)
-  const convEl = <>{sendAmountStr} <Cur>{token}</Cur></>
-  const showConv = currency === 'VND' || currency === 'CNY'
+  // USD = USDC (1:1, chỉ khác nhãn hiển thị); USDC/EURC/cirBTC gửi đúng số đã nhập, KHÔNG quy đổi.
+  const token = currency === 'USD' ? 'USDC' : currency
+  const sendAmountStr = token === 'cirBTC' ? amount.toFixed(8) : amount.toFixed(2)
+  const mainEl = currency === 'USD' ? <>{displaySymbol('USDC')}{amount}</> : <>{amount} <Cur>{currency}</Cur></>
 
-  // Phí mạng theo TIỀN TỆ MẶC ĐỊNH (ez_currency), không cứng VND
+  // Phí mạng theo TIỀN TỆ MẶC ĐỊNH ở Cài đặt (getDisplayCurrency() luôn trả USDC/EURC)
   const displayCur = getDisplayCurrency()
-  const dispRates = { VND: 1, ...rates }
   function feeEl() {
     if (feeVnd === null) return t('Đang tính...')
-    if (displayCur === 'VND') return feeVnd < 1 ? '< 1đ' : fmtVND(feeVnd)
-    const v = feeVnd / (dispRates[displayCur] || 1)
+    const v = feeVnd / (feeRates[displayCur] || 1)
     const sign = displaySymbol(displayCur)
     return v < 0.01 ? `< ${sign}0.01` : `${sign}${v.toFixed(2)}`
   }
@@ -124,14 +118,6 @@ export default function SendConfirm() {
               {mainEl}
             </span>
           </div>
-          {showConv && (
-            <div className="confirm-row">
-              <span className="confirm-label">{t('Quy đổi')}</span>
-              <span className="confirm-value num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
-                {convEl}
-              </span>
-            </div>
-          )}
           {memo && (
             <div className="confirm-row">
               <span className="confirm-label">{t('Nội dung')}</span>
