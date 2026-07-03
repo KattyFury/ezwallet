@@ -86,15 +86,17 @@ body {
   margin-right: -15px;
 }
 
-/* Scrollbar mảnh, tiệp màu — dùng cho vùng token/thông báo có thể cuộn (tránh scrollbar mặc định
-   to xấu chen vào layout). Ẩn khi không cuộn, chỉ hiện thumb mảnh màu xám nhạt khi cần. */
+/* Scrollbar tối giản, gần như ẩn — dùng cho vùng token/thông báo có thể cuộn (tránh scrollbar
+   mặc định to xấu chen vào layout). Cực mảnh (3px) + màu rất nhạt lúc nghỉ (--color-faint),
+   đậm hơn (--color-muted) khi rê chuột/đang cuộn — tinh tế, không gây chú ý ngoài lúc cần. */
 .scroll-thin {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-gray) transparent;
+  scrollbar-color: var(--color-faint) transparent;
 }
-.scroll-thin::-webkit-scrollbar { width: 4px; }
+.scroll-thin::-webkit-scrollbar { width: 3px; }
 .scroll-thin::-webkit-scrollbar-track { background: transparent; }
-.scroll-thin::-webkit-scrollbar-thumb { background: var(--color-gray); border-radius: 4px; }
+.scroll-thin::-webkit-scrollbar-thumb { background: var(--color-faint); border-radius: 10px; }
+.scroll-thin:hover::-webkit-scrollbar-thumb, .scroll-thin::-webkit-scrollbar-thumb:hover { background: var(--color-muted); }
 
 /* Row helpers */
 .row-1      { grid-row: 1; }
