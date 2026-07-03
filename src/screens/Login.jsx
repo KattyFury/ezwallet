@@ -51,9 +51,20 @@ export default function Login() {
       if (error) { setGoogleErr(googleErrMsg(error)); setRestoring(false); return }
       if (!result?.userToken) { setRestoring(false); return }
       try {
-        const { userToken, encryptionKey } = result
+        const { userToken, encryptionKey, refreshToken, oAuthInfo } = result
         localStorage.setItem('ez_user_token', userToken)
         localStorage.setItem('ez_encryption_key', encryptionKey)
+        // ⚠️ userToken Circle chỉ sống 60 PHÚT (dùng cho challenge PIN). User Google KHÔNG có
+        // ez_email nên refreshSession() cũ KHÔNG làm mới được → sau 1h mọi thao tác PIN (Đổi PIN,
+        // gửi tiền) trả 403 Forbidden. FIX: LƯU refreshToken (Circle trả sẵn) → refreshSession()
+        // đổi lấy userToken mới qua POST /users/token/refresh. ĐỪNG vứt refreshToken nữa.
+        if (refreshToken) localStorage.setItem('ez_refresh_token', refreshToken)
+        localStorage.setItem('ez_login_method', 'google')
+        // Circle CÓ trả email Google trong oAuthInfo.socialUserInfo.email — lưu RIÊNG (KHÔNG ghi
+        // vào ez_email, vì ez_email điều khiển luồng refresh email-login = danh tính KHÁC). Chỉ để
+        // hiển thị "Login email" thay vì "…".
+        const gEmail = oAuthInfo?.socialUserInfo?.email
+        if (gEmail) localStorage.setItem('ez_google_email', gEmail)
         localStorage.removeItem('ez_wallet_addr')
         localStorage.removeItem('ez_wallet_id')
 

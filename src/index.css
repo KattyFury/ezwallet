@@ -86,17 +86,14 @@ body {
   margin-right: -15px;
 }
 
-/* Scrollbar tối giản, gần như ẩn — dùng cho vùng token/thông báo có thể cuộn (tránh scrollbar
-   mặc định to xấu chen vào layout). Cực mảnh (3px) + màu rất nhạt lúc nghỉ (--color-faint),
-   đậm hơn (--color-muted) khi rê chuột/đang cuộn — tinh tế, không gây chú ý ngoài lúc cần. */
+/* Scrollbar ẨN HOÀN TOÀN — vùng token/thông báo vẫn cuộn được bình thường, chỉ KHÔNG
+   hiện thanh cuộn (đã có hiệu ứng mờ dần ở mép để gợi ý còn nội dung bên dưới/trên).
+   Thanh cuộn desktop dù mảnh 3px vẫn trông chướng trên UI mobile-first → bỏ hẳn cho sạch. */
 .scroll-thin {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-faint) transparent;
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/Edge cũ */
 }
-.scroll-thin::-webkit-scrollbar { width: 3px; }
-.scroll-thin::-webkit-scrollbar-track { background: transparent; }
-.scroll-thin::-webkit-scrollbar-thumb { background: var(--color-faint); border-radius: 10px; }
-.scroll-thin:hover::-webkit-scrollbar-thumb, .scroll-thin::-webkit-scrollbar-thumb:hover { background: var(--color-muted); }
+.scroll-thin::-webkit-scrollbar { width: 0; height: 0; display: none; }  /* Chrome/Safari */
 
 /* Row helpers */
 .row-1      { grid-row: 1; }

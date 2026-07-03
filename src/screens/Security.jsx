@@ -24,7 +24,7 @@ export default function Security() {
     }
   }
 
-  const email = localStorage.getItem('ez_email') || '…'
+  const email = localStorage.getItem('ez_email') || localStorage.getItem('ez_google_email') || '…'
   const walletAddr = localStorage.getItem('ez_wallet_addr') || '…'
   const shortAddr = walletAddr !== '…' ? walletAddr.slice(0, 10) + '...' + walletAddr.slice(-6) : '…'
 

@@ -91,18 +91,54 @@ export async function getWalletAddress(userToken) {
 // người dùng chỉ thấy bị đá ra mà không hiểu vì sao. Gọi hàm này trước MỌI thao
 // tác cần ký PIN (gửi tiền, đổi PIN) để luôn có token mới — Circle cho tạo token
 // mới bất cứ lúc nào chỉ cần userId (= email), không cần mật khẩu.
+// Đổi refreshToken (Circle trả lúc social login) lấy userToken mới. Dùng cho user Google —
+// họ không có userId=email nên không tạo token mới bằng createSession được.
+export async function refreshSocialToken(userToken, refreshToken, deviceId) {
+  const res = await fetch('/api/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'refreshSocial', userToken, refreshToken, deviceId }),
+  })
+  const data = await res.json()
+  if (data.error) { console.error('[refreshSocialToken]', data.error, data.detail); throw new Error(data.error) }
+  return data   // { userToken, encryptionKey, refreshToken }
+}
+
 export async function refreshSession() {
   const email = localStorage.getItem('ez_email')
   const fallback = { userToken: localStorage.getItem('ez_user_token'), encryptionKey: localStorage.getItem('ez_encryption_key') }
-  if (!email) return fallback
-  try {
-    const { userToken, encryptionKey } = await createSession(email)
-    localStorage.setItem('ez_user_token', userToken)
-    localStorage.setItem('ez_encryption_key', encryptionKey)
-    return { userToken, encryptionKey }
-  } catch {
-    return fallback   // refresh lỗi (mất mạng...) → dùng token cũ, để lỗi thật lộ ra ở bước execute
+
+  // Luồng EMAIL: tạo token mới bằng userId = email (Circle cho tạo bất cứ lúc nào).
+  if (email) {
+    try {
+      const { userToken, encryptionKey } = await createSession(email)
+      localStorage.setItem('ez_user_token', userToken)
+      localStorage.setItem('ez_encryption_key', encryptionKey)
+      return { userToken, encryptionKey }
+    } catch {
+      return fallback
+    }
   }
+
+  // Luồng GOOGLE (không có email → dùng refreshToken + deviceId đã lưu lúc login).
+  // Đây là fix gốc lỗi "Đổi PIN: Forbidden": userToken PIN sống 60' mà trước đây user Google
+  // không có cách làm mới → hết hạn → 403. Giờ đổi refreshToken lấy token mới trước khi ký PIN.
+  const refreshToken = localStorage.getItem('ez_refresh_token')
+  const deviceId = localStorage.getItem('ez_google_deviceId')
+  if (refreshToken && deviceId) {
+    try {
+      const r = await refreshSocialToken(fallback.userToken, refreshToken, deviceId)
+      if (r?.userToken) {
+        localStorage.setItem('ez_user_token', r.userToken)
+        if (r.encryptionKey) localStorage.setItem('ez_encryption_key', r.encryptionKey)
+        if (r.refreshToken) localStorage.setItem('ez_refresh_token', r.refreshToken)  // Circle rotate → lưu bản mới
+        return { userToken: r.userToken, encryptionKey: r.encryptionKey || fallback.encryptionKey }
+      }
+    } catch {
+      // refreshToken hết hạn (14 ngày) / lỗi mạng → dùng token cũ, để lỗi thật lộ ra ở bước execute
+    }
+  }
+  return fallback
 }
 
 // KIT_KEY di chuyển lên server-side (Cloudflare Worker env var)

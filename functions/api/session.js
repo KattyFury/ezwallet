@@ -16,6 +16,27 @@ export async function onRequestPost(ctx) {
   const apiKey = ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY;
   const body = await ctx.request.json();
 
+  // Social login: làm mới userToken bằng refreshToken (userToken sống 60') — cho user Google,
+  // vì họ KHÔNG có userId=email để tạo token mới như luồng email. Spec Circle:
+  // POST /v1/w3s/users/token/refresh · header X-User-Token · body {idempotencyKey, refreshToken, deviceId}.
+  if (body.action === 'refreshSocial') {
+    const { userToken, refreshToken, deviceId } = body;
+    const res = await fetch(`${CIRCLE_API}/users/token/refresh`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'X-User-Token': userToken },
+      body: JSON.stringify({ idempotencyKey: crypto.randomUUID(), refreshToken, deviceId }),
+    });
+    const data = await res.json();
+    if (data.code || !data.data?.userToken) {
+      return new Response(JSON.stringify({ error: data.message || 'refresh failed', detail: data }), { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    }
+    return new Response(JSON.stringify({
+      userToken: data.data.userToken,
+      encryptionKey: data.data.encryptionKey,
+      refreshToken: data.data.refreshToken,
+    }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+  }
+
   // Social login: tạo device token
   if (body.action === 'socialToken') {
     const { deviceId } = body;
