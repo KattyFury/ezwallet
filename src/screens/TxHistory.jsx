@@ -17,17 +17,25 @@ function loadContactMap() {
   } catch { return {} }
 }
 
-function timeAgo(ts) {
-  const diff = Math.floor(Date.now() / 1000) - parseInt(ts)
-  if (diff < 60) return t('vừa xong')
-  if (diff < 3600) return `${Math.floor(diff / 60)} ${t('phút trước')}`
-  if (diff < 86400) return `${Math.floor(diff / 3600)} ${t('giờ trước')}`
-  if (diff < 604800) return `${Math.floor(diff / 86400)} ${t('ngày trước')}`
-  return new Date(ts * 1000).toLocaleDateString('vi-VN')
-}
-
 function shortAddr(addr) {
   return addr ? addr.slice(0, 6) + '...' + addr.slice(-4) : ''
+}
+
+// Nhãn NGÀY cho ranh giới nhóm (vd "28 Jun 2026") + GIỜ chi tiết cho từng dòng (vd "14:32").
+function dateLabel(ts) {
+  return new Date(parseInt(ts) * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
+function timeLabel(ts) {
+  return new Date(parseInt(ts) * 1000).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+}
+
+// Ranh giới ngày giữa các nhóm giao dịch (user chốt: boundary hiện ngày tháng năm).
+function DateHeader({ date, first }) {
+  return (
+    <div style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)', padding: first ? '2px 2px 8px' : '18px 2px 8px' }}>
+      {date}
+    </div>
+  )
 }
 
 // Style nút lọc đang bật: nền trắng + viền xanh + chữ xanh (không tô đặc)
@@ -51,20 +59,22 @@ function txInfo(tx, walletAddr, contacts, rates) {
   return { isSend, amount, symbol, usd, counter, name }
 }
 
-// Layout user chốt (2026-07-03): icon đã nói lên gửi/nhận —
-//   [icon] Sent USDC to hieu · 5 min ago      | -$1.00   (tiền hiển thị, chính)
-//          (lời nhắn nếu có — để đối soát)     | 1.00 USDC (token thật, xám nhỏ)
+// Mỗi giao dịch = 1 khối, cột giữa 3 dòng (user chốt 2026-07-04):
+//   [icon]  hàng1: Received from <tên/địa chỉ>          | +$5.00     (tiền hiển thị, chính)
+//           hàng2: 14:32  (giờ chi tiết)                 | 5.00 USDC  (token thật, xám nhỏ)
+//           hàng3: memo (nếu có)
+// Ranh giới NGÀY ở DateHeader (hiện khi đổi ngày). align-items:flex-start vì cột giữa nhiều dòng.
 function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo }) {
   const { isSend, amount, symbol, usd, counter, name } = txInfo(tx, walletAddr, contacts, rates)
   const who = name || shortAddr(counter)
   return (
     <button onClick={onClick} style={{
-      display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+      display: 'flex', alignItems: 'flex-start', gap: 12, width: '100%',
       padding: '12px 0', border: 'none', background: 'none', cursor: 'pointer',
       borderBottom: '1px solid var(--color-gray)', fontFamily: 'inherit', textAlign: 'left',
     }}>
       <div style={{
-        width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+        width: 40, height: 40, borderRadius: '50%', flexShrink: 0, marginTop: 2,
         background: isSend ? 'var(--color-info-soft)' : 'var(--color-primary-soft)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
@@ -72,23 +82,26 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo }) {
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        {/* Bỏ chữ token (USDC) — đã hiện ở cột phải; dòng gọn hơn (fs-label) tiết kiệm chỗ */}
-        <div style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {isSend ? 'Sent to' : 'Received from'} {who} <span style={{ color: 'var(--color-muted)', fontWeight: 'var(--fw-regular)' }}>· {timeAgo(tx.timeStamp)}</span>
+        {/* hàng 1: gửi/nhận cho ai (tên danh bạ hoặc địa chỉ ví) */}
+        <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {isSend ? 'Sent to' : 'Received from'} {who}
         </div>
+        {/* hàng 2: giờ chi tiết */}
+        <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', marginTop: 2 }}>{timeLabel(tx.timeStamp)}</div>
+        {/* hàng 3: memo (nếu có) */}
         {memo && (
-          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {memo}
           </div>
         )}
       </div>
 
-      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+      <div style={{ textAlign: 'right', flexShrink: 0, marginTop: 2 }}>
         {/* Chính: tiền hiển thị ($). Phụ: token thật, xám mờ */}
         <div className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: isSend ? 'var(--color-error)' : 'var(--color-primary)' }}>
           {isSend ? '-' : '+'}{rates ? `${displaySymbol(cur)}${displayNum(usd, cur, rates)}` : '…'}
         </div>
-        <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
+        <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', marginTop: 2 }}>
           {amount.toFixed(amount < 0.01 ? 6 : 2)} {symbol}
         </div>
       </div>
@@ -179,9 +192,17 @@ export default function TxHistory() {
           <div style={{ width: '100%', textAlign: 'center', paddingTop: 40 }}>
             <div style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{emptyMsg}</div>
           </div>
-        ) : (
-          filtered.map(tx => <TxRow key={tx.hash} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} cur={cur} rates={rates} memo={memos[tx.hash]} />)
-        )}
+        ) : (() => {
+          // Nhóm theo ngày: chèn DateHeader mỗi khi ngày đổi (txs sort desc sẵn từ API).
+          let last = null
+          const nodes = []
+          filtered.forEach((tx, i) => {
+            const dl = dateLabel(tx.timeStamp)
+            if (dl !== last) { nodes.push(<DateHeader key={`h-${dl}`} date={dl} first={i === 0} />); last = dl }
+            nodes.push(<TxRow key={tx.hash} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} cur={cur} rates={rates} memo={memos[tx.hash]} />)
+          })
+          return nodes
+        })()}
       </div>
 
       <div style={{ gridRow: '9 / 11', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
