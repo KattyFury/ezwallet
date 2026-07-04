@@ -5,7 +5,7 @@ import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
 import NotifArea from '../components/NotifArea'
 import { useNav } from '../nav'
-import { getTokenBalances } from '../chain'
+import { getTokenBalances, cachedBalances } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import { t } from '../i18n'
 
@@ -17,7 +17,8 @@ export default function HomeReceive() {
   const { navigate } = useNav()
   const [copied, setCopied] = useState(false)
   const [addrCopied, setAddrCopied] = useState(false)   // copy riêng cho nút dưới QR (khác nút "Chia sẻ")
-  const [totalUsd, setTotalUsd] = useState(0)
+  // Seed tổng số dư từ cache → không "..." khi chuyển màn
+  const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? c.reduce((s, t) => s + t.usd, 0) : 0 })
   const [walletAddr, setWalletAddr] = useState(localStorage.getItem('ez_wallet_addr') || '')
 
   // Lấy lại địa chỉ ví nếu thiếu (tạo ví xong nhưng Circle provision chậm)

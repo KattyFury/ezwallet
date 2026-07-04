@@ -30,6 +30,14 @@ export const TOKENS = [
 let priceCache = {}
 let lastFetch = 0
 
+// ── Cache tầng module: chuyển màn (Send↔Receive↔Menu) hiện số NGAY, không "..." nhấp nháy.
+// Mỗi navigate thay mới component → mount lại → fetch lại; nếu seed state từ cache thì số cũ
+// hiện tức thì, fetch nền cập nhật sau (như app ngân hàng). Sống theo phiên (mất khi reload trang).
+let _balCache = {}      // addr(lowercase) -> tokens[] (kết quả getTokenBalances gần nhất)
+let _ratesCache = null  // { USDC, EURC, cirBTC } gần nhất
+export function cachedBalances(addr) { return addr ? (_balCache[addr.toLowerCase()] || null) : null }
+export function cachedRates() { return _ratesCache }
+
 async function fetchPrices() {
   if (Date.now() - lastFetch < 60000) return priceCache
   try {
@@ -65,7 +73,9 @@ export async function getTokenBalances(walletAddress) {
       }
     })
   )
-  return results.filter(t => t.amount > 0)
+  const out = results.filter(t => t.amount > 0)
+  if (walletAddress) _balCache[walletAddress.toLowerCase()] = out   // cache cho lần mount sau
+  return out
 }
 
 export function fmtAmount(amount, decimals = 6) {
@@ -86,7 +96,8 @@ export async function getUsdRate(symbol = 'USDC') {
 // cirBTC dùng CHUNG 1 nguồn tỷ giá với cột hiển thị (tránh lệch nguồn).
 export async function getDisplayRates() {
   const [u, e, b] = await Promise.all([getUsdRate('USDC'), getUsdRate('EURC'), getUsdRate('cirBTC')])
-  return { USDC: u, EURC: e, cirBTC: b }
+  _ratesCache = { USDC: u, EURC: e, cirBTC: b }   // cache cho lần mount sau
+  return _ratesCache
 }
 
 // Số dư 1 token + giá USD (USDC = token dùng để gửi)

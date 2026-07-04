@@ -1,7 +1,7 @@
 ﻿import NavBar from '../components/NavBar'
 import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
-import { getTokenBalances } from '../chain'
+import { getTokenBalances, cachedBalances } from '../chain'
 import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
 import { t } from '../i18n'
@@ -15,7 +15,8 @@ const ITEMS = [
 
 export default function MenuScreen() {
   const { navigate } = useNav()
-  const [totalUsd, setTotalUsd] = useState(0)
+  // Seed tổng số dư từ cache → không "..." khi chuyển màn
+  const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? c.reduce((s, t) => s + t.usd, 0) : 0 })
   useEffect(() => {
     const addr = localStorage.getItem('ez_wallet_addr')
     if (addr) getTokenBalances(addr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0)))

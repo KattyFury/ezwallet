@@ -4,7 +4,7 @@ import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
 import { getDisplayCurrency, displayNum, displaySymbol } from '../data'
-import { getTokenBalances, getDisplayRates } from '../chain'
+import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import NotifArea from '../components/NotifArea'
 import { t } from '../i18n'
@@ -50,10 +50,12 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
 
 export default function HomeSend() {
   const { navigate } = useNav()
-  const [tokens, setTokens] = useState([])
-  const [loading, setLoading] = useState(true)
+  // Seed từ cache tầng module → chuyển màn hiện số NGAY (không "..." nhấp nháy), fetch nền cập nhật.
+  const seedTokens = cachedBalances(localStorage.getItem('ez_wallet_addr'))
+  const [tokens, setTokens] = useState(seedTokens || [])
+  const [loading, setLoading] = useState(!seedTokens)
   const cur = getDisplayCurrency()
-  const [rates, setRates] = useState(null)
+  const [rates, setRates] = useState(cachedRates)
   // Toggle CHUNG cho cả danh sách (không còn per-token): mặc định false = hiện $; nhấn giữ
   // ShowTokensButton → true = hiện số lượng token thật; nhả tay → về lại $.
   const [showToken, setShowToken] = useState(false)
@@ -66,7 +68,7 @@ export default function HomeSend() {
         .catch(console.error)
         .finally(() => setLoading(false))
     })
-    getDisplayRates().then(setRates).catch(() => setRates({ USDC: 1, EURC: 1.08 }))
+    getDisplayRates().then(setRates).catch(() => setRates(r => r || { USDC: 1, EURC: 1.08 }))
   }, [])
 
   const totalUsd = tokens.reduce((s, t) => s + t.usd, 0)
