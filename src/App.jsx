@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { NavContext } from './nav'
+import ErrorBoundary from './components/ErrorBoundary'
 import Login from './screens/Login'
 import HomeSend from './screens/HomeSend'
 import HomeReceive from './screens/HomeReceive'
@@ -62,7 +63,9 @@ export default function App() {
 
   return (
     <NavContext.Provider value={{ navigate, params: nav.params }}>
-      <Screen />
+      <ErrorBoundary>
+        <Screen />
+      </ErrorBoundary>
     </NavContext.Provider>
   )
 }

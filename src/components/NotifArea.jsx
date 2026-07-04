@@ -20,18 +20,27 @@ function pollIncoming(after) {
   if (!addr) return
   fetch(`https://testnet.arcscan.app/api?module=account&action=tokentx&address=${addr}&sort=desc&limit=20`)
     .then(r => r.json()).then(d => {
-      const recv = (d?.result || []).filter(tx => tx.to?.toLowerCase() === addr.toLowerCase())
+      const all = d?.result || []
+      const lower = addr.toLowerCase()
+      // Hash nào ví vừa GỬI ĐI (from = ví) VÀ nhận về = giao dịch SWAP (đổi token, cùng 1 tx).
+      // → thông báo tiền-vào của swap phải nói "đổi tiền xong", KHÔNG phải "nhận từ người lạ"
+      // (người bán rau nhìn địa chỉ contract lạ sẽ hoang mang). Vẫn giữ 2 thông báo riêng.
+      const outHashes = new Set(all.filter(tx => tx.from?.toLowerCase() === lower).map(tx => tx.hash))
+      const recv = all.filter(tx => tx.to?.toLowerCase() === lower)
       const lastSeen = parseInt(localStorage.getItem('ez_last_recv_ts') || '0')
       if (recv[0]) localStorage.setItem('ez_last_recv_ts', recv[0].timeStamp)
       if (lastSeen) {
         const seen = notifiedHashes()
         recv.filter(tx => parseInt(tx.timeStamp) > lastSeen && !seen.has(tx.hash)).reverse().forEach(tx => {
           const amt = (parseFloat(tx.value) / Math.pow(10, parseInt(tx.tokenDecimal || 6))).toFixed(2)
-          // Hiện TÊN DANH BẠ nếu địa chỉ người gửi đã lưu (đồng bộ với thông báo "Đã gửi cho <tên>")
-          const fromName = findContactName(tx.from) || `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`
-          // dedupeKey theo hash — lớp phòng thủ thêm (ngoài seen-set) chống race khi StrictMode
-          // chạy 2 fetch poll song song lúc dev.
-          addNotif(`${t('Đã nhận')} ${amt} ${tx.tokenSymbol || 'USDC'} ${t('từ')} ${fromName}`, 'received', tx.hash, `recv-${tx.hash}`)
+          const symbol = tx.tokenSymbol || 'USDC'
+          if (outHashes.has(tx.hash)) {
+            addNotif(`Swap complete · received ${amt} ${symbol}`, 'received', tx.hash, `recv-${tx.hash}`)
+          } else {
+            // Hiện TÊN DANH BẠ nếu địa chỉ người gửi đã lưu (đồng bộ thông báo "Đã gửi cho <tên>")
+            const fromName = findContactName(tx.from) || `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`
+            addNotif(`${t('Đã nhận')} ${amt} ${symbol} ${t('từ')} ${fromName}`, 'received', tx.hash, `recv-${tx.hash}`)
+          }
           markNotified(tx.hash)
         })
         after()

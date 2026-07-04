@@ -64,7 +64,7 @@ function txInfo(tx, walletAddr, contacts, rates) {
 //           hàng2: 14:32  (giờ chi tiết)                 | 5.00 USDC  (token thật, xám nhỏ)
 //           hàng3: memo (nếu có)
 // Ranh giới NGÀY ở DateHeader (hiện khi đổi ngày). align-items:flex-start vì cột giữa nhiều dòng.
-function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo }) {
+function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap }) {
   const { isSend, amount, symbol, usd, counter, name } = txInfo(tx, walletAddr, contacts, rates)
   const who = name || shortAddr(counter)
   return (
@@ -82,9 +82,9 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo }) {
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        {/* hàng 1: gửi/nhận cho ai (tên danh bạ hoặc địa chỉ ví) */}
+        {/* hàng 1: swap → "Swapped" (đừng hiện "từ [contract lạ]"); còn lại → gửi/nhận cho ai */}
         <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {isSend ? 'Sent to' : 'Received from'} {who}
+          {isSwap ? 'Swapped' : `${isSend ? 'Sent to' : 'Received from'} ${who}`}
         </div>
         {/* hàng 2: giờ chi tiết */}
         <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', marginTop: 2 }}>{timeLabel(tx.timeStamp)}</div>
@@ -158,6 +158,17 @@ export default function TxHistory() {
 
   const isSendTx = tx => tx.from?.toLowerCase() === walletAddr?.toLowerCase()
   const filtered = txs.filter(tx => filter === 'all' ? true : filter === 'send' ? isSendTx(tx) : !isSendTx(tx))
+  // Hash nào ví vừa GỬI vừa NHẬN (2 transfer cùng tx) = SWAP → dòng ghi "Swapped", không "từ [lạ]".
+  const swapHashes = (() => {
+    const dir = {}, lower = walletAddr?.toLowerCase()
+    txs.forEach(tx => {
+      const h = tx.hash; if (!dir[h]) dir[h] = { in: false, out: false }
+      if (tx.from?.toLowerCase() === lower) dir[h].out = true
+      if (tx.to?.toLowerCase() === lower) dir[h].in = true
+    })
+    const s = new Set(); for (const h in dir) if (dir[h].in && dir[h].out) s.add(h)
+    return s
+  })()
   const emptyMsg = filter === 'send' ? t('Chưa có giao dịch gửi') : filter === 'receive' ? t('Chưa có giao dịch nhận') : t('Chưa có giao dịch nào')
 
   useEffect(() => {
@@ -199,7 +210,7 @@ export default function TxHistory() {
           filtered.forEach((tx, i) => {
             const dl = dateLabel(tx.timeStamp)
             if (dl !== last) { nodes.push(<DateHeader key={`h-${dl}`} date={dl} first={i === 0} />); last = dl }
-            nodes.push(<TxRow key={tx.hash} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} cur={cur} rates={rates} memo={memos[tx.hash]} />)
+            nodes.push(<TxRow key={tx.hash} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} cur={cur} rates={rates} memo={memos[tx.hash]} isSwap={swapHashes.has(tx.hash)} />)
           })
           return nodes
         })()}
