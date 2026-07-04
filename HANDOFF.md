@@ -154,6 +154,7 @@
 
 **🎨 Design status (S17): TẠM DỪNG — USER TỰ LÀM UI.** Đã thử redesign Home nhiều lần qua Artifact prototype, user thấy xấu → dừng. **Đừng tự ý redesign nữa; chờ user đưa design rồi mới port vào React.**
 - **Icon = bộ tự vẽ của user** (`icon/*.svg`, viewBox 100, stroke-width 10, line đậm). LUÔN dùng icon thật, KHÔNG bịa SVG khác (phá đồng bộ). Verify badge = `check.svg` (tích TRONG vòng tròn), không phải dấu V trần.
+- **⚠️ CHUẨN HÓA icon mới BẮT BUỘC:** khi user vẽ/export icon (thường ra `width="100" height="100"` + `stroke="black"`), PHẢI đổi thành **`width="100%" height="100%"` + `stroke="currentColor"`** (giữ nguyên path). Không thì Icon.jsx render SVG ra 100px trong ô ~22px → tràn, xô lệch layout + không đổi màu được (bug S17: human/copy vỡ). `swap.svg`/`pencil.svg` đã chuẩn hóa nhưng CHƯA import vào `Icon.jsx` (thêm import khi cần dùng: swap cho nav, pencil cho edit).
 - **Hệ kích thước nút (user chốt):** nút CHÍNH = **2/3** bề ngang (đăng nhập, xác nhận…); nút PHỤ = **1/2** (Hold to show tokens, Send trong Contacts…). (CSS `.row10-single` đang 66.67% ✓; `.row10-dual` đang 44% — user muốn 1/2, sửa khi đụng tới.)
 - **Mốc thẩm mỹ user thích:** Coinbase Wallet (chữ đậm sắc, số dư khổng lồ, tile bo tròn nền nhạt, nhiều khoảng thở, tối giản viền). Brand GIỮ xanh lá (Coinbase xanh dương).
 - **Số dư:** 1 màu, to, giữa; PHẢI auto co nhỏ khi đơn vị dài (vd VND `₫3.380.000`) để không tràn ngang.
