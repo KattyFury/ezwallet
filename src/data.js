@@ -36,9 +36,9 @@ export function getDisplayCurrency() {
 }
 
 // Số dạng (không kèm ký hiệu) theo tiền tệ hiển thị — để layout số to + ký hiệu treo riêng.
-// rates = { USDC, EURC, cirBTC, CNY } (VND mỗi 1 đơn vị, từ getDisplayRates).
-export function displayNum(vnd, cur, rates) {
-  if (!cur || cur === 'VND') return Math.round(vnd || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')
+// usd = giá trị USD (từ token.usd / getDisplayRates cùng nguồn). rates = { USDC:1, EURC:~1.08, cirBTC } (USD/đơn vị).
+// Quy ra tiền hiển thị = usd / rate[cur]: cur=USDC → chính usd ($); cur=EURC → usd/1.08 (€). Stablecoin ra ĐÚNG 1:1.
+export function displayNum(usd, cur, rates) {
   const rate = (rates && rates[cur]) || 1
-  return ((vnd || 0) / rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  return ((usd || 0) / rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }

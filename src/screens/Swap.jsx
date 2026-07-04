@@ -19,13 +19,14 @@ const SWAP_ENABLED = true
 const SWAP_TOKENS = ['USDC', 'EURC', 'cirBTC']
 const decimalsFor = sym => (sym === 'cirBTC' ? 6 : 2)
 
-function TokenRow({ sym, onClick }) {
+function TokenRow({ sym, onClick, big }) {
+  const d = big ? 44 : 32
   return (
     <button onClick={onClick}
-      style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
-      <img src={`/tokens/${sym.toLowerCase()}.png`} alt={sym} style={{ width: 32, height: 32, borderRadius: '50%' }} />
-      <span className="num" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
-      <Icon name="down2" size={11} color="var(--color-muted)" />
+      style={{ display: 'flex', alignItems: 'center', gap: big ? 10 : 8, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
+      <img src={`/tokens/${sym.toLowerCase()}.png`} alt={sym} style={{ width: d, height: d, borderRadius: '50%' }} />
+      <span className="num" style={{ fontSize: big ? 26 : 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
+      <Icon name="down2" size={big ? 14 : 11} color="var(--color-muted)" />
     </button>
   )
 }
@@ -137,6 +138,8 @@ export default function Swap() {
   const CARD = { border: '1.5px solid var(--color-gray)', borderRadius: 14, background: 'var(--color-white)', padding: '14px 16px' }
   // Số trong card = cỡ cố định vừa phải (không dùng fs-amount 40px — to & thô). Đồng bộ 2 card.
   const AMT = { fontSize: 28, fontWeight: 'var(--fw-semibold)', lineHeight: 1 }
+  // FROM to hơn (chiếm 2 hàng) để nổi bật "đang đổi TỪ cái gì"; TO giữ AMT thường.
+  const AMT_BIG = { fontSize: 40, fontWeight: 'var(--fw-semibold)', lineHeight: 1 }
 
   return (
     <div className="screen">
@@ -146,16 +149,17 @@ export default function Swap() {
         {t('Đổi tiền')}
       </div>
 
-      {/* FROM — hàng 2-3 (spec user) */}
-      <div style={{ gridRow: '2 / 4', display: 'flex', alignItems: 'center' }}>
-        <div style={{ ...CARD, width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <TokenRow sym={fromSym} onClick={() => setPicker('from')} />
-            <span className="num" style={{ ...AMT, color: overBalance ? 'var(--color-error)' : input ? 'var(--color-content)' : 'var(--color-faint)' }}>
+      {/* FROM — CHIẾM ĐỦ 2 hàng (2-3), token + số TO để người dùng thấy rõ đang đổi TỪ cái gì.
+          Card cao 100% ô grid 2 hàng; token/số cỡ lớn ở nửa trên, Available + chip ở đáy. */}
+      <div style={{ gridRow: '2 / 4', display: 'flex', alignItems: 'stretch', paddingTop: 6, paddingBottom: 6 }}>
+        <div style={{ ...CARD, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <TokenRow sym={fromSym} big onClick={() => setPicker('from')} />
+            <span className="num" style={{ ...AMT_BIG, color: overBalance ? 'var(--color-error)' : input ? 'var(--color-content)' : 'var(--color-faint)' }}>
               {input || '0'}
             </span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 10, gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
             <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>
               Available: <span className="num">{(available).toFixed(decimalsFor(fromSym))}</span>
             </span>

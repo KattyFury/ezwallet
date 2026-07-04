@@ -45,17 +45,17 @@ function txInfo(tx, walletAddr, contacts, rates) {
   const amount = parseFloat(tx.value) / Math.pow(10, decimals)
   const isSend = tx.from?.toLowerCase() === walletAddr?.toLowerCase()
   const symbol = tx.tokenSymbol || token?.symbol || '?'
-  const vnd = amount * (rates?.[symbol] ?? token?.vndRate ?? 25000)
+  const usd = amount * (rates?.[symbol] ?? token?.usdRate ?? 1)
   const counter = isSend ? tx.to : tx.from
   const name = contacts[counter?.toLowerCase()] || null
-  return { isSend, amount, symbol, vnd, counter, name }
+  return { isSend, amount, symbol, usd, counter, name }
 }
 
 // Layout user chốt (2026-07-03): icon đã nói lên gửi/nhận —
 //   [icon] Sent USDC to hieu · 5 min ago      | -$1.00   (tiền hiển thị, chính)
 //          (lời nhắn nếu có — để đối soát)     | 1.00 USDC (token thật, xám nhỏ)
 function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo }) {
-  const { isSend, amount, symbol, vnd, counter, name } = txInfo(tx, walletAddr, contacts, rates)
+  const { isSend, amount, symbol, usd, counter, name } = txInfo(tx, walletAddr, contacts, rates)
   const who = name || shortAddr(counter)
   return (
     <button onClick={onClick} style={{
@@ -86,7 +86,7 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo }) {
       <div style={{ textAlign: 'right', flexShrink: 0 }}>
         {/* Chính: tiền hiển thị ($). Phụ: token thật, xám mờ */}
         <div className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: isSend ? 'var(--color-error)' : 'var(--color-primary)' }}>
-          {isSend ? '-' : '+'}{rates ? `${displaySymbol(cur)}${displayNum(vnd, cur, rates)}` : '…'}
+          {isSend ? '-' : '+'}{rates ? `${displaySymbol(cur)}${displayNum(usd, cur, rates)}` : '…'}
         </div>
         <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
           {amount.toFixed(amount < 0.01 ? 6 : 2)} {symbol}
@@ -116,8 +116,8 @@ export default function TxHistory() {
   const [memos, setMemos] = useState({})   // hash → memo text (lời nhắn hiện ngay trong list để đối soát)
   const [copied, setCopied] = useState(false)
   const cur = getDisplayCurrency()
-  const [rates, setRates] = useState(null)  // tỷ giá VND→tiền hiển thị (fetch), null khi chưa xong
-  useEffect(() => { getDisplayRates().then(setRates).catch(() => setRates({ VND: 1 })) }, [])
+  const [rates, setRates] = useState(null)  // tỷ giá USD→tiền hiển thị (fetch), null khi chưa xong
+  useEffect(() => { getDisplayRates().then(setRates).catch(() => setRates({ USDC: 1, EURC: 1.08 })) }, [])
 
   function copyCounter(addr) {
     navigator.clipboard.writeText(addr)
@@ -214,7 +214,7 @@ export default function TxHistory() {
                 {d.isSend ? '-' : '+'}{d.amount.toFixed(d.amount < 0.01 ? 6 : 2)} {d.symbol}
               </span>
             </DetailRow>
-            <DetailRow label={t('Quy đổi')}><span className="num">{rates ? `${displaySymbol(cur)}${displayNum(d.vnd, cur, rates)}` : '…'}</span></DetailRow>
+            <DetailRow label={t('Quy đổi')}><span className="num">{rates ? `${displaySymbol(cur)}${displayNum(d.usd, cur, rates)}` : '…'}</span></DetailRow>
             <DetailRow label={t('Thời gian')}>{new Date(selected.timeStamp * 1000).toLocaleString('vi-VN')}</DetailRow>
             {memoLoading ? <DetailRow label={t('Nội dung')}>{t('Đang tải...')}</DetailRow> : memo ? <DetailRow label={t('Nội dung')}>{memo}</DetailRow> : null}
             <button className="btn btn-secondary" style={{ width: '100%', marginTop: 14 }}

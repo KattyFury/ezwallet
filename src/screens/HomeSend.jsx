@@ -53,7 +53,7 @@ export default function HomeSend() {
   const [tokens, setTokens] = useState([])
   const [loading, setLoading] = useState(true)
   const cur = getDisplayCurrency()
-  const [rates, setRates] = useState(cur === 'VND' ? { VND: 1 } : null)
+  const [rates, setRates] = useState(null)
   // Toggle CHUNG cho cả danh sách (không còn per-token): mặc định false = hiện $; nhấn giữ
   // ShowTokensButton → true = hiện số lượng token thật; nhả tay → về lại $.
   const [showToken, setShowToken] = useState(false)
@@ -66,14 +66,14 @@ export default function HomeSend() {
         .catch(console.error)
         .finally(() => setLoading(false))
     })
-    if (cur !== 'VND') getDisplayRates().then(setRates).catch(() => setRates({ VND: 1 }))
+    getDisplayRates().then(setRates).catch(() => setRates({ USDC: 1, EURC: 1.08 }))
   }, [])
 
-  const totalVND = tokens.reduce((s, t) => s + t.vnd, 0)
+  const totalUsd = tokens.reduce((s, t) => s + t.usd, 0)
 
   return (
     <div className="screen">
-      <BalanceHeader totalVND={totalVND} loading={loading} />
+      <BalanceHeader totalUsd={totalUsd} loading={loading} />
 
       {/* Hàng 3-6: danh sách token, cuộn được; mờ dần 1/3 hàng ở ĐÁY khi tiến sát nút Show tokens */}
       <div className="row-3-6 scroll-thin" style={{
@@ -110,7 +110,7 @@ export default function HomeSend() {
                 <span style={{ ...TOKEN_TEXT_STYLE, marginLeft: 'auto' }}>
                   {showToken
                     ? tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)
-                    : (rates ? `${displaySymbol(cur)}${displayNum(tk.vnd, cur, rates)}` : '…')}
+                    : (rates ? `${displaySymbol(cur)}${displayNum(tk.usd, cur, rates)}` : '…')}
                 </span>
               </div>
             ))}

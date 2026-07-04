@@ -18,11 +18,13 @@ const ERC20_ABI = [
   { name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'account', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ]
 
-// cgId: lấy giá VND live từ CoinGecko; vndRate: fallback offline nếu API lỗi
+// GIÁ QUY VỀ USD (đơn vị tính của app). cgId: giá USD live từ CoinGecko; usdRate: fallback offline
+// (USD mỗi 1 đơn vị). USDC LUÔN ghim = 1 (nó CHÍNH LÀ USD) → stablecoin hiện đúng 1:1, không lệch
+// "$5"→"$4.99" như cách cũ (đi vòng qua VND + noise CoinGecko).
 export const TOKENS = [
-  { symbol: 'USDC',   address: '0x3600000000000000000000000000000000000000', decimals: 6, color: '#2775CA', cgId: 'usd-coin',  vndRate: 25000 },
-  { symbol: 'EURC',   address: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', decimals: 6, color: '#1A56DB', cgId: 'euro-coin', vndRate: 27000 },
-  { symbol: 'cirBTC', address: '0xf0c4a4ce82a5746abaad9425360ab04fbba432bf', decimals: 8, color: '#F7931A', cgId: 'bitcoin',   vndRate: 2600000000 },
+  { symbol: 'USDC',   address: '0x3600000000000000000000000000000000000000', decimals: 6, color: '#2775CA', cgId: 'usd-coin',  usdRate: 1 },
+  { symbol: 'EURC',   address: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', decimals: 6, color: '#1A56DB', cgId: 'euro-coin', usdRate: 1.08 },
+  { symbol: 'cirBTC', address: '0xf0c4a4ce82a5746abaad9425360ab04fbba432bf', decimals: 8, color: '#F7931A', cgId: 'bitcoin',   usdRate: 65000 },
 ]
 
 let priceCache = {}
@@ -32,11 +34,12 @@ async function fetchPrices() {
   if (Date.now() - lastFetch < 60000) return priceCache
   try {
     const ids = TOKENS.filter(t => t.cgId).map(t => t.cgId).join(',')
-    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=vnd`)
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`)
     const data = await res.json()
     TOKENS.forEach(t => {
-      if (t.cgId && data[t.cgId]?.vnd) priceCache[t.symbol] = data[t.cgId].vnd
+      if (t.cgId && data[t.cgId]?.usd != null) priceCache[t.symbol] = data[t.cgId].usd
     })
+    priceCache['USDC'] = 1  // ghim: USDC = $1 chính xác (đừng để CoinGecko ~0.9998 làm lệch)
     lastFetch = Date.now()
   } catch {}
   return priceCache
@@ -55,10 +58,10 @@ export async function getTokenBalances(walletAddress) {
           args: [walletAddress],
         })
         const amount = Number(raw) / Math.pow(10, token.decimals)
-        const rate = prices[token.symbol] ?? token.vndRate
-        return { ...token, amount, vnd: Math.round(amount * rate) }
+        const rate = prices[token.symbol] ?? token.usdRate
+        return { ...token, amount, usd: amount * rate }   // giá trị USD (KHÔNG làm tròn — cần phần lẻ cent)
       } catch {
-        return { ...token, amount: 0, vnd: 0 }
+        return { ...token, amount: 0, usd: 0 }
       }
     })
   )
@@ -71,26 +74,26 @@ export function fmtAmount(amount, decimals = 6) {
   return amount.toFixed(Math.min(4, decimals))
 }
 
-// Tỷ giá VND live (CoinGecko), fallback vndRate offline
-export async function getVndRate(symbol = 'USDC') {
+// Giá USD của 1 token (USD mỗi 1 đơn vị). USDC = 1. Fallback usdRate offline.
+export async function getUsdRate(symbol = 'USDC') {
   const prices = await fetchPrices()
   const token = TOKENS.find(t => t.symbol === symbol)
-  return prices[symbol] ?? token?.vndRate ?? 25000
+  return prices[symbol] ?? token?.usdRate ?? 1
 }
 
-// Tỷ giá cho tiền tệ hiển thị: VND mỗi 1 đơn vị {USDC, EURC, cirBTC, CNY}. CNY suy từ USDC/7.25.
-// cirBTC thêm để TxHistory quy đổi giao dịch cirBTC — dùng CHUNG 1 nguồn tỷ giá với cột hiển thị
-// (trước đây txInfo dùng token.vndRate cache lệch nguồn → 1 USDC hiện $0.95, user báo lỗi).
+// Tỷ giá cho tiền tệ hiển thị: USD mỗi 1 đơn vị {USDC:1, EURC:~1.08, cirBTC:~giá BTC}.
+// USDC ghim 1 → stablecoin hiện đúng 1:1 (5 USDC = $5.00). cirBTC để TxHistory quy đổi giao dịch
+// cirBTC dùng CHUNG 1 nguồn tỷ giá với cột hiển thị (tránh lệch nguồn).
 export async function getDisplayRates() {
-  const [u, e, b] = await Promise.all([getVndRate('USDC'), getVndRate('EURC'), getVndRate('cirBTC')])
-  return { VND: 1, USDC: u, EURC: e, cirBTC: b, CNY: Math.round(u / 7.25) }
+  const [u, e, b] = await Promise.all([getUsdRate('USDC'), getUsdRate('EURC'), getUsdRate('cirBTC')])
+  return { USDC: u, EURC: e, cirBTC: b }
 }
 
-// Số dư 1 token + tỷ giá (USDC = token dùng để gửi)
+// Số dư 1 token + giá USD (USDC = token dùng để gửi)
 export async function getTokenInfo(addr, symbol = 'USDC') {
-  const [balances, rate] = await Promise.all([getTokenBalances(addr), getVndRate(symbol)])
+  const [balances, rate] = await Promise.all([getTokenBalances(addr), getUsdRate(symbol)])
   const t = balances.find(b => b.symbol === symbol)
-  return { balance: t?.amount ?? 0, vnd: t?.vnd ?? 0, rate }
+  return { balance: t?.amount ?? 0, usd: t?.usd ?? 0, rate }
 }
 
 // Đọc memo (Arc Transaction Memos) của 1 giao dịch từ Memo event on-chain → text
@@ -113,13 +116,12 @@ export async function getTxMemo(hash) {
   return null
 }
 
-// Phí gas thật: Arc tính gas bằng USDC (18 decimals nội bộ) → quy ra VND
-// gasUnits: ~65k cho transfer thường, ~110k cho transfer kèm memo
-export async function estimateFeeVnd(gasUnits = 65000) {
+// Phí gas thật: Arc tính gas bằng USDC (18 decimals nội bộ). USDC = $1 → phí USD CHÍNH LÀ feeUsdc.
+// gasUnits: ~65k cho transfer thường, ~110k cho transfer kèm memo. KHÔNG làm tròn (phí rất nhỏ, cần cent).
+export async function estimateFeeUsd(gasUnits = 65000) {
   try {
-    const [gasPrice, rate] = await Promise.all([publicClient.getGasPrice(), getVndRate('USDC')])
-    const feeUsdc = Number(gasPrice * BigInt(gasUnits)) / 1e18
-    return Math.round(feeUsdc * rate)   // làm tròn về VND nguyên (tránh fmtVND chèn dấu vào phần lẻ)
+    const gasPrice = await publicClient.getGasPrice()
+    return Number(gasPrice * BigInt(gasUnits)) / 1e18
   } catch {
     return 0
   }

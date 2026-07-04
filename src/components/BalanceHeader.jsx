@@ -4,15 +4,15 @@ import { getDisplayRates } from '../chain'
 
 // Cụm số dư dùng chung cho HomeSend / HomeReceive / MenuScreen — chiếm 2 hàng (row-1-2),
 // con số là phần to nổi bật. Hiển thị theo TIỀN TỆ MẶC ĐỊNH (ez_currency).
-export default function BalanceHeader({ totalVND, loading }) {
+export default function BalanceHeader({ totalUsd, loading }) {
   const cur = getDisplayCurrency()
-  const [rates, setRates] = useState(cur === 'VND' ? { VND: 1 } : null)
+  const [rates, setRates] = useState(null)
 
   useEffect(() => {
-    if (cur !== 'VND') getDisplayRates().then(setRates).catch(() => setRates({ VND: 1 }))
-  }, [cur])
+    getDisplayRates().then(setRates).catch(() => setRates({ USDC: 1, EURC: 1.08 }))
+  }, [])
 
-  const num = (loading || (cur !== 'VND' && !rates)) ? '...' : displayNum(totalVND, cur, rates)
+  const num = (loading || !rates) ? '...' : displayNum(totalUsd, cur, rates)
   const sign = loading ? '' : displaySymbol(cur)
 
   return (

@@ -17,7 +17,7 @@ export default function HomeReceive() {
   const { navigate } = useNav()
   const [copied, setCopied] = useState(false)
   const [addrCopied, setAddrCopied] = useState(false)   // copy riêng cho nút dưới QR (khác nút "Chia sẻ")
-  const [totalVND, setTotalVND] = useState(0)
+  const [totalUsd, setTotalUsd] = useState(0)
   const [walletAddr, setWalletAddr] = useState(localStorage.getItem('ez_wallet_addr') || '')
 
   // Lấy lại địa chỉ ví nếu thiếu (tạo ví xong nhưng Circle provision chậm)
@@ -28,7 +28,7 @@ export default function HomeReceive() {
 
   useEffect(() => {
     if (!walletAddr) return
-    getTokenBalances(walletAddr).then(ts => setTotalVND(ts.reduce((s, t) => s + t.vnd, 0)))
+    getTokenBalances(walletAddr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0)))
   }, [walletAddr])
 
   async function handleShare() {
@@ -48,7 +48,7 @@ export default function HomeReceive() {
 
   return (
     <div className="screen">
-      <BalanceHeader totalVND={totalVND} loading={false} />
+      <BalanceHeader totalUsd={totalUsd} loading={false} />
 
       <div className="row-3-5 center col" style={{ gap: 14 }}>
         <QRCodeSVG value={walletAddr || '0x'} size={200} level="M" />

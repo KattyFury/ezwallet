@@ -4,7 +4,7 @@ import { addNotif } from '../notif'
 import { useNav } from '../nav'
 import { t } from '../i18n'
 import { getDisplayCurrency, displaySymbol } from '../data'
-import { getVndRate, estimateFeeVnd } from '../chain'
+import { getUsdRate, estimateFeeUsd } from '../chain'
 import { getSDK, executeChallenge, refreshSession } from '../circle'
 
 function shortenAddr(addr) {
@@ -20,18 +20,18 @@ export default function SendConfirm() {
   const { navigate, params } = useNav()
   // currency = 'USD' (nhãn thân thiện, gửi USDC) hoặc token thật (USDC/EURC/cirBTC) — đến từ SendAmount.
   const { address, name, amount, memo, currency = 'USD' } = params
-  const [feeVnd, setFeeVnd] = useState(null)      // phí gas thật (null = đang tính)
-  // Tỷ giá riêng cho PHÍ (hiển thị theo tiền tệ mặc định ở Cài đặt — luôn USDC/EURC, không VND)
-  const [feeRates, setFeeRates] = useState({ USDC: 25000, EURC: 27000 })
+  const [feeUsd, setFeeUsd] = useState(null)      // phí gas thật (USD, null = đang tính)
+  // Tỷ giá riêng cho PHÍ (USD mỗi 1 đơn vị tiền hiển thị — USDC:1, EURC:~1.08)
+  const [feeRates, setFeeRates] = useState({ USDC: 1, EURC: 1.08 })
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)         // đã gửi thành công → khóa, không gửi lại
   const [error, setError] = useState('')          // lỗi terminal (hủy/mạng...) hiện tại chỗ
 
   useEffect(() => {
-    Promise.all([getVndRate('USDC'), getVndRate('EURC')])
+    Promise.all([getUsdRate('USDC'), getUsdRate('EURC')])
       .then(([u, e]) => setFeeRates({ USDC: u, EURC: e })).catch(() => {})
     // memo đi qua Memo contract → tốn gas hơn (~110k) so với transfer thường (~65k)
-    estimateFeeVnd(memo && memo.trim() ? 110000 : 65000).then(setFeeVnd).catch(() => setFeeVnd(0))
+    estimateFeeUsd(memo && memo.trim() ? 110000 : 65000).then(setFeeUsd).catch(() => setFeeUsd(0))
   }, [memo])
 
   // USD = USDC (1:1, chỉ khác nhãn hiển thị); USDC/EURC/cirBTC gửi đúng số đã nhập, KHÔNG quy đổi.
@@ -42,8 +42,8 @@ export default function SendConfirm() {
   // Phí mạng theo TIỀN TỆ MẶC ĐỊNH ở Cài đặt (getDisplayCurrency() luôn trả USDC/EURC)
   const displayCur = getDisplayCurrency()
   function feeEl() {
-    if (feeVnd === null) return t('Đang tính...')
-    const v = feeVnd / (feeRates[displayCur] || 1)
+    if (feeUsd === null) return t('Đang tính...')
+    const v = feeUsd / (feeRates[displayCur] || 1)
     const sign = displaySymbol(displayCur)
     return v < 0.01 ? `< ${sign}0.01` : `${sign}${v.toFixed(2)}`
   }

@@ -15,16 +15,16 @@ const ITEMS = [
 
 export default function MenuScreen() {
   const { navigate } = useNav()
-  const [totalVND, setTotalVND] = useState(0)
+  const [totalUsd, setTotalUsd] = useState(0)
   useEffect(() => {
     const addr = localStorage.getItem('ez_wallet_addr')
-    if (addr) getTokenBalances(addr).then(ts => setTotalVND(ts.reduce((s, t) => s + t.vnd, 0)))
+    if (addr) getTokenBalances(addr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0)))
   }, [])
 
   return (
     <div className="screen">
       {/* Rows 1-2: Số dư (đồng bộ với HomeSend / HomeReceive) */}
-      <BalanceHeader totalVND={totalVND} loading={false} />
+      <BalanceHeader totalUsd={totalUsd} loading={false} />
 
       {/* Row 3: Nạp / Rút */}
       <div className="row-3" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
