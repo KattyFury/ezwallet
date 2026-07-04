@@ -1,6 +1,6 @@
 # HANDOFF — EZwallet
 
-**Cập nhật:** 2026-07-04 (session 15 — sửa swap đúng cách adapter, chờ verify)
+**Cập nhật:** 2026-07-04 (session 17 — swap verified+bật, USD 1:1, cache số dư; design TẠM DỪNG)
 **Repo:** https://github.com/KattyFury/ezwallet · **Live:** https://ezwallet.pages.dev (Cloudflare Pages, auto-deploy từ `main`)
 **Local:** `D:\Files\Claude_laptop\Build_on_Arc\ezwallet`
 
@@ -73,6 +73,7 @@
 - **Gửi tiền** USDC/EURC/cirBTC — `functions/api/send.js`: transfer thường hoặc qua Memo contract khi có lời nhắn (UTF-8 tiếng Việt ok, verified tx `0xb75b...7e50`). idempotencyKey chống gửi trùng.
 - **Session-restore**, balance on-chain + tỷ giá live, TxHistory (ArcScan API + memo từ Memo event), Contacts (per-account, avatar cropper), QR (tạo/quét/kho, jsQR), thông báo in-app (NotifArea, tự hết hạn 2h), biên lai (canvas → Photos qua Web Share API), Onboarding, per-account store (`store.js`).
 - **Đổi PIN** (user email): `PUT /v1/w3s/user/pin` → challenge → PIN cũ + PIN mới. ✅ verify bằng gọi API thật.
+- **Số dư KHÔNG nhấp nháy khi chuyển màn** (S17): `chain.js` cache số dư (`_balCache` theo địa chỉ) + tỷ giá (`_ratesCache`) ở tầng module; `cachedBalances()`/`cachedRates()` (đồng bộ). HomeSend/HomeReceive/MenuScreen/BalanceHeader seed state từ cache → hiện số cũ NGAY, fetch nền cập nhật (như app ngân hàng). Cache sống theo phiên (mất khi reload).
 - **refreshSession()** (`circle.js`): gọi TRƯỚC MỌI thao tác cần PIN — email user tạo token mới qua userId=email; Google user đổi `refreshToken` qua `POST /users/token/refresh` (body `{idempotencyKey, refreshToken, deviceId}` + header X-User-Token).
 
 **✅ SWAP — ĐÃ SỬA ĐÚNG + VERIFY + BẬT (S15, 2026-07-04). `SWAP_ENABLED=true`.**
@@ -151,6 +152,13 @@
 - **Scrollbar:** `.scroll-thin` = ẨN HOÀN TOÀN (vẫn cuộn được; mờ dần mép gợi ý còn nội dung).
 - Brand: `design/logo.svg` (Login), favicon `/icon.svg`, apple-touch-icon `/pfp.png` (PNG nền trắng — iOS không nhận SVG/transparent).
 
+**🎨 Design status (S17): TẠM DỪNG — USER TỰ LÀM UI.** Đã thử redesign Home nhiều lần qua Artifact prototype, user thấy xấu → dừng. **Đừng tự ý redesign nữa; chờ user đưa design rồi mới port vào React.**
+- **Icon = bộ tự vẽ của user** (`icon/*.svg`, viewBox 100, stroke-width 10, line đậm). LUÔN dùng icon thật, KHÔNG bịa SVG khác (phá đồng bộ). Verify badge = `check.svg` (tích TRONG vòng tròn), không phải dấu V trần.
+- **Hệ kích thước nút (user chốt):** nút CHÍNH = **2/3** bề ngang (đăng nhập, xác nhận…); nút PHỤ = **1/2** (Hold to show tokens, Send trong Contacts…). (CSS `.row10-single` đang 66.67% ✓; `.row10-dual` đang 44% — user muốn 1/2, sửa khi đụng tới.)
+- **Mốc thẩm mỹ user thích:** Coinbase Wallet (chữ đậm sắc, số dư khổng lồ, tile bo tròn nền nhạt, nhiều khoảng thở, tối giản viền). Brand GIỮ xanh lá (Coinbase xanh dương).
+- **Số dư:** 1 màu, to, giữa; PHẢI auto co nhỏ khi đơn vị dài (vd VND `₫3.380.000`) để không tràn ngang.
+- Prototype Artifact dùng font giả (Arial) nhìn rẻ → nếu cần mockup, nhúng font Barlow/IBM Plex thật (script `getfonts.mjs` trong scratchpad tải được từ Google Fonts).
+
 ---
 
 ## 5. Layout Rules
@@ -222,6 +230,7 @@ Bền: `ez_contacts`, `ez_saved_qrs`, `ez_lang`, `ez_currency`, `ez_onboarded`.
 - **S8-10 (07-03):** Google login chạy; phát hiện SSO ≠ email (2 ví); Đổi PIN 403 cho SSO → verify bằng gọi API thật (email OK, SSO bị chặn platform) → **disable Google login**; scrollbar ẩn.
 - **S11 (07-03):** Swap build lại: Multicall3From batch 1 tx 1 PIN, encoder verified vs viem, chừa 1 USDC phí, UI theo design system.
 - **S12 (07-03):** Kit amount = base units (root cause "No route"/400); biên lai `$2` + Amount token thật; TxHistory layout mới + cùng nguồn tỷ giá + memo trong list; Swap layout chuẩn numpad + picker 3 token + notif; dọn code chết (mock TOKENS/SWAP_PAIRS/fmtDisplay, wireframe spec, 3 icon); viết lại HANDOFF.
+- **S17 (07-04):** ✅ Cache số dư+tỷ giá → chuyển màn hết "..." nhấp nháy (xem mục 3). User vẽ thêm icon: `human` (vẽ lại), `copy` (sửa lại), `swap` (mới), `pencil` (edit). Quy ước: edit=pencil, xóa=X (khỏi trash). **🎨 DESIGN TẠM DỪNG — user tự làm UI** (xem note "Design status" cuối mục 4).
 - **S16 (07-04):** ✅ Swap execute chạy thật trên deploy (verify). **Sửa quy đổi giá: base USD, ghim USDC=$1** (bỏ đi-vòng-VND → stablecoin đúng 1:1, hết "$5"→"$4.99"); rename `vnd→usd`/`getUsdRate`/`estimateFeeUsd`/`totalUsd` khắp 8 file (build OK). **Layout Swap:** card FROM chiếm đủ 2 hàng (2-3), token/số to hẳn (icon 44, số 40px). **Đính chính Google login:** social login duyệt bằng Confirmation UI chứ không PIN (docs) → khui được nhưng mất lớp chống-người-nhà; user giữ Email+PIN, đi hỏi dev.
 - **S15 (07-04):** ✅ **Sửa swap đúng cách adapter** (đọc source SDK, không đoán): gọi `ADAPTER.execute(executionParams, tokenInputs, signature)` — ABI copy từ `@circle-fin/adapter-viem-v2`; chiến lược 'approve' (tokenInputs permitType=NONE + approve riêng); batch qua Multicall3From 1 PIN; encode bằng viem; round-trip encode→decode test khớp byte. Tách lõi `functions/api/_swapCore.js` (chung swap.js + dev-server, hết footgun sync). Thêm action `simulate` + script `verify-swap.mjs` (eth_simulateV1, không tốn tiền/PIN). **VERIFY ĐẠT: 2 EURC→USDC, USDC ví +3.12254 khớp Kit → bật `SWAP_ENABLED=true`.** Thêm mục 0 (combo build-on-Arc: 6 link Circle+Arc skills/mcp/llms.txt).
 - **S14 (07-04):** 🔴 **Đào ra ROOT CAUSE swap mất tiền** = phải gọi ADAPTER contract (`0xBBD70b01`) với intent có chữ ký, KHÔNG bóc instructions chạy tay (bỏ qua settlement → USDC kẹt ở adapter). Bằng chứng: trace log tx + eth_simulateV1 (input tiêu, output không về). **Đã DISABLE swap** (`SWAP_ENABLED=false`). Thêm Circle codegen MCP (`claude mcp add`, cần restart). Layout Swap theo spec user (h2-3/4/5/6 + 50%/100% + `~`). **Cách sửa đúng đã note kỹ ở mục 3.**
