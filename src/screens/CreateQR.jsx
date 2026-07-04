@@ -13,7 +13,8 @@ export default function CreateQR() {
   const [digits, setDigits] = useState('')
   const [cur, setCur] = useState('USD')
   const [showCur, setShowCur] = useState(false)
-  // Khi tạo từ Kho QR → tạo xong AUTO lưu (không cần bước "thêm vào kho")
+  const [name, setName] = useState('')
+  // Từ Kho QR → tạo xong LƯU vào kho (kèm TÊN); từ màn Nhận → chỉ hiện để share, KHÔNG lưu.
   const fromLibrary = params?.from === 'SavedQRList'
 
   const amount = parseFloat(digits || '0')
@@ -32,8 +33,17 @@ export default function CreateQR() {
         {t('Tạo QR nhận tiền')}
       </div>
 
-      <div className="row-2 center">
-        <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{t('Số tiền muốn nhận')}</span>
+      {/* Từ Kho QR: ô ĐẶT TÊN (thiết kế đồng bộ ô memo lúc gửi) — để tiểu thương tạo cả menu.
+          Từ màn Nhận: chỉ phụ đề "Số tiền muốn nhận". Ô nhập neo trên cùng (bàn phím che nửa dưới). */}
+      <div className="row-2 center" style={{ padding: '0 4px' }}>
+        {fromLibrary ? (
+          <div className="memo-row" style={{ width: '100%' }}>
+            <Icon name="pencil" size={18} color="var(--color-muted)" />
+            <input className="memo-input" value={name} onChange={e => setName(e.target.value)} placeholder="Name your QR" maxLength={30} />
+          </div>
+        ) : (
+          <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{t('Số tiền muốn nhận')}</span>
+        )}
       </div>
 
       {/* Số căn giữa MỘT STYLE (USD hiện tiền tố $ liền khối); chip tiền tệ neo BÌA PHẢI (đồng bộ SendAmount) */}
@@ -57,7 +67,7 @@ export default function CreateQR() {
         <div style={{ flex: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
           <button className="btn btn-secondary" style={{ width: '44%' }} onClick={() => navigate(fromLibrary ? 'SavedQRList' : 'HomeReceive')}>{t('Hủy')}</button>
           <button className="btn btn-primary" style={{ width: '44%' }} disabled={amount <= 0}
-            onClick={() => navigate('ShowQR', { amount, currency: cur, isNew: true, back: fromLibrary ? 'SavedQRList' : 'HomeReceive' })}>
+            onClick={() => navigate('ShowQR', { amount, currency: cur, name: name.trim(), saveToLibrary: fromLibrary, back: fromLibrary ? 'SavedQRList' : 'HomeReceive' })}>
             {t('Tạo QR')}
           </button>
         </div>

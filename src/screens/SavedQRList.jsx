@@ -31,12 +31,13 @@ export default function SavedQRList() {
             const c = q.currency || 'USD'
             const label = fmtMoney(q.amount, c)
             return (
-              // Xem QR đã lưu: isNew=false (không lưu lại), Back về Kho QR
-              <button key={q.id} onClick={() => navigate('ShowQR', { amount: q.amount, currency: c, isNew: false, back: 'SavedQRList' })}
-                style={{ position: 'relative', aspectRatio: '1', border: '1.5px solid var(--color-gray)', borderRadius: 12, background: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: 8, fontFamily: 'inherit' }}>
+              // Xem QR đã lưu (không lưu lại), Back về Kho QR. Hiển thị: QR · Tên (đen) · số tiền (xám).
+              <button key={q.id} onClick={() => navigate('ShowQR', { amount: q.amount, currency: c, saveToLibrary: false, back: 'SavedQRList' })}
+                style={{ position: 'relative', border: '1.5px solid var(--color-gray)', borderRadius: 12, background: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '12px 8px 10px', fontFamily: 'inherit' }}>
                 <span onClick={e => handleDelete(q.id, e)} style={{ position: 'absolute', top: 6, right: 6, display: 'flex' }}><Icon name="x" size={14} color="var(--color-muted)" /></span>
-                <QRCodeSVG value={`ezwallet:${walletAddr}?amount=${q.amount}&cur=${c}`} size={64} level="M" />
-                <span className="num" style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{label}</span>
+                <QRCodeSVG value={`ezwallet:${walletAddr}?amount=${q.amount}&cur=${c}`} size={58} level="M" />
+                {q.name && <span style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.name}</span>}
+                <span className="num" style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)' }}>{label}</span>
               </button>
             )
           })}

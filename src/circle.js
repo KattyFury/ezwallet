@@ -197,6 +197,12 @@ export function executeChallenge(sdk, userToken, encryptionKey, challengeId) {
     sdk.execute(challengeId, (err, result) => {
       if (err) {
         if (RETRYABLE_CODES.has(err.code)) return   // để iframe cho user thử lại, đừng settle
+        // PIN bị KHOÁ (sai quá số lần cho phép) → Circle trả message tiếng Anh dài, đáng sợ.
+        // Thay bằng 1 câu ngắn gọn thân thiện; app vẫn về trạng thái ổn (caller setLoading(false)).
+        const raw = err?.message || err?.error?.message || ''
+        if (/lock/i.test(raw)) {
+          return reject(Object.assign(new Error('Wrong PIN too many times. It is locked for a while — please try again later.'), { code: err.code, locked: true }))
+        }
         return reject(err)
       }
       resolve(result)

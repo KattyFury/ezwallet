@@ -8,20 +8,20 @@ import { loadSavedQRs, saveSavedQRs } from '../store'
 
 export default function ShowQR() {
   const { navigate, params } = useNav()
-  const { amount, currency = 'USD', isNew, back = 'HomeReceive' } = params
+  const { amount, currency = 'USD', name = '', saveToLibrary, back = 'HomeReceive' } = params
   const walletAddr = localStorage.getItem('ez_wallet_addr') || ''
   const qrValue = `ezwallet:${walletAddr}?amount=${amount}&cur=${currency}`
   // MỘT CHUỖI MỘT STYLE: "$2" / "2 USDC" (fmtMoney) — không tách bold số + regular đơn vị.
   const amountText = fmtMoney(amount, currency)
   const wrapRef = useRef(null)
 
-  // AUTO lưu vào kho khi VỪA TẠO (isNew) — bỏ bước "Lưu vào kho QR" thủ công (user chốt).
-  // Xem existing (từ Kho QR) thì isNew=false → không lưu lại (khỏi trùng).
+  // CHỈ lưu vào kho khi tạo TỪ Kho QR (saveToLibrary) — kèm TÊN. QR tạo ở màn Nhận chỉ để
+  // hiện/share, KHÔNG tự lưu (user chốt: đừng nhét mọi QR vào kho, phiền phải xóa).
   useEffect(() => {
-    if (!isNew) return
+    if (!saveToLibrary) return
     const list = loadSavedQRs()
-    if (!list.some(q => q.amount === amount && (q.currency || 'USD') === currency)) {
-      list.push({ id: Date.now(), amount, currency, createdAt: new Date().toISOString() })
+    if (!list.some(q => q.amount === amount && (q.currency || 'USD') === currency && (q.name || '') === name)) {
+      list.push({ id: Date.now(), amount, currency, name, createdAt: new Date().toISOString() })
       saveSavedQRs(list)
     }
   }, [])

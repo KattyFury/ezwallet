@@ -82,7 +82,7 @@ export default function Login() {
         if (info?.address) localStorage.setItem('ez_wallet_addr', info.address)
         if (info?.walletId) localStorage.setItem('ez_wallet_id', info.walletId)
 
-        navigate(localStorage.getItem('ez_onboarded') ? 'HomeSend' : 'Onboarding')
+        navigate('HomeSend')   // bỏ Onboarding (tiền tệ giờ đổi ở Menu → Language & Currency)
       } catch (e) {
         setGoogleErr(e.message || t('Có lỗi xảy ra')); setRestoring(false)
       }

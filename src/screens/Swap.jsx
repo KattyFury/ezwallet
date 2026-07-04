@@ -160,7 +160,7 @@ export default function Swap() {
             </span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>
               Available: <span className="num">{(available).toFixed(decimalsFor(fromSym))}</span>
             </span>
             <div style={{ display: 'flex', gap: 6 }}>

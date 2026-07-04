@@ -8,10 +8,17 @@ import { t } from '../i18n'
 
 const ITEMS = [
   { id: 'TxHistory', icon: 'clock',  label: 'Lịch sử giao dịch' },
-  { id: 'Language',  icon: 'globe',  label: 'Tiền tệ', disabled: true },  // chỉ USD/EUR, chưa đáng vào — làm mờ
+  { id: 'Language',  icon: 'globe',  label: 'Language & Currency' },  // đổi ngôn ngữ + tiền tệ mặc định
   { id: 'Security',  icon: 'shield', label: 'Bảo mật' },
   { id: 'About',     icon: 'info',   label: 'About' },
 ]
+
+// Nạp tiền: copy địa chỉ ví vào clipboard rồi mở Faucet → user chỉ việc dán vào Faucet.
+function copyAddrThenFaucet() {
+  const addr = localStorage.getItem('ez_wallet_addr')
+  if (addr) { try { navigator.clipboard.writeText(addr) } catch {} }
+  window.open('https://faucet.circle.com/', '_blank')
+}
 
 export default function MenuScreen() {
   const { navigate } = useNav()
@@ -32,8 +39,7 @@ export default function MenuScreen() {
         <button className="btn btn-secondary" style={{ flex: 1, opacity: 0.4 }} disabled>
           {t('Rút tiền')}
         </button>
-        <button className="btn btn-primary" style={{ flex: 1 }}
-          onClick={() => window.open('https://faucet.circle.com/', '_blank')}>
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={copyAddrThenFaucet}>
           {t('Nạp tiền')}
         </button>
       </div>

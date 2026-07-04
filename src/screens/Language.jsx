@@ -29,11 +29,19 @@ export default function Language() {
   return (
     <div className="screen">
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        {t('Tiền tệ')}
+        Language &amp; Currency
       </div>
 
+      {/* Ngôn ngữ: hiện app khoá English (Circle SDK chỉ English) → hàng làm mờ, không bấm. */}
       <div className="row-3" style={{ display: 'flex', alignItems: 'center' }}>
-        <Row label={t('Tiền tệ')} value={displaySymbol(currency)} onClick={() => setPicker(true)} />
+        <div className="menu-item" style={{ width: '100%', opacity: 0.4, cursor: 'not-allowed' }}>
+          <span style={{ flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>Language</span>
+          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-content)', border: '1.5px solid var(--color-gray)', borderRadius: 8, padding: '4px 12px', marginRight: 8 }}>English</span>
+        </div>
+      </div>
+
+      <div className="row-4" style={{ display: 'flex', alignItems: 'center' }}>
+        <Row label="Default currency" value={displaySymbol(currency)} onClick={() => setPicker(true)} />
       </div>
 
       <div className="row-10 row10-single">
