@@ -1,10 +1,16 @@
 import { useState } from 'react'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
-import { createSession, getSDK, initializeWallet, executeChallenge, getWalletAddress } from '../circle'
+import { createSession, createEmailToken, getSDK, initializeWallet, executeChallenge, getWalletAddress } from '../circle'
 import { t } from '../i18n'
 
 const DOMAINS = ['@gmail.com', '@yahoo.com', '@icloud.com']
+const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
+// ✅ Email OTP: đăng nhập phải nhập MÃ gửi về email → chỉ chủ hòm thư vào được (bịt lỗ "ai gõ
+// email cũng vào"). Cần SMTP đã khai ở Circle Console (đã xong 2026-07-05). Tắt cờ = false → về
+// luồng email trực tiếp cũ (PIN, KHÔNG xác minh email) nếu OTP có sự cố.
+// ⚠️ CHƯA CHẮC: user OTP dùng PIN hay Confirmation UI để ký — phải TEST bằng email throwaway mới.
+const EMAIL_OTP_ENABLED = true
 
 function getEmailHistory() {
   try { return JSON.parse(localStorage.getItem('ez_email_history') || '[]') } catch { return [] }
@@ -31,9 +37,65 @@ export default function EnterEmail() {
 
   function applyDomain(d) { setEmail(e => e + d); setError('') }
 
+  // Sau khi có userToken (từ OTP): tạo ví (nếu chưa) → challenge (PIN hoặc Approve tuỳ Circle) →
+  // lấy địa chỉ → vào Home. User OTP làm mới token bằng refreshToken (như Google), KHÔNG set ez_email.
+  async function finishOtpLogin(result, emailStr, deviceId) {
+    const { userToken, encryptionKey, refreshToken } = result
+    localStorage.setItem('ez_user_token', userToken)
+    localStorage.setItem('ez_encryption_key', encryptionKey)
+    if (refreshToken) localStorage.setItem('ez_refresh_token', refreshToken)
+    localStorage.setItem('ez_google_deviceId', deviceId)   // fingerprint máy — dùng cho refreshSocial
+    localStorage.setItem('ez_google_email', emailStr)      // hiển thị "Login email"
+    localStorage.setItem('ez_login_method', 'email')
+    localStorage.removeItem('ez_email')                    // tránh nhánh PIN-createSession (sai cho user OTP)
+    localStorage.removeItem('ez_wallet_addr'); localStorage.removeItem('ez_wallet_id')
+
+    const walletData = await initializeWallet(userToken)
+    const challengeId = walletData?.data?.challengeId
+    if (challengeId) await executeChallenge(getSDK(), userToken, encryptionKey, challengeId)
+
+    let info = null
+    for (let i = 0; i < 3 && !info?.address; i++) {
+      info = await getWalletAddress(userToken)
+      if (!info?.address) await new Promise(r => setTimeout(r, 2000))
+    }
+    if (info?.address) localStorage.setItem('ez_wallet_addr', info.address)
+    if (info?.walletId) localStorage.setItem('ez_wallet_id', info.walletId)
+    saveEmailHistory(emailStr)
+    navigate('HomeSend')
+  }
+
   async function handleSubmit() {
     if (!valid || loading) return
     setLoading(true); setError('')
+
+    if (EMAIL_OTP_ENABLED) {
+      const em = email.trim()
+      try {
+        const sdk = getSDK()
+        const deviceId = await sdk.getDeviceId()
+        const { otpToken, deviceToken, deviceEncryptionKey } = await createEmailToken(deviceId, em)
+        // Set config + callback rồi mở màn nhập OTP hosted của Circle.
+        sdk.updateConfigs(
+          { appSettings: { appId: APP_ID }, loginConfigs: { deviceToken, deviceEncryptionKey, otpToken } },
+          async (error, result) => {
+            if (error) {
+              if (error?.code === 155701) { setLoading(false); return }   // user tự hủy → im lặng
+              setError(`${error?.message || 'OTP failed'}${error?.code ? ` (${error.code})` : ''}`); setLoading(false); return
+            }
+            if (!result?.userToken) { setLoading(false); return }
+            try { await finishOtpLogin(result, em, deviceId) }
+            catch (e) { setError(e.message || t('Có lỗi xảy ra')); setLoading(false) }
+          }
+        )
+        sdk.verifyOtp()   // giữ loading=true; callback ở trên sẽ điều hướng hoặc bật lỗi
+      } catch (e) {
+        setError(e.message || t('Có lỗi xảy ra')); setLoading(false)
+      }
+      return
+    }
+
+    // ── Luồng cũ (cờ tắt): email trực tiếp + PIN, KHÔNG xác minh email ──
     try {
       localStorage.removeItem('ez_wallet_addr')
       localStorage.removeItem('ez_wallet_id')
@@ -61,7 +123,7 @@ export default function EnterEmail() {
       if (walletInfo?.walletId) localStorage.setItem('ez_wallet_id', walletInfo.walletId)
 
       saveEmailHistory(email.trim())
-      navigate('HomeSend')   // bỏ Onboarding (tiền tệ giờ đổi ở Menu → Language & Currency)
+      navigate('HomeSend')
     } catch (e) {
       setError(e.message || t('Có lỗi xảy ra'))
     } finally {

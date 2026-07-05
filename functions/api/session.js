@@ -53,6 +53,27 @@ export async function onRequestPost(ctx) {
     }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
   }
 
+  // Email OTP: gửi mã về email + trả otpToken/deviceToken/deviceEncryptionKey cho SDK verifyOtp.
+  // Circle gửi email qua SMTP đã khai trong Console. Spec: POST /v1/w3s/users/email/token {deviceId,email}.
+  if (body.action === 'emailToken') {
+    const { deviceId } = body;
+    const em = (body.email || '').toLowerCase().trim();
+    const res = await fetch(`${CIRCLE_API}/users/email/token`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ idempotencyKey: crypto.randomUUID(), deviceId, email: em }),
+    });
+    const data = await res.json();
+    if (data.code || !data.data?.otpToken) {
+      return new Response(JSON.stringify({ error: data.message || 'email token failed', detail: data }), { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    }
+    return new Response(JSON.stringify({
+      otpToken: data.data.otpToken,
+      deviceToken: data.data.deviceToken,
+      deviceEncryptionKey: data.data.deviceEncryptionKey,
+    }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+  }
+
   const { email } = body;
 
   if (!email) {

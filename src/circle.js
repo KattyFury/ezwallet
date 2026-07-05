@@ -40,6 +40,18 @@ export async function createSession(email) {
   return data
 }
 
+// Email OTP: gửi mã về email + trả { otpToken, deviceToken, deviceEncryptionKey } cho sdk.verifyOtp().
+export async function createEmailToken(deviceId, email) {
+  const res = await fetch('/api/session', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'emailToken', deviceId, email }),
+  })
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
+  return data
+}
+
 export async function initializeWallet(userToken) {
   const res = await fetch('/api/wallet', {
     method: 'POST',
