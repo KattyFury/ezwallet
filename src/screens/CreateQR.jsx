@@ -59,18 +59,21 @@ export default function CreateQR() {
         </div>
       </div>
 
-      {/* Numpad MẶC ĐỊNH = hàng 6.5→8.5 (dời cả khối lên nửa hàng, đồng bộ màn Gửi) */}
-      <div style={{ gridRow: '7 / 11', marginTop: '-5dvh', display: 'flex', flexDirection: 'column' }}>
+      {/* Numpad = hàng 6.5→8.5 (gridRow 6/9, spacer 0.5 + numpad 2.5), TÁCH khỏi nút — đồng bộ màn Gửi */}
+      <div style={{ gridRow: '6 / 9', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 0.5 }} />
         <div style={{ flex: 2.5, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />
         </div>
-        <div style={{ flex: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-          <button className="btn btn-secondary" style={{ width: '44%' }} onClick={() => navigate(fromLibrary ? 'SavedQRList' : 'HomeReceive')}>{t('Hủy')}</button>
-          <button className="btn btn-primary" style={{ width: '44%' }} disabled={amount <= 0}
-            onClick={() => navigate('ShowQR', { amount, currency: cur, name: name.trim(), saveToLibrary: fromLibrary, back: fromLibrary ? 'SavedQRList' : 'HomeReceive' })}>
-            {t('Tạo QR')}
-          </button>
-        </div>
+      </div>
+
+      {/* Nút [Hủy][Tạo QR] = vị trí chuẩn row10-dual (hàng 9-10) */}
+      <div className="row10-dual">
+        <button className="btn btn-secondary" onClick={() => navigate(fromLibrary ? 'SavedQRList' : 'HomeReceive')}>{t('Hủy')}</button>
+        <button className="btn btn-primary" disabled={amount <= 0}
+          onClick={() => navigate('ShowQR', { amount, currency: cur, name: name.trim(), saveToLibrary: fromLibrary, back: fromLibrary ? 'SavedQRList' : 'HomeReceive' })}>
+          {t('Tạo QR')}
+        </button>
       </div>
 
       {showCur && (

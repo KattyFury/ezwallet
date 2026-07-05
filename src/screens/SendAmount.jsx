@@ -98,20 +98,22 @@ export default function SendAmount() {
         />
       </div>
 
-      {/* Numpad MẶC ĐỊNH = hàng 6.5→8.5 (dời cả khối lên NỬA HÀNG: marginTop -5dvh) → nút confirm
-          về đúng chỗ, không bị numpad đè xuống. Khối gồm numpad (flex 2.5) + nút (flex 1.5). */}
-      <div style={{ gridRow: '7 / 11', marginTop: '-5dvh', display: 'flex', flexDirection: 'column' }}>
+      {/* Numpad = hàng 6.5→8.5 chính xác: gridRow 6/9 (50-80%) với spacer 0.5 + numpad 2.5
+          → numpad ở 55-80%. TÁCH khỏi nút để nút không bị kéo lệch. */}
+      <div style={{ gridRow: '6 / 9', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 0.5 }} />
         <div style={{ flex: 2.5, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />
         </div>
-        <div style={{ flex: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-          <button className="btn btn-secondary" style={{ width: '44%' }} onClick={() => navigate('HomeSend')}>{t('Quay lại')}</button>
-          <button className="btn btn-primary" style={{ width: '44%' }} disabled={!canContinue}
-            onClick={() => navigate('SendConfirm', { address, name, amount, memo, currency: cur })}
-          >
-            {t('Tiếp tục')}
-          </button>
-        </div>
+      </div>
+
+      {/* Nút [Quay lại][Tiếp tục] = vị trí CHUẨN row10-dual (hàng 9-10, canh giữa quanh ranh giới 9/10) */}
+      <div className="row10-dual">
+        <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>{t('Quay lại')}</button>
+        <button className="btn btn-primary" disabled={!canContinue}
+          onClick={() => navigate('SendConfirm', { address, name, amount, memo, currency: cur })}>
+          {t('Tiếp tục')}
+        </button>
       </div>
 
       {/* Popup chọn tiền tệ — neo nửa trên (tránh bàn phím) */}
