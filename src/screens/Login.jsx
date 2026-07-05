@@ -138,14 +138,12 @@ export default function Login() {
   // platform: PUT /user/pin → 403 code 3 dù token tươi + pinStatus ENABLED (verify bằng gọi API
   // thật). User quyết định tắt tới khi có hướng xử lý (hoặc Circle mở, hoặc chuyển kiến trúc
   // lấy email từ Google Identity Services rồi đi luồng email — xem HANDOFF session 8).
-  // Bật lại: disabled: true → false. TOÀN BỘ hạ tầng (cookies, deviceId, refreshToken) giữ nguyên.
-  const BUTTONS = [
-    { icon: <Icon name="mail" size={22} />, label: 'Đăng nhập với Email', primary: true, onClick: () => navigate('EnterEmail'), disabled: false },
-    { icon: <Icon name="google" size={22} />, label: 'Đăng nhập với Google', primary: false, onClick: handleGoogleLogin, disabled: true },
-  ]
+  // Google login ĐÃ BỎ KHỎI GIAO DIỆN (user chốt 2026-07-05). Hạ tầng (handleGoogleLogin, cookies,
+  // deviceId, refreshToken, onLoginComplete) GIỮ NGUYÊN để bật lại nhanh khi cần — chỉ ẩn nút.
 
   return (
     <div className="screen">
+      {/* Hàng 1-5: logo + slogan, canh giữa */}
       <div className="row-1-5 center col" style={{ gap: '3dvh' }}>
         <img src={logoLong} alt="ezwallet" style={{ width: '50%' }} />
         <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)', textAlign: 'center' }}>
@@ -153,25 +151,17 @@ export default function Login() {
         </span>
       </div>
 
-      <div style={{ gridRow: '6 / 11', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', gap: '2dvh', paddingBottom: '7dvh' }}>
+      {/* Hàng 6-10: nút Đăng nhập với Email, canh GIỮA vùng */}
+      <div style={{ gridRow: '6 / 11', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2dvh' }}>
         {restoring && (
           <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{t('Đang xử lý...')}</span>
         )}
-        {googleErr && (
-          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center', maxWidth: '80%' }}>{googleErr}</span>
-        )}
-        {BUTTONS.map(({ icon, label, primary, onClick, disabled }) => (
-          <button key={label} className={`btn ${primary ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ width: '80%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10, opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
-            disabled={disabled}
-            onClick={disabled ? undefined : onClick}>
-            {icon}
-            <span style={{ whiteSpace: 'nowrap' }}>{t(label)}</span>
-          </button>
-        ))}
-        <span style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)', textAlign: 'center', maxWidth: '85%' }}>
-          Google sign-in is temporarily unavailable.
-        </span>
+        <button className="btn btn-primary"
+          style={{ width: '80%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10 }}
+          onClick={() => navigate('EnterEmail')}>
+          <Icon name="mail" size={22} />
+          <span style={{ whiteSpace: 'nowrap' }}>{t('Đăng nhập với Email')}</span>
+        </button>
       </div>
     </div>
   )
