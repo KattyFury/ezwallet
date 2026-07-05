@@ -9,13 +9,28 @@ import { loadSavedQRs, saveSavedQRs } from '../store'
 export default function SavedQRList() {
   const { navigate } = useNav()
   const [list, setList] = useState(loadSavedQRs)
+  const [adding, setAdding] = useState(false)
+  const [name, setName] = useState('')
+  const [amountStr, setAmountStr] = useState('')
   const walletAddr = localStorage.getItem('ez_wallet_addr') || ''
+
+  const amountNum = parseFloat(amountStr || '0')
 
   function handleDelete(id, e) {
     e.stopPropagation()
     const updated = list.filter(q => q.id !== id)
     setList(updated)
     saveSavedQRs(updated)
+  }
+
+  function resetForm() { setAdding(false); setName(''); setAmountStr('') }
+
+  // Save = TẠO QR vào KHO (không show QR cho scan — đó là tính năng Create QR). currency mặc định USD.
+  function handleSave() {
+    if (!(amountNum > 0)) return
+    const updated = [...list, { id: Date.now(), amount: amountNum, currency: 'USD', name: name.trim(), createdAt: new Date().toISOString() }]
+    setList(updated); saveSavedQRs(updated)
+    resetForm()
   }
 
   return (
@@ -41,8 +56,8 @@ export default function SavedQRList() {
               </button>
             )
           })}
-          {/* ô + thêm QR mới (from: SavedQRList → CreateQR biết đường về + auto-save) */}
-          <button onClick={() => navigate('CreateQR', { from: 'SavedQRList' })}
+          {/* ô + → mở POPUP thêm QR (không sang màn mới) */}
+          <button onClick={() => setAdding(true)}
             style={{ aspectRatio: '1', border: '1.5px dashed var(--color-muted)', borderRadius: 12, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="add" size={32} color="var(--color-muted)" />
           </button>
@@ -52,6 +67,23 @@ export default function SavedQRList() {
       <div className="row-10 row10-single">
         <button className="btn btn-secondary" onClick={() => navigate('HomeReceive')}>{t('Quay lại')}</button>
       </div>
+
+      {/* Popup thêm QR — đồng bộ style popup Thêm danh bạ (neo nửa trên, tránh bàn phím). */}
+      {adding && (
+        <div onClick={resetForm}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 60 }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '88%', maxWidth: 360, background: 'var(--color-white)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center' }}>Add to library</div>
+            <input className="address-input" placeholder="Name (optional)" value={name} onChange={e => setName(e.target.value)} maxLength={30} style={{ fontSize: 'var(--fs-body)' }} />
+            <input className="address-input" placeholder="Amount" inputMode="decimal" value={amountStr}
+              onChange={e => setAmountStr(e.target.value.replace(/[^\d.]/g, ''))} style={{ fontSize: 'var(--fs-body)' }} />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={resetForm}>{t('Hủy')}</button>
+              <button className="btn btn-primary" style={{ flex: 1 }} disabled={!(amountNum > 0)} onClick={handleSave}>{t('Lưu')}</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

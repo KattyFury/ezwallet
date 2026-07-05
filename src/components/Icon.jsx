@@ -18,6 +18,7 @@ import info from '../../icon/info.svg?raw'
 import left from '../../icon/left.svg?raw'
 import mail from '../../icon/mail.svg?raw'
 import menu from '../../icon/menu.svg?raw'
+import option from '../../icon/option.svg?raw'
 import out from '../../icon/out.svg?raw'
 import pencil from '../../icon/pencil.svg?raw'
 import qr from '../../icon/qr.svg?raw'
@@ -34,7 +35,7 @@ import x from '../../icon/x.svg?raw'
 
 const ICONS = {
   add, back, check, clock, copy, down, down2, download, erase, facebook, globe, google, hint,
-  human, info, left, mail, menu, out, pencil, qr, right, right2, scan, share, shield, swap, trade, up, warning, x,
+  human, info, left, mail, menu, option, out, pencil, qr, right, right2, scan, share, shield, swap, trade, up, warning, x,
 }
 
 export default function Icon({ name, size = 24, color, style, className }) {

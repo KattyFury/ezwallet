@@ -64,7 +64,7 @@ function txInfo(tx, walletAddr, contacts, rates) {
 //           hàng2: 14:32  (giờ chi tiết)                 | 5.00 USDC  (token thật, xám nhỏ)
 //           hàng3: memo (nếu có)
 // Ranh giới NGÀY ở DateHeader (hiện khi đổi ngày). align-items:flex-start vì cột giữa nhiều dòng.
-function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap }) {
+function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, onAdd }) {
   const { isSend, amount, symbol, usd, counter, name } = txInfo(tx, walletAddr, contacts, rates)
   const who = name || shortAddr(counter)
   return (
@@ -82,18 +82,22 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap }) 
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        {/* hàng 1: swap → "Swapped" (đừng hiện "từ [contract lạ]"); còn lại → gửi/nhận cho ai */}
-        <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {isSwap ? 'Swapped' : `${isSend ? 'Sent to' : 'Received from'} ${who}`}
+        {/* hàng 1: ai (font nhỏ 1 cỡ để nhét [Add]) + nút Add (địa chỉ chưa lưu danh bạ, không phải swap) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {isSwap ? 'Swapped' : `${isSend ? 'Sent to' : 'Received from'} ${who}`}
+          </span>
+          {!isSwap && !name && counter && (
+            <span onClick={e => { e.stopPropagation(); onAdd(counter) }}
+              style={{ flexShrink: 0, fontSize: 'var(--fs-tiny)', fontWeight: 'var(--fw-medium)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)', borderRadius: 6, padding: '1px 8px', whiteSpace: 'nowrap' }}>
+              + Add
+            </span>
+          )}
         </div>
-        {/* hàng 2: giờ chi tiết */}
-        <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', marginTop: 2 }}>{timeLabel(tx.timeStamp)}</div>
-        {/* hàng 3: memo (nếu có) */}
-        {memo && (
-          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', marginTop: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {memo}
-          </div>
-        )}
+        {/* hàng 2+: At <giờ> – Note: <memo>. Memo DÀI xuống dòng thoải mái (không cắt 1 dòng). */}
+        <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', marginTop: 3, lineHeight: 1.4, wordBreak: 'break-word' }}>
+          At <span className="num">{timeLabel(tx.timeStamp)}</span>{memo ? ` – Note: ${memo}` : ''}
+        </div>
       </div>
 
       <div style={{ textAlign: 'right', flexShrink: 0, marginTop: 2 }}>
@@ -210,7 +214,7 @@ export default function TxHistory() {
           filtered.forEach((tx, i) => {
             const dl = dateLabel(tx.timeStamp)
             if (dl !== last) { nodes.push(<DateHeader key={`h-${dl}`} date={dl} first={i === 0} />); last = dl }
-            nodes.push(<TxRow key={tx.hash} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} cur={cur} rates={rates} memo={memos[tx.hash]} isSwap={swapHashes.has(tx.hash)} />)
+            nodes.push(<TxRow key={tx.hash} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} cur={cur} rates={rates} memo={memos[tx.hash]} isSwap={swapHashes.has(tx.hash)} onAdd={a => navigate('Contacts', { addAddress: a })} />)
           })
           return nodes
         })()}

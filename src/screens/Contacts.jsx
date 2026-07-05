@@ -92,34 +92,39 @@ function AvatarCropper({ src, onCancel, onDone }) {
 }
 
 export default function Contacts() {
-  const { navigate } = useNav()
+  const { navigate, params } = useNav()
   const [contacts, setContacts] = useState(loadContacts)
-  const [adding, setAdding] = useState(false)
-  const [name, setName] = useState('')
-  const [addr, setAddr] = useState('')
-  const [pfp, setPfp] = useState(null)        // ảnh đã cắt
-  const [picked, setPicked] = useState(null)  // ảnh thô đang chỉnh
-  const [copiedId, setCopiedId] = useState(null) // contact vừa copy địa chỉ
+  // form = null (đóng) | { id?, name, addr, pfp }. Có id = SỬA; không id = THÊM.
+  const [form, setForm] = useState(null)
+  const [picked, setPicked] = useState(null)     // ảnh thô đang chỉnh
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [copiedId, setCopiedId] = useState(null)
   const fileRef = useRef(null)
+
+  // Tới từ TxHistory [Add] → mở form Thêm với địa chỉ điền sẵn
+  useEffect(() => { if (params?.addAddress) setForm({ name: '', addr: params.addAddress, pfp: null }) }, [])
 
   function copyAddr(c) {
     navigator.clipboard?.writeText(c.address).catch(() => {})
-    setCopiedId(c.id)
-    setTimeout(() => setCopiedId(null), 1200)
+    setCopiedId(c.id); setTimeout(() => setCopiedId(null), 1200)
   }
 
-  function resetForm() { setAdding(false); setName(''); setAddr(''); setPfp(null); setPicked(null) }
+  function openAdd() { setForm({ name: '', addr: '', pfp: null }) }
+  function openEdit(c) { setForm({ id: c.id, name: c.name, addr: c.address, pfp: c.avatar || null }) }
+  function closeForm() { setForm(null); setPicked(null); setConfirmDelete(false) }
+  const formValid = form && form.name.trim() && isValid(form.addr)
 
-  function handleAdd() {
-    if (!name.trim() || !isValid(addr)) return
-    const updated = [...contacts, { id: Date.now(), name: name.trim(), address: addr.trim(), avatar: pfp }]
-    setContacts(updated); saveContacts(updated)
-    resetForm()
+  function handleSave() {
+    if (!formValid) return
+    const updated = form.id
+      ? contacts.map(c => c.id === form.id ? { ...c, name: form.name.trim(), address: form.addr.trim(), avatar: form.pfp } : c)
+      : [...contacts, { id: Date.now(), name: form.name.trim(), address: form.addr.trim(), avatar: form.pfp }]
+    setContacts(updated); saveContacts(updated); closeForm()
   }
 
-  function handleDelete(id) {
-    const updated = contacts.filter(c => c.id !== id)
-    setContacts(updated); saveContacts(updated)
+  function handleDelete() {
+    const updated = contacts.filter(c => c.id !== form.id)
+    setContacts(updated); saveContacts(updated); closeForm()
   }
 
   function pickFile(e) {
@@ -166,9 +171,9 @@ export default function Contacts() {
                   className="btn btn-primary" style={{ height: 40, minHeight: 40, padding: '0 22px', fontSize: 'var(--fs-item)' }}>
                   {t('Gửi')}
                 </button>
-                <button onClick={() => handleDelete(c.id)}
+                <button onClick={() => openEdit(c)}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', flexShrink: 0, display: 'flex' }}>
-                  <Icon name="x" size={18} color="var(--color-muted)" />
+                  <Icon name="option" size={20} color="var(--color-muted)" />
                 </button>
               </div>
             )
@@ -178,39 +183,59 @@ export default function Contacts() {
 
       <div className="row-10 row10-dual">
         <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>{t('Quay lại')}</button>
-        <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} onClick={() => setAdding(true)}>
+        <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} onClick={openAdd}>
           <Icon name="add" size={22} color="var(--color-white)" />{t('Thêm')}
         </button>
       </div>
 
       <input ref={fileRef} type="file" accept="image/*" onChange={pickFile} style={{ display: 'none' }} />
 
-      {/* Popup thêm danh bạ — neo ở nửa trên (hàng 1-5), tránh bàn phím iPhone che nửa dưới */}
-      {adding && (
-        <div
-          onClick={resetForm}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 60 }}
-        >
+      {/* Popup THÊM/SỬA danh bạ — neo nửa trên (tránh bàn phím). Sửa: có "Delete contact" đỏ. */}
+      {form && (
+        <div onClick={closeForm}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 60 }}>
           <div onClick={e => e.stopPropagation()} style={{ width: '88%', maxWidth: 360, background: 'var(--color-white)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
             {picked ? (
-              <AvatarCropper src={picked} onCancel={() => setPicked(null)} onDone={d => { setPfp(d); setPicked(null) }} />
+              <AvatarCropper src={picked} onCancel={() => setPicked(null)} onDone={d => { setForm(f => ({ ...f, pfp: d })); setPicked(null) }} />
             ) : (
               <>
-                <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center' }}>{t('Thêm danh bạ')}</div>
+                <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center' }}>{form.id ? 'Edit contact' : t('Thêm danh bạ')}</div>
                 <button onClick={() => fileRef.current?.click()}
-                  style={{ alignSelf: 'center', width: 80, height: 80, borderRadius: '50%', border: 'none', cursor: 'pointer', overflow: 'hidden', background: pfp ? 'transparent' : 'var(--color-gray)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
-                  {pfp
-                    ? <img src={pfp} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  style={{ alignSelf: 'center', width: 80, height: 80, borderRadius: '50%', border: 'none', cursor: 'pointer', overflow: 'hidden', background: form.pfp ? 'transparent' : 'var(--color-gray)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+                  {form.pfp
+                    ? <img src={form.pfp} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : <Icon name="add" size={30} color="var(--color-white)" />}
                 </button>
-                <input className="address-input" placeholder={t('Tên')} value={name} onChange={e => setName(e.target.value)} style={{ fontSize: 'var(--fs-body)' }} />
-                <input className="address-input" placeholder="0x..." value={addr} onChange={e => setAddr(e.target.value)} style={{ fontSize: 'var(--fs-body)' }} />
+                <input className="address-input" placeholder={t('Tên')} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ fontSize: 'var(--fs-body)' }} />
+                <input className="address-input" placeholder="0x..." value={form.addr} onChange={e => setForm(f => ({ ...f, addr: e.target.value }))} style={{ fontSize: 'var(--fs-body)' }} />
+                {/* SỬA: dòng chữ đỏ "Delete contact" (không phải nút — tránh lòi 3 nút), bấm → confirm */}
+                {form.id && (
+                  <button onClick={() => setConfirmDelete(true)}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)', fontFamily: 'inherit', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', padding: '2px 0', textAlign: 'center' }}>
+                    Delete contact
+                  </button>
+                )}
                 <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn btn-secondary" style={{ flex: 1 }} onClick={resetForm}>{t('Hủy')}</button>
-                  <button className="btn btn-primary" style={{ flex: 1 }} disabled={!name.trim() || !isValid(addr)} onClick={handleAdd}>{t('Lưu')}</button>
+                  <button className="btn btn-secondary" style={{ flex: 1 }} onClick={closeForm}>{t('Quay lại')}</button>
+                  <button className="btn btn-primary" style={{ flex: 1 }} disabled={!formValid} onClick={handleSave}>{t('Lưu')}</button>
                 </div>
               </>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Xác nhận xóa — chống bấm nhầm */}
+      {confirmDelete && (
+        <div onClick={() => setConfirmDelete(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '88%', maxWidth: 340, background: 'var(--color-white)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'center' }}>
+            <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>Delete contact?</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>This can't be undone.</div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setConfirmDelete(false)}>{t('Quay lại')}</button>
+              <button className="btn btn-primary" style={{ flex: 1, background: 'var(--color-error)' }} onClick={handleDelete}>Delete</button>
+            </div>
           </div>
         </div>
       )}
