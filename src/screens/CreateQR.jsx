@@ -59,8 +59,8 @@ export default function CreateQR() {
         </div>
       </div>
 
-      {/* Numpad 2.5 hàng + nút — CÓ phím thập phân (nhập 1.5) đồng bộ màn Gửi */}
-      <div style={{ gridRow: '7 / 11', display: 'flex', flexDirection: 'column' }}>
+      {/* Numpad MẶC ĐỊNH = hàng 6.5→8.5 (dời cả khối lên nửa hàng, đồng bộ màn Gửi) */}
+      <div style={{ gridRow: '7 / 11', marginTop: '-5dvh', display: 'flex', flexDirection: 'column' }}>
         <div style={{ flex: 2.5, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />
         </div>
