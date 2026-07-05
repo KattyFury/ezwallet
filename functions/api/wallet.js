@@ -26,10 +26,26 @@ function pickArcWallet(wallets) {
 
 export async function onRequestPost(ctx) {
   const apiKey = ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY;
-  const { action, userToken } = await ctx.request.json();
+  const body = await ctx.request.json();
+  const { action, userToken } = body;
 
   if (!userToken) {
     return new Response(JSON.stringify({ error: 'userToken required' }), { status: 400, headers: JSON_HEADERS });
+  }
+
+  // Verify PIN để MỞ VÍ (đăng nhập lần 2+ / mở lại app): ký 1 message EIP-191 rỗng — user nhập PIN,
+  // Circle xác thực + ký (KHÔNG tốn gas, KHÔNG lên chain). Ký thành công = PIN đúng = cho vào ví.
+  // Ví EOA nên ký message được ngay (không dính lazy-deploy của SCA).
+  if (action === 'signMessage') {
+    const { status, data } = await circleReq('POST', '/user/sign/message',
+      { walletId: body.walletId, message: body.message || 'Unlock EZwallet', idempotencyKey: crypto.randomUUID() }, apiKey, userToken);
+    const challengeId = data?.data?.challengeId;
+    if (!challengeId) {
+      console.error('[signMessage] no challengeId:', status, JSON.stringify(data));
+      const msg = `${data?.message || data?.error?.message || 'no challengeId'} (HTTP ${status}${data?.code ? `, code ${data.code}` : ''})`;
+      return new Response(JSON.stringify({ error: msg, detail: data }), { status: 500, headers: JSON_HEADERS });
+    }
+    return new Response(JSON.stringify({ challengeId }), { headers: JSON_HEADERS });
   }
 
   if (action === 'initialize') {

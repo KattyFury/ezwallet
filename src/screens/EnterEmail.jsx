@@ -64,7 +64,8 @@ export default function EnterEmail() {
     if (info?.address) localStorage.setItem('ez_wallet_addr', info.address)
     if (info?.walletId) localStorage.setItem('ez_wallet_id', info.walletId)
     saveEmailHistory(emailStr)
-    navigate('Passcode', { next: 'HomeSend' })   // qua cổng passcode (đặt lần đầu / nhập)
+    sessionStorage.setItem('ez_pin_ok', '1')   // user OTP không có PIN → bỏ qua cổng PIN
+    navigate('HomeSend')
   }
 
   async function handleSubmit() {
@@ -125,7 +126,9 @@ export default function EnterEmail() {
       if (walletInfo?.walletId) localStorage.setItem('ez_wallet_id', walletInfo.walletId)
 
       saveEmailHistory(email.trim())
-      navigate('Passcode', { next: 'HomeSend' })   // qua cổng passcode (đặt lần đầu / nhập)
+      // Lần 1 = vừa TẠO PIN (có challengeId) → đã xác thực → vào thẳng. Lần 2+ (không challengeId) → cổng PIN.
+      if (challengeId) { sessionStorage.setItem('ez_pin_ok', '1'); navigate('HomeSend') }
+      else navigate('PinGate', { next: 'HomeSend' })
     } catch (e) {
       setError(e.message || t('Có lỗi xảy ra'))
     } finally {

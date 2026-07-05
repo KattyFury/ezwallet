@@ -40,20 +40,18 @@ export async function createSession(email) {
   return data
 }
 
-// ── App passcode (khoá mở ví, lưu server KV) ──
-// accountId = email đăng nhập (email hoặc google-email) — khoá passcode theo tài khoản, không theo máy.
-export function accountId() {
-  return localStorage.getItem('ez_email') || localStorage.getItem('ez_google_email') || ''
+// Verify PIN để MỞ VÍ (khoá truy cập bằng chính PIN Circle — không tạo mã thứ 2). Tạo challenge
+// ký 1 message rỗng; executeChallenge sẽ mở màn nhập PIN. Ký OK = PIN đúng = mở ví.
+export async function signMessageChallenge(userToken, walletId, message = 'Unlock EZwallet') {
+  const res = await fetch('/api/wallet', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'signMessage', userToken, walletId, message }),
+  })
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
+  return data.challengeId
 }
-async function passcodeReq(payload) {
-  const r = await fetch('/api/passcode', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-  if (r.status === 503) return { unavailable: true }   // KV chưa bind → client fail-open (không khoá)
-  return r.json()
-}
-export const passcodeStatus = (userId) => passcodeReq({ action: 'status', userId }).catch(() => ({ unavailable: true }))
-export const passcodeSet = (userId, code) => passcodeReq({ action: 'set', userId, code })
-export const passcodeVerify = (userId, code) => passcodeReq({ action: 'verify', userId, code })
-export const passcodeReset = (userId, code) => passcodeReq({ action: 'reset', userId, code })
 
 // Email OTP: gửi mã về email + trả { otpToken, deviceToken, deviceEncryptionKey } cho sdk.verifyOtp().
 export async function createEmailToken(deviceId, email) {

@@ -82,7 +82,8 @@ export default function Login() {
         if (info?.address) localStorage.setItem('ez_wallet_addr', info.address)
         if (info?.walletId) localStorage.setItem('ez_wallet_id', info.walletId)
 
-        navigate('Passcode', { next: 'HomeSend' })   // qua cổng passcode
+        sessionStorage.setItem('ez_pin_ok', '1')   // user Google không có PIN → bỏ qua cổng PIN
+        navigate('HomeSend')
       } catch (e) {
         setGoogleErr(e.message || t('Có lỗi xảy ra')); setRestoring(false)
       }
