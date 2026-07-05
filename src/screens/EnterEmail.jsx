@@ -9,8 +9,10 @@ const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
 // ✅ Email OTP: đăng nhập phải nhập MÃ gửi về email → chỉ chủ hòm thư vào được (bịt lỗ "ai gõ
 // email cũng vào"). Cần SMTP đã khai ở Circle Console (đã xong 2026-07-05). Tắt cờ = false → về
 // luồng email trực tiếp cũ (PIN, KHÔNG xác minh email) nếu OTP có sự cố.
-// ⚠️ CHƯA CHẮC: user OTP dùng PIN hay Confirmation UI để ký — phải TEST bằng email throwaway mới.
-const EMAIL_OTP_ENABLED = true
+// ĐÃ TEST (2026-07-05): user OTP ký bằng Confirmation UI, KHÔNG có PIN → mất lớp chống-người-nhà +
+// màn "Contract Interaction" khó hiểu với người già. → TẮT, về Email+PIN. Bật lại khi Circle cho
+// social/OTP dùng PIN (hoặc customize confirm UI đẹp hơn). Code OTP giữ nguyên, chỉ đổi cờ này.
+const EMAIL_OTP_ENABLED = false
 
 function getEmailHistory() {
   try { return JSON.parse(localStorage.getItem('ez_email_history') || '[]') } catch { return [] }
