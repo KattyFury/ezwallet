@@ -1,5 +1,6 @@
-﻿import { useState, useEffect } from 'react'
-import { QRCodeSVG } from 'qrcode.react'
+﻿import { useState, useEffect, useRef } from 'react'
+import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react'
+import { saveImageToPhotos } from '../saveImage'
 import NavBar from '../components/NavBar'
 import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
@@ -17,6 +18,7 @@ export default function HomeReceive() {
   const { navigate } = useNav()
   const [copied, setCopied] = useState(false)
   const [addrCopied, setAddrCopied] = useState(false)   // copy riêng cho nút dưới QR (khác nút "Chia sẻ")
+  const qrRef = useRef(null)   // canvas ẩn để xuất ảnh QR khi Share
   // Seed tổng số dư từ cache → không "..." khi chuyển màn
   const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? c.reduce((s, t) => s + t.usd, 0) : 0 })
   const [walletAddr, setWalletAddr] = useState(localStorage.getItem('ez_wallet_addr') || '')
@@ -32,13 +34,14 @@ export default function HomeReceive() {
     getTokenBalances(walletAddr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0)))
   }, [walletAddr])
 
+  // Share = chia sẻ ẢNH QR (PNG) kèm text địa chỉ → sheet iOS có "Save Image" (lưu vào kho ảnh) +
+  // vẫn mang địa chỉ ví. (Muốn copy riêng địa chỉ thì bấm vào địa chỉ dưới QR — handleCopyAddr.)
   async function handleShare() {
-    if (navigator.share) {
-      try { await navigator.share({ text: walletAddr }); return } catch {}
-    }
+    const canvas = qrRef.current?.querySelector('canvas')
+    if (canvas && navigator.canShare) { saveImageToPhotos(canvas, 'ezwallet-qr.png', walletAddr); return }
+    // Fallback (không hỗ trợ share ảnh): copy địa chỉ
     await navigator.clipboard.writeText(walletAddr)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
+    setCopied(true); setTimeout(() => setCopied(false), 2000)
   }
 
   async function handleCopyAddr() {
@@ -50,6 +53,11 @@ export default function HomeReceive() {
   return (
     <div className="screen">
       <BalanceHeader totalUsd={totalUsd} loading={false} />
+
+      {/* Canvas ẩn (chất lượng cao) để Share xuất ra PNG → "Save Image" vào kho ảnh */}
+      <div ref={qrRef} style={{ position: 'absolute', left: -9999, top: -9999 }} aria-hidden>
+        <QRCodeCanvas value={walletAddr || '0x'} size={512} level="M" includeMargin />
+      </div>
 
       <div className="row-3-5 center col" style={{ gap: 14 }}>
         <QRCodeSVG value={walletAddr || '0x'} size={200} level="M" />
