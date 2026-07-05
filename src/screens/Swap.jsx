@@ -149,52 +149,52 @@ export default function Swap() {
         {t('Đổi tiền')}
       </div>
 
-      {/* FROM — CHIẾM ĐỦ 2 hàng (2-3), token + số TO để người dùng thấy rõ đang đổi TỪ cái gì.
-          Card cao 100% ô grid 2 hàng; token/số cỡ lớn ở nửa trên, Available + chip ở đáy. */}
-      <div style={{ gridRow: '2 / 4', display: 'flex', alignItems: 'stretch', paddingTop: 6, paddingBottom: 6 }}>
-        <div style={{ ...CARD, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <TokenRow sym={fromSym} big onClick={() => setPicker('from')} />
-            <span className="num" style={{ ...AMT_BIG, color: overBalance ? 'var(--color-error)' : input ? 'var(--color-content)' : 'var(--color-faint)' }}>
-              {input || '0'}
-            </span>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>
-              Available: <span className="num">{(available).toFixed(decimalsFor(fromSym))}</span>
-            </span>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {[['50%', 0.5], ['100%', 1]].map(([label, pct]) => (
-                <button key={label} onClick={() => setInput(String(parseFloat((available * pct).toFixed(decimalsFor(fromSym)))))}
-                  style={{ border: '1.5px solid var(--color-primary)', color: 'var(--color-primary)', background: 'var(--color-white)', borderRadius: 8, padding: '3px 12px', fontSize: 'var(--fs-label)', fontFamily: 'inherit', cursor: 'pointer' }}>
-                  {label}
-                </button>
-              ))}
+      {/* Cụm FROM↔TO — LIỀN LẠC (nút đổi chiều đè lên ranh giới 2 card), canh giữa vùng hàng 2-4. */}
+      <div style={{ gridRow: '2 / 5', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <div style={{ position: 'relative' }}>
+          {/* FROM */}
+          <div style={{ ...CARD, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <TokenRow sym={fromSym} big onClick={() => setPicker('from')} />
+              <span className="num" style={{ ...AMT_BIG, color: overBalance ? 'var(--color-error)' : input ? 'var(--color-content)' : 'var(--color-faint)' }}>
+                {input || '0'}
+              </span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>
+                Available: <span className="num">{(available).toFixed(decimalsFor(fromSym))}</span>
+              </span>
+              <div style={{ display: 'flex', gap: 6 }}>
+                {[['50%', 0.5], ['100%', 1]].map(([label, pct]) => (
+                  <button key={label} onClick={() => setInput(String(parseFloat((available * pct).toFixed(decimalsFor(fromSym)))))}
+                    style={{ border: '1.5px solid var(--color-primary)', color: 'var(--color-primary)', background: 'var(--color-white)', borderRadius: 8, padding: '3px 12px', fontSize: 'var(--fs-label)', fontFamily: 'inherit', cursor: 'pointer' }}>
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
+
+          {/* Nút đổi chiều — ĐÈ lên ranh giới 2 card (viền trắng như "đục lỗ") → cụm liền lạc */}
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '-16px 0', position: 'relative', zIndex: 3 }}>
+            <button onClick={swapDir}
+              style={{ width: 40, height: 40, borderRadius: '50%', border: '3px solid var(--color-white)', background: 'var(--color-gray)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+              <Icon name="trade" size={18} color="var(--color-content)" />
+            </button>
+          </div>
+
+          {/* TO */}
+          <div style={{ ...CARD, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <TokenRow sym={toSym} onClick={() => setPicker('to')} />
+            <span className="num" style={{ ...AMT, color: estAmt ? 'var(--color-content)' : 'var(--color-faint)' }}>
+              {estAmt ? `~${parseFloat(estAmt).toFixed(decimalsFor(toSym))}` : '0'}
+            </span>
+          </div>
         </div>
       </div>
 
-      {/* Nút đổi chiều — hàng 4 */}
-      <div style={{ gridRow: '4 / 5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <button onClick={swapDir}
-          style={{ width: 44, height: 44, borderRadius: '50%', border: '1.5px solid var(--color-gray)', background: 'var(--color-white)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <Icon name="trade" size={19} color="var(--color-content)" />
-        </button>
-      </div>
-
-      {/* TO — hàng 5 */}
-      <div style={{ gridRow: '5 / 6', display: 'flex', alignItems: 'center' }}>
-        <div style={{ ...CARD, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <TokenRow sym={toSym} onClick={() => setPicker('to')} />
-          <span className="num" style={{ ...AMT, color: estAmt ? 'var(--color-content)' : 'var(--color-faint)' }}>
-            {estAmt ? `~${parseFloat(estAmt).toFixed(decimalsFor(toSym))}` : '0'}
-          </span>
-        </div>
-      </div>
-
-      {/* Nút Swap + trạng thái — hàng 6 (trên numpad) */}
-      <div style={{ gridRow: '6 / 7', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+      {/* Nút Swap + trạng thái — ở ranh giới hàng 5/6 (giữa cụm trên & numpad) */}
+      <div style={{ gridRow: '5 / 6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
         <button className="btn btn-primary" style={{ width: '66.67%' }} disabled={!canSwap} onClick={handleSwap}>
           {loading ? 'Processing...' : SWAP_ENABLED ? 'Swap' : 'Swap (under repair)'}
         </button>
@@ -208,13 +208,12 @@ export default function Swap() {
         </div>
       </div>
 
-      {/* Numpad ĐỒNG BỘ mọi màn: 2.5 hàng (7, 8, nửa 9). NavBar hàng 10 → container 7/10 với
-          spacer 0.5 dưới cùng để numpad chiếm đúng 2.5/3 = rows 7,8,nửa-9 như SendAmount/CreateQR. */}
-      <div style={{ gridRow: '7 / 10', display: 'flex', flexDirection: 'column' }}>
+      {/* Numpad ĐỒNG BỘ 6.5-8.5 (gridRow 6/9: spacer 0.5 + numpad 2.5), như SendAmount/CreateQR */}
+      <div style={{ gridRow: '6 / 9', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 0.5 }} />
         <div style={{ flex: 2.5, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />
         </div>
-        <div style={{ flex: 0.5 }} />
       </div>
 
       <NavBar active="Swap" />

@@ -4,6 +4,7 @@ import Icon from '../components/Icon'
 import { fmtVND, fmtMoney } from '../data'
 import { addNotif } from '../notif'
 import { saveImageToPhotos } from '../saveImage'
+import logoLong from '../../design/logo.svg'
 import { t } from '../i18n'
 
 // Vòng tròn xanh + check.svg trắng (dùng chung icon hệ thống, không vẽ path riêng)
@@ -43,7 +44,7 @@ export default function SendReceipt() {
   }, [])
 
   // Vẽ biên lai ra canvas rồi tải về kho ảnh
-  function saveReceipt() {
+  async function saveReceipt() {
     const W = 620, H = memo ? 600 : 540   // +60 cho dòng Amount mới
     const cv = document.createElement('canvas')
     cv.width = W; cv.height = H
@@ -68,7 +69,12 @@ export default function SendReceipt() {
     row('Amount', realAmountText)
     if (memo) row(t('Nội dung'), memo)
     row(t('Thời gian'), fmtTime(timestamp))
-    x.textAlign = 'center'; x.fillStyle = '#16A34A'; x.font = '700 26px sans-serif'; x.fillText('EZ Wallet', W / 2, H - 30)
+    // Logo EZwallet (branding chuẩn — design/logo.svg, EZ đen + wallet xanh) ở đáy
+    const lw = 168, lh = lw * 144 / 463
+    const img = new Image()
+    img.src = logoLong
+    try { await img.decode() } catch {}
+    x.drawImage(img, (W - lw) / 2, H - 22 - lh, lw, lh)
     saveImageToPhotos(cv, `bien-lai-${timestamp}.png`)
   }
 
