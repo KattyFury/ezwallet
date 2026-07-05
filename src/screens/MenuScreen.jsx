@@ -62,6 +62,7 @@ export default function MenuScreen() {
           // GIỮ ez_email_history (gợi ý email lúc đăng nhập lại — user báo mất hint). Xóa cả
           // session Google (refreshToken/email/method) để đăng xuất sạch, deviceId giữ (định danh máy).
           ;['ez_user_token','ez_wallet_addr','ez_wallet_id','ez_encryption_key','ez_email','ez_notifs','ez_last_recv_ts','ez_refresh_token','ez_google_email','ez_login_method'].forEach(k => localStorage.removeItem(k))
+          sessionStorage.removeItem('ez_passcode_ok')   // đăng nhập lại phải qua cổng passcode
           window.location.reload()
         }}>
           <Icon name="out" size={24} color="var(--color-error)" />

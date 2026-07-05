@@ -22,6 +22,7 @@ import Language from './screens/Language'
 import Security from './screens/Security'
 import About from './screens/About'
 import Onboarding from './screens/Onboarding'
+import Passcode from './screens/Passcode'
 
 const SCREENS = {
   Login,
@@ -35,14 +36,17 @@ const SCREENS = {
   About,
   ComingSoon,
   Onboarding,
+  Passcode,
 }
 
 export default function App() {
   const [nav, setNav] = useState(() => {
-    // Còn session (userToken) → vào thẳng HomeSend; địa chỉ ví tự lấy lại nếu thiếu
-    // (KHÔNG ép phải có ez_wallet_addr — Circle provision chậm sẽ tự heal sau).
+    // Còn session (userToken) → qua CỔNG PASSCODE (khoá mở ví) trước khi vào HomeSend, trừ khi
+    // phiên này đã mở khoá (ez_passcode_ok). Chưa có session → Login.
     const hasSession = localStorage.getItem('ez_user_token')
-    return { screen: hasSession ? 'HomeSend' : 'Login', params: {} }
+    if (!hasSession) return { screen: 'Login', params: {} }
+    const unlocked = sessionStorage.getItem('ez_passcode_ok')
+    return unlocked ? { screen: 'HomeSend', params: {} } : { screen: 'Passcode', params: { next: 'HomeSend' } }
   })
 
   function navigate(screen, params = {}) {

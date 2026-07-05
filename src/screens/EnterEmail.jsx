@@ -64,7 +64,7 @@ export default function EnterEmail() {
     if (info?.address) localStorage.setItem('ez_wallet_addr', info.address)
     if (info?.walletId) localStorage.setItem('ez_wallet_id', info.walletId)
     saveEmailHistory(emailStr)
-    navigate('HomeSend')
+    navigate('Passcode', { next: 'HomeSend' })   // qua cổng passcode (đặt lần đầu / nhập)
   }
 
   async function handleSubmit() {
@@ -125,7 +125,7 @@ export default function EnterEmail() {
       if (walletInfo?.walletId) localStorage.setItem('ez_wallet_id', walletInfo.walletId)
 
       saveEmailHistory(email.trim())
-      navigate('HomeSend')
+      navigate('Passcode', { next: 'HomeSend' })   // qua cổng passcode (đặt lần đầu / nhập)
     } catch (e) {
       setError(e.message || t('Có lỗi xảy ra'))
     } finally {
