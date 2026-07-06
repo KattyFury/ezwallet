@@ -49,30 +49,26 @@ export default function Security() {
         {t('Bảo mật')}
       </div>
 
-      {/* Xếp liền trong 1 container (đồng bộ About): mỗi mục 1 hàng, CSS .menu-item tự kẻ line
-          xám giữa các hàng (last-child tự bỏ border). Không nhét mỗi mục vào 1 grid-row riêng
-          (kiểu cũ khiến mục lơ lửng giữa hàng 10% → loạn xạ). */}
-      <div className="row-2-9" style={{ gridRow: '2 / 9', justifyContent: 'flex-start', overflowY: 'auto' }}>
-        <div className="menu-item">
-          <span style={LABEL}>{t('Email đăng nhập')}</span>
-          <span style={VALUE}>{email}</span>
-        </div>
-        <button className="menu-item" onClick={copyAddr}>
-          <span style={LABEL}>{t('Địa chỉ ví')}</span>
-          <span style={{ ...VALUE, color: copied ? 'var(--color-primary)' : 'var(--color-muted)' }}>{copied ? t('Đã sao chép') : shortAddr}</span>
-          <Icon name="copy" size={16} color="var(--color-faint)" />
-        </button>
-        <button className="menu-item" onClick={handleResetPin}>
-          <span style={LABEL}>{t('Đổi PIN')}</span>
-          {pinStatus
-            ? <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-primary)' }}>{pinStatus}</span>
-            : <Icon name="right2" size={15} color="var(--color-faint)" />}
-        </button>
-        {/* Phương thức khôi phục CHƯA build → làm mờ, không bấm được (user: cái gì chưa xong thì làm mờ) */}
-        <div className="menu-item" style={{ opacity: 0.4, cursor: 'not-allowed' }}>
-          <span style={LABEL}>{t('Phương thức khôi phục')}</span>
-          <span style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)' }}>Coming soon</span>
-        </div>
+      {/* MỖI MỤC = 1 HÀNG riêng (row 2-5), KHÔNG line xám ngăn cách (user chốt). */}
+      <div className="menu-item" style={{ gridRow: 2 }}>
+        <span style={LABEL}>{t('Email đăng nhập')}</span>
+        <span style={VALUE}>{email}</span>
+      </div>
+      <button className="menu-item" style={{ gridRow: 3 }} onClick={copyAddr}>
+        <span style={LABEL}>{t('Địa chỉ ví')}</span>
+        <span style={{ ...VALUE, color: copied ? 'var(--color-primary)' : 'var(--color-muted)' }}>{copied ? t('Đã sao chép') : shortAddr}</span>
+        <Icon name="copy" size={16} color="var(--color-faint)" />
+      </button>
+      <button className="menu-item" style={{ gridRow: 4 }} onClick={handleResetPin}>
+        <span style={LABEL}>{t('Đổi PIN')}</span>
+        {pinStatus
+          ? <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-primary)' }}>{pinStatus}</span>
+          : <Icon name="right2" size={15} color="var(--color-faint)" />}
+      </button>
+      {/* Phương thức khôi phục CHƯA build → làm mờ, không bấm được */}
+      <div className="menu-item" style={{ gridRow: 5, opacity: 0.4, cursor: 'not-allowed' }}>
+        <span style={LABEL}>{t('Phương thức khôi phục')}</span>
+        <span style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)' }}>Coming soon</span>
       </div>
 
       <div className="row-10 row10-single">

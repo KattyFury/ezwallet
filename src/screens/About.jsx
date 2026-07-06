@@ -26,22 +26,21 @@ export default function About() {
         {t('About')}
       </div>
 
-      <div className="row-2-9" style={{ gridRow: '2 / 9', justifyContent: 'flex-start', overflowY: 'auto' }}>
-        {ITEMS.map(({ label, value, link }) => (
-          link ? (
-            <button key={label} className="menu-item" onClick={() => window.open(link, '_blank')}>
-              <span style={LABEL}>{t(label)}</span>
-              {value && <span style={VALUE}>{value}</span>}
-              <Icon name="right2" size={15} color="var(--color-faint)" />
-            </button>
-          ) : (
-            <div key={label} className="menu-item">
-              <span style={LABEL}>{t(label)}</span>
-              <span style={VALUE}>{value}</span>
-            </div>
-          )
-        ))}
-      </div>
+      {/* MỖI YẾU TỐ = 1 HÀNG riêng (row 2-8), KHÔNG line xám ngăn cách (user chốt). */}
+      {ITEMS.map(({ label, value, link }, i) => (
+        link ? (
+          <button key={label} className="menu-item" style={{ gridRow: i + 2 }} onClick={() => window.open(link, '_blank')}>
+            <span style={LABEL}>{t(label)}</span>
+            {value && <span style={VALUE}>{value}</span>}
+            <Icon name="right2" size={15} color="var(--color-faint)" />
+          </button>
+        ) : (
+          <div key={label} className="menu-item" style={{ gridRow: i + 2 }}>
+            <span style={LABEL}>{t(label)}</span>
+            <span style={VALUE}>{value}</span>
+          </div>
+        )
+      ))}
 
       <div className="row-10 row10-single">
         <button className="btn btn-primary" onClick={() => navigate('MenuScreen')}>{t('Quay lại')}</button>

@@ -3,7 +3,7 @@ import { useNav } from '../nav'
 import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
 import { t } from '../i18n'
-import { displaySymbol } from '../data'
+import { displaySymbol, amountFontSize } from '../data'
 
 // Đồng bộ màn Gửi: USD (nhãn thân thiện, ứng USDC) mặc định + USDC/EURC/cirBTC.
 const CURRENCIES = ['USD', 'USDC', 'EURC', 'cirBTC']
@@ -49,7 +49,7 @@ export default function CreateQR() {
       {/* Số căn giữa MỘT STYLE (USD hiện tiền tố $ liền khối); chip tiền tệ neo BÌA PHẢI (đồng bộ SendAmount) */}
       <div className="row-3-4 center col">
         <div style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
+          <span className="num" style={{ fontSize: amountFontSize((cur === 'USD' ? '$' : '') + digits, 52, 9), fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
             {cur === 'USD' ? displaySymbol('USDC') : ''}{digits}<span className="caret">_</span>
           </span>
           <button onClick={() => setShowCur(true)}
@@ -59,12 +59,13 @@ export default function CreateQR() {
         </div>
       </div>
 
-      {/* Numpad = hàng 6.5→8.5 (gridRow 6/9, spacer 0.5 + numpad 2.5), TÁCH khỏi nút — đồng bộ màn Gửi */}
-      <div style={{ gridRow: '6 / 9', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 0.5 }} />
+      {/* Numpad ở hàng 6.75-8.25 (đồng bộ SendAmount/Swap): gridRow 6/10, spacer 0.75 + numpad 2.5 + đệm dưới 0.75 */}
+      <div style={{ gridRow: '6 / 10', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 0.75 }} />
         <div style={{ flex: 2.5, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />
         </div>
+        <div style={{ flex: 0.75 }} />
       </div>
 
       {/* Nút [Hủy][Tạo QR] = vị trí chuẩn row10-dual (hàng 9-10) */}
@@ -77,10 +78,9 @@ export default function CreateQR() {
       </div>
 
       {showCur && (
-        <div onClick={() => setShowCur(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '14dvh' }}>
-          <div onClick={e => e.stopPropagation()} style={{ width: '70%', maxWidth: 300, background: 'var(--color-white)', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center', padding: '6px 0' }}>{t('Chọn tiền tệ')}</div>
+        <div className="popup-overlay" onClick={() => setShowCur(false)}>
+          <div className="popup-card" onClick={e => e.stopPropagation()}>
+            <div className="popup-title">{t('Chọn tiền tệ')}</div>
             {CURRENCIES.map(c => (
               <button key={c} onClick={() => { setCur(c); setShowCur(false) }}
                 className={`btn ${c === cur ? 'btn-primary' : 'btn-secondary'}`} style={{ width: '100%' }}>{c}</button>

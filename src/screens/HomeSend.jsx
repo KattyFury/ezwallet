@@ -79,7 +79,7 @@ export default function HomeSend() {
       {/* Hàng 3-5: danh sách token, cuộn được; mờ dần ở ĐÁY. Nút "Hold to show tokens" nằm GIỮA
           hàng 6 (dưới list, tách hẳn khỏi vùng thông báo hàng 7 để không tưởng bấm ra thông báo). */}
       <div className="row-3-5 scroll-thin" style={{
-        display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto', paddingTop: 2, paddingBottom: 8,
+        display: 'flex', flexDirection: 'column', gap: 26, overflowY: 'auto', paddingTop: 2, paddingBottom: 8,
         WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
         maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
       }}>

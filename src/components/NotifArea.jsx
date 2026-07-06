@@ -113,8 +113,8 @@ export default function NotifArea({ hints = [], warning = null }) {
     // CUỘN ĐƯỢC (overflowY:auto, không phải hidden) — đầy thì kéo lên xem thêm. Mờ 1/3 hàng
     // (calc(100dvh/30)) ở mép TRÊN (ranh giới hàng 6/7) khi tiến sát nút "Show tokens" phía trên,
     // KHÔNG mờ quá nhiều kẻo mất chỗ đọc nội dung. Scrollbar mảnh (.scroll-thin) cho gọn layout.
-    <div ref={scrollRef} className="scroll-thin" style={{
-      flex: 1, minHeight: 0, width: '100%', overflowY: 'auto',
+    <div ref={scrollRef} className="scroll-hidden" style={{
+      flex: 1, minHeight: 0, width: '100%',
       WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black calc(100dvh / 30))',
       maskImage: 'linear-gradient(to bottom, transparent 0, black calc(100dvh / 30))',
     }}>

@@ -40,7 +40,7 @@ export default function SavedQRList() {
       </div>
 
       {/* Lưới 3 cột (hàng 2-7), ô cuối là "+" để thêm QR; nhiều thì scroll */}
-      <div style={{ gridRow: '2 / 8', overflowY: 'auto' }}>
+      <div className="scroll-thin" style={{ gridRow: '2 / 8' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, alignContent: 'start' }}>
           {list.map(q => {
             const c = q.currency || 'USD'
@@ -69,18 +69,17 @@ export default function SavedQRList() {
         <button className="btn btn-primary" style={{ width: '44%' }} onClick={() => navigate('HomeReceive')}>{t('Quay lại')}</button>
       </div>
 
-      {/* Popup thêm QR — đồng bộ style popup Thêm danh bạ (neo nửa trên, tránh bàn phím). */}
+      {/* Popup thêm QR — chuẩn .popup-card (tâm vùng hàng 2-5, chừa bàn phím nửa dưới) */}
       {adding && (
-        <div onClick={resetForm}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 60 }}>
-          <div onClick={e => e.stopPropagation()} style={{ width: '88%', maxWidth: 360, background: 'var(--color-white)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
-            <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center' }}>Add to library</div>
+        <div className="popup-overlay" onClick={resetForm}>
+          <div className="popup-card" onClick={e => e.stopPropagation()}>
+            <div className="popup-title">Add to library</div>
             <input className="address-input" placeholder="Name (optional)" value={name} onChange={e => setName(e.target.value)} maxLength={30} style={{ fontSize: 'var(--fs-body)' }} />
             <input className="address-input" placeholder="Amount" inputMode="decimal" value={amountStr}
               onChange={e => setAmountStr(e.target.value.replace(/[^\d.]/g, ''))} style={{ fontSize: 'var(--fs-body)' }} />
-            <div style={{ display: 'flex', gap: 8 }}>
-              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={resetForm}>{t('Hủy')}</button>
-              <button className="btn btn-primary" style={{ flex: 1 }} disabled={!(amountNum > 0)} onClick={handleSave}>{t('Lưu')}</button>
+            <div className="popup-actions">
+              <button className="btn btn-secondary" onClick={resetForm}>{t('Hủy')}</button>
+              <button className="btn btn-primary" disabled={!(amountNum > 0)} onClick={handleSave}>{t('Lưu')}</button>
             </div>
           </div>
         </div>

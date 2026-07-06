@@ -59,20 +59,22 @@ function txInfo(tx, walletAddr, contacts, rates) {
   return { isSend, amount, symbol, usd, counter, name }
 }
 
-// Mỗi giao dịch = 1 khối, cột giữa 3 dòng (user chốt 2026-07-04):
-//   [icon]  hàng1: Received from <tên/địa chỉ>          | +$5.00     (tiền hiển thị, chính)
-//           hàng2: 14:32  (giờ chi tiết)                 | 5.00 USDC  (token thật, xám nhỏ)
-//           hàng3: memo (nếu có)
-// Ranh giới NGÀY ở DateHeader (hiện khi đổi ngày). align-items:flex-start vì cột giữa nhiều dòng.
+// Mỗi giao dịch = 1 khối, KHÔNG line xám ngăn cách (user chốt 2026-07-06). Cấu trúc "hàng" (hàng
+// nhỏ TRONG box, không phải hàng màn hình):
+//   [icon]  hàng1: Received from <tên/địa chỉ>              | +$5.00     (tiền hiển thị, chính)
+//   (h1-2)  hàng2: At 14:32   [+ Add]  ← nút Add DỜI xuống  | 5.00 USDC  (token thật, xám — h1-2)
+//           hàng3-4: Note: <memo> (nếu có, dài thì xuống dòng)
+// Icon (trái) + cụm tiền (phải) neo Ở HÀNG 1-2 (top-align). Ranh giới NGÀY ở DateHeader.
 function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, onAdd }) {
   const { isSend, amount, symbol, usd, counter, name } = txInfo(tx, walletAddr, contacts, rates)
   const who = name || shortAddr(counter)
   return (
     <button onClick={onClick} style={{
       display: 'flex', alignItems: 'flex-start', gap: 12, width: '100%',
-      padding: '12px 0', border: 'none', background: 'none', cursor: 'pointer',
-      borderBottom: '1px solid var(--color-gray)', fontFamily: 'inherit', textAlign: 'left',
+      padding: '14px 0', border: 'none', background: 'none', cursor: 'pointer',
+      fontFamily: 'inherit', textAlign: 'left',
     }}>
+      {/* Icon gửi/nhận — neo hàng 1-2 (top-align) */}
       <div style={{
         width: 40, height: 40, borderRadius: '50%', flexShrink: 0, marginTop: 2,
         background: isSend ? 'var(--color-info-soft)' : 'var(--color-primary-soft)',
@@ -82,10 +84,14 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, on
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        {/* hàng 1: ai (font nhỏ 1 cỡ để nhét [Add]) + nút Add (địa chỉ chưa lưu danh bạ, không phải swap) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-            {isSwap ? 'Swapped' : `${isSend ? 'Sent to' : 'Received from'} ${who}`}
+        {/* hàng 1: ai — cỡ item, đậm (không còn chen [Add] nên để to rõ) */}
+        <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {isSwap ? 'Swapped' : `${isSend ? 'Sent to' : 'Received from'} ${who}`}
+        </div>
+        {/* hàng 2: At <giờ> + nút [+ Add] (DỜI XUỐNG đây — trước ở hàng 1 nhìn xấu) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
+            At <span className="num">{timeLabel(tx.timeStamp)}</span>
           </span>
           {!isSwap && !name && counter && (
             <span onClick={e => { e.stopPropagation(); onAdd(counter) }}
@@ -94,14 +100,16 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, on
             </span>
           )}
         </div>
-        {/* hàng 2+: At <giờ> – Note: <memo>. Memo DÀI xuống dòng thoải mái (không cắt 1 dòng). */}
-        <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', marginTop: 3, lineHeight: 1.4, wordBreak: 'break-word' }}>
-          At <span className="num">{timeLabel(tx.timeStamp)}</span>{memo ? ` – Note: ${memo}` : ''}
-        </div>
+        {/* hàng 3-4: Note (nếu có) — dài xuống dòng thoải mái */}
+        {memo && (
+          <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', marginTop: 3, lineHeight: 1.4, wordBreak: 'break-word' }}>
+            Note: {memo}
+          </div>
+        )}
       </div>
 
+      {/* Cụm tiền — neo hàng 1-2 (top-align). Chính: tiền hiển thị ($). Phụ: token thật, xám */}
       <div style={{ textAlign: 'right', flexShrink: 0, marginTop: 2 }}>
-        {/* Chính: tiền hiển thị ($). Phụ: token thật, xám mờ */}
         <div className="num" style={{ fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: isSend ? 'var(--color-error)' : 'var(--color-primary)' }}>
           {isSend ? '-' : '+'}{rates ? `${displaySymbol(cur)}${displayNum(usd, cur, rates)}` : '…'}
         </div>
@@ -115,7 +123,7 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, on
 
 function DetailRow({ label, children }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '8px 0', borderBottom: '1px solid var(--color-gray)' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '7px 0' }}>
       <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', flexShrink: 0 }}>{label}</span>
       <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', textAlign: 'right', wordBreak: 'break-word' }}>{children}</span>
     </div>
@@ -200,7 +208,7 @@ export default function TxHistory() {
         {t('Lịch sử giao dịch')}
       </div>
 
-      <div className="row-2-8" style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', overflowY: 'auto', justifyContent: 'flex-start' }}>
+      <div className="row-2-8 scroll-thin" style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start' }}>
         {loading ? (
           <div style={{ width: '100%', textAlign: 'center', paddingTop: 40, color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>{t('Đang tải...')}</div>
         ) : filtered.length === 0 ? (
@@ -231,10 +239,10 @@ export default function TxHistory() {
 
       {/* Popup chi tiết giao dịch */}
       {selected && d && (
-        <div onClick={() => setSelected(null)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 360, background: 'var(--color-white)', borderRadius: 16, padding: 20 }}>
-            <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center', marginBottom: 8 }}>{t('Chi tiết giao dịch')}</div>
+        <div className="popup-overlay" onClick={() => setSelected(null)}>
+          {/* display:block — DetailRow tự có padding+border nên KHÔNG dùng gap flex của .popup-card */}
+          <div className="popup-card" style={{ display: 'block' }} onClick={e => e.stopPropagation()}>
+            <div className="popup-title" style={{ marginBottom: 8 }}>{t('Chi tiết giao dịch')}</div>
             <DetailRow label={t('Loại')}>{d.isSend ? t('Đã gửi') : t('Đã nhận')} {d.symbol}</DetailRow>
             {d.name && <DetailRow label={d.isSend ? t('Người nhận') : t('Người gửi')}>{d.name}</DetailRow>}
             <DetailRow label={t('Địa chỉ ví')}>

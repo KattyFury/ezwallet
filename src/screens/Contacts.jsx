@@ -142,7 +142,7 @@ export default function Contacts() {
         {t('Danh bạ')}
       </div>
 
-      <div className="row-2-8" style={{ width: '100%', overflowY: 'auto', justifyContent: contacts.length ? 'flex-start' : 'center' }}>
+      <div className="row-2-8 scroll-thin" style={{ width: '100%', justifyContent: contacts.length ? 'flex-start' : 'center' }}>
         {contacts.length === 0 ? (
           <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{t('Chưa có danh bạ')}</span>
         ) : (
@@ -192,14 +192,13 @@ export default function Contacts() {
 
       {/* Popup THÊM/SỬA danh bạ — neo nửa trên (tránh bàn phím). Sửa: có "Delete contact" đỏ. */}
       {form && (
-        <div onClick={closeForm}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: 60 }}>
-          <div onClick={e => e.stopPropagation()} style={{ width: '88%', maxWidth: 360, background: 'var(--color-white)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div className="popup-overlay" onClick={closeForm}>
+          <div className="popup-card" onClick={e => e.stopPropagation()}>
             {picked ? (
               <AvatarCropper src={picked} onCancel={() => setPicked(null)} onDone={d => { setForm(f => ({ ...f, pfp: d })); setPicked(null) }} />
             ) : (
               <>
-                <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center' }}>{form.id ? 'Edit contact' : t('Thêm danh bạ')}</div>
+                <div className="popup-title">{form.id ? 'Edit contact' : t('Thêm danh bạ')}</div>
                 <button onClick={() => fileRef.current?.click()}
                   style={{ alignSelf: 'center', width: 80, height: 80, borderRadius: '50%', border: 'none', cursor: 'pointer', overflow: 'hidden', background: form.pfp ? 'transparent' : 'var(--color-gray)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
                   {form.pfp
@@ -215,9 +214,9 @@ export default function Contacts() {
                     Delete contact
                   </button>
                 )}
-                <div style={{ display: 'flex', gap: 8 }}>
-                  <button className="btn btn-secondary" style={{ flex: 1 }} onClick={closeForm}>{t('Quay lại')}</button>
-                  <button className="btn btn-primary" style={{ flex: 1 }} disabled={!formValid} onClick={handleSave}>{t('Lưu')}</button>
+                <div className="popup-actions">
+                  <button className="btn btn-secondary" onClick={closeForm}>{t('Quay lại')}</button>
+                  <button className="btn btn-primary" disabled={!formValid} onClick={handleSave}>{t('Lưu')}</button>
                 </div>
               </>
             )}
@@ -225,16 +224,15 @@ export default function Contacts() {
         </div>
       )}
 
-      {/* Xác nhận xóa — chống bấm nhầm */}
+      {/* Xác nhận xóa — chống bấm nhầm (z-index 110: đè lên popup form đang mở) */}
       {confirmDelete && (
-        <div onClick={() => setConfirmDelete(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 110, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ width: '88%', maxWidth: 340, background: 'var(--color-white)', borderRadius: 16, padding: 20, display: 'flex', flexDirection: 'column', gap: 12, textAlign: 'center' }}>
-            <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>Delete contact?</div>
+        <div className="popup-overlay" style={{ zIndex: 110 }} onClick={() => setConfirmDelete(false)}>
+          <div className="popup-card" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <div className="popup-title">Delete contact?</div>
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>This can't be undone.</div>
-            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setConfirmDelete(false)}>{t('Quay lại')}</button>
-              <button className="btn btn-primary" style={{ flex: 1, background: 'var(--color-error)' }} onClick={handleDelete}>Delete</button>
+            <div className="popup-actions" style={{ marginTop: 4 }}>
+              <button className="btn btn-secondary" onClick={() => setConfirmDelete(false)}>{t('Quay lại')}</button>
+              <button className="btn btn-primary" style={{ background: 'var(--color-error)' }} onClick={handleDelete}>Delete</button>
             </div>
           </div>
         </div>

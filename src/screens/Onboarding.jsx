@@ -51,13 +51,9 @@ export default function Onboarding() {
       </div>
 
       {picker && (
-        <div onClick={() => setPicker(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={e => e.stopPropagation()}
-            style={{ width: '100%', maxWidth: 340, background: 'var(--color-white)', borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center', marginBottom: 4 }}>
-              Select currency
-            </div>
+        <div className="popup-overlay" onClick={() => setPicker(false)}>
+          <div className="popup-card" onClick={e => e.stopPropagation()}>
+            <div className="popup-title">Select currency</div>
             {CURRENCIES.map(o => (
               <button key={o.code}
                 onClick={() => pickCur(o.code)}

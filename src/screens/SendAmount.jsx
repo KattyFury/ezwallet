@@ -6,7 +6,7 @@ import ErrorToast from '../components/ErrorToast'
 import { getTokenInfo } from '../chain'
 import { t } from '../i18n'
 import { findContactName } from '../store'
-import { displaySymbol, spendableOf } from '../data'
+import { displaySymbol, spendableOf, amountFontSize } from '../data'
 
 function shortenAddr(addr) {
   return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
@@ -72,7 +72,7 @@ export default function SendAmount() {
       <div className="row-3-4 center col" style={{ gap: 6 }}>
         {/* Số to như màn số dư, LUÔN căn giữa; chip tiền tệ neo BÌA PHẢI (không bám theo bề rộng số nữa) */}
         <div style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: overBalance ? 'var(--color-error)' : digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
+          <span className="num" style={{ fontSize: amountFontSize((cur === 'USD' ? '$' : '') + digits, 52, 9), fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: overBalance ? 'var(--color-error)' : digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
             {cur === 'USD' ? displaySymbol('USDC') : ''}{digits}<span className="caret">_</span>
           </span>
           <button onClick={() => setShowCur(true)}
@@ -98,13 +98,14 @@ export default function SendAmount() {
         />
       </div>
 
-      {/* Numpad = hàng 6.5→8.5 chính xác: gridRow 6/9 (50-80%) với spacer 0.5 + numpad 2.5
-          → numpad ở 55-80%. TÁCH khỏi nút để nút không bị kéo lệch. */}
-      <div style={{ gridRow: '6 / 9', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 0.5 }} />
+      {/* Numpad ở hàng 6.75-8.25 (khung gridRow 6/10: spacer 0.75 + numpad 2.5 + đệm dưới 0.75),
+          TÁCH khỏi nút để nút không bị kéo lệch. */}
+      <div style={{ gridRow: '6 / 10', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 0.75 }} />
         <div style={{ flex: 2.5, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />
         </div>
+        <div style={{ flex: 0.75 }} />
       </div>
 
       {/* Nút [Quay lại][Tiếp tục] = vị trí CHUẨN row10-dual (hàng 9-10, canh giữa quanh ranh giới 9/10) */}
@@ -116,12 +117,11 @@ export default function SendAmount() {
         </button>
       </div>
 
-      {/* Popup chọn tiền tệ — neo nửa trên (tránh bàn phím) */}
+      {/* Popup chọn tiền tệ — chuẩn .popup-card (tâm vùng hàng 2-5, chừa bàn phím nửa dưới) */}
       {showCur && (
-        <div onClick={() => setShowCur(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '14dvh' }}>
-          <div onClick={e => e.stopPropagation()} style={{ width: '70%', maxWidth: 300, background: 'var(--color-white)', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center', padding: '6px 0' }}>{t('Chọn tiền tệ')}</div>
+        <div className="popup-overlay" onClick={() => setShowCur(false)}>
+          <div className="popup-card" onClick={e => e.stopPropagation()}>
+            <div className="popup-title">{t('Chọn tiền tệ')}</div>
             {CURRENCIES.map(c => (
               <button key={c} onClick={() => { setCur(c); setShowCur(false) }}
                 className={`btn ${c === cur ? 'btn-primary' : 'btn-secondary'}`} style={{ width: '100%' }}>

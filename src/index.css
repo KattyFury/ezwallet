@@ -77,23 +77,43 @@ body {
   margin: 0 auto;
   background: var(--color-white);
   overflow: hidden;
-  padding: 0 15px;
+  padding: 0 20px;                /* lề trái/phải toàn app = 20px (user chốt, nâng từ 15) */
 }
 
-/* Full-bleed: xuyên qua padding 15px để chạm edge */
+/* Full-bleed: xuyên qua padding 20px để chạm edge */
 .full-bleed {
-  margin-left: -15px;
-  margin-right: -15px;
+  margin-left: -20px;
+  margin-right: -20px;
 }
 
-/* Scrollbar ẨN HOÀN TOÀN — vùng token/thông báo vẫn cuộn được bình thường, chỉ KHÔNG
-   hiện thanh cuộn (đã có hiệu ứng mờ dần ở mép để gợi ý còn nội dung bên dưới/trên).
-   Thanh cuộn desktop dù mảnh 3px vẫn trông chướng trên UI mobile-first → bỏ hẳn cho sạch. */
+/* Scrollbar NẰM TRONG DẢI LỀ 20PX (user chốt 2026-07-06), và thiết kế GIỮ NGUYÊN CHIỀU NGANG khi
+   chuyển từ không-scroll → scroll (không co lại). Cách làm:
+   - margin-right -20px: container ăn ra sát mép phải màn (phủ luôn dải lề 20px bên phải).
+   - scrollbar-gutter: stable: LUÔN chừa sẵn chỗ cho scrollbar (kể cả lúc chưa scroll) → nội dung
+     không bị đẩy/co khi scrollbar xuất hiện.
+   - padding-right 12px: cùng với ~8px gutter scrollbar = nội dung thụt đúng 20px từ mép màn (bằng
+     lề trái) → chiều ngang nội dung KHÔNG đổi dù có scroll hay không.
+   → Kết quả: [20px lề] [nội dung cố định] [scrollbar mảnh nằm trong dải lề phải 20px]. */
 .scroll-thin {
-  scrollbar-width: none;        /* Firefox */
-  -ms-overflow-style: none;     /* IE/Edge cũ */
+  overflow-y: auto;
+  margin-right: -20px;
+  padding-right: 12px;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;                              /* Firefox */
+  scrollbar-color: var(--color-gray) transparent;
 }
-.scroll-thin::-webkit-scrollbar { width: 0; height: 0; display: none; }  /* Chrome/Safari */
+.scroll-thin::-webkit-scrollbar { width: 8px; }       /* Chrome/Safari — nằm trong dải lề 20px */
+.scroll-thin::-webkit-scrollbar-track { background: transparent; }
+.scroll-thin::-webkit-scrollbar-thumb { background: var(--color-gray); border-radius: 4px; }
+
+/* Cuộn được nhưng ẨN thanh cuộn — dùng cho vùng có hiệu ứng mờ mép riêng (vd NotifArea): thanh
+   cuộn hiện ra sẽ đè/lệch các box thông báo màu → ẩn hẳn, đã có mask mờ gợi ý còn nội dung. */
+.scroll-hidden {
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scroll-hidden::-webkit-scrollbar { width: 0; height: 0; display: none; }
 
 /* Row helpers */
 .row-1      { grid-row: 1; }
@@ -116,7 +136,7 @@ body {
 .row-1-9    { grid-row: 1 / 10; }
 
 /* ── Content padding (horizontal only, không ảnh hưởng background) ── */
-.px { padding-left: 15px; padding-right: 15px; }
+.px { padding-left: 20px; padding-right: 20px; }
 
 /* ── Shared utilities ── */
 .center {
@@ -171,23 +191,67 @@ body {
   border: 1.5px solid var(--color-gray);
 }
 
-/* Buttons span rows 9-10, centered vertically */
-.row10-single {
-  grid-row: 9 / 11;
+/* Nút Back/Continue: neo TÂM tại VỊ TRÍ 9 (top 85dvh + height 10dvh → tâm 90dvh). THOÁT KHỎI GRID
+   (position:absolute) thay vì chiếm 2 hàng grid-row — box grid stretch cả 2 hàng sẽ chặn click
+   xuống content dưới nó (numpad) dù mắt không thấy. left/right 20px khớp lề .screen. */
+.row10-single, .row10-dual {
+  position: absolute;
+  grid-row: auto;               /* HỦY grid-row:10 mà class .row-10 áp vào (Contacts/About...): nếu
+                                   phần tử absolute còn giữ grid-row, nó lấy Ô LƯỚI làm gốc toạ độ
+                                   → top:85dvh tính từ hàng 10 → nút văng khỏi màn (Contacts mất nút).
+                                   grid-row:auto → gốc là .screen → hiện đúng ở MỌI màn. */
+  left: 20px;
+  right: 20px;
+  top: 85dvh;                   /* height 10dvh → TÂM nút ở 90dvh = VỊ TRÍ 9 (user chốt) */
+  height: 10dvh;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .row10-single .btn { width: 66.67%; }
 
-.row10-dual {
-  grid-row: 9 / 11;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
-}
+.row10-dual { gap: 12px; }
 .row10-dual .btn { width: 44%; }
+
+/* ── Popup dùng chung (chuẩn 2026-07-06) ──
+   TÂM popup neo tại 30dvh = TÂM vùng hàng 2-5 (10-50dvh) → nửa dưới màn hình LUÔN trống cho bàn
+   phím (popup có ô nhập không bị bàn phím che), và mọi popup nằm cùng 1 chỗ → đồng bộ thị giác.
+   Đồng bộ chiều ngang (88% / max 340), padding, gap, bo góc cho TẤT CẢ popup. Popup dài hơn vùng
+   thì cuộn nội bộ (max-height 56dvh, ẩn thanh cuộn) thay vì tràn xuống che bàn phím. */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 100;
+}
+.popup-card {
+  position: absolute;
+  top: 30dvh;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 88%;
+  max-width: 340px;
+  max-height: 56dvh;
+  overflow-y: auto;
+  background: var(--color-white);
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.popup-card::-webkit-scrollbar { width: 0; height: 0; display: none; }
+.popup-title {
+  font-family: var(--font-display);
+  color: var(--color-black);
+  font-size: var(--fs-title);
+  font-weight: var(--fw-medium);
+  text-align: center;
+}
+.popup-actions { display: flex; gap: 8px; }
+.popup-actions .btn { flex: 1; }
 
 /* ── Numpad ── */
 .numpad {
@@ -308,6 +372,7 @@ body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   border-top: 1px solid var(--color-gray);
+  margin: 0 -20px;               /* NavBar TRÀN SÁT MÉP, KHÔNG cách lề (hủy padding 20px của .screen) — user chốt "trừ NAV BAR" */
 }
 
 .navbar-btn {
@@ -548,11 +613,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 15px 18px;
-  border-bottom: 1px solid rgba(204,204,204,0.5);
+  padding: 12px 18px;                     /* KHÔNG kẻ line xám (user chốt) — phân tách bằng padding */
 }
-
-.confirm-row:last-child { border-bottom: none; }
 
 .confirm-label {
   font-size: var(--fs-label);
@@ -604,13 +666,10 @@ body {
   gap: 12px;
   border: none;
   background: none;
-  border-bottom: 1px solid rgba(204,204,204,0.5);
-  cursor: pointer;
+  cursor: pointer;                        /* KHÔNG kẻ line xám ngăn cách (user chốt: bỏ mọi line xám trừ NavBar) */
   font-family: var(--font-base);
   width: 100%;
   text-align: left;
   color: var(--color-black);              /* iOS Safari mặc định chữ button = màu accent (xanh) → ép đen */
   -webkit-text-fill-color: var(--color-black);
 }
-
-.menu-item:last-child { border-bottom: none; }

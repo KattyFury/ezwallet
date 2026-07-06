@@ -18,13 +18,9 @@ export default function Language() {
 
   function pickCur(code) { setCurrency(code); localStorage.setItem('ez_currency', code); setPicker(false) }
 
-  const Row = ({ label, value, onClick }) => (
-    <button className="menu-item" style={{ width: '100%' }} onClick={onClick}>
-      <span style={{ flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>{label}</span>
-      <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-content)', border: '1.5px solid var(--color-gray)', borderRadius: 8, padding: '4px 12px', marginRight: 8 }}>{value}</span>
-      <Icon name="right2" size={15} color="var(--color-faint)" />
-    </button>
-  )
+  // Chip giá trị ĐỒNG BỘ cho mọi hàng (English / $ …) — cùng 1 style, không mỗi chỗ mỗi kiểu.
+  const LABEL = { flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }
+  const CHIP = { fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', border: '1.5px solid var(--color-gray)', borderRadius: 10, padding: '6px 14px' }
 
   return (
     <div className="screen">
@@ -32,29 +28,27 @@ export default function Language() {
         Language &amp; Currency
       </div>
 
-      {/* Ngôn ngữ: hiện app khoá English (Circle SDK chỉ English) → hàng làm mờ, không bấm. */}
-      <div className="row-3" style={{ display: 'flex', alignItems: 'center' }}>
-        <div className="menu-item" style={{ width: '100%', opacity: 0.4, cursor: 'not-allowed' }}>
-          <span style={{ flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>Language</span>
-          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-content)', border: '1.5px solid var(--color-gray)', borderRadius: 8, padding: '4px 12px', marginRight: 8 }}>English</span>
-        </div>
+      {/* Ngôn ngữ = HÀNG 2. App khoá English (Circle SDK chỉ English) → làm mờ, không bấm. */}
+      <div className="menu-item" style={{ gridRow: 2, opacity: 0.4, cursor: 'not-allowed' }}>
+        <span style={LABEL}>Language</span>
+        <span style={CHIP}>English</span>
       </div>
 
-      <div className="row-4" style={{ display: 'flex', alignItems: 'center' }}>
-        <Row label="Default currency" value={displaySymbol(currency)} onClick={() => setPicker(true)} />
-      </div>
+      {/* Tiền tệ = HÀNG 3. Chip cùng style với chip English. */}
+      <button className="menu-item" style={{ gridRow: 3 }} onClick={() => setPicker(true)}>
+        <span style={LABEL}>Default currency</span>
+        <span style={CHIP}>{displaySymbol(currency)}</span>
+        <Icon name="right2" size={15} color="var(--color-faint)" style={{ marginLeft: 8 }} />
+      </button>
 
       <div className="row-10 row10-single">
         <button className="btn btn-primary" onClick={() => navigate('MenuScreen')}>{t('Quay lại')}</button>
       </div>
 
       {picker && (
-        <div onClick={() => setPicker(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-          <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 340, background: 'var(--color-white)', borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 8, maxHeight: '80dvh', overflowY: 'auto' }}>
-            <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center', marginBottom: 4 }}>
-              {t('Chọn tiền tệ')}
-            </div>
+        <div className="popup-overlay" onClick={() => setPicker(false)}>
+          <div className="popup-card" onClick={e => e.stopPropagation()}>
+            <div className="popup-title">{t('Chọn tiền tệ')}</div>
             {CURRENCIES.map(o => (
               <button key={o.code} onClick={() => pickCur(o.code)}
                 className={`btn ${o.code === currency ? 'btn-primary' : 'btn-secondary'}`}

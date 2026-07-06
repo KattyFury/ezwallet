@@ -4,7 +4,7 @@ import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
 import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession } from '../circle'
 import { getTokenBalances } from '../chain'
-import { spendableOf, GAS_RESERVE_USDC } from '../data'
+import { spendableOf, amountFontSize, floorTo } from '../data'
 import { addNotif } from '../notif'
 import { t } from '../i18n'
 
@@ -36,11 +36,9 @@ function TokenRow({ sym, onClick, big }) {
 // thì 2 phía tự đảo cho nhau, selectToken đã xử lý).
 function TokenPicker({ current, onSelect, onClose }) {
   return (
-    <div onClick={onClose}
-      style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 100, display: 'flex', alignItems: 'flex-start', justifyContent: 'center', paddingTop: '14dvh' }}>
-      <div onClick={e => e.stopPropagation()}
-        style={{ width: '70%', maxWidth: 300, background: 'var(--color-white)', borderRadius: 16, padding: 12, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', textAlign: 'center', padding: '6px 0' }}>Select token</div>
+    <div className="popup-overlay" onClick={onClose}>
+      <div className="popup-card" onClick={e => e.stopPropagation()}>
+        <div className="popup-title">Select token</div>
         {SWAP_TOKENS.map(sym => (
           <button key={sym} onClick={() => { onSelect(sym); onClose() }} className={`btn ${sym === current ? 'btn-primary' : 'btn-secondary'}`}
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
@@ -70,7 +68,8 @@ export default function Swap() {
   const amountNum = parseFloat(input || '0')
   // Khả dụng: USDC chừa lại 1 làm phí mạng (gas Arc = USDC) — không cho swap hết
   const available = spendableOf(fromSym, balances[fromSym])
-  const overBalance = amountNum > available
+  // +1e-9: bỏ qua sai số dấu phẩy động khi nhập/floor đúng bằng số dư (kẻo "max" bị coi là vượt)
+  const overBalance = amountNum > available + 1e-9
   const canSwap = SWAP_ENABLED && amountNum > 0 && !overBalance && !loading
 
   function loadBalances() {
@@ -149,15 +148,16 @@ export default function Swap() {
         {t('Đổi tiền')}
       </div>
 
-      {/* Cụm FROM↔TO — LIỀN LẠC (nút đổi chiều đè lên ranh giới 2 card), ĐẨY XUỐNG SÁT nút Swap +
-          numpad (justify flex-end) → tạo cụm liền mạch EURC→NUMPAD; khoảng trống trên = cách title. */}
-      <div style={{ gridRow: '2 / 5', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+      {/* Cụm FROM↔TO — LIỀN LẠC (nút đổi chiều đè lên ranh giới 2 card), ĐẨY XUỐNG SÁT nút Swap
+          (khung tới hàng 6, flex-end + đệm dưới 5dvh → đáy cụm ~vị trí 4.5, ngay trên nút Swap ở
+          vị trí 5); khoảng trống phía trên = cách title. */}
+      <div style={{ gridRow: '2 / 6', paddingBottom: '5dvh', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
         <div style={{ position: 'relative' }}>
           {/* FROM */}
           <div style={{ ...CARD, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <TokenRow sym={fromSym} big onClick={() => setPicker('from')} />
-              <span className="num" style={{ ...AMT_BIG, color: overBalance ? 'var(--color-error)' : input ? 'var(--color-content)' : 'var(--color-faint)' }}>
+              <span className="num" style={{ ...AMT_BIG, fontSize: amountFontSize(input, 46, 7), color: overBalance ? 'var(--color-error)' : input ? 'var(--color-content)' : 'var(--color-faint)' }}>
                 {input}<span className="caret">_</span>
               </span>
             </div>
@@ -167,7 +167,7 @@ export default function Swap() {
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
                 {[['50%', 0.5], ['100%', 1]].map(([label, pct]) => (
-                  <button key={label} onClick={() => setInput(String(parseFloat((available * pct).toFixed(decimalsFor(fromSym)))))}
+                  <button key={label} onClick={() => setInput(String(floorTo(available * pct, decimalsFor(fromSym))))}
                     style={{ border: '1.5px solid var(--color-primary)', color: 'var(--color-primary)', background: 'var(--color-white)', borderRadius: 8, padding: '3px 12px', fontSize: 'var(--fs-label)', fontFamily: 'inherit', cursor: 'pointer' }}>
                     {label}
                   </button>
@@ -194,27 +194,26 @@ export default function Swap() {
         </div>
       </div>
 
-      {/* Nút Swap — CHÍNH NÓ hiện trạng thái (Preparing… / Enter PIN… / Submitted) thay vì dòng
-          chú thích riêng bên dưới. Dòng dưới chỉ còn lỗi (đỏ) hoặc nhắc phí gas. */}
-      <div style={{ gridRow: '5 / 6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-        <button className="btn btn-primary" style={{ width: '66.67%', whiteSpace: 'nowrap' }} disabled={!canSwap} onClick={handleSwap}>
-          {status || 'Swap'}
+      {/* Nút Swap = NƠI DUY NHẤT hiện mọi trạng thái giao dịch (Preparing… / Enter PIN… / Submitted /
+          lỗi) — KHÔNG có dòng ghi chú/lỗi riêng bên dưới (user chốt: mọi chi tiết đổ vào nút cho tối
+          giản). Ưu tiên: lỗi > trạng thái > 'Swap'. Lỗi hiện đỏ ngay trên nút (đổi màu chữ + viền).
+          Neo đúng VỊ TRÍ 5 (tâm nút ở y=50dvh): top = 50dvh − nửa chiều cao nút (.btn 6dvh → 3dvh).
+          position:absolute thay vì gridRow — tránh grid item đè hitbox lên numpad bên dưới. */}
+      <div style={{ position: 'absolute', left: 20, right: 20, top: 'calc(50dvh - 3dvh)', zIndex: 2, display: 'flex', justifyContent: 'center' }}>
+        <button className={`btn ${error ? 'btn-secondary' : 'btn-primary'}`}
+          style={{ width: '66.67%', overflow: 'hidden', ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null) }}
+          disabled={!canSwap && !error} onClick={handleSwap}>
+          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{error || status || 'Swap'}</span>
         </button>
-        <div style={{ textAlign: 'center', fontSize: 'var(--fs-tiny)', minHeight: 14 }}>
-          {error
-            ? <span style={{ color: 'var(--color-error)' }}>{error}</span>
-            : (!status && fromSym === 'USDC'
-                ? <span style={{ color: 'var(--color-muted)' }}>{GAS_RESERVE_USDC} USDC is kept for network fees</span>
-                : null)}
-        </div>
       </div>
 
-      {/* Numpad ĐỒNG BỘ 6.5-8.5 (gridRow 6/9: spacer 0.5 + numpad 2.5), như SendAmount/CreateQR */}
-      <div style={{ gridRow: '6 / 9', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 0.5 }} />
+      {/* Numpad ở hàng 6.75-8.25 (đồng bộ SendAmount/CreateQR): gridRow 6/10, spacer 0.75 + numpad 2.5 + đệm dưới 0.75 */}
+      <div style={{ gridRow: '6 / 10', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 0.75 }} />
         <div style={{ flex: 2.5, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />
         </div>
+        <div style={{ flex: 0.75 }} />
       </div>
 
       <NavBar active="Swap" />

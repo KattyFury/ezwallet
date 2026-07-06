@@ -101,17 +101,18 @@ export default function QRScanner() {
 
   return (
     <div className="screen">
-      <div className="row-1-5 center col" style={{ gap: 18 }}>
+      <div className="row-1-5" style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {error ? (
           <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center', padding: '0 20px' }}>{error}</span>
         ) : (
           <>
-            {/* Ô vuông quét QR — trung tâm hàng 1-5 */}
-            <div style={{ position: 'relative', width: '85%', aspectRatio: '1', borderRadius: 16, overflow: 'hidden', background: '#000' }}>
+            {/* Ô vuông quét QR — căn ĐÚNG TÂM nửa trên màn (tâm 25dvh). Chú thích neo tuyệt đối phía
+                dưới nên KHÔNG kéo lệch tâm ô quét lên trên như trước. */}
+            <div style={{ position: 'relative', width: '82%', aspectRatio: '1', borderRadius: 16, overflow: 'hidden', background: '#000' }}>
               <video ref={videoRef} autoPlay playsInline muted
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)', textAlign: 'center' }}>{hint}</span>
+            <span style={{ position: 'absolute', left: 0, right: 0, bottom: '3%', textAlign: 'center', fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>{hint}</span>
           </>
         )}
       </div>

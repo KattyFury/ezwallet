@@ -11,6 +11,21 @@ export function spendableOf(symbol, balance) {
   return symbol === 'USDC' ? Math.max(0, b - GAS_RESERVE_USDC) : b
 }
 
+// Cỡ chữ số tiền AUTO CO NHỎ theo độ dài chuỗi (Barlow ~0.5em/ký tự) để số dài KHÔNG tràn/bể
+// layout (vd nhập "0.00000001"). base = cỡ tối đa (px); maxChars = số ký tự vừa khít ở base;
+// dài hơn thì co tuyến tính xuống, có sàn minPx để không nhỏ quá đọc không nổi.
+export function amountFontSize(str, base, maxChars, minPx = 20) {
+  const len = (str || '').length || 1
+  return len <= maxChars ? base : Math.max(minPx, Math.round(base * maxChars / len))
+}
+
+// Làm tròn XUỐNG tới `dec` chữ số thập phân — dùng cho nút Max/100%: toFixed() làm tròn LÊN nên
+// số ra có thể > số dư thật → bị chặn "vượt số dư". floor thì luôn ≤ số dư, gửi/swap được.
+export function floorTo(n, dec) {
+  const p = 10 ** dec
+  return Math.floor((n || 0) * p) / p
+}
+
 // Ký hiệu tiền tệ THÂN THIỆN cho người dùng phổ thông: USDC≈USD, EURC≈EUR (stablecoin 1:1).
 // Người già biết $/€ chứ không biết USDC/EURC → chỉ đổi CHỮ HIỂN THỊ (tiền tố, vd "$127.66");
 // chain/API/lưu trữ vẫn dùng symbol thật (USDC/EURC). CHỈ dùng cho TIỀN HIỂN THỊ (tổng, quy
