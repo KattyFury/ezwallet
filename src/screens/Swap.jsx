@@ -20,12 +20,12 @@ const SWAP_TOKENS = ['USDC', 'EURC', 'cirBTC']
 const decimalsFor = sym => (sym === 'cirBTC' ? 6 : 2)
 
 function TokenRow({ sym, onClick, big }) {
-  const d = big ? 44 : 32
+  const d = big ? 48 : 32
   return (
     <button onClick={onClick}
       style={{ display: 'flex', alignItems: 'center', gap: big ? 10 : 8, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
       <img src={`/tokens/${sym.toLowerCase()}.png`} alt={sym} style={{ width: d, height: d, borderRadius: '50%' }} />
-      <span className="num" style={{ fontSize: big ? 26 : 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
+      <span className="num" style={{ fontSize: big ? 28 : 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
       <Icon name="down2" size={big ? 14 : 11} color="var(--color-muted)" />
     </button>
   )
@@ -114,18 +114,18 @@ export default function Swap() {
   }
 
   async function handleSwap() {
-    setLoading(true); setError(''); setStatus('Preparing...')
+    setLoading(true); setError(''); setStatus('Preparing…')
     try {
       // Token 60' có thể đã hết hạn giữa phiên → làm mới TRƯỚC khi tạo challenge cần PIN
       const { userToken, encryptionKey } = await refreshSession()
       const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
       if (res.error) throw new Error(res.error)
-      setStatus('Enter PIN to confirm...')
+      setStatus('Enter PIN…')
       await executeChallenge(getSDK(), userToken, encryptionKey, res.challengeId)
       const outTxt = res.amountOut ? ` to ~${parseFloat(res.amountOut).toFixed(decimalsFor(toSym))} ${toSym}` : ` to ${toSym}`
       const msg = `Swapped ${amountNum} ${fromSym}${outTxt}`
       addNotif(msg, 'sent', null, `swap-${Date.now()}`)   // hiện ở NotifArea (HomeSend/HomeReceive)
-      setStatus('Swap submitted!')
+      setStatus('Submitted')
       setInput(''); setEstAmt(null)
       setTimeout(() => { loadBalances(); setStatus('') }, 4000)
     } catch (e) {
@@ -135,11 +135,11 @@ export default function Swap() {
     } finally { setLoading(false) }
   }
 
-  const CARD = { border: '1.5px solid var(--color-gray)', borderRadius: 14, background: 'var(--color-white)', padding: '14px 16px' }
-  // Số trong card = cỡ cố định vừa phải (không dùng fs-amount 40px — to & thô). Đồng bộ 2 card.
-  const AMT = { fontSize: 28, fontWeight: 'var(--fw-semibold)', lineHeight: 1 }
+  const CARD = { border: '1.5px solid var(--color-gray)', borderRadius: 16, background: 'var(--color-white)', padding: '20px 18px' }
+  // Số trong card = cỡ cố định vừa phải (không dùng fs-amount 52px — to & thô). Đồng bộ 2 card.
+  const AMT = { fontSize: 32, fontWeight: 'var(--fw-semibold)', lineHeight: 1 }
   // FROM to hơn (chiếm 2 hàng) để nổi bật "đang đổi TỪ cái gì"; TO giữ AMT thường.
-  const AMT_BIG = { fontSize: 40, fontWeight: 'var(--fw-semibold)', lineHeight: 1 }
+  const AMT_BIG = { fontSize: 46, fontWeight: 'var(--fw-semibold)', lineHeight: 1 }
 
   return (
     <div className="screen">
@@ -149,15 +149,16 @@ export default function Swap() {
         {t('Đổi tiền')}
       </div>
 
-      {/* Cụm FROM↔TO — LIỀN LẠC (nút đổi chiều đè lên ranh giới 2 card), canh giữa vùng hàng 2-4. */}
-      <div style={{ gridRow: '2 / 5', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      {/* Cụm FROM↔TO — LIỀN LẠC (nút đổi chiều đè lên ranh giới 2 card), ĐẨY XUỐNG SÁT nút Swap +
+          numpad (justify flex-end) → tạo cụm liền mạch EURC→NUMPAD; khoảng trống trên = cách title. */}
+      <div style={{ gridRow: '2 / 5', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
         <div style={{ position: 'relative' }}>
           {/* FROM */}
           <div style={{ ...CARD, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <TokenRow sym={fromSym} big onClick={() => setPicker('from')} />
               <span className="num" style={{ ...AMT_BIG, color: overBalance ? 'var(--color-error)' : input ? 'var(--color-content)' : 'var(--color-faint)' }}>
-                {input || '0'}
+                {input}<span className="caret">_</span>
               </span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -193,18 +194,18 @@ export default function Swap() {
         </div>
       </div>
 
-      {/* Nút Swap + trạng thái — ở ranh giới hàng 5/6 (giữa cụm trên & numpad) */}
+      {/* Nút Swap — CHÍNH NÓ hiện trạng thái (Preparing… / Enter PIN… / Submitted) thay vì dòng
+          chú thích riêng bên dưới. Dòng dưới chỉ còn lỗi (đỏ) hoặc nhắc phí gas. */}
       <div style={{ gridRow: '5 / 6', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-        <button className="btn btn-primary" style={{ width: '66.67%' }} disabled={!canSwap} onClick={handleSwap}>
-          {loading ? 'Processing...' : SWAP_ENABLED ? 'Swap' : 'Swap (under repair)'}
+        <button className="btn btn-primary" style={{ width: '66.67%', whiteSpace: 'nowrap' }} disabled={!canSwap} onClick={handleSwap}>
+          {status || 'Swap'}
         </button>
         <div style={{ textAlign: 'center', fontSize: 'var(--fs-tiny)', minHeight: 14 }}>
-          {!SWAP_ENABLED && <span style={{ color: 'var(--color-muted)' }}>Swap is temporarily disabled while we fix settlement</span>}
-          {SWAP_ENABLED && error && <span style={{ color: 'var(--color-error)' }}>{error}</span>}
-          {SWAP_ENABLED && !error && status && <span style={{ color: 'var(--color-primary)' }}>{status}</span>}
-          {SWAP_ENABLED && !error && !status && fromSym === 'USDC' && (
-            <span style={{ color: 'var(--color-muted)' }}>{GAS_RESERVE_USDC} USDC is kept for network fees</span>
-          )}
+          {error
+            ? <span style={{ color: 'var(--color-error)' }}>{error}</span>
+            : (!status && fromSym === 'USDC'
+                ? <span style={{ color: 'var(--color-muted)' }}>{GAS_RESERVE_USDC} USDC is kept for network fees</span>
+                : null)}
         </div>
       </div>
 

@@ -50,7 +50,7 @@ export default function CreateQR() {
       <div className="row-3-4 center col">
         <div style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
-            {cur === 'USD' ? displaySymbol('USDC') : ''}{digits || '0'}
+            {cur === 'USD' ? displaySymbol('USDC') : ''}{digits}<span className="caret">_</span>
           </span>
           <button onClick={() => setShowCur(true)}
             style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 4, border: '1.5px solid var(--color-gray)', borderRadius: 10, padding: '6px 10px', background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>

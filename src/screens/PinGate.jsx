@@ -41,7 +41,7 @@ export default function PinGate() {
 
   return (
     <div className="screen">
-      <div className="row-2-8 col" style={{ justifyContent: 'center', gap: 16, textAlign: 'center', padding: '0 24px' }}>
+      <div className="row-1-5 center col" style={{ gap: 16, textAlign: 'center', padding: '0 24px' }}>
         <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>Enter your PIN</div>
         <div style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)', maxWidth: 300 }}>Enter your PIN to unlock your wallet.</div>
         {error && <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', maxWidth: 300 }}>{error}</div>}

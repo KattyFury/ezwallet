@@ -221,6 +221,17 @@ body {
 .numpad-key.empty   { pointer-events: none; }
 .numpad.disabled    { opacity: 0.2; pointer-events: none; }
 
+/* Caret nhấp nháy ở ô nhập số (SendAmount/CreateQR/Swap) — cho người dùng biết SỐ SẼ VÀO
+   CHỖ NÀO khi bấm numpad (trước đây chỉ có '0' mờ, không rõ đang nhắm vào đâu). */
+@keyframes caret-blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+.caret {
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--color-muted);
+  font-weight: var(--fw-normal);
+  animation: caret-blink 1.1s step-end infinite;
+}
+
 /* ── PinDots ── */
 .pin-dots {
   display: flex;

@@ -151,8 +151,8 @@ export default function Login() {
         </span>
       </div>
 
-      {/* Hàng 6-10: nút Đăng nhập với Email, canh GIỮA vùng */}
-      <div style={{ gridRow: '6 / 11', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2dvh' }}>
+      {/* Nút Đăng nhập với Email — ở ranh giới hàng 9-10 (giữa row 9/11 = mép dưới, như các màn khác) */}
+      <div style={{ gridRow: '9 / 11', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2dvh' }}>
         {restoring && (
           <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{t('Đang xử lý...')}</span>
         )}

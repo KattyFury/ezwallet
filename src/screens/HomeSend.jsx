@@ -19,10 +19,9 @@ const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-condensed)', fontSize: 'var(-
 // giữ tay mới hiện số lượng token thật; nhả tay tự động quay lại $ — tránh việc bấm xong quên
 // đổi lại rồi không hiểu "0.0001 cirBTC" là gì.
 // Xám cả nền lẫn chữ — nút phụ, không quan trọng bằng nội dung chính.
-// NẰM TRONG PHẠM VI hàng 3-6 (vùng token), ĐÁY của hàng 6 — KHÔNG lấn qua hàng 7 (vùng thông
-// báo), tránh hiểu lầm nút này liên quan tới lịch sử giao dịch. top:60% = đúng đáy hàng 6 của
-// .screen (10 hàng đều nhau); translateY(-100%) đẩy trọn thân nút lên TRÊN mốc đó (không phải
-// -50% cắt đôi ranh giới như trước) + chừa thêm 6px đệm cho thoáng.
+// NẰM GIỮA hàng 6 (dưới list token hàng 3-5, TRÊN vùng thông báo hàng 7) — tách đều 2 phía để
+// không ai tưởng bấm nút này ra thông báo. top:55% = tâm hàng 6 của .screen (10 hàng đều nhau,
+// hàng 6 = 50%→60%); translate(-50%,-50%) đặt trọn thân nút vào đúng tâm mốc đó.
 function ShowTokensButton({ onHoldStart, onHoldEnd }) {
   return (
     <button
@@ -34,7 +33,7 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
       onTouchCancel={onHoldEnd}
       onContextMenu={e => e.preventDefault()}
       style={{
-        position: 'absolute', left: '50%', top: '60%', transform: 'translate(-50%, calc(-100% - 6px))', zIndex: 10,
+        position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
         padding: '0 22px', borderRadius: 50, border: 'none', background: 'var(--color-gray)',
         color: 'var(--color-muted)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
@@ -77,8 +76,9 @@ export default function HomeSend() {
     <div className="screen">
       <BalanceHeader totalUsd={totalUsd} loading={loading} />
 
-      {/* Hàng 3-6: danh sách token, cuộn được; mờ dần 1/3 hàng ở ĐÁY khi tiến sát nút Show tokens */}
-      <div className="row-3-6 scroll-thin" style={{
+      {/* Hàng 3-5: danh sách token, cuộn được; mờ dần ở ĐÁY. Nút "Hold to show tokens" nằm GIỮA
+          hàng 6 (dưới list, tách hẳn khỏi vùng thông báo hàng 7 để không tưởng bấm ra thông báo). */}
+      <div className="row-3-5 scroll-thin" style={{
         display: 'flex', flexDirection: 'column', gap: 16, overflowY: 'auto', paddingTop: 2, paddingBottom: 8,
         WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
         maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
@@ -120,7 +120,7 @@ export default function HomeSend() {
         )}
       </div>
 
-      {/* Nổi đúng ranh giới hàng 6/7 (position:absolute trong ShowTokensButton) — KHÔNG chiếm hàng riêng */}
+      {/* Nổi giữa hàng 6 (position:absolute trong ShowTokensButton) — KHÔNG chiếm hàng riêng */}
       {tokens.length > 0 && (
         <ShowTokensButton onHoldStart={() => setShowToken(true)} onHoldEnd={() => setShowToken(false)} />
       )}
