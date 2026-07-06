@@ -22,7 +22,7 @@ export default function SendConfirm() {
   const { address, name, amount, memo, currency = 'USD' } = params
   const [feeUsd, setFeeUsd] = useState(null)      // phí gas thật (USD, null = đang tính)
   // Tỷ giá riêng cho PHÍ (USD mỗi 1 đơn vị tiền hiển thị — USDC:1, EURC:~1.08)
-  const [feeRates, setFeeRates] = useState({ USDC: 1, EURC: 1.08, CNY: 0.14, VND: 0.0000395 })
+  const [feeRates, setFeeRates] = useState({ USDC: 1, EURC: 1.08 })
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)         // đã gửi thành công → khóa, không gửi lại
   const [error, setError] = useState('')          // lỗi terminal (hủy/mạng...) hiện tại chỗ

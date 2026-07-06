@@ -34,8 +34,15 @@ function pollIncoming(after) {
         recv.filter(tx => parseInt(tx.timeStamp) > lastSeen && !seen.has(tx.hash)).reverse().forEach(tx => {
           const amt = (parseFloat(tx.value) / Math.pow(10, parseInt(tx.tokenDecimal || 6))).toFixed(2)
           const symbol = tx.tokenSymbol || 'USDC'
+          // Cờ ez_faucet_pending set khi user bấm nút Faucet ở HomeSend → USDC vào ĐẦU TIÊN trong
+          // 1h coi là tiền Faucet → thông báo "Faucet successful" (dễ hiểu hơn "nhận từ 0x…lạ").
+          const faucetPending = parseInt(localStorage.getItem('ez_faucet_pending') || '0')
+          const isFaucet = symbol === 'USDC' && faucetPending && Date.now() - faucetPending < 3600000
           if (outHashes.has(tx.hash)) {
             addNotif(`Swap complete · received ${amt} ${symbol}`, 'received', tx.hash, `recv-${tx.hash}`)
+          } else if (isFaucet) {
+            localStorage.removeItem('ez_faucet_pending')
+            addNotif(`Faucet successful · received ${amt} ${symbol}`, 'received', tx.hash, `recv-${tx.hash}`)
           } else {
             // Hiện TÊN DANH BẠ nếu địa chỉ người gửi đã lưu (đồng bộ thông báo "Đã gửi cho <tên>")
             const fromName = findContactName(tx.from) || `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`

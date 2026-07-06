@@ -1,25 +1,24 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
-import { t, getLang, setLang } from '../i18n'
+import { t } from '../i18n'
 import { getDisplayCurrency } from '../data'
 
-// Ngôn ngữ: hạ tầng i18n có en/vi/zh. ⚠️ Modal PIN/xác nhận Circle LUÔN tiếng Anh (không đổi được);
-// nhiều chuỗi mới hardcode English → chọn VI/ZH còn lẫn Anh vài chỗ (cần dịch bổ sung nếu muốn full).
+// Ngôn ngữ KHOÁ English (Circle SDK chỉ English + chuỗi mới hardcode English). Hiện thêm option
+// Việt/Trung cho popup đỡ trống nhưng KHOÁ (thấy được, không bấm) — user chốt.
 const LANGUAGES = [
-  { code: 'en', label: 'English' },
-  { code: 'vi', label: 'Tiếng Việt' },
-  { code: 'zh', label: '中文' },
+  { code: 'en', label: 'English', locked: false },
+  { code: 'vi', label: 'Tiếng Việt', locked: true },
+  { code: 'zh', label: '中文', locked: true },
 ]
-const LANG_LABEL = { en: 'English', vi: 'Tiếng Việt', zh: '中文' }
 
-// Tiền HIỂN THỊ (quy đổi qua tỷ giá, KHÔNG phải token thật — chain vẫn USDC/EURC). code = giá trị
-// lưu ez_currency; USD/EUR ứng token USDC/EURC, CNY/VND là pháp định quy đổi.
+// Tiền hiển thị: USD/EUR chọn được (ứng token USDC/EURC). CNY/VND hiện option nhưng KHOÁ (chưa
+// wire tỷ giá — mở lại: bỏ locked + thêm rate ở chain.js getDisplayRates + SUPPORTED_CURRENCIES).
 const CURRENCIES = [
-  { code: 'USDC', short: 'USD', label: 'USD – US Dollar' },
-  { code: 'EURC', short: 'EUR', label: 'EUR – Euro' },
-  { code: 'CNY',  short: 'CNY', label: 'CNY – Chinese Yuan' },
-  { code: 'VND',  short: 'VND', label: 'VND – Vietnamese Dong' },
+  { code: 'USDC', short: 'USD', label: 'USD – US Dollar', locked: false },
+  { code: 'EURC', short: 'EUR', label: 'EUR – Euro', locked: false },
+  { code: 'CNY',  short: 'CNY', label: 'CNY – Chinese Yuan', locked: true },
+  { code: 'VND',  short: 'VND', label: 'VND – Vietnamese Dong', locked: true },
 ]
 const CUR_SHORT = { USDC: 'USD', EURC: 'EUR', CNY: 'CNY', VND: 'VND' }
 
@@ -28,14 +27,29 @@ export default function Language() {
   const [currency, setCurrency] = useState(getDisplayCurrency())
   const [curPicker, setCurPicker] = useState(false)
   const [langPicker, setLangPicker] = useState(false)
-  const lang = getLang()
 
   function pickCur(code) { setCurrency(code); localStorage.setItem('ez_currency', code); setCurPicker(false) }
-  function pickLang(code) { setLang(code) }   // setLang tự lưu + reload (đọc lại LANG)
 
-  // Chip giá trị ĐỒNG BỘ cho mọi hàng (cùng 1 style, không mỗi chỗ mỗi kiểu).
+  // Chip giá trị ĐỒNG BỘ cho mọi hàng (cùng 1 style).
   const LABEL = { flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }
   const CHIP = { fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', border: '1.5px solid var(--color-gray)', borderRadius: 10, padding: '6px 14px' }
+
+  // 1 popup dùng chung cho cả ngôn ngữ & tiền tệ: option locked = nút mờ, disabled (không bấm).
+  const Picker = ({ title, options, active, onPick, onClose }) => (
+    <div className="popup-overlay" onClick={onClose}>
+      <div className="popup-card" onClick={e => e.stopPropagation()}>
+        <div className="popup-title">{title}</div>
+        {options.map(o => (
+          <button key={o.code} disabled={o.locked}
+            onClick={() => { if (!o.locked) onPick(o.code); else return }}
+            className={`btn ${o.code === active ? 'btn-primary' : 'btn-secondary'}`}
+            style={{ width: '100%', justifyContent: 'flex-start', paddingLeft: 18 }}>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
 
   return (
     <div className="screen">
@@ -43,14 +57,14 @@ export default function Language() {
         Language &amp; Currency
       </div>
 
-      {/* Ngôn ngữ = HÀNG 2 — bấm mở popup chọn Anh/Việt/Trung */}
+      {/* Ngôn ngữ = HÀNG 2 — bấm mở popup (English chọn được; Việt/Trung khoá) */}
       <button className="menu-item" style={{ gridRow: 2 }} onClick={() => setLangPicker(true)}>
         <span style={LABEL}>Language</span>
-        <span style={CHIP}>{LANG_LABEL[lang] || 'English'}</span>
+        <span style={CHIP}>English</span>
         <Icon name="right2" size={15} color="var(--color-faint)" style={{ marginLeft: 8 }} />
       </button>
 
-      {/* Tiền tệ = HÀNG 3 — bấm mở popup USD/EUR/CNY/VND */}
+      {/* Tiền tệ = HÀNG 3 — bấm mở popup (USD/EUR chọn được; CNY/VND khoá) */}
       <button className="menu-item" style={{ gridRow: 3 }} onClick={() => setCurPicker(true)}>
         <span style={LABEL}>Default currency</span>
         <span style={CHIP}>{CUR_SHORT[currency] || 'USD'}</span>
@@ -62,33 +76,12 @@ export default function Language() {
       </div>
 
       {langPicker && (
-        <div className="popup-overlay" onClick={() => setLangPicker(false)}>
-          <div className="popup-card" onClick={e => e.stopPropagation()}>
-            <div className="popup-title">Language</div>
-            {LANGUAGES.map(o => (
-              <button key={o.code} onClick={() => pickLang(o.code)}
-                className={`btn ${o.code === lang ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ width: '100%', justifyContent: 'flex-start', paddingLeft: 18 }}>
-                {o.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <Picker title="Language" options={LANGUAGES} active="en"
+          onPick={() => setLangPicker(false)} onClose={() => setLangPicker(false)} />
       )}
-
       {curPicker && (
-        <div className="popup-overlay" onClick={() => setCurPicker(false)}>
-          <div className="popup-card" onClick={e => e.stopPropagation()}>
-            <div className="popup-title">{t('Chọn tiền tệ')}</div>
-            {CURRENCIES.map(o => (
-              <button key={o.code} onClick={() => pickCur(o.code)}
-                className={`btn ${o.code === currency ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ width: '100%', justifyContent: 'flex-start', paddingLeft: 18 }}>
-                {o.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        <Picker title={t('Chọn tiền tệ')} options={CURRENCIES} active={currency}
+          onPick={pickCur} onClose={() => setCurPicker(false)} />
       )}
     </div>
   )

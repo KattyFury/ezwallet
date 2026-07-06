@@ -67,7 +67,7 @@ export default function HomeSend() {
         .catch(console.error)
         .finally(() => setLoading(false))
     })
-    getDisplayRates().then(setRates).catch(() => setRates(r => r || { USDC: 1, EURC: 1.08, CNY: 0.14, VND: 0.0000395 }))
+    getDisplayRates().then(setRates).catch(() => setRates(r => r || { USDC: 1, EURC: 1.08 }))
   }, [])
 
   const totalUsd = tokens.reduce((s, t) => s + t.usd, 0)
@@ -134,7 +134,7 @@ export default function HomeSend() {
           ]}
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
-              <div onClick={() => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } window.open('https://faucet.circle.com/', '_blank') }}
+              <div onClick={() => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } localStorage.setItem('ez_faucet_pending', String(Date.now())); window.open('https://faucet.circle.com/', '_blank') }}
                 style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-label)', color: 'var(--color-content)' }}>
                   <Icon name="warning" size={18} color="var(--color-warning)" style={{ flexShrink: 0 }} />

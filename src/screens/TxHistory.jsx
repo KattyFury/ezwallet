@@ -142,7 +142,7 @@ export default function TxHistory() {
   const [copied, setCopied] = useState(false)
   const cur = getDisplayCurrency()
   const [rates, setRates] = useState(null)  // tỷ giá USD→tiền hiển thị (fetch), null khi chưa xong
-  useEffect(() => { getDisplayRates().then(setRates).catch(() => setRates({ USDC: 1, EURC: 1.08, CNY: 0.14, VND: 0.0000395 })) }, [])
+  useEffect(() => { getDisplayRates().then(setRates).catch(() => setRates({ USDC: 1, EURC: 1.08 })) }, [])
 
   function copyCounter(addr) {
     navigator.clipboard.writeText(addr)

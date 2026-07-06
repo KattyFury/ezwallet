@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getDisplayCurrency, displayNum, displaySymbol, amountFontSize } from '../data'
+import { getDisplayCurrency, displayNum, displaySymbol } from '../data'
 import { getDisplayRates, cachedRates } from '../chain'
 
 // Cụm số dư dùng chung cho HomeSend / HomeReceive / MenuScreen — chiếm 2 hàng (row-1-2),
@@ -9,7 +9,7 @@ export default function BalanceHeader({ totalUsd, loading }) {
   const [rates, setRates] = useState(cachedRates)   // seed từ cache → không "..." khi chuyển màn
 
   useEffect(() => {
-    getDisplayRates().then(setRates).catch(() => setRates(r => r || { USDC: 1, EURC: 1.08, CNY: 0.14, VND: 0.0000395 }))
+    getDisplayRates().then(setRates).catch(() => setRates(r => r || { USDC: 1, EURC: 1.08 }))
   }, [])
 
   const num = (loading || !rates) ? '...' : displayNum(totalUsd, cur, rates)
@@ -18,7 +18,7 @@ export default function BalanceHeader({ totalUsd, loading }) {
   return (
     <div className="row-1-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       {/* Ký hiệu tiền tệ = TIỀN TỐ dính liền số (vd "$127.66") — cả cụm căn giữa như 1 khối, không tách suffix riêng */}
-      <span style={{ fontFamily: 'var(--font-condensed)', fontSize: amountFontSize(sign + num, 52, 9), fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', lineHeight: 1, whiteSpace: 'nowrap' }}>
+      <span style={{ fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', lineHeight: 1 }}>
         {sign}{num}
       </span>
     </div>

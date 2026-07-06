@@ -235,10 +235,10 @@ function detect() {
   return 'en'
 }
 
-// Đọc lựa chọn ngôn ngữ user (mặc định English). Đổi qua setLang() → lưu + reload.
-// ⚠️ Modal PIN/xác nhận của Circle LUÔN tiếng Anh (không đổi được); chuỗi mới hardcode English
-// nên VI/ZH còn lẫn Anh ở vài chỗ — cần dịch bổ sung nếu muốn full.
-let LANG = localStorage.getItem('ez_lang') || 'en'
+// KHÓA English (user chốt): Circle SDK chỉ tiếng Anh + nhiều chuỗi mới hardcode English → giữ 'en'
+// cho đồng nhất. Language screen có hiện option Việt/Trung nhưng KHOÁ (không click). Hạ tầng VI/ZH
+// + setLang() còn nguyên — mở lại chỉ cần cho LANG đọc localStorage + bỏ khoá 2 option đó.
+let LANG = 'en'
 
 export function getLang() { return LANG }
 export function setLang(l) { localStorage.setItem('ez_lang', l); window.location.reload() }
