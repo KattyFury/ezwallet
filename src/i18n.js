@@ -235,7 +235,10 @@ function detect() {
   return 'en'
 }
 
-let LANG = 'en'
+// Đọc lựa chọn ngôn ngữ user (mặc định English). Đổi qua setLang() → lưu + reload.
+// ⚠️ Modal PIN/xác nhận của Circle LUÔN tiếng Anh (không đổi được); chuỗi mới hardcode English
+// nên VI/ZH còn lẫn Anh ở vài chỗ — cần dịch bổ sung nếu muốn full.
+let LANG = localStorage.getItem('ez_lang') || 'en'
 
 export function getLang() { return LANG }
 export function setLang(l) { localStorage.setItem('ez_lang', l); window.location.reload() }

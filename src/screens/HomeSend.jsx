@@ -67,7 +67,7 @@ export default function HomeSend() {
         .catch(console.error)
         .finally(() => setLoading(false))
     })
-    getDisplayRates().then(setRates).catch(() => setRates(r => r || { USDC: 1, EURC: 1.08 }))
+    getDisplayRates().then(setRates).catch(() => setRates(r => r || { USDC: 1, EURC: 1.08, CNY: 0.14, VND: 0.0000395 }))
   }, [])
 
   const totalUsd = tokens.reduce((s, t) => s + t.usd, 0)

@@ -96,7 +96,7 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, on
           {!isSwap && !name && counter && (
             <span onClick={e => { e.stopPropagation(); onAdd(counter) }}
               style={{ flexShrink: 0, fontSize: 'var(--fs-tiny)', fontWeight: 'var(--fw-medium)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)', borderRadius: 6, padding: '1px 8px', whiteSpace: 'nowrap' }}>
-              + Add
+              Add to Contacts
             </span>
           )}
         </div>
@@ -142,7 +142,7 @@ export default function TxHistory() {
   const [copied, setCopied] = useState(false)
   const cur = getDisplayCurrency()
   const [rates, setRates] = useState(null)  // tỷ giá USD→tiền hiển thị (fetch), null khi chưa xong
-  useEffect(() => { getDisplayRates().then(setRates).catch(() => setRates({ USDC: 1, EURC: 1.08 })) }, [])
+  useEffect(() => { getDisplayRates().then(setRates).catch(() => setRates({ USDC: 1, EURC: 1.08, CNY: 0.14, VND: 0.0000395 })) }, [])
 
   function copyCounter(addr) {
     navigator.clipboard.writeText(addr)
@@ -208,7 +208,11 @@ export default function TxHistory() {
         {t('Lịch sử giao dịch')}
       </div>
 
-      <div className="row-2-8 scroll-thin" style={{ display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start' }}>
+      <div className="row-2-8 scroll-thin" style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start',
+        WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
+        maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
+      }}>
         {loading ? (
           <div style={{ width: '100%', textAlign: 'center', paddingTop: 40, color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>{t('Đang tải...')}</div>
         ) : filtered.length === 0 ? (

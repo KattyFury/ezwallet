@@ -30,7 +30,9 @@ export function floorTo(n, dec) {
 // Người già biết $/€ chứ không biết USDC/EURC → chỉ đổi CHỮ HIỂN THỊ (tiền tố, vd "$127.66");
 // chain/API/lưu trữ vẫn dùng symbol thật (USDC/EURC). CHỈ dùng cho TIỀN HIỂN THỊ (tổng, quy
 // đổi, phí) — KHÔNG áp cho tên token thật (USDC/EURC/cirBTC vẫn hiện nguyên trong danh sách token).
-const CURRENCY_LABEL = { USDC: '$', EURC: '€' }
+// Ký hiệu tiền hiển thị: USDC→$, EURC→€, thêm CNY→¥, VND→₫ (2 cái sau là tiền pháp định quy đổi,
+// KHÔNG phải token — chỉ đổi CÁCH HIỂN THỊ số dư/quy đổi qua tỷ giá; chain vẫn giữ USDC/EURC).
+const CURRENCY_LABEL = { USDC: '$', EURC: '€', CNY: '¥', VND: '₫' }
 export function displaySymbol(sym) { return CURRENCY_LABEL[sym] || sym }
 
 // Format tiền MỘT CHUỖI MỘT STYLE: "$2" (không phải "2 USD" tách số đậm + đơn vị thường —
@@ -44,7 +46,7 @@ export function fmtMoney(amount, currency) {
 
 // Tiền tệ hiển thị toàn app (số dư, quy đổi, phí) — anh chọn ở Onboarding/Cài đặt.
 // Hiện chỉ hỗ trợ stablecoin USDC/EURC (mặc định USDC). Giá trị cũ (VND/CNY) tự quy về USDC.
-const SUPPORTED_CURRENCIES = ['USDC', 'EURC']
+const SUPPORTED_CURRENCIES = ['USDC', 'EURC', 'CNY', 'VND']
 export function getDisplayCurrency() {
   const c = localStorage.getItem('ez_currency')
   return SUPPORTED_CURRENCIES.includes(c) ? c : 'USDC'
@@ -55,5 +57,6 @@ export function getDisplayCurrency() {
 // Quy ra tiền hiển thị = usd / rate[cur]: cur=USDC → chính usd ($); cur=EURC → usd/1.08 (€). Stablecoin ra ĐÚNG 1:1.
 export function displayNum(usd, cur, rates) {
   const rate = (rates && rates[cur]) || 1
-  return ((usd || 0) / rate).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const dec = cur === 'VND' ? 0 : 2   // VND không có phần lẻ; còn lại 2 số thập phân
+  return ((usd || 0) / rate).toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec })
 }

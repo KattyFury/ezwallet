@@ -91,12 +91,27 @@ export async function getUsdRate(symbol = 'USDC') {
   return prices[symbol] ?? token?.usdRate ?? 1
 }
 
-// Tỷ giá cho tiền tệ hiển thị: USD mỗi 1 đơn vị {USDC:1, EURC:~1.08, cirBTC:~giá BTC}.
+// Tỷ giá pháp định CNY/VND = USD mỗi 1 đơn vị (để displayNum quy usd/rate ra số CNY/VND).
+// CoinGecko trả giá 1 USDC theo cny/vnd (= bao nhiêu CNY/VND đổi 1 USD, vì USDC≈$1) → nghịch đảo.
+// Fallback offline khi API lỗi: 1 CNY≈$0.14, 1 VND≈$0.0000395.
+async function fetchFiatRates() {
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=usd-coin&vs_currencies=cny,vnd')
+    const d = await res.json()
+    const cnyPerUsd = d['usd-coin']?.cny, vndPerUsd = d['usd-coin']?.vnd
+    return {
+      CNY: cnyPerUsd ? 1 / cnyPerUsd : 0.14,
+      VND: vndPerUsd ? 1 / vndPerUsd : 0.0000395,
+    }
+  } catch { return { CNY: 0.14, VND: 0.0000395 } }
+}
+
+// Tỷ giá cho tiền tệ hiển thị: USD mỗi 1 đơn vị {USDC:1, EURC:~1.08, cirBTC:~giá BTC, CNY, VND}.
 // USDC ghim 1 → stablecoin hiện đúng 1:1 (5 USDC = $5.00). cirBTC để TxHistory quy đổi giao dịch
-// cirBTC dùng CHUNG 1 nguồn tỷ giá với cột hiển thị (tránh lệch nguồn).
+// cirBTC dùng CHUNG 1 nguồn tỷ giá với cột hiển thị (tránh lệch nguồn). CNY/VND cho tiền hiển thị.
 export async function getDisplayRates() {
-  const [u, e, b] = await Promise.all([getUsdRate('USDC'), getUsdRate('EURC'), getUsdRate('cirBTC')])
-  _ratesCache = { USDC: u, EURC: e, cirBTC: b }   // cache cho lần mount sau
+  const [u, e, b, fiat] = await Promise.all([getUsdRate('USDC'), getUsdRate('EURC'), getUsdRate('cirBTC'), fetchFiatRates()])
+  _ratesCache = { USDC: u, EURC: e, cirBTC: b, CNY: fiat.CNY, VND: fiat.VND }   // cache cho lần mount sau
   return _ratesCache
 }
 

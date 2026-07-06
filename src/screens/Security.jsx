@@ -65,11 +65,6 @@ export default function Security() {
           ? <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-primary)' }}>{pinStatus}</span>
           : <Icon name="right2" size={15} color="var(--color-faint)" />}
       </button>
-      {/* Phương thức khôi phục CHƯA build → làm mờ, không bấm được */}
-      <div className="menu-item" style={{ gridRow: 5, opacity: 0.4, cursor: 'not-allowed' }}>
-        <span style={LABEL}>{t('Phương thức khôi phục')}</span>
-        <span style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)' }}>Coming soon</span>
-      </div>
 
       <div className="row-10 row10-single">
         <button className="btn btn-primary" onClick={() => navigate('MenuScreen')}>{t('Quay lại')}</button>
