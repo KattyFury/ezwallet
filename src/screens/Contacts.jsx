@@ -6,13 +6,6 @@ import { loadContacts, saveContacts } from '../store'
 
 function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
 
-function avatar(name) {
-  const c = name?.trim()[0]?.toUpperCase() || '?'
-  const colors = ['var(--color-primary)', '#2775CA', '#F7931A', '#1A56DB', 'var(--color-error)']
-  const i = name.charCodeAt(0) % colors.length
-  return { letter: c, color: colors[i] }
-}
-
 const V = 220 // viewport ảnh tròn
 
 // Cắt ảnh tròn: zoom bằng slider, di chuyển bằng kéo
@@ -147,15 +140,16 @@ export default function Contacts() {
           <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{t('Chưa có danh bạ')}</span>
         ) : (
           contacts.map(c => {
-            const av = avatar(c.name)
             return (
               <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '14px 0' }}>
                 {c.avatar ? (
                   <img src={c.avatar} alt="" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                 ) : (
-                  <div style={{ width: 52, height: 52, borderRadius: '50%', background: av.color, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 700, fontSize: 22, flexShrink: 0 }}>
-                    {av.letter}
-                  </div>
+                  // Chưa có ảnh → vòng xám + dấu "+" trắng, bấm vào để thêm avatar
+                  <button onClick={() => openEdit(c)}
+                    style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--color-gray)', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon name="add" size={24} color="var(--color-white)" />
+                  </button>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 20, fontWeight: 'var(--fw-medium)' }}>{c.name}</div>

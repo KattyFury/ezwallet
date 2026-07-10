@@ -38,11 +38,11 @@ function DateHeader({ date, first }) {
   )
 }
 
-// Style nút lọc đang bật: nền trắng + viền xanh + chữ xanh (không tô đặc)
+// Style nút lọc đang bật: nền trắng + viền xanh thương hiệu + chữ xanh thương hiệu (không tô đặc)
 const activeFilter = {
-  borderColor: 'var(--color-primary)',
-  color: 'var(--color-primary)',
-  WebkitTextFillColor: 'var(--color-primary)',
+  borderColor: 'var(--color-brand)',
+  color: 'var(--color-brand)',
+  WebkitTextFillColor: 'var(--color-brand)',
 }
 
 // Tính thông tin chung của 1 giao dịch. vnd quy từ CÙNG NGUỒN rates với cột hiển thị
@@ -95,7 +95,7 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, on
           </span>
           {!isSwap && !name && counter && (
             <span onClick={e => { e.stopPropagation(); onAdd(counter) }}
-              style={{ flexShrink: 0, fontSize: 'var(--fs-tiny)', fontWeight: 'var(--fw-medium)', color: 'var(--color-primary)', border: '1px solid var(--color-primary)', borderRadius: 6, padding: '1px 8px', whiteSpace: 'nowrap' }}>
+              style={{ flexShrink: 0, fontSize: 'var(--fs-tiny)', fontWeight: 'var(--fw-medium)', color: 'var(--color-brand)', border: '1px solid var(--color-brand)', borderRadius: 6, padding: '1px 8px', whiteSpace: 'nowrap' }}>
               Add to Contacts
             </span>
           )}

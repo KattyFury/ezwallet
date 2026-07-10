@@ -114,7 +114,7 @@ export default function SendConfirm() {
           )}
           <div className="confirm-row">
             <span className="confirm-label">{t('Số tiền')}</span>
-            <span className="confirm-value num" style={{ fontWeight: 'var(--fw-bold)', color: 'var(--color-primary)' }}>
+            <span className="confirm-value num" style={{ fontWeight: 'var(--fw-bold)', color: 'var(--color-brand)' }}>
               {mainEl}
             </span>
           </div>

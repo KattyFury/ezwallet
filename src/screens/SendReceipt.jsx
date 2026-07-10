@@ -7,13 +7,9 @@ import { saveImageToPhotos } from '../saveImage'
 import logoLong from '../../design/logo.svg'
 import { t } from '../i18n'
 
-// Vòng tròn xanh + check.svg trắng (dùng chung icon hệ thống, không vẽ path riêng)
+// Icon check XANH LÁ to (thành công) — check.svg đã gồm vòng tròn viền + dấu check
 function CheckIcon() {
-  return (
-    <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--color-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <Icon name="check" size={34} color="var(--color-white)" />
-    </div>
-  )
+  return <Icon name="check" size={76} color="var(--color-primary)" />
 }
 
 function shortenAddr(addr) {
@@ -50,13 +46,13 @@ export default function SendReceipt() {
     cv.width = W; cv.height = H
     const x = cv.getContext('2d')
     x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, W, H)
-    // check tròn xanh lá (thành công)
-    x.fillStyle = '#16A34A'; x.beginPath(); x.arc(W / 2, 90, 40, 0, Math.PI * 2); x.fill()
-    x.strokeStyle = '#FFFFFF'; x.lineWidth = 7; x.lineCap = 'round'; x.lineJoin = 'round'
-    x.beginPath(); x.moveTo(W / 2 - 18, 90); x.lineTo(W / 2 - 5, 104); x.lineTo(W / 2 + 20, 76); x.stroke()
+    // Icon check XANH LÁ to (vòng tròn viền + dấu check, cùng kiểu check.svg) — thành công
+    x.strokeStyle = '#16A34A'; x.lineWidth = 8; x.lineCap = 'round'; x.lineJoin = 'round'
+    x.beginPath(); x.arc(W / 2, 90, 44, 0, Math.PI * 2); x.stroke()
+    x.beginPath(); x.moveTo(W / 2 - 20, 90); x.lineTo(W / 2 - 6, 105); x.lineTo(W / 2 + 22, 73); x.stroke()
     x.textAlign = 'center'
-    x.fillStyle = '#000000'; x.font = '600 32px sans-serif'; x.fillText(t('Đã gửi thành công'), W / 2, 175)
-    x.fillStyle = '#16A34A'; x.font = '700 52px sans-serif'; x.fillText(amountText, W / 2, 240)
+    x.fillStyle = '#000000'; x.font = '600 32px sans-serif'; x.fillText(t('Đã gửi thành công'), W / 2, 180)
+    x.fillStyle = '#0B53BF'; x.font = '700 52px sans-serif'; x.fillText(amountText, W / 2, 245)
     // các dòng
     let yy = 320
     const row = (label, val) => {
@@ -70,7 +66,7 @@ export default function SendReceipt() {
     if (memo) row(t('Nội dung'), memo)
     row(t('Thời gian'), fmtTime(timestamp))
     // Logo EZwallet (branding chuẩn — design/logo.svg, EZ xanh thương hiệu + wallet đen) ở đáy
-    const lw = 168, lh = lw * 144 / 463
+    const lw = 168, lh = lw * 85 / 342   // tỉ lệ theo logo.svg mới (viewBox 342×85)
     const img = new Image()
     img.src = logoLong
     try { await img.decode() } catch {}
@@ -88,7 +84,7 @@ export default function SendReceipt() {
         <CheckIcon />
         <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>{t('Đã gửi thành công')}</span>
         {/* MỘT span, MỘT font/size/weight — "$2" liền khối */}
-        <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-primary)' }}>
+        <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
           {amountText}
         </span>
         <div className="confirm-box" style={{ width: '100%' }}>
