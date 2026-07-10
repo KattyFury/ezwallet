@@ -1,9 +1,8 @@
 ﻿/* ══════════════════════════════════════════════════════════
    DESIGN TOKENS (2026-06-28).
-   FONT (khóa, 2026-07-03): IBM Plex Sans = NỘI DUNG cho người đọc (mô tả, hint, thông báo,
-   menu, input). Barlow (họ Barlow) CHỈ dùng cho: số, ký hiệu tiền tệ (USD/USDC/EURC/cirBTC),
-   tiêu đề chính màn (vd "Send money"), và BUTTON. Titles = Barlow Condensed; số/tiền tệ/button
-   = Barlow thường (biến --font-condensed, tên cũ nhưng giá trị đã đổi sang non-condensed).
+   FONT (khóa, 2026-07-10): chỉ còn 2 font. Barlow = THƯƠNG HIỆU (logo, tiêu đề chính màn,
+   số, ký hiệu tiền tệ USD/USDC/EURC/cirBTC, BUTTON). IBM Plex Sans = NỘI DUNG cho người đọc
+   (mô tả, hint, thông báo, menu, input). ĐÃ BỎ Barlow Condensed — mọi biến Barlow dùng Barlow thường.
    MÀU (khóa): 4 tầng chữ + màu chức năng dưới đây.
    CỠ CHỮ: ĐÃ MỞ KHÓA — scale dưới là gợi ý, được phép tùy chỉnh px theo từng chỗ.
    ══════════════════════════════════════════════════════════ */
@@ -15,10 +14,11 @@
   --color-faint:      #E5E5EA;   /* icon ẩn / chevron / placeholder (xám nhạt) */
 
   /* ── MÀU CHỨC NĂNG ── */
-  --color-primary:      #16A34A; /* màu chủ đạo, active, NHẬN tiền */
+  --color-primary:      #16A34A; /* xanh lá — active, NHẬN tiền / tích cực */
   --color-primary-soft: #DCFCE7; /* nền nhạt xanh lá (chọn / nhận) */
-  --color-info:         #2563EB; /* xanh dương — GỬI tiền (thông báo) */
-  --color-info-soft:    #DBEAFE; /* nền nhạt xanh dương */
+  --color-info:         #0B53BF; /* xanh THƯƠNG HIỆU — GỬI tiền (thông báo) */
+  --color-info-soft:    #E2EAF7; /* nền nhạt xanh thương hiệu */
+  --color-brand:        #0B53BF; /* MÀU THƯƠNG HIỆU — nút CTA (btn-primary, action-card primary) */
   --color-error:        #DC2626; /* đỏ — lỗi / xóa bỏ */
   --color-error-soft:   #FEE2E2; /* nền nhạt đỏ */
   --color-warning:      #F59E0B; /* vàng cảnh báo */
@@ -28,9 +28,9 @@
 
   /* ── FONT ── */
   --font-base:      'IBM Plex Sans', sans-serif;       /* NỘI DUNG cho người đọc: menu, mô tả, hint, thông báo, input, memo */
-  --font-display:   'Barlow Condensed', sans-serif;    /* logo, TIÊU ĐỀ chính màn (vd "Send money") */
-  --font-title:     'Barlow Condensed', sans-serif;    /* alias → display (tiêu đề) */
-  --font-condensed: 'Barlow', sans-serif;              /* TÊN CŨ, giá trị đã đổi: Barlow (regular, KHÔNG condensed) — số, ký hiệu tiền tệ (USD/USDC/EURC/cirBTC), BUTTON */
+  --font-display:   'Barlow', sans-serif;              /* THƯƠNG HIỆU: logo, TIÊU ĐỀ chính màn (vd "Send money") */
+  --font-title:     'Barlow', sans-serif;              /* alias → display (tiêu đề) */
+  --font-condensed: 'Barlow', sans-serif;              /* TÊN CŨ (bỏ Barlow Condensed): Barlow thường — số, ký hiệu tiền tệ (USD/USDC/EURC/cirBTC), BUTTON */
 
   /* ── CỠ CHỮ (scale gợi ý — đã mở khóa, tùy chỉnh được) ── */
   --fs-amount:   52px;   /* Barlow display — số tiền lớn */
@@ -157,7 +157,7 @@ body {
 .text-success   { color: var(--color-primary); }
 
 /* ── Buttons ── */
-.screen-title { font-family: var(--font-display); color: var(--color-black); }   /* tiêu đề màn = Barlow Condensed, BLACK */
+.screen-title { font-family: var(--font-display); color: var(--color-black); }   /* tiêu đề màn = Barlow, BLACK */
 
 /* Mọi số & ký hiệu tiền tệ ($/USDC/EURC/cirBTC) → Barlow (--font-condensed, regular) */
 .num { font-family: var(--font-condensed); }
@@ -181,7 +181,7 @@ body {
 .btn:disabled { opacity: 0.4; cursor: default; }
 
 .btn-primary {
-  background: var(--color-primary);
+  background: var(--color-brand);
   color: var(--color-white);
 }
 
@@ -326,7 +326,7 @@ body {
   border-radius: 12px;
 }
 
-.option-row.selected { border-color: var(--color-primary); }
+.option-row.selected { border-color: var(--color-brand); }
 .option-row.disabled { opacity: 0.4; }
 
 .option-radio {
@@ -340,14 +340,14 @@ body {
   justify-content: center;
 }
 
-.option-radio.selected { border-color: var(--color-primary); }
+.option-radio.selected { border-color: var(--color-brand); }
 
 .option-radio.selected::after {
   content: '';
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  background: var(--color-primary);
+  background: var(--color-brand);
 }
 
 /* ── Additional row spans ── */
@@ -450,8 +450,8 @@ body {
 }
 
 .action-card.primary {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
+  background: var(--color-brand);
+  border-color: var(--color-brand);
   color: var(--color-white);
 }
 

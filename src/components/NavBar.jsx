@@ -22,7 +22,7 @@ export default function NavBar({ active }) {
           style={{ position: 'relative', ...(tab.disabled ? { opacity: 0.4, cursor: 'not-allowed' } : {}) }}
         >
           {active === tab.id && (
-            <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '70%', height: 5, borderRadius: '0 0 5px 5px', background: 'var(--color-primary)' }} />
+            <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '70%', height: 5, borderRadius: '0 0 5px 5px', background: 'var(--color-brand)' }} />
           )}
           <Icon name={tab.icon} size={20} color={active === tab.id ? 'var(--color-black)' : 'var(--color-muted)'} style={{ marginBottom: 2 }} />
           {t(tab.label)}

@@ -168,7 +168,7 @@ export default function Swap() {
               <div style={{ display: 'flex', gap: 6 }}>
                 {[['50%', 0.5], ['100%', 1]].map(([label, pct]) => (
                   <button key={label} onClick={() => setInput(String(floorTo(available * pct, decimalsFor(fromSym))))}
-                    style={{ border: '1.5px solid var(--color-primary)', color: 'var(--color-primary)', background: 'var(--color-white)', borderRadius: 8, padding: '3px 12px', fontSize: 'var(--fs-label)', fontFamily: 'inherit', cursor: 'pointer' }}>
+                    style={{ border: '1.5px solid var(--color-brand)', color: 'var(--color-brand)', background: 'var(--color-white)', borderRadius: 8, padding: '3px 12px', fontSize: 'var(--fs-label)', fontFamily: 'inherit', cursor: 'pointer' }}>
                     {label}
                   </button>
                 ))}

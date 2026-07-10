@@ -50,7 +50,7 @@ export default function SendReceipt() {
     cv.width = W; cv.height = H
     const x = cv.getContext('2d')
     x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, W, H)
-    // check tròn xanh
+    // check tròn xanh lá (thành công)
     x.fillStyle = '#16A34A'; x.beginPath(); x.arc(W / 2, 90, 40, 0, Math.PI * 2); x.fill()
     x.strokeStyle = '#FFFFFF'; x.lineWidth = 7; x.lineCap = 'round'; x.lineJoin = 'round'
     x.beginPath(); x.moveTo(W / 2 - 18, 90); x.lineTo(W / 2 - 5, 104); x.lineTo(W / 2 + 20, 76); x.stroke()
@@ -69,7 +69,7 @@ export default function SendReceipt() {
     row('Amount', realAmountText)
     if (memo) row(t('Nội dung'), memo)
     row(t('Thời gian'), fmtTime(timestamp))
-    // Logo EZwallet (branding chuẩn — design/logo.svg, EZ đen + wallet xanh) ở đáy
+    // Logo EZwallet (branding chuẩn — design/logo.svg, EZ xanh thương hiệu + wallet đen) ở đáy
     const lw = 168, lh = lw * 144 / 463
     const img = new Image()
     img.src = logoLong
