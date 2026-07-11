@@ -3,7 +3,10 @@
 > **Dành cho:** một phiên Claude tập trung vào **thiết kế UI/UX**.
 > **Mục tiêu của file này:** đưa cho bạn đủ bối cảnh để đề xuất / dựng lại giao diện EZwallet cho đẹp, nhất quán, và **đúng đối tượng người dùng** — mà không cần đụng tới code blockchain.
 >
-> Bạn **được phép redesign**. (Trong repo có ghi chú cũ "user tự làm UI" — bỏ qua, giờ chủ dự án chủ động nhờ bạn thiết kế.)
+> Bạn **được phép redesign phần NHÌN**. (Trong repo có ghi chú cũ "user tự làm UI" — bỏ qua, giờ chủ dự án chủ động nhờ bạn thiết kế.)
+
+> ⚠️ **PHẠM VI (chủ dự án chốt): CHỈ nâng cấp GIAO DIỆN / thẩm mỹ. Nút bấm đã ưng, GIỮ NGUYÊN.**
+> Nghĩa là: **giữ nguyên** vị trí, số lượng, hành vi, và luồng bấm của các nút — người dùng (người già) đã quen. Việc của bạn là làm cho app **đẹp hơn, sạch hơn, sang hơn**: màu, khoảng cách, bo góc, đổ bóng, kiểu chữ, chất liệu tile/card, icon, tổng thể "chất liệu" hình ảnh. **Đừng** đổi chỗ nút, gộp/tách bước, hay đổi cách tương tác.
 
 ---
 
@@ -144,10 +147,10 @@ Nhóm theo luồng. (Tên file React trong `src/screens/` để bạn đối chi
 
 ## 8. Mình mong nhận được gì từ bạn (gợi ý — chủ dự án sẽ chốt)
 
-Bạn có thể đề xuất một trong các dạng sau (hỏi lại chủ dự án nếu chưa rõ họ muốn mức nào):
-1. **Mockup HTML tương tác** một hoặc nhiều màn (dạng artifact xem trên điện thoại) để chốt hướng thẩm mỹ trước.
-2. **Đề xuất tinh chỉnh hệ thiết kế** (màu/chữ/khoảng cách/thành phần) kèm lý do, đặc biệt hướng "sạch như Coinbase, dễ cho người già".
-3. **Redesign từng màn** theo thứ tự ưu tiên: **HomeSend → SendAmount → SendReceipt → Swap** (4 màn người dùng gặp nhiều nhất).
+Nhớ phạm vi ở đầu file: **chỉ nâng cấp phần nhìn, giữ nguyên nút bấm & luồng.** Bạn có thể đề xuất:
+1. **Mockup HTML tương tác** một hoặc nhiều màn (dạng artifact xem trên điện thoại) để chốt hướng thẩm mỹ trước — cùng bố cục/nút hiện tại, chỉ khác lớp áo hình ảnh.
+2. **Đề xuất tinh chỉnh hệ thiết kế** (bảng màu/chữ/khoảng cách/bo góc/đổ bóng/chất liệu tile) kèm lý do, hướng "sạch như Coinbase, dễ cho người già".
+3. **Làm mới thẩm mỹ từng màn** theo thứ tự ưu tiên: **HomeSend → SendAmount → SendReceipt → Swap** (4 màn gặp nhiều nhất) — nút giữ nguyên chỗ, chỉ lên đời phần nhìn.
 
 Ưu tiên hàng đầu khi cân nhắc mọi quyết định: **người già không rành công nghệ vẫn tự gửi được tiền mà không hoảng.** Đẹp phục vụ mục tiêu đó, không phải ngược lại.
 
