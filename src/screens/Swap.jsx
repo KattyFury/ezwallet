@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import NavBar from '../components/NavBar'
 import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
-import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession } from '../circle'
+import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress } from '../circle'
 import { getTokenBalances } from '../chain'
 import { spendableOf, amountFontSize, floorTo } from '../data'
 import { addNotif } from '../notif'
@@ -60,16 +60,23 @@ export default function Swap() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [status, setStatus] = useState('')
+  const [success, setSuccess] = useState(false)   // true = vừa swap xong → nút xanh lá báo thành công
   const [picker, setPicker] = useState(null)
   const debounceRef = useRef(null)
 
-  const walletAddress = localStorage.getItem('ez_wallet_addr')
+  // Địa chỉ ví AN TOÀN: seed nhanh từ localStorage, tự khôi phục từ Circle nếu thiếu (giống HomeSend).
+  // Đọc thẳng localStorage như trước → trên PWA mobile ez_wallet_addr có thể vắng → balances rỗng →
+  // overBalance luôn true → nút Swap không sáng.
+  const [walletAddress, setWalletAddress] = useState(() => localStorage.getItem('ez_wallet_addr'))
+  useEffect(() => { if (!walletAddress) ensureWalletAddress().then(a => a && setWalletAddress(a)).catch(() => {}) }, [])
   const walletId = localStorage.getItem('ez_wallet_id')
   const amountNum = parseFloat(input || '0')
   // Khả dụng: USDC chừa lại 1 làm phí mạng (gas Arc = USDC) — không cho swap hết
+  const hasBal = balances[fromSym] !== undefined
   const available = spendableOf(fromSym, balances[fromSym])
-  // +1e-9: bỏ qua sai số dấu phẩy động khi nhập/floor đúng bằng số dư (kẻo "max" bị coi là vượt)
-  const overBalance = amountNum > available + 1e-9
+  // +1e-9: bỏ qua sai số dấu phẩy động khi nhập/floor đúng bằng số dư (kẻo "max" bị coi là vượt).
+  // CHỈ chặn khi ĐÃ BIẾT số dư — chưa tải xong thì đừng khoá nút.
+  const overBalance = hasBal && amountNum > available + 1e-9
   const canSwap = SWAP_ENABLED && amountNum > 0 && !overBalance && !loading
 
   function loadBalances() {
@@ -97,6 +104,7 @@ export default function Swap() {
   }, [input, fromSym, toSym])
 
   function handleKey(key) {
+    if (success) { setSuccess(false); setStatus('') }   // gõ số mới → bỏ trạng thái thành công cũ
     if (key === 'BACK') { setInput(d => d.slice(0, -1)); return }
     if (key === '.') { setInput(d => (d.includes('.') ? d : (d === '' ? '0.' : d + '.'))); return }
     if (input.length >= 12) return
@@ -113,7 +121,8 @@ export default function Swap() {
   }
 
   async function handleSwap() {
-    setLoading(true); setError(''); setStatus('Preparing…')
+    setLoading(true); setError(''); setSuccess(false); setStatus('Preparing…')
+    const beforeOut = balances[toSym] || 0   // số dư token NHẬN trước swap → để xác nhận on-chain
     try {
       // Token 60' có thể đã hết hạn giữa phiên → làm mới TRƯỚC khi tạo challenge cần PIN
       const { userToken, encryptionKey } = await refreshSession()
@@ -121,17 +130,33 @@ export default function Swap() {
       if (res.error) throw new Error(res.error)
       setStatus('Enter PIN…')
       await executeChallenge(getSDK(), userToken, encryptionKey, res.challengeId)
+
+      // ✅ TRẠNG THÁI 1 — PIN đã ký, lệnh swap ĐÃ GỬI lên Arc ("đề nghị thành công")
       const outTxt = res.amountOut ? ` to ~${parseFloat(res.amountOut).toFixed(decimalsFor(toSym))} ${toSym}` : ` to ${toSym}`
-      const msg = `Swapped ${amountNum} ${fromSym}${outTxt}`
-      addNotif(msg, 'sent', null, `swap-${Date.now()}`)   // hiện ở NotifArea (HomeSend/HomeReceive)
-      setStatus('Submitted')
+      addNotif(`Swapped ${amountNum} ${fromSym}${outTxt}`, 'sent', null, `swap-${Date.now()}`)   // NotifArea (Home)
       setInput(''); setEstAmt(null)
-      setTimeout(() => { loadBalances(); setStatus('') }, 4000)
+      setSuccess(true); setStatus('Swap submitted')
+      setLoading(false)
+
+      // ✅ TRẠNG THÁI 2 — xác nhận ON-CHAIN (Arc finality <1s, chừa độ trễ RPC): poll tới khi số dư
+      // token NHẬN tăng thì đổi nút thành "Swap successful". Nếu chưa kịp thấy tăng → giữ "Swap submitted".
+      let confirmed = false
+      for (let i = 0; i < 6 && !confirmed; i++) {
+        await new Promise(r => setTimeout(r, 1500))
+        try {
+          const ts = await getTokenBalances(walletAddress)
+          const map = {}; ts.forEach(tk => { map[tk.symbol] = tk.amount }); setBalances(map)
+          if ((ts.find(t => t.symbol === toSym)?.amount || 0) > beforeOut + 1e-9) confirmed = true
+        } catch {}
+      }
+      setStatus(confirmed ? 'Swap successful' : 'Swap submitted')
+      setTimeout(() => { setSuccess(false); setStatus('') }, 3500)   // tự ẩn, về lại nút "Swap"
     } catch (e) {
-      if (e?.code === 155701) { setStatus(''); setLoading(false); return }  // user tự hủy PIN → im lặng
+      setLoading(false)
+      if (e?.code === 155701) { setStatus(''); return }  // user tự hủy PIN → im lặng
       const msg = e?.message || e?.error?.message || (typeof e === 'string' ? e : 'Swap failed')
       setError(msg); setStatus('')
-    } finally { setLoading(false) }
+    }
   }
 
   const CARD = { border: '1.5px solid var(--color-gray)', borderRadius: 16, background: 'var(--color-white)', padding: '20px 18px' }
@@ -201,9 +226,17 @@ export default function Swap() {
           position:absolute thay vì gridRow — tránh grid item đè hitbox lên numpad bên dưới. */}
       <div style={{ position: 'absolute', left: 20, right: 20, top: 'calc(50dvh - 3dvh)', zIndex: 2, display: 'flex', justifyContent: 'center' }}>
         <button className={`btn ${error ? 'btn-secondary' : 'btn-primary'}`}
-          style={{ width: '66.67%', overflow: 'hidden', ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null) }}
+          style={{
+            width: '66.67%', overflow: 'hidden',
+            ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
+            // Thành công = nút XANH LÁ (màu ngữ nghĩa success của app), ép opacity 1 để không bị mờ dù disabled
+            ...(success ? { background: 'var(--color-primary)', color: 'var(--color-white)', opacity: 1 } : null),
+          }}
           disabled={!canSwap && !error} onClick={handleSwap}>
-          <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{error || status || 'Swap'}</span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+            {success && <Icon name="check" size={18} color="var(--color-white)" />}
+            {error || status || 'Swap'}
+          </span>
         </button>
       </div>
 

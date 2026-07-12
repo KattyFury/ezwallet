@@ -4,6 +4,7 @@ import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
 import ErrorToast from '../components/ErrorToast'
 import { getTokenInfo } from '../chain'
+import { ensureWalletAddress } from '../circle'
 import { t } from '../i18n'
 import { findContactName } from '../store'
 import { displaySymbol, spendableOf, amountFontSize } from '../data'
@@ -28,20 +29,27 @@ export default function SendAmount() {
   const [memo, setMemo] = useState(params.memo || '')
   const [showCur, setShowCur] = useState(false)
   const [availableAmt, setAvailableAmt] = useState(null) // số dư của TOKEN đang chọn (đơn vị token thật)
+  const [walletAddr, setWalletAddr] = useState(null)
+
+  // Địa chỉ ví AN TOÀN: ensureWalletAddress tự khôi phục từ Circle nếu localStorage thiếu — giống
+  // HomeSend. TRƯỚC đây đọc thẳng localStorage: trên PWA mobile (lưu màn hình chính) ez_wallet_addr
+  // có thể vắng → availableAmt=0 → nút "Tiếp tục" KHÔNG BAO GIỜ SÁNG dù có tiền. (PC có key nên OK.)
+  useEffect(() => { ensureWalletAddress().then(a => setWalletAddr(a || null)).catch(() => setWalletAddr(null)) }, [])
 
   // Số dư khả dụng: theo ĐÚNG token đang chọn (USD/USDC → USDC; EURC → EURC; cirBTC → cirBTC)
   useEffect(() => {
-    const addr = localStorage.getItem('ez_wallet_addr')
+    if (!walletAddr) { setAvailableAmt(null); return }   // chưa có địa chỉ → coi như đang tải (null), ĐỪNG ép 0
     const tok = effectiveToken(cur)
-    if (!addr) { setAvailableAmt(0); return }
     setAvailableAmt(null)
     // spendableOf: USDC chừa lại 1 làm phí mạng (gas Arc trả bằng USDC) — khách không gửi hết được
-    getTokenInfo(addr, tok).then(i => setAvailableAmt(spendableOf(tok, i.balance))).catch(() => setAvailableAmt(0))
-  }, [cur])
+    getTokenInfo(walletAddr, tok).then(i => setAvailableAmt(spendableOf(tok, i.balance))).catch(() => setAvailableAmt(0))
+  }, [cur, walletAddr])
 
   const amount = parseFloat(digits || '0')
   const overBalance = availableAmt !== null && amount > availableAmt
-  const canContinue = amount > 0 && !overBalance && availableAmt !== null
+  // Nút sáng ngay khi có số tiền hợp lệ; CHỈ chặn khi biết CHẮC vượt số dư. Không khoá nút chỉ vì số
+  // dư chưa tải xong (trước đây đòi availableAmt!==null làm nút "chết" khi số dư/địa chỉ chưa về kịp).
+  const canContinue = amount > 0 && !overBalance
   const decimalsFor = c => (effectiveToken(c) === 'cirBTC' ? 8 : 2)
   const availableStr = `${availableAmt !== null ? availableAmt.toFixed(decimalsFor(cur)) : '…'} ${cur}`
 
