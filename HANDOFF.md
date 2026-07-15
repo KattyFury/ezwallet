@@ -101,8 +101,8 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 - **Scrollbar:** `.scroll-thin` = ẩn hoàn toàn (vẫn cuộn được, mờ mép gợi ý); `.scroll-hidden` cho NotifArea.
 
 **Brand assets:**
-- `design/logo.svg` — logo chữ "EZ" (brand blue) + "wallet" (đen), dùng ở **Login** + **biên lai** (import trực tiếp). Canvas biên lai dùng tỉ lệ viewBox `342×85`.
-- Favicon `/fav_icon.png` (EZ sát viền), app icon Apple + manifest `/icon.png` (512×512, EZ brand blue, nền trắng — iOS không nhận SVG/transparent).
+- `design/logo.svg` — icon ví có chữ "EZ" (brand blue) + chữ "Wallet" (đen), viewBox `1174×380`, dùng ở **Login** + **biên lai** (import trực tiếp). Canvas biên lai dùng tỉ lệ viewBox `1174×380`. `design/logo-icon.svg` = chỉ icon ví (viewBox `500×396`), để dành chưa dùng.
+- Favicon `/fav_icon.png` (icon ví EZ, nền trắng), app icon Apple + manifest `/icon.png` (512×512, icon ví EZ brand blue, nền trắng — iOS không nhận SVG/transparent).
 
 > 🎨 **Design: user tự làm UI.** Đừng tự ý redesign; chờ user đưa design rồi port vào React. Icon = bộ tự vẽ của user (viewBox 100, stroke-width 10). Mốc thẩm mỹ user thích: Coinbase Wallet (số dư to, tile bo tròn nền nhạt, nhiều khoảng thở, tối giản viền) — brand xanh dương.
 
@@ -161,6 +161,7 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 ## 10. Thay đổi gần đây (rút gọn)
 
+- **07-15 (logo mới):** User thay bộ logo → icon **ví có chữ "EZ"** (brand blue). `design/logo.svg` = icon ví + chữ "Wallet" (viewBox `1174×380`, thay logo chữ cũ `342×85`) → dùng Login + biên lai; sửa tỉ lệ canvas biên lai `85/342`→`380/1174` (SendReceipt.jsx). `public/fav_icon.png` + `public/icon.png` (512, resize từ apple-icon 500) = icon ví nền trắng. Thêm `design/logo-icon.svg` (chỉ icon ví, để dành).
 - **07-12 (fix gửi mobile + trạng thái swap):** **Bug PWA mobile không sáng nút gửi/swap:** `SendAmount` + `Swap` đọc thẳng `localStorage.ez_wallet_addr` (HomeSend thì dùng `ensureWalletAddress()` có khôi phục) → trên PWA lưu màn hình chính key có thể vắng → `availableAmt=0`/balances rỗng → `overBalance` luôn true → nút chết. **Fix:** cả 2 màn dùng `ensureWalletAddress()`; `canContinue`/`canSwap` chỉ chặn khi ĐÃ BIẾT số dư (chưa tải xong thì không khoá nút). **Swap thêm trạng thái nút:** "Swap submitted" (PIN ký xong, lệnh đã lên Arc) → poll số dư token nhận tăng → "Swap successful" (nút xanh lá + dấu check, tự ẩn sau 3.5s).
 - **07-11 (rebrand):** Đổi màu thương hiệu xanh lá → **brand blue `#0B53BF`** (thêm token `--color-brand`, `--color-info`=brand); hệ màu ngữ nghĩa xanh lá=nhận/success, brand=gửi/thương hiệu. **Bỏ Barlow Condensed** (còn Barlow + IBM Plex). **Logo/icon mới** (EZ brand blue): logo.svg, fav_icon.png, icon.png 512. Fix icon check biên lai (check xanh lá to, bỏ circle trắng), amount gửi/receipt → brand, avatar contact chưa có ảnh = xám + dấu "+", nút Add-to-Contacts + filter history → brand. **Dọn file thừa:** xoá asset mồ côi (icon.svg/pfp cũ), bỏ `.wrangler` khỏi git + gitignore.
 - **07-06 (S24):** Language/Currency khoá English (option VI/ZH + CNY/VND disabled). Faucet → thông báo "Faucet successful". → dừng build, sản phẩm ổn định.
