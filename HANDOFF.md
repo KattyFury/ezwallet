@@ -77,7 +77,8 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 ## 5. Design System (`src/index.css` :root)
 
-**Font (chỉ 2, đã bỏ Barlow Condensed):** `--font-base` **IBM Plex Sans** = nội dung cho người đọc (menu, mô tả, hint, thông báo, input). `--font-display`/`--font-title`/`--font-condensed` = **Barlow** = thương hiệu (logo, tiêu đề màn, số `.num`, ký hiệu tiền tệ, button). *(Biến `--font-condensed` là tên cũ, giá trị đã là Barlow thường.)*
+**Font (2026-07-15: CHỈ 1 FONT = BARLOW toàn app, đã bỏ IBM Plex Sans + Barlow Condensed):** mọi biến `--font-base`/`--font-display`/`--font-title`/`--font-condensed` đều = **Barlow** (giữ 4 tên cũ để khỏi sửa JSX). `index.html` load Barlow `300;400;500;600`.
+**Đậm–nhạt (bắt mắt = tương phản weight):** `--fw-light 300` = SỐ HERO to (số dư `BalanceHeader`, số tiền `.amount-display`) → thanh thoát, CHỈ dùng chữ to. `--fw-normal 400` body · `--fw-medium 500` nút/item/label · `--fw-semibold 600` tiêu đề màn/popup + nhấn mạnh + active. **KHÔNG 700** (Barlow 700 xấu, khoá max 600).
 **Cỡ chữ (mở khoá):** amount 52 · title 30 · num 24 · body 19 · item 17 · label 15 · tiny 13.
 
 **Màu — hệ NGỮ NGHĨA (user chốt):**
@@ -161,6 +162,7 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 ## 10. Thay đổi gần đây (rút gọn)
 
+- **07-15 (font 1 Barlow + đậm–nhạt):** Đổi TOÀN APP về **1 font Barlow** (bỏ IBM Plex Sans; `--font-base`→Barlow, các biến khác vốn đã Barlow). `index.html` load `300;400;500;600`. Thêm `--fw-light 300`; số hero (BalanceHeader, `.amount-display`) → Light; tiêu đề (`.send-title`, `.popup-title`) → semibold 600 → tương phản đậm–nhạt "bắt mắt". Không đụng per-screen inline khác.
 - **07-15 (logo mới):** User thay bộ logo → icon **ví có chữ "EZ"** (brand blue). `design/logo.svg` = icon ví + chữ "Wallet" (viewBox `1174×380`, thay logo chữ cũ `342×85`) → dùng Login + biên lai; sửa tỉ lệ canvas biên lai `85/342`→`380/1174` (SendReceipt.jsx). `public/fav_icon.png` + `public/icon.png` (512, resize từ apple-icon 500) = icon ví nền trắng. Thêm `design/logo-icon.svg` (chỉ icon ví, để dành).
 - **07-12 (fix gửi mobile + trạng thái swap):** **Bug PWA mobile không sáng nút gửi/swap:** `SendAmount` + `Swap` đọc thẳng `localStorage.ez_wallet_addr` (HomeSend thì dùng `ensureWalletAddress()` có khôi phục) → trên PWA lưu màn hình chính key có thể vắng → `availableAmt=0`/balances rỗng → `overBalance` luôn true → nút chết. **Fix:** cả 2 màn dùng `ensureWalletAddress()`; `canContinue`/`canSwap` chỉ chặn khi ĐÃ BIẾT số dư (chưa tải xong thì không khoá nút). **Swap thêm trạng thái nút:** "Swap submitted" (PIN ký xong, lệnh đã lên Arc) → poll số dư token nhận tăng → "Swap successful" (nút xanh lá + dấu check, tự ẩn sau 3.5s).
 - **07-11 (rebrand):** Đổi màu thương hiệu xanh lá → **brand blue `#0B53BF`** (thêm token `--color-brand`, `--color-info`=brand); hệ màu ngữ nghĩa xanh lá=nhận/success, brand=gửi/thương hiệu. **Bỏ Barlow Condensed** (còn Barlow + IBM Plex). **Logo/icon mới** (EZ brand blue): logo.svg, fav_icon.png, icon.png 512. Fix icon check biên lai (check xanh lá to, bỏ circle trắng), amount gửi/receipt → brand, avatar contact chưa có ảnh = xám + dấu "+", nút Add-to-Contacts + filter history → brand. **Dọn file thừa:** xoá asset mồ côi (icon.svg/pfp cũ), bỏ `.wrangler` khỏi git + gitignore.

@@ -76,9 +76,11 @@ Chủ dự án đã có một hệ khá chỉn chu. Bạn có thể nâng cấp 
 
 Quy tắc vàng: **thương hiệu & hành động gửi → xanh dương; nhận & thành công → xanh lá.** Đừng lẫn hai màu này.
 
-### Chữ (2 font)
-- **Barlow** = giọng **thương hiệu**: logo, tiêu đề màn, con số tiền, ký hiệu tiền tệ, chữ trên nút. (Đậm tối đa **600 / semibold** — Barlow 700 bị xấu, đừng dùng.)
-- **IBM Plex Sans** = **nội dung cho người đọc**: menu, mô tả, hint, thông báo, ô nhập, lời nhắn.
+### Chữ (1 font — Barlow toàn app, 2026-07-15)
+- **Barlow** dùng cho **mọi thứ** (đã bỏ IBM Plex Sans). Thiết kế bắt mắt bằng **tương phản đậm–nhạt**:
+  - **Light 300** = số hero to (số dư, số tiền) → thanh thoát, hiện đại. Chỉ dùng cho chữ TO.
+  - **400** = nội dung/body · **500** = nút, item, label · **600 / semibold** = tiêu đề màn, nhấn mạnh, active.
+  - Đậm tối đa **600** — Barlow 700 bị xấu, đừng dùng.
 
 Cỡ chữ hiện dùng (px): số tiền lớn **52** · tiêu đề màn **30** · số trong list **24** · nội dung/nút **19** · item list **17** · label/phụ **15** · ghi chú nhỏ **13**. (Vì đối tượng người già, **đừng nhỏ hơn** các mốc này; có thể cân nhắc to hơn.)
 

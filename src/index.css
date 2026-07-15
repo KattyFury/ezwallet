@@ -1,8 +1,8 @@
 ﻿/* ══════════════════════════════════════════════════════════
    DESIGN TOKENS (2026-06-28).
-   FONT (khóa, 2026-07-10): chỉ còn 2 font. Barlow = THƯƠNG HIỆU (logo, tiêu đề chính màn,
-   số, ký hiệu tiền tệ USD/USDC/EURC/cirBTC, BUTTON). IBM Plex Sans = NỘI DUNG cho người đọc
-   (mô tả, hint, thông báo, menu, input). ĐÃ BỎ Barlow Condensed — mọi biến Barlow dùng Barlow thường.
+   FONT (khóa, 2026-07-15): CHỈ 1 FONT = BARLOW cho TOÀN APP (đã bỏ IBM Plex Sans + Barlow Condensed).
+   Thiết kế bắt mắt bằng TƯƠNG PHẢN ĐẬM–NHẠT: Light 300 = số hero (số dư, số tiền) thanh thoát;
+   400 = body/nội dung; 500 = nút, item; 600 = tiêu đề, nhấn mạnh, active. KHÔNG dùng 700 (Barlow 700 xấu).
    MÀU (khóa): 4 tầng chữ + màu chức năng dưới đây.
    CỠ CHỮ: ĐÃ MỞ KHÓA — scale dưới là gợi ý, được phép tùy chỉnh px theo từng chỗ.
    ══════════════════════════════════════════════════════════ */
@@ -26,11 +26,11 @@
   --color-white:        #FFFFFF;
   --color-gray:         #E5E5EA; /* xám nhạt — border / nền / divider (KHÔNG làm màu chữ) */
 
-  /* ── FONT ── */
-  --font-base:      'IBM Plex Sans', sans-serif;       /* NỘI DUNG cho người đọc: menu, mô tả, hint, thông báo, input, memo */
-  --font-display:   'Barlow', sans-serif;              /* THƯƠNG HIỆU: logo, TIÊU ĐỀ chính màn (vd "Send money") */
+  /* ── FONT — 1 font duy nhất: BARLOW (mọi biến trỏ về Barlow, giữ tên cũ để không phải sửa JSX) ── */
+  --font-base:      'Barlow', sans-serif;              /* NỘI DUNG: menu, mô tả, hint, thông báo, input, memo */
+  --font-display:   'Barlow', sans-serif;              /* THƯƠNG HIỆU: logo, TIÊU ĐỀ chính màn */
   --font-title:     'Barlow', sans-serif;              /* alias → display (tiêu đề) */
-  --font-condensed: 'Barlow', sans-serif;              /* TÊN CŨ (bỏ Barlow Condensed): Barlow thường — số, ký hiệu tiền tệ (USD/USDC/EURC/cirBTC), BUTTON */
+  --font-condensed: 'Barlow', sans-serif;              /* TÊN CŨ: số, ký hiệu tiền tệ, BUTTON */
 
   /* ── CỠ CHỮ (scale gợi ý — đã mở khóa, tùy chỉnh được) ── */
   --fs-amount:   52px;   /* Barlow display — số tiền lớn */
@@ -43,10 +43,11 @@
   --fs-content:  20px;   /* alias → --fs-body */
   --fs-sub:      16px;   /* alias → --fs-label */
 
-  /* Font weights */
-  --fw-normal:    400;
-  --fw-medium:    500;
-  --fw-semibold:  600;
+  /* Font weights — thang đậm–nhạt cho tương phản Barlow */
+  --fw-light:     300;   /* NHẠT — số hero lớn (số dư, số tiền): thanh thoát, chỉ dùng cho chữ TO */
+  --fw-normal:    400;   /* body, nội dung đọc */
+  --fw-medium:    500;   /* nút, item list, label */
+  --fw-semibold:  600;   /* tiêu đề, nhấn mạnh, active */
   --fw-bold:      600;   /* KHÓA ở 600 — Barlow không bao giờ 700 (xấu). Max = semibold */
 }
 
@@ -247,7 +248,7 @@ body {
   font-family: var(--font-display);
   color: var(--color-black);
   font-size: var(--fs-title);
-  font-weight: var(--fw-medium);
+  font-weight: var(--fw-semibold);   /* tiêu đề ĐẬM (semibold) — pole đậm của tương phản */
   text-align: center;
 }
 .popup-actions { display: flex; gap: 8px; }
@@ -533,7 +534,7 @@ body {
   gap: 10px;
   font-family: var(--font-display);
   font-size: var(--fs-title);
-  font-weight: var(--fw-medium);
+  font-weight: var(--fw-semibold);   /* tiêu đề màn ĐẬM (semibold) */
   color: var(--color-black);
 }
 
@@ -575,7 +576,7 @@ body {
 .amount-display {
   font-family: var(--font-condensed);
   font-size: var(--fs-amount);
-  font-weight: var(--fw-bold);
+  font-weight: var(--fw-light);      /* số hero NHẠT (Light) — thanh thoát, tương phản với tiêu đề đậm */
   text-align: center;
   padding: 6px 0;
   letter-spacing: -0.5px;
