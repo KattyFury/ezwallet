@@ -104,7 +104,7 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 - **Scrollbar:** `.scroll-thin` = ẩn hoàn toàn (vẫn cuộn được, mờ mép gợi ý); `.scroll-hidden` cho NotifArea.
 
 **Brand assets:**
-- `design/logo.svg` — icon ví có chữ "EZ" (brand blue) + chữ "Wallet" (đen), viewBox `1174×380`, dùng ở **Login** + **biên lai** (import trực tiếp). Canvas biên lai dùng tỉ lệ viewBox `1174×380`. `design/logo-icon.svg` = chỉ icon ví (viewBox `500×396`), để dành chưa dùng.
+- `design/logo.svg` — icon ví có chữ "EZ" (brand blue) + chữ "Wallet" (đen), viewBox `1160×380`, dùng ở **Login** + **biên lai** (import trực tiếp). Canvas biên lai dùng tỉ lệ viewBox `1160×380`. `design/logo-icon.svg` = chỉ icon ví (viewBox `500×396`), để dành chưa dùng.
 - Favicon `/fav_icon.png` (icon ví EZ, nền trắng), app icon Apple + manifest `/icon.png` (512×512, icon ví EZ brand blue, nền trắng — iOS không nhận SVG/transparent).
 
 > 🎨 **Design: user tự làm UI.** Đừng tự ý redesign; chờ user đưa design rồi port vào React. Icon = bộ tự vẽ của user (viewBox 100, stroke-width 10). Mốc thẩm mỹ user thích: Coinbase Wallet (số dư to, tile bo tròn nền nhạt, nhiều khoảng thở, tối giản viền) — brand xanh dương.

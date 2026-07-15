@@ -92,7 +92,7 @@ Cỡ chữ hiện dùng (px): số tiền lớn **52** · tiêu đề màn **30*
 - **Scrollbar ẩn** (vẫn cuộn được, mờ mép để gợi ý còn nội dung).
 
 ### Logo
-- `design/logo.svg`: icon **ví có chữ "EZ"** (xanh thương hiệu) + chữ **"Wallet"** (đen), viewBox `1174×380`. Dùng ở màn Đăng nhập và trên biên lai.
+- `design/logo.svg`: icon **ví có chữ "EZ"** (xanh thương hiệu) + chữ **"Wallet"** (đen), viewBox `1160×380`. Dùng ở màn Đăng nhập và trên biên lai.
 - `design/logo-icon.svg`: chỉ **icon ví "EZ"** (không chữ, viewBox `500×396`) — để dành, chưa dùng.
 
 ---

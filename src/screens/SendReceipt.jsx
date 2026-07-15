@@ -66,7 +66,7 @@ export default function SendReceipt() {
     if (memo) row(t('Nội dung'), memo)
     row(t('Thời gian'), fmtTime(timestamp))
     // Logo EZwallet (branding chuẩn — design/logo.svg, EZ xanh thương hiệu + wallet đen) ở đáy
-    const lw = 168, lh = lw * 380 / 1174   // tỉ lệ theo logo.svg mới (viewBox 1174×380)
+    const lw = 168, lh = lw * 380 / 1160   // tỉ lệ theo logo.svg mới (viewBox 1160×380)
     const img = new Image()
     img.src = logoLong
     try { await img.decode() } catch {}
