@@ -1,6 +1,6 @@
 # HANDOFF — EZwallet
 
-**Cập nhật:** 2026-07-11 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** https://ezwallet.pages.dev (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
+**Cập nhật:** 2026-07-15 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** https://ezwallet.pages.dev (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
 
 > **Ví stablecoin cho người dùng phổ thông / người già.** UX đơn giản, mobile-first.
 > ĐẦU MỖI PHIÊN đọc CẢ `HANDOFF.md` (file này) + `CLAUDE.md` (cách làm việc với user).
@@ -51,11 +51,11 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 ## 3. Trạng thái tính năng (✅ chạy thật / verify on-chain hoặc trên deploy)
 
-- **Email login → tạo ví** (userId=email, authMode PIN) + câu hỏi bảo mật. **Khoá mở ví:** lần 2+/mở lại app phải qua `PinGate` (ký message rỗng verify PIN, không gas). Lần 1 (vừa đặt PIN) vào thẳng. Google login **ẩn khỏi UI** (hạ tầng giữ — xem mục 6). Email OTP đã dựng nhưng TẮT (`EMAIL_OTP_ENABLED=false`).
+- **Email login → tạo ví** (userId=email, authMode PIN) + câu hỏi bảo mật. **Khoá mở ví:** lần 2+/mở lại app → `PinGate` TỰ bật thẳng PIN Circle (ký message rỗng verify, không gas; KHÔNG hiện màn PIN riêng — chỉ logo nền, hủy/lỗi mới hiện nút Unlock/Đăng xuất). Lần 1 (vừa đặt PIN) vào thẳng. Google login **ẩn khỏi UI** (hạ tầng giữ — xem mục 6). Email OTP đã dựng nhưng TẮT (`EMAIL_OTP_ENABLED=false`).
 - **Gửi tiền** USDC/EURC/cirBTC (`send.js`): transfer thường, hoặc qua Memo contract khi có lời nhắn (UTF-8 tiếng Việt ok). `idempotencyKey` chống gửi trùng.
 - **Swap** USDC↔EURC↔cirBTC — **BẬT** (`SWAP_ENABLED=true`), verify eth_simulateV1 đạt (USDC về ví đúng). Chi tiết mục 4.
 - **Balance on-chain + tỷ giá live**, có **cache** (`chain.js` `_balCache`/`_ratesCache`) → chuyển màn hiện số cũ ngay, fetch nền cập nhật (không nhấp nháy "..."). Cache sống theo phiên.
-- **TxHistory** (ArcScan API + memo từ event), **Contacts** (per-account, avatar cropper), **QR** (tạo/quét/kho, jsQR), **thông báo in-app** (NotifArea tự hết hạn 2h), **biên lai** (canvas → Photos qua Web Share API), **Onboarding**, per-account store (`store.js`).
+- **TxHistory** (ArcScan API + memo từ event), **Contacts** (per-account, avatar cropper), **QR** (tạo/quét/kho, jsQR), **thông báo in-app** (NotifArea — KHÔNG hết hạn, giữ trạng thái ví mới nhất), **biên lai** (canvas → Photos qua Web Share API), **Onboarding**, per-account store (`store.js`).
 - **Đổi PIN** (email user): `PUT /v1/w3s/user/pin` → challenge PIN cũ + mới ✅.
 - **`refreshSession()`** (`circle.js`): gọi TRƯỚC mọi thao tác cần PIN (userToken sống 60'). Email user: token mới qua userId=email. Google user: đổi refreshToken qua `POST /users/token/refresh`.
 
@@ -164,11 +164,14 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 ## 10. Thay đổi gần đây (rút gọn)
 
-- **07-15 (tăng size chữ đồng bộ cho người già + fix + PIN gọn):** Áp **font vừa-to (21)** cho: navbar (Swap/Send/Receive/Menu), menu items + Sign out, Login slogan, EnterEmail (email+gợi ý, icon hint 15→20), Send (Gửi cho/recipient/Transfer note/nút USD), địa chỉ ví Receive, confirm+receipt (yếu tố chính vừa-to, phụ vừa=19). **Fix #4 số dư:** bỏ `filter(amount>0)` trong `getTokenBalances` → HomeSend LUÔN hiện đủ 3 token USDC/EURC/cirBTC kể cả số dư 0 (RPC verify cả 3 contract + balanceOf OK — token bị ẩn chỉ do filter). **#3 PIN:** PinGate bỏ màn "Enter your PIN" riêng → vào tự bật thẳng PIN Circle (chỉ hiện logo nền), hủy/lỗi mới hiện nút Unlock/Đăng xuất. **#7:** thông báo KHÔNG hết hạn (bỏ cutoff 2h ở `getNotifs`). Logo Login/PinGate 50%→56%. Back QR Library căn giữa (`.row10-single`, trước lệch phải bị méo).
-- **07-15 (gradient + font naming + logo gradient):** Thay bộ logo sang bản GRADIENT (icon/fav/logo-full/logo-icon). App đổi nút CTA + action-card primary từ flat sang **gradient dọc** `#0088FF→#0B53BF` (`--grad-brand`). Chuẩn hoá tên cỡ chữ: size to (title 30) / font vừa-to (md-lg 21: button+slogan+input) / font vừa (body 19: nội dung). Login: slogan +2px (font vừa-to). EnterEmail: email + gợi ý → font vừa-to. Logo Login giữ 50% (2/4).
-- **07-15 (mock mode chạy local):** Thêm `npm run mock` → dựng UI/flow local không cần Circle/PIN (ví ảo + số dư ảo, chặn network trả data giả, Gửi/Swap giả lập thành công). File mới `src/mock.js` + `.env.mock`; gate bằng cờ `VITE_MOCK` ở `chain.js`/`circle.js`/`main.jsx`. Không lọt production. Verify: prod build OK, server mock 200, cờ inject `VITE_MOCK=1`.
-- **07-15 (font 1 Barlow + đậm–nhạt):** Đổi TOÀN APP về **1 font Barlow** (bỏ IBM Plex Sans; `--font-base`→Barlow, các biến khác vốn đã Barlow). `index.html` load `300;400;500;600`. Thêm `--fw-light 300`; số hero (BalanceHeader, `.amount-display`) → Light; tiêu đề (`.send-title`, `.popup-title`) → semibold 600 → tương phản đậm–nhạt "bắt mắt". Không đụng per-screen inline khác.
-- **07-15 (logo mới):** User thay bộ logo → icon **ví có chữ "EZ"** (brand blue). `design/logo.svg` = icon ví + chữ "Wallet" (viewBox `1174×380`, thay logo chữ cũ `342×85`) → dùng Login + biên lai; sửa tỉ lệ canvas biên lai `85/342`→`380/1174` (SendReceipt.jsx). `public/fav_icon.png` + `public/icon.png` (512, resize từ apple-icon 500) = icon ví nền trắng. Thêm `design/logo-icon.svg` (chỉ icon ví, để dành).
+- **07-15 (rebrand logo gradient · 1 font Barlow · tăng size chữ · fix số dư · PIN gọn · mock mode):** Gộp nhiều lần sửa trong ngày, trạng thái CUỐI:
+  - **Logo** bản GRADIENT (icon ví "EZ"): `design/logo.svg` viewBox `1160×380` (Login+biên lai, canvas dùng tỉ lệ này), `logo-icon.svg` (chỉ icon), `fav_icon.png`, `icon.png` 512. Logo Login/PinGate width **56%**.
+  - **Font:** toàn app **1 font Barlow** (bỏ IBM Plex + Barlow Condensed). Cỡ đặt tên: size to (title 30) / **vừa-to (21)** / vừa (19); số hero (BalanceHeader, `.amount-display`) → Light 300; tiêu đề → semibold 600. Áp vừa-to: navbar, menu+Sign out, Login slogan, EnterEmail (icon hint 20), Send (Gửi cho/recipient/note/nút USD), địa chỉ Receive, confirm+receipt (chính vừa-to, phụ vừa).
+  - **Gradient** `--grad-brand` dọc `#0088FF→#0B53BF`: nền `.btn-primary` + `.action-card.primary` (thay flat); `--color-brand` #0B53BF đặc vẫn cho chữ/viền.
+  - **Fix số dư:** bỏ `filter(amount>0)` ở `getTokenBalances` → HomeSend luôn hiện đủ 3 token kể cả số dư 0 (RPC verify cả 3 contract + balanceOf OK).
+  - **PIN:** `PinGate` bỏ màn "Enter your PIN" riêng → vào tự bật thẳng PIN Circle. **Thông báo:** KHÔNG hết hạn (bỏ cutoff 2h ở `getNotifs`).
+  - **Mock mode** `npm run mock`: ví/số dư ảo, chặn `/api/*`+ArcScan, Gửi/Swap giả lập — canh UI local không cần Circle. `src/mock.js`+`.env.mock`, gate cờ `VITE_MOCK`, KHÔNG lọt production.
+  - Back QR Library căn giữa (`.row10-single`).
 - **07-12 (fix gửi mobile + trạng thái swap):** **Bug PWA mobile không sáng nút gửi/swap:** `SendAmount` + `Swap` đọc thẳng `localStorage.ez_wallet_addr` (HomeSend thì dùng `ensureWalletAddress()` có khôi phục) → trên PWA lưu màn hình chính key có thể vắng → `availableAmt=0`/balances rỗng → `overBalance` luôn true → nút chết. **Fix:** cả 2 màn dùng `ensureWalletAddress()`; `canContinue`/`canSwap` chỉ chặn khi ĐÃ BIẾT số dư (chưa tải xong thì không khoá nút). **Swap thêm trạng thái nút:** "Swap submitted" (PIN ký xong, lệnh đã lên Arc) → poll số dư token nhận tăng → "Swap successful" (nút xanh lá + dấu check, tự ẩn sau 3.5s).
 - **07-11 (rebrand):** Đổi màu thương hiệu xanh lá → **brand blue `#0B53BF`** (thêm token `--color-brand`, `--color-info`=brand); hệ màu ngữ nghĩa xanh lá=nhận/success, brand=gửi/thương hiệu. **Bỏ Barlow Condensed** (còn Barlow + IBM Plex). **Logo/icon mới** (EZ brand blue): logo.svg, fav_icon.png, icon.png 512. Fix icon check biên lai (check xanh lá to, bỏ circle trắng), amount gửi/receipt → brand, avatar contact chưa có ảnh = xám + dấu "+", nút Add-to-Contacts + filter history → brand. **Dọn file thừa:** xoá asset mồ côi (icon.svg/pfp cũ), bỏ `.wrangler` khỏi git + gitignore.
 - **07-06 (S24):** Language/Currency khoá English (option VI/ZH + CNY/VND disabled). Faucet → thông báo "Faucet successful". → dừng build, sản phẩm ổn định.
