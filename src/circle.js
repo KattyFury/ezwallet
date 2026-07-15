@@ -1,4 +1,5 @@
 import { W3SSdk } from '@circle-fin/w3s-pw-web-sdk'
+import { MOCK, MOCK_RATES } from './mock'
 
 let sdk = null
 
@@ -10,6 +11,7 @@ let sdk = null
 // → Chấp nhận English toàn bộ khâu PIN cho tới khi Circle hỗ trợ localization đầy đủ (hoặc đổi tech).
 // ĐỪNG thêm setLocalizations lại nếu chưa xác nhận Circle localize được HẾT (gồm cả chữ lỗi runtime).
 export function getSDK() {
+  if (MOCK) return {}   // mock: không init SDK thật
   if (!sdk) {
     sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
   }
@@ -130,6 +132,7 @@ export async function refreshSocialToken(userToken, refreshToken, deviceId) {
 }
 
 export async function refreshSession() {
+  if (MOCK) return { userToken: 'mock-token', encryptionKey: 'mock-key' }
   const email = localStorage.getItem('ez_email')
   const fallback = { userToken: localStorage.getItem('ez_user_token'), encryptionKey: localStorage.getItem('ez_encryption_key') }
 
@@ -169,7 +172,14 @@ export async function refreshSession() {
 // KIT_KEY di chuyển lên server-side (Cloudflare Worker env var)
 // Browser chỉ gọi /api/swap, Worker xử lý Circle Stablecoin Kit API
 
+// MOCK: quy đổi ước tính theo MOCK_RATES (USD mỗi 1 đơn vị): amountOut = amountIn·rateIn/rateOut
+function mockSwapOut(tokenIn, tokenOut, amountIn) {
+  const rIn = MOCK_RATES[tokenIn] ?? 1, rOut = MOCK_RATES[tokenOut] ?? 1
+  return String((Number(amountIn) * rIn / rOut).toFixed(6))
+}
+
 export async function estimateSwap({ walletAddress, tokenIn, tokenOut, amountIn }) {
+  if (MOCK) return { amountOut: mockSwapOut(tokenIn, tokenOut, amountIn) }
   const res = await fetch('/api/swap', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -180,6 +190,7 @@ export async function estimateSwap({ walletAddress, tokenIn, tokenOut, amountIn 
 
 // userToken truyền vào từ refreshSession() (đừng đọc thẳng localStorage — token 60' có thể chết)
 export async function executeSwap({ userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn }) {
+  if (MOCK) return { challengeId: 'mock-challenge', amountOut: mockSwapOut(tokenIn, tokenOut, amountIn) }
   const res = await fetch('/api/swap', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -217,6 +228,7 @@ const RETRYABLE_CODES = new Set([
 ])
 
 export function executeChallenge(sdk, userToken, encryptionKey, challengeId) {
+  if (MOCK) return Promise.resolve()   // mock: bỏ qua bước ký PIN, coi như thành công
   return new Promise((resolve, reject) => {
     sdk.setAuthentication({ userToken, encryptionKey })
     sdk.execute(challengeId, (err, result) => {

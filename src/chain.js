@@ -1,5 +1,6 @@
 import { createPublicClient, http, decodeEventLog, parseAbiItem } from 'viem'
 import { defineChain } from 'viem'
+import { MOCK, MOCK_AMOUNTS, MOCK_RATES } from './mock'
 
 export const arcTestnet = defineChain({
   id: 5042002,
@@ -35,8 +36,18 @@ let lastFetch = 0
 // hiện tức thì, fetch nền cập nhật sau (như app ngân hàng). Sống theo phiên (mất khi reload trang).
 let _balCache = {}      // addr(lowercase) -> tokens[] (kết quả getTokenBalances gần nhất)
 let _ratesCache = null  // { USDC, EURC, cirBTC } gần nhất
-export function cachedBalances(addr) { return addr ? (_balCache[addr.toLowerCase()] || null) : null }
-export function cachedRates() { return _ratesCache }
+// MOCK MODE: dựng số dư ảo từ TOKENS + MOCK_AMOUNTS (không đọc RPC).
+function mockBalances() {
+  return TOKENS
+    .map(t => { const amount = MOCK_AMOUNTS[t.symbol] || 0; return { ...t, amount, usd: amount * (MOCK_RATES[t.symbol] ?? t.usdRate) } })
+    .filter(t => t.amount > 0)
+}
+
+export function cachedBalances(addr) {
+  if (MOCK) return mockBalances()   // trả ngay, không "..." nhấp nháy
+  return addr ? (_balCache[addr.toLowerCase()] || null) : null
+}
+export function cachedRates() { return MOCK ? MOCK_RATES : _ratesCache }
 
 async function fetchPrices() {
   if (Date.now() - lastFetch < 60000) return priceCache
@@ -54,6 +65,7 @@ async function fetchPrices() {
 }
 
 export async function getTokenBalances(walletAddress) {
+  if (MOCK) return mockBalances()
   if (!walletAddress) return []
   const prices = await fetchPrices()
   const results = await Promise.all(
@@ -86,6 +98,7 @@ export function fmtAmount(amount, decimals = 6) {
 
 // Giá USD của 1 token (USD mỗi 1 đơn vị). USDC = 1. Fallback usdRate offline.
 export async function getUsdRate(symbol = 'USDC') {
+  if (MOCK) return MOCK_RATES[symbol] ?? 1
   const prices = await fetchPrices()
   const token = TOKENS.find(t => t.symbol === symbol)
   return prices[symbol] ?? token?.usdRate ?? 1
@@ -95,6 +108,7 @@ export async function getUsdRate(symbol = 'USDC') {
 // USDC ghim 1 → stablecoin hiện đúng 1:1 (5 USDC = $5.00). cirBTC để TxHistory quy đổi giao dịch
 // cirBTC dùng CHUNG 1 nguồn tỷ giá với cột hiển thị (tránh lệch nguồn).
 export async function getDisplayRates() {
+  if (MOCK) { _ratesCache = MOCK_RATES; return MOCK_RATES }
   const [u, e, b] = await Promise.all([getUsdRate('USDC'), getUsdRate('EURC'), getUsdRate('cirBTC')])
   _ratesCache = { USDC: u, EURC: e, cirBTC: b }   // cache cho lần mount sau
   return _ratesCache
@@ -130,6 +144,7 @@ export async function getTxMemo(hash) {
 // Phí gas thật: Arc tính gas bằng USDC (18 decimals nội bộ). USDC = $1 → phí USD CHÍNH LÀ feeUsdc.
 // gasUnits: ~65k cho transfer thường, ~110k cho transfer kèm memo. KHÔNG làm tròn (phí rất nhỏ, cần cent).
 export async function estimateFeeUsd(gasUnits = 65000) {
+  if (MOCK) return 0.002   // phí ảo nhỏ
   try {
     const gasPrice = await publicClient.getGasPrice()
     return Number(gasPrice * BigInt(gasUnits)) / 1e18
