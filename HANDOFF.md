@@ -80,7 +80,8 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 **Font (2026-07-15: CHỈ 1 FONT = BARLOW toàn app, đã bỏ IBM Plex Sans + Barlow Condensed):** mọi biến `--font-base`/`--font-display`/`--font-title`/`--font-condensed` đều = **Barlow** (giữ 4 tên cũ để khỏi sửa JSX). `index.html` load Barlow `300;400;500;600`.
 **Đậm–nhạt (bắt mắt = tương phản weight):** `--fw-light 300` = SỐ HERO to (số dư `BalanceHeader`, số tiền `.amount-display`) → thanh thoát, CHỈ dùng chữ to. `--fw-normal 400` body · `--fw-medium 500` nút/item/label · `--fw-semibold 600` tiêu đề màn/popup + nhấn mạnh + active. **KHÔNG 700** (Barlow 700 xấu, khoá max 600).
-**Cỡ chữ (mở khoá):** amount 52 · title 30 · num 24 · body 19 · item 17 · label 15 · tiny 13.
+**Cỡ chữ + TÊN GỌI (user chốt 2026-07-15):** amount 52 · **"size to"=title 30** (tiêu đề trang) · num 24 · **"font vừa-to"=md-lg 21** (BUTTON + slogan + chữ khi nhập text) · **"font vừa"=body 19** (nội dung, nhỏ hơn vừa-to) · item 17 · label 15 · tiny 13.
+**Gradient thương hiệu (user chốt 2026-07-15, muốn "stunning" không flat):** `--grad-brand` = `linear-gradient(180deg,#0088FF 0%,#0B53BF 100%)` (dọc, sáng trên→đậm dưới). Áp cho NỀN `.btn-primary` + `.action-card.primary`. `--color-brand` (#0B53BF đặc) vẫn dùng cho CHỮ/VIỀN brand (nav active, filter, option) — gradient không set được cho text/border.
 
 **Màu — hệ NGỮ NGHĨA (user chốt):**
 | Ý nghĩa | Token | Hex |
@@ -163,6 +164,7 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 ## 10. Thay đổi gần đây (rút gọn)
 
+- **07-15 (gradient + font naming + logo gradient):** Thay bộ logo sang bản GRADIENT (icon/fav/logo-full/logo-icon). App đổi nút CTA + action-card primary từ flat sang **gradient dọc** `#0088FF→#0B53BF` (`--grad-brand`). Chuẩn hoá tên cỡ chữ: size to (title 30) / font vừa-to (md-lg 21: button+slogan+input) / font vừa (body 19: nội dung). Login: slogan +2px (font vừa-to). EnterEmail: email + gợi ý → font vừa-to. Logo Login giữ 50% (2/4).
 - **07-15 (mock mode chạy local):** Thêm `npm run mock` → dựng UI/flow local không cần Circle/PIN (ví ảo + số dư ảo, chặn network trả data giả, Gửi/Swap giả lập thành công). File mới `src/mock.js` + `.env.mock`; gate bằng cờ `VITE_MOCK` ở `chain.js`/`circle.js`/`main.jsx`. Không lọt production. Verify: prod build OK, server mock 200, cờ inject `VITE_MOCK=1`.
 - **07-15 (font 1 Barlow + đậm–nhạt):** Đổi TOÀN APP về **1 font Barlow** (bỏ IBM Plex Sans; `--font-base`→Barlow, các biến khác vốn đã Barlow). `index.html` load `300;400;500;600`. Thêm `--fw-light 300`; số hero (BalanceHeader, `.amount-display`) → Light; tiêu đề (`.send-title`, `.popup-title`) → semibold 600 → tương phản đậm–nhạt "bắt mắt". Không đụng per-screen inline khác.
 - **07-15 (logo mới):** User thay bộ logo → icon **ví có chữ "EZ"** (brand blue). `design/logo.svg` = icon ví + chữ "Wallet" (viewBox `1174×380`, thay logo chữ cũ `342×85`) → dùng Login + biên lai; sửa tỉ lệ canvas biên lai `85/342`→`380/1174` (SendReceipt.jsx). `public/fav_icon.png` + `public/icon.png` (512, resize từ apple-icon 500) = icon ví nền trắng. Thêm `design/logo-icon.svg` (chỉ icon ví, để dành).

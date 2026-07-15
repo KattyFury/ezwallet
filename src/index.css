@@ -18,7 +18,8 @@
   --color-primary-soft: #DCFCE7; /* nền nhạt xanh lá (chọn / nhận) */
   --color-info:         #0B53BF; /* xanh THƯƠNG HIỆU — GỬI tiền (thông báo) */
   --color-info-soft:    #E2EAF7; /* nền nhạt xanh thương hiệu */
-  --color-brand:        #0B53BF; /* MÀU THƯƠNG HIỆU — nút CTA (btn-primary, action-card primary) */
+  --color-brand:        #0B53BF; /* MÀU THƯƠNG HIỆU (đặc) — CHỮ/VIỀN brand (nav active, filter, option) */
+  --grad-brand: linear-gradient(180deg, #0088FF 0%, #0B53BF 100%); /* GRADIENT thương hiệu (dọc: 0088FF trên → 0B53BF dưới) — NỀN nút CTA + action-card primary (stunning, không flat) */
   --color-error:        #DC2626; /* đỏ — lỗi / xóa bỏ */
   --color-error-soft:   #FEE2E2; /* nền nhạt đỏ */
   --color-warning:      #F59E0B; /* vàng cảnh báo */
@@ -34,9 +35,10 @@
 
   /* ── CỠ CHỮ (scale gợi ý — đã mở khóa, tùy chỉnh được) ── */
   --fs-amount:   52px;   /* Barlow display — số tiền lớn */
-  --fs-title:    30px;   /* Barlow display — tiêu đề màn */
+  --fs-title:    30px;   /* "size to" — TIÊU ĐỀ trang */
   --fs-num:      24px;   /* Barlow — số trong list (token amount, VND) */
-  --fs-body:     19px;   /* IBM UI — nội dung, nút */
+  --fs-md-lg:    21px;   /* "font vừa-to" — BUTTON + slogan + chữ khi NHẬP text (to hơn nội dung 2px) */
+  --fs-body:     19px;   /* "font vừa" — NỘI DUNG chữ (nhỏ hơn font vừa-to) */
   --fs-item:     17px;   /* IBM UI — item list */
   --fs-label:    15px;   /* IBM UI — label, text phụ, placeholder */
   --fs-tiny:     13px;   /* badge / ghi chú rất nhỏ */
@@ -168,7 +170,7 @@ body {
   align-items: center;
   justify-content: center;
   font-family: var(--font-condensed);
-  font-size: var(--fs-body);
+  font-size: var(--fs-md-lg);
   font-weight: var(--fw-medium);
   border-radius: 50px;
   border: none;
@@ -182,7 +184,7 @@ body {
 .btn:disabled { opacity: 0.4; cursor: default; }
 
 .btn-primary {
-  background: var(--color-brand);
+  background: var(--grad-brand);
   color: var(--color-white);
 }
 
@@ -451,8 +453,8 @@ body {
 }
 
 .action-card.primary {
-  background: var(--color-brand);
-  border-color: var(--color-brand);
+  background: var(--grad-brand);
+  border-color: transparent;
   color: var(--color-white);
 }
 

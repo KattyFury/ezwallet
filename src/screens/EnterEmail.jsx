@@ -152,7 +152,7 @@ export default function EnterEmail() {
           onChange={e => { setEmail(e.target.value); setError('') }}
           onKeyDown={e => e.key === 'Enter' && handleSubmit()}
           autoFocus
-          style={{ position: 'absolute', top: '50%', left: 0, right: 0, transform: 'translateY(-50%)', height: 52, fontSize: 'var(--fs-body)' }}
+          style={{ position: 'absolute', top: '50%', left: 0, right: 0, transform: 'translateY(-50%)', height: 52, fontSize: 'var(--fs-md-lg)' }}
         />
 
         {/* Suggestions hiện absolute bên dưới input — không đẩy input */}
@@ -164,7 +164,7 @@ export default function EnterEmail() {
                   textAlign: 'left', padding: '6px 12px',
                   border: 'none', borderRadius: 10,
                   background: 'var(--color-gray)', cursor: 'pointer',
-                  fontSize: 'var(--fs-label)', fontFamily: 'inherit', color: 'var(--color-content)',
+                  fontSize: 'var(--fs-md-lg)', fontFamily: 'inherit', color: 'var(--color-content)',
                   opacity: 0.8, alignSelf: 'flex-start',
                 }}>
                 <Icon name="hint" size={15} color="var(--color-muted)" style={{ marginRight: 6, verticalAlign: 'middle' }} />{s}
@@ -181,7 +181,7 @@ export default function EnterEmail() {
                 style={{
                   padding: '6px 12px', border: 'none', borderRadius: 10,
                   background: 'var(--color-gray)', cursor: 'pointer',
-                  fontSize: 'var(--fs-label)', fontFamily: 'inherit', color: 'var(--color-content)', opacity: 0.8,
+                  fontSize: 'var(--fs-md-lg)', fontFamily: 'inherit', color: 'var(--color-content)', opacity: 0.8,
                 }}>
                 {d}
               </button>
