@@ -3,9 +3,7 @@ const KEY = 'ez_notifs'
 
 export function getNotifs() {
   try {
-    const all = JSON.parse(localStorage.getItem(KEY) || '[]')
-    const cutoff = Date.now() - 2 * 60 * 60 * 1000  // tự ẩn sau 2 tiếng
-    return all.filter(n => !n.ts || n.ts > cutoff)
+    return JSON.parse(localStorage.getItem(KEY) || '[]')   // KHÔNG hết hạn (user chốt 2026-07-15): luôn giữ trạng thái ví mới nhất
   } catch { return [] }
 }
 

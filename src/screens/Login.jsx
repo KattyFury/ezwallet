@@ -145,7 +145,7 @@ export default function Login() {
     <div className="screen">
       {/* Hàng 1-5: logo + slogan, canh giữa */}
       <div className="row-1-5 center col" style={{ gap: '3dvh' }}>
-        <img src={logoLong} alt="ezwallet" style={{ width: '50%' }} />
+        <img src={logoLong} alt="ezwallet" style={{ width: '56%' }} />
         <span style={{ fontSize: 'var(--fs-md-lg)', color: '#48484A', textAlign: 'center' }}>
           {t('Tạo ví bằng email, gửi nhận tiền')}<br />{t('một cách dễ dàng')}
         </span>

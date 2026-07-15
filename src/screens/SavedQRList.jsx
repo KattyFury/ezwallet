@@ -64,9 +64,9 @@ export default function SavedQRList() {
         </div>
       </div>
 
-      {/* Back = xanh (primary) + neo BÊN PHẢI cho thuận tay (ngón cái) */}
-      <div style={{ gridRow: '9 / 11', display: 'flex', alignItems: 'center', justifyContent: 'flex-end' }}>
-        <button className="btn btn-primary" style={{ width: '44%' }} onClick={() => navigate('HomeReceive')}>{t('Quay lại')}</button>
+      {/* Back = xanh (primary), căn GIỮA màn hình theo chuẩn .row10-single (user chốt 2026-07-15) */}
+      <div className="row10-single">
+        <button className="btn btn-primary" onClick={() => navigate('HomeReceive')}>{t('Quay lại')}</button>
       </div>
 
       {/* Popup thêm QR — chuẩn .popup-card (tâm vùng hàng 2-5, chừa bàn phím nửa dưới) */}

@@ -109,7 +109,7 @@ export default function SendConfirm() {
           {name && (
             <div className="confirm-row">
               <span className="confirm-label">{t('Địa chỉ')}</span>
-              <span className="confirm-value" style={{ fontSize: 'var(--fs-label)' }}>{shortenAddr(address)}</span>
+              <span className="confirm-value" style={{ fontSize: 'var(--fs-body)' }}>{shortenAddr(address)}</span>
             </div>
           )}
           <div className="confirm-row">
@@ -126,7 +126,7 @@ export default function SendConfirm() {
           )}
           <div className="confirm-row">
             <span className="confirm-label">{t('Phí mạng')}</span>
-            <span className="confirm-value num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
+            <span className="confirm-value num" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>
               {feeEl()}
             </span>
           </div>

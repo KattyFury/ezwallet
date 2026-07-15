@@ -167,7 +167,7 @@ export default function EnterEmail() {
                   fontSize: 'var(--fs-md-lg)', fontFamily: 'inherit', color: 'var(--color-content)',
                   opacity: 0.8, alignSelf: 'flex-start',
                 }}>
-                <Icon name="hint" size={15} color="var(--color-muted)" style={{ marginRight: 6, verticalAlign: 'middle' }} />{s}
+                <Icon name="hint" size={20} color="var(--color-muted)" style={{ marginRight: 6, verticalAlign: 'middle' }} />{s}
               </button>
             ))}
           </div>

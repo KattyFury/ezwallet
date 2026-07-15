@@ -104,7 +104,7 @@ export default function SendReceipt() {
           ) : null}
           <div className="confirm-row">
             <span className="confirm-label">{t('Thời gian')}</span>
-            <span className="confirm-value" style={{ fontSize: 'var(--fs-label)' }}>{fmtTime(timestamp)}</span>
+            <span className="confirm-value" style={{ fontSize: 'var(--fs-body)' }}>{fmtTime(timestamp)}</span>
           </div>
         </div>
       </div>

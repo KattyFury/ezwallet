@@ -50,7 +50,7 @@ export default function MenuScreen() {
           <button className="menu-item" style={{ width: '100%', opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
             <Icon name={icon} size={24} color="var(--color-content)" />
-            <span style={{ flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>{t(label)}</span>
+            <span style={{ flex: 1, fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>{t(label)}</span>
             {!disabled && <Icon name="right2" size={15} color="var(--color-faint)" />}
           </button>
         </div>
@@ -66,7 +66,7 @@ export default function MenuScreen() {
           window.location.reload()
         }}>
           <Icon name="out" size={24} color="var(--color-error)" />
-          <span style={{ flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)' }}>{t('Đăng xuất')}</span>
+          <span style={{ flex: 1, fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)' }}>{t('Đăng xuất')}</span>
         </button>
       </div>
 

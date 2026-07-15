@@ -62,7 +62,7 @@ export default function HomeReceive() {
       <div className="row-3-5 center col" style={{ gap: 14 }}>
         <QRCodeSVG value={walletAddr || '0x'} size={200} level="M" />
         <button onClick={handleCopyAddr} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-          <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>
+          <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>
             {shortenAddr(walletAddr)}
           </span>
           <Icon name={addrCopied ? 'check' : 'copy'} size={18} color={addrCopied ? 'var(--color-primary)' : 'var(--color-muted)'} />

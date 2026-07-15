@@ -85,7 +85,7 @@ export async function getTokenBalances(walletAddress) {
       }
     })
   )
-  const out = results.filter(t => t.amount > 0)
+  const out = results   // hiện MỌI token hỗ trợ (kể cả số dư 0) — ví luôn thấy đủ USDC/EURC/cirBTC (user chốt 2026-07-15)
   if (walletAddress) _balCache[walletAddress.toLowerCase()] = out   // cache cho lần mount sau
   return out
 }
