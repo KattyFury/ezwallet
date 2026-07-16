@@ -226,7 +226,7 @@ export default function Contacts() {
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>This can't be undone.</div>
             <div className="popup-actions" style={{ marginTop: 4 }}>
               <button className="btn btn-secondary" onClick={() => setConfirmDelete(false)}>{t('Quay lại')}</button>
-              <button className="btn btn-primary" style={{ background: 'var(--color-error)' }} onClick={handleDelete}>Delete</button>
+              <button className="btn btn-error" onClick={handleDelete}>Delete</button>
             </div>
           </div>
         </div>

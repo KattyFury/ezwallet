@@ -225,12 +225,12 @@ export default function Swap() {
           Neo đúng VỊ TRÍ 5 (tâm nút ở y=50dvh): top = 50dvh − nửa chiều cao nút (.btn 6dvh → 3dvh).
           position:absolute thay vì gridRow — tránh grid item đè hitbox lên numpad bên dưới. */}
       <div style={{ position: 'absolute', left: 20, right: 20, top: 'calc(50dvh - 3dvh)', zIndex: 2, display: 'flex', justifyContent: 'center' }}>
-        <button className={`btn ${error ? 'btn-secondary' : 'btn-primary'}`}
+        <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
           style={{
             width: '66.67%', overflow: 'hidden',
             ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
-            // Thành công = nút XANH LÁ (màu ngữ nghĩa success của app), ép opacity 1 để không bị mờ dù disabled
-            ...(success ? { background: 'var(--color-primary)', color: 'var(--color-white)', opacity: 1 } : null),
+            // Thành công = nút XANH LÁ gradient (.btn-success) — ép opacity 1 để không bị mờ dù disabled
+            ...(success ? { opacity: 1 } : null),
           }}
           disabled={!canSwap && !error} onClick={handleSwap}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>

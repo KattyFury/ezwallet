@@ -19,8 +19,9 @@ export default function HomeReceive() {
   const [copied, setCopied] = useState(false)
   const [addrCopied, setAddrCopied] = useState(false)   // copy riêng cho nút dưới QR (khác nút "Chia sẻ")
   const qrRef = useRef(null)   // canvas ẩn để xuất ảnh QR khi Share
-  // Seed tổng số dư từ cache → không "..." khi chuyển màn
-  const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? c.reduce((s, t) => s + t.usd, 0) : 0 })
+  // Seed tổng số dư từ cache → không "..." khi chuyển màn. CHƯA có cache → null (CHƯA BIẾT),
+  // KHÔNG phải 0 — xem chú thích cùng bug ở MenuScreen (07-16: màn vẽ "$0.00" lúc đang tải).
+  const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? c.reduce((s, t) => s + t.usd, 0) : null })
   const [walletAddr, setWalletAddr] = useState(localStorage.getItem('ez_wallet_addr') || '')
 
   // Lấy lại địa chỉ ví nếu thiếu (tạo ví xong nhưng Circle provision chậm)
@@ -31,7 +32,8 @@ export default function HomeReceive() {
 
   useEffect(() => {
     if (!walletAddr) return
-    getTokenBalances(walletAddr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0)))
+    // catch: đọc hỏng thì GIỮ số cũ, đừng để văng thành 0 (getTokenBalances giờ ném lỗi thay vì bịa 0)
+    getTokenBalances(walletAddr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0))).catch(() => {})
   }, [walletAddr])
 
   // Share = chia sẻ ẢNH QR (PNG) kèm text địa chỉ → sheet iOS có "Save Image" (lưu vào kho ảnh) +
@@ -52,7 +54,7 @@ export default function HomeReceive() {
 
   return (
     <div className="screen">
-      <BalanceHeader totalUsd={totalUsd} loading={false} />
+      <BalanceHeader totalUsd={totalUsd} loading={totalUsd === null} />
 
       {/* Canvas ẩn (chất lượng cao) để Share xuất ra PNG → "Save Image" vào kho ảnh */}
       <div ref={qrRef} style={{ position: 'absolute', left: -9999, top: -9999 }} aria-hidden>

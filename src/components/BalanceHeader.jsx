@@ -12,8 +12,11 @@ export default function BalanceHeader({ totalUsd, loading }) {
     getDisplayRates().then(setRates).catch(() => setRates(r => r || { USDC: 1, EURC: 1.08 }))
   }, [])
 
-  const num = (loading || !rates) ? '...' : displayNum(totalUsd, cur, rates)
-  const sign = loading ? '' : displaySymbol(cur)
+  // CHƯA BIẾT số dư → '…', KHÔNG BAO GIỜ vẽ "$0.00" (đó là bịa số dư — bug 07-16).
+  // totalUsd == null = chưa tải xong / đọc hỏng; chỉ 0 THẬT mới được hiện "$0.00".
+  const unknown = loading || !rates || totalUsd == null || Number.isNaN(totalUsd)
+  const num = unknown ? '…' : displayNum(totalUsd, cur, rates)
+  const sign = unknown ? '' : displaySymbol(cur)
 
   return (
     <div className="row-1-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

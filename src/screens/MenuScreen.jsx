@@ -22,17 +22,21 @@ function copyAddrThenFaucet() {
 
 export default function MenuScreen() {
   const { navigate } = useNav()
-  // Seed tổng số dư từ cache → không "..." khi chuyển màn
-  const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? c.reduce((s, t) => s + t.usd, 0) : 0 })
+  // Seed tổng số dư từ cache → không "..." khi chuyển màn. CHƯA có cache → null (CHƯA BIẾT),
+  // KHÔNG phải 0: bug 07-16 dùng 0 làm giá trị khởi tạo + loading={false} cứng → màn tự tin vẽ
+  // "$0.00" trong lúc còn đang tải ("chuyển màn hình nó cũng làm cho số tiền về 0 0 0").
+  // null → BalanceHeader hiện "…" cho tới khi có số THẬT.
+  const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? c.reduce((s, t) => s + t.usd, 0) : null })
   useEffect(() => {
     const addr = localStorage.getItem('ez_wallet_addr')
-    if (addr) getTokenBalances(addr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0)))
+    // catch: đọc hỏng thì GIỮ số cũ, đừng để văng thành 0 (getTokenBalances giờ ném lỗi thay vì bịa 0)
+    if (addr) getTokenBalances(addr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0))).catch(() => {})
   }, [])
 
   return (
     <div className="screen">
       {/* Rows 1-2: Số dư (đồng bộ với HomeSend / HomeReceive) */}
-      <BalanceHeader totalUsd={totalUsd} loading={false} />
+      <BalanceHeader totalUsd={totalUsd} loading={totalUsd === null} />
 
       {/* Row 3: Nạp / Rút */}
       <div className="row-3" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>

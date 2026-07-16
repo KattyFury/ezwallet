@@ -26,6 +26,22 @@
   --color-info-soft:    #E2EAF7; /* nền nhạt xanh thương hiệu */
   --color-brand:        #0B53BF; /* MÀU THƯƠNG HIỆU (đặc) — CHỮ/VIỀN brand (nav active, filter, option) */
   --grad-brand: linear-gradient(180deg, #0088FF 0%, #0B53BF 100%); /* GRADIENT thương hiệu (dọc: 0088FF trên → 0B53BF dưới) — NỀN nút CTA + action-card primary (stunning, không flat) */
+
+  /* ── GRADIENT TRẠNG THÁI (user chốt 2026-07-16) — nút đổi màu xanh lá/vàng/đỏ cũng phải có
+     gradient "y chang logo": DỌC, nhạt trên → đậm dưới, cùng độ chuyển (ΔL 10.4 · ΔS 10.9 — đo
+     ngược từ --grad-brand #0088FF→#0B53BF).
+     ⚠️ KHÁC --grad-brand ở chỗ NEO: brand lấy --color-brand làm ĐÁY rồi nâng sáng lên đỉnh. Ở đây
+     màu ngữ nghĩa là ĐỈNH, đáy là bản ĐẬM hơn — tức đẩy cả dải xuống phía tối. Lý do: nâng sáng
+     kiểu brand thì chữ trắng trên xanh lá tụt còn 1.79:1 và trên vàng 1.77:1 = KHÔNG ĐỌC NỔI, đi
+     ngược ưu tiên số 1 (to–rõ cho người già). Đẩy tối thì chữ trắng LUÔN ≥ mức hôm nay:
+       xanh lá  đỉnh 3.30:1 → đáy 6.40:1   (grad-brand: 3.52 → 6.99 — gần như trùng profile)
+       đỏ       đỉnh 4.83:1 → đáy 7.16:1
+       vàng     CHỮ ĐEN: đỉnh 9.78:1 → đáy 5.88:1  (chữ TRẮNG trên vàng chỉ 2.15:1 → CẤM)
+     Cũng KHÔNG dịch hue như brand (−8°): brand đi từ xanh dương nên vô hại, nhưng áp cho vàng ra
+     CAM (#FF9936) và cho đỏ ra HỒNG (#EE495F) — sai màu ngữ nghĩa. Giữ nguyên hue. */
+  --grad-primary: linear-gradient(180deg, #16A34A 0%, #176D37 100%); /* xanh lá — success/nhận (chữ trắng) */
+  --grad-warning: linear-gradient(180deg, #F59E0B 0%, #B87B13 100%); /* vàng — cảnh báo (CHỮ ĐEN, không phải trắng) */
+  --grad-error:   linear-gradient(180deg, #DC2626 0%, #A52828 100%); /* đỏ — lỗi/xoá (chữ trắng) */
   --color-error:        #DC2626; /* đỏ — lỗi / xóa bỏ */
   --color-error-soft:   #FEE2E2; /* nền nhạt đỏ */
   --color-warning:      #F59E0B; /* vàng cảnh báo */
@@ -230,6 +246,14 @@ body {
   color: var(--color-black);
   border: 1.5px solid var(--color-gray);
 }
+
+/* Nút TRẠNG THÁI — dùng class này, ĐỪNG tự chế inline `background: var(--color-primary)` nữa
+   (nút phẳng lạc giữa các nút gradient). Màu theo hệ ngữ nghĩa: success/nhận = xanh lá,
+   cảnh báo = vàng, lỗi/xoá = đỏ. Chi tiết công thức gradient xem :root --grad-*. */
+.btn-success { background: var(--grad-primary); color: var(--color-white); border: none; }
+.btn-error   { background: var(--grad-error);   color: var(--color-white); border: none; }
+/* Vàng BẮT BUỘC chữ ĐEN — chữ trắng trên vàng chỉ 2.15:1, người già không đọc được. */
+.btn-warning { background: var(--grad-warning); color: var(--color-black); border: none; }
 
 /* Nút Back/Continue: neo TÂM tại VỊ TRÍ 9 (top 85dvh + height 10dvh → tâm 90dvh). THOÁT KHỎI GRID
    (position:absolute) thay vì chiếm 2 hàng grid-row — box grid stretch cả 2 hàng sẽ chặn click

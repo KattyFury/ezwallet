@@ -59,15 +59,23 @@ export default function HomeSend() {
   // ShowTokensButton → true = hiện số lượng token thật; nhả tay → về lại $.
   const [showToken, setShowToken] = useState(false)
 
+  // Đọc số dư: hỏng thì THỬ LẠI, TUYỆT ĐỐI không để rơi về 0.
+  // Bug 07-16: `.catch(console.error).finally(() => setLoading(false))` — fetch hỏng mà chưa có
+  // cache → tokens=[] + loading=false → totalUsd=0 → màn tự tin vẽ "$0.00" (số dư BỊA). Giờ hỏng
+  // thì GIỮ trạng thái đang tải ("…") + tự thử lại mỗi 3s cho tới khi có số THẬT.
   useEffect(() => {
+    let cancelled = false
+    let timer = null
     ensureWalletAddress().then(addr => {
+      if (cancelled) return
       if (!addr) { setLoading(false); return }
-      getTokenBalances(addr)
-        .then(setTokens)
-        .catch(console.error)
-        .finally(() => setLoading(false))
+      const load = () => getTokenBalances(addr)
+        .then(ts => { if (!cancelled) { setTokens(ts); setLoading(false) } })
+        .catch(() => { if (!cancelled) timer = setTimeout(load, 3000) })
+      load()
     })
     getDisplayRates().then(setRates).catch(() => setRates(r => r || { USDC: 1, EURC: 1.08 }))
+    return () => { cancelled = true; clearTimeout(timer) }
   }, [])
 
   const totalUsd = tokens.reduce((s, t) => s + t.usd, 0)

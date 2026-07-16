@@ -64,29 +64,52 @@ async function fetchPrices() {
   return priceCache
 }
 
+// Đọc balanceOf 1 token, CÓ THỬ LẠI. RPC Arc thỉnh thoảng lỗi/timeout lẻ tẻ từng call.
+// Thử 3 lần, giãn dần 250/500ms. Hết 3 lần vẫn hỏng → NÉM LỖI (đừng nuốt).
+async function readBalance(token, walletAddress, tries = 3) {
+  let lastErr
+  for (let i = 0; i < tries; i++) {
+    try {
+      const raw = await publicClient.readContract({
+        address: token.address,
+        abi: ERC20_ABI,
+        functionName: 'balanceOf',
+        args: [walletAddress],
+      })
+      return Number(raw) / Math.pow(10, token.decimals)
+    } catch (e) {
+      lastErr = e
+      if (i < tries - 1) await new Promise(r => setTimeout(r, 250 * (i + 1)))
+    }
+  }
+  throw lastErr
+}
+
+// ⚠️ ĐỪNG BAO GIỜ TRẢ 0 KHI ĐỌC HỎNG — đó là BỊA SỐ DƯ.
+// Bug 07-16 (user: "các con số cứ loạn lên sai lệch rồi mới bình thường trở lại, ví dụ hiện
+// 0 0 22 xong rồi mới về lại 240 0 0"): code cũ bọc mỗi balanceOf trong try/catch rồi trả
+// `{amount: 0}` khi lỗi. RPC Arc lỗi lẻ tẻ từng token → token đọc hỏng hiện 0 y như số dư thật
+// bằng 0 → lần fetch sau ăn thì số nhảy về đúng. Tệ hơn: kết quả BỊA đó còn được GHI VÀO CACHE
+// → số sai lan sang mọi màn khác.
+// Giờ: đọc hỏng cả 3 lần → Promise.all reject → HÀM NÉM LỖI → màn hình GIỮ NGUYÊN số cũ (cache/
+// seed) thay vì vẽ số bịa. Chỉ ghi cache khi ĐỦ CẢ 3 TOKEN đọc thật thành công.
 export async function getTokenBalances(walletAddress) {
   if (MOCK) return mockBalances()
   if (!walletAddress) return []
-  const prices = await fetchPrices()
-  const results = await Promise.all(
-    TOKENS.map(async token => {
-      try {
-        const raw = await publicClient.readContract({
-          address: token.address,
-          abi: ERC20_ABI,
-          functionName: 'balanceOf',
-          args: [walletAddress],
-        })
-        const amount = Number(raw) / Math.pow(10, token.decimals)
-        const rate = prices[token.symbol] ?? token.usdRate
-        return { ...token, amount, usd: amount * rate }   // giá trị USD (KHÔNG làm tròn — cần phần lẻ cent)
-      } catch {
-        return { ...token, amount: 0, usd: 0 }
-      }
-    })
-  )
-  const out = results   // hiện MỌI token hỗ trợ (kể cả số dư 0) — ví luôn thấy đủ USDC/EURC/cirBTC (user chốt 2026-07-15)
-  if (walletAddress) _balCache[walletAddress.toLowerCase()] = out   // cache cho lần mount sau
+  // Giá và số dư chạy SONG SONG (trước đây await giá xong mới đọc số dư → chậm gấp đôi).
+  // Giá hỏng không sao: fetchPrices tự nuốt lỗi, rate rơi về usdRate offline — giá sai lệch vài %
+  // thì chấp nhận được, còn SỐ DƯ sai thì không.
+  const [prices, amounts] = await Promise.all([
+    fetchPrices(),
+    Promise.all(TOKENS.map(token => readBalance(token, walletAddress))),
+  ])
+  // Hiện MỌI token hỗ trợ (kể cả số dư 0 THẬT) — ví luôn thấy đủ USDC/EURC/cirBTC (user chốt 07-15)
+  const out = TOKENS.map((token, i) => {
+    const amount = amounts[i]
+    const rate = prices[token.symbol] ?? token.usdRate
+    return { ...token, amount, usd: amount * rate }   // giá trị USD (KHÔNG làm tròn — cần phần lẻ cent)
+  })
+  _balCache[walletAddress.toLowerCase()] = out   // chỉ tới đây khi CẢ 3 token đọc thật thành công
   return out
 }
 
