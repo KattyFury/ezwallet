@@ -28,6 +28,28 @@ export const TOKENS = [
   { symbol: 'cirBTC', address: '0xf0c4a4ce82a5746abaad9425360ab04fbba432bf', decimals: 8, color: '#F7931A', cgId: 'bitcoin',   usdRate: 65000 },
 ]
 
+// ── ĐỊA CHỈ FAUCET Circle trên Arc Testnet ──
+// Tiền từ faucet phải hiện "Faucet successful", KHÔNG phải "Đã nhận … từ 0xd4c0…daae" (người già
+// nhìn địa chỉ lạ sẽ tưởng người lạ chuyển tiền).
+// TRA RA BẰNG DỮ LIỆU THẬT (ArcScan, 2026-07-17), không đoán: quét ~1000 tx gần nhất của cả 3
+// token rồi lọc theo HÀNH VI faucet = gửi tới RẤT NHIỀU ví khác nhau + CHƯA BAO GIỜ nhận về.
+// Cả 5 địa chỉ dưới đều phát ĐÚNG một bộ cố định USDC 20.00 + EURC 20.00 + cirBTC 0.00 cho
+// 88–101 ví khác nhau, số nhận về = 0 → không thể nhầm với ví người dùng.
+// (Đã loại 0xc3de926d… và 0xfa61e1de… : tuy cũng "chưa nhận về" nhưng số tiền lung tung
+//  0.09/0.50/1.00… → là user thường, không phải faucet.)
+// Faucet mới sinh ra sau này mà chưa có ở đây → vẫn được bắt bằng cờ ez_faucet_pending
+// (user bấm nút Faucet trong app) — xem NotifArea.pollIncoming.
+const FAUCET_ADDRESSES = new Set([
+  '0x70e3fb28e1794bb91d5bceb7d66b731d0c61af8e',   // 101 ví · USDC+EURC+cirBTC
+  '0x319dd63e0ac72e7ac74443029d074032c043460f',   //  96 ví
+  '0x3c3380cdfb94dfeeaa41cad9f58254ae380d752d',   //  90 ví
+  '0xd844ba11f64d23a7481e24474d2f184e350b9b3d',   //  89 ví
+  '0xd4c0b787aa2ff9eb751bb515c877ebbf2daddaae',   //  88 ví
+])
+export function isFaucetAddress(addr) {
+  return !!addr && FAUCET_ADDRESSES.has(addr.toLowerCase())
+}
+
 let priceCache = {}
 let lastFetch = 0
 

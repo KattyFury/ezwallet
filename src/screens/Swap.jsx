@@ -129,7 +129,7 @@ export default function Swap() {
       const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
       if (res.error) throw new Error(res.error)
       setStatus('Enter PIN…')
-      await executeChallenge(getSDK(), userToken, encryptionKey, res.challengeId)
+      await executeChallenge(await getSDK(), userToken, encryptionKey, res.challengeId)
 
       // ✅ TRẠNG THÁI 1 — PIN đã ký, lệnh swap ĐÃ GỬI lên Arc ("đề nghị thành công")
       const outTxt = res.amountOut ? ` to ~${parseFloat(res.amountOut).toFixed(decimalsFor(toSym))} ${toSym}` : ` to ${toSym}`

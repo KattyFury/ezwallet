@@ -1,6 +1,6 @@
 # HANDOFF — EZwallet
 
-**Cập nhật:** 2026-07-16 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** https://ezwallet.pages.dev (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
+**Cập nhật:** 2026-07-17 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** https://ezwallet.pages.dev (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
 
 > **Ví stablecoin cho người dùng phổ thông / người già.** UX đơn giản, mobile-first.
 > ĐẦU MỖI PHIÊN đọc CẢ `HANDOFF.md` (file này) + `CLAUDE.md` (cách làm việc với user).
@@ -171,6 +171,12 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 ---
 
 ## 10. Thay đổi gần đây (rút gọn)
+
+- **07-17 (số dư không còn bịa · app nhẹ gấp 3.4 lần · nhãn Faucet):**
+  - **BỊA SỐ DƯ (bug nặng nhất):** `getTokenBalances` bọc mỗi `balanceOf` trong try/catch rồi trả `{amount:0}` khi lỗi → RPC Arc hỏng lẻ tẻ từng token → hiện 0 y như số dư THẬT bằng 0 → fetch sau ăn thì nhảy về đúng ("0 0 22 → 240 0 0"), và số bịa còn được GHI VÀO CACHE lan sang mọi màn. Thêm 2 chỗ hardcode `loading={false}` + `totalUsd=0` (MenuScreen/HomeReceive) → "chuyển màn về 0 0 0". **Nguyên tắc mới: KHÔNG BAO GIỜ vẽ số chưa chắc — chỉ 0 THẬT mới được hiện "$0.00"**, chưa biết → `…`. `readBalance` thử lại 3 lần rồi NÉM LỖI; chỉ ghi cache khi cả 3 token đọc thật thành công; HomeSend hỏng thì giữ `…` + tự thử lại mỗi 3s. Verify Playwright giả lập RPC: hỏng hoàn toàn → `…` ✓ · hồi phục → tự về $240 ✓ · **chập chờn 50%/call reload 6 lần → không lần nào ra số sai ✓**.
+  - **LOAD LÂU → NẠP LƯỜI:** đo được **5.661ms** mới thấy chữ trên 4G (tải 1.689KB trước). Thủ phạm: App.jsx import TĨNH cả 22 màn → 1 bundle 1.704KB; trong đó Circle SDK **bản thân chỉ 31KB nhưng kéo theo firebase 262KB + crypto-browserify 480KB ≈ 740KB** (≈60% bundle) chỉ để ký PIN, mà lại chặn lần vẽ đầu. Fix: `lazy()` 22 màn + `import()` động cho W3SSdk (`getSDK()` **thành ASYNC** — mọi chỗ gọi phải `await`). → **1.676ms, tải trước 195KB** = nhanh 3.4×, nhẹ 8.7×. Chunk: entry 145KB · SDK+firebase 1002KB (chỉ tải khi ký PIN) · viem 264KB · jsQR 130KB (chỉ màn quét).
+  - **NHÃN FAUCET:** faucet Circle phát 1 lượt CẢ BA token nhưng code cũ chặn `symbol === 'USDC'` + xoá cờ `ez_faucet_pending` ngay sau token đầu → EURC/cirBTC rớt thành "Received … from 0xd4c0…daae". Giờ nhận biết bằng **danh sách địa chỉ faucet tra từ ArcScan** (`chain.js` `isFaucetAddress`) + cờ pending làm lưới vớt cho faucet mới. TxHistory hiện "Received from **Faucet**", bỏ nút Add-to-Contacts cho faucet.
+  - ⚠️ **CHƯA TEST ĐƯỢC luồng PIN thật** (Circle SDK không chạy localhost) — `await getSDK()` phải test trên deploy.
 
 - **07-16b (xám cho chữ phụ · icon match font toàn bộ · fix màn Sign in with Email):**
   - **Chữ phụ → `--color-muted` = `#636366` (xám đậm)**, thay `#AEAEB2` (2.3:1, trượt AA — người già đọc không ra). Slogan Login bỏ hardcode `#48484A` (9.1:1, gần như đen) → dùng token. Lý do & số đo ở mục 5.

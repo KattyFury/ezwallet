@@ -1,28 +1,34 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { NavContext } from './nav'
 import ErrorBoundary from './components/ErrorBoundary'
-import Login from './screens/Login'
-import HomeSend from './screens/HomeSend'
-import HomeReceive from './screens/HomeReceive'
-import Swap from './screens/Swap'
-import MenuScreen from './screens/MenuScreen'
-import PasteAddress from './screens/PasteAddress'
-import SendAmount from './screens/SendAmount'
-import SendConfirm from './screens/SendConfirm'
-import SendReceipt from './screens/SendReceipt'
-import EnterEmail from './screens/EnterEmail'
-import CreateQR from './screens/CreateQR'
-import ShowQR from './screens/ShowQR'
-import SavedQRList from './screens/SavedQRList'
-import Contacts from './screens/Contacts'
-import QRScanner from './screens/QRScanner'
-import ComingSoon from './screens/ComingSoon'
-import TxHistory from './screens/TxHistory'
-import Language from './screens/Language'
-import Security from './screens/Security'
-import About from './screens/About'
-import Onboarding from './screens/Onboarding'
-import PinGate from './screens/PinGate'
+
+// NẠP LƯỜI TỪNG MÀN (2026-07-17) — user: "app cùi tại sao load lâu".
+// Trước: App.jsx import TĨNH cả 22 màn → Vite gộp HẾT vào 1 file 1.668 KB, trình duyệt phải tải +
+// parse + chạy XONG TOÀN BỘ rồi React mới vẽ được chữ đầu tiên → ĐO ĐƯỢC 2.7s MÀN TRẮNG trên 4G.
+// Nặng nhất lại là thứ màn đầu KHÔNG CẦN: jsQR 130KB (chỉ màn quét QR), qrcode.react (chỉ màn QR).
+// lazy() → mỗi màn 1 file riêng, chỉ tải khi user thực sự mở màn đó.
+const Login       = lazy(() => import('./screens/Login'))
+const HomeSend    = lazy(() => import('./screens/HomeSend'))
+const HomeReceive = lazy(() => import('./screens/HomeReceive'))
+const Swap        = lazy(() => import('./screens/Swap'))
+const MenuScreen  = lazy(() => import('./screens/MenuScreen'))
+const PasteAddress = lazy(() => import('./screens/PasteAddress'))
+const SendAmount  = lazy(() => import('./screens/SendAmount'))
+const SendConfirm = lazy(() => import('./screens/SendConfirm'))
+const SendReceipt = lazy(() => import('./screens/SendReceipt'))
+const EnterEmail  = lazy(() => import('./screens/EnterEmail'))
+const CreateQR    = lazy(() => import('./screens/CreateQR'))
+const ShowQR      = lazy(() => import('./screens/ShowQR'))
+const SavedQRList = lazy(() => import('./screens/SavedQRList'))
+const Contacts    = lazy(() => import('./screens/Contacts'))
+const QRScanner   = lazy(() => import('./screens/QRScanner'))
+const ComingSoon  = lazy(() => import('./screens/ComingSoon'))
+const TxHistory   = lazy(() => import('./screens/TxHistory'))
+const Language    = lazy(() => import('./screens/Language'))
+const Security    = lazy(() => import('./screens/Security'))
+const About       = lazy(() => import('./screens/About'))
+const Onboarding  = lazy(() => import('./screens/Onboarding'))
+const PinGate     = lazy(() => import('./screens/PinGate'))
 
 const SCREENS = {
   Login,
@@ -68,7 +74,12 @@ export default function App() {
   return (
     <NavContext.Provider value={{ navigate, params: nav.params }}>
       <ErrorBoundary>
-        <Screen />
+        {/* fallback = KHUNG MÀN TRẮNG TRỐNG, cố tình KHÔNG spinner/chữ "đang tải": màn tải trong
+            <100ms, nhấp một cái spinner rồi biến còn khó chịu hơn là không có gì. Giữ nền trắng +
+            đúng khung .screen → không giật layout khi màn thật hiện ra. */}
+        <Suspense fallback={<div className="screen" />}>
+          <Screen />
+        </Suspense>
       </ErrorBoundary>
     </NavContext.Provider>
   )

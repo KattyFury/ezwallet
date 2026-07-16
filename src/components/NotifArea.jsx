@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import Icon from './Icon'
 import { useNav } from '../nav'
 import { getNotifs, dismissNotif, addNotif } from '../notif'
+import { isFaucetAddress } from '../chain'
 import { findContactName } from '../store'
 import { t } from '../i18n'
 
@@ -34,14 +35,22 @@ function pollIncoming(after) {
         recv.filter(tx => parseInt(tx.timeStamp) > lastSeen && !seen.has(tx.hash)).reverse().forEach(tx => {
           const amt = (parseFloat(tx.value) / Math.pow(10, parseInt(tx.tokenDecimal || 6))).toFixed(2)
           const symbol = tx.tokenSymbol || 'USDC'
-          // Cờ ez_faucet_pending set khi user bấm nút Faucet ở HomeSend → USDC vào ĐẦU TIÊN trong
-          // 1h coi là tiền Faucet → thông báo "Faucet successful" (dễ hiểu hơn "nhận từ 0x…lạ").
+          // FAUCET — 2 cách nhận biết, ưu tiên cách chắc chắn:
+          // 1) Địa chỉ gửi NẰM TRONG danh sách faucet đã tra từ ArcScan (chain.js) — chắc ăn, không
+          //    phụ thuộc user có bấm nút Faucet trong app hay không, không hết hạn.
+          // 2) Cờ ez_faucet_pending (user vừa bấm nút Faucet ở HomeSend, trong 1h) — lưới vớt cho
+          //    faucet MỚI chưa có trong danh sách.
+          // ⚠️ 2 BUG CŨ đã sửa (user báo 07-17: "Received 20.00 EURC from 0xd4c0…daae" thay vì
+          //    "Faucet successful"):
+          //    - Cũ chặn `symbol === 'USDC'` → faucet Circle phát 1 LƯỢT CẢ BA token (USDC 20 +
+          //      EURC 20 + cirBTC dust) nên EURC/cirBTC rớt xuống nhánh "nhận từ 0x…lạ".
+          //    - Cũ `removeItem('ez_faucet_pending')` ngay sau token ĐẦU TIÊN → 2 token còn lại của
+          //      cùng lượt faucet đó mất cờ. Giờ KHÔNG xoá trong vòng lặp (cờ tự hết hạn sau 1h).
           const faucetPending = parseInt(localStorage.getItem('ez_faucet_pending') || '0')
-          const isFaucet = symbol === 'USDC' && faucetPending && Date.now() - faucetPending < 3600000
+          const isFaucet = isFaucetAddress(tx.from) || (faucetPending && Date.now() - faucetPending < 3600000)
           if (outHashes.has(tx.hash)) {
             addNotif(`Swap complete · received ${amt} ${symbol}`, 'received', tx.hash, `recv-${tx.hash}`)
           } else if (isFaucet) {
-            localStorage.removeItem('ez_faucet_pending')
             addNotif(`Faucet successful · received ${amt} ${symbol}`, 'received', tx.hash, `recv-${tx.hash}`)
           } else {
             // Hiện TÊN DANH BẠ nếu địa chỉ người gửi đã lưu (đồng bộ thông báo "Đã gửi cho <tên>")

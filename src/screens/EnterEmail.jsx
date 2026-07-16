@@ -53,7 +53,7 @@ export default function EnterEmail() {
 
     const walletData = await initializeWallet(userToken)
     const challengeId = walletData?.data?.challengeId
-    if (challengeId) await executeChallenge(getSDK(), userToken, encryptionKey, challengeId)
+    if (challengeId) await executeChallenge(await getSDK(), userToken, encryptionKey, challengeId)
 
     let info = null
     for (let i = 0; i < 3 && !info?.address; i++) {
@@ -74,7 +74,7 @@ export default function EnterEmail() {
     if (EMAIL_OTP_ENABLED) {
       const em = email.trim()
       try {
-        const sdk = getSDK()
+        const sdk = await getSDK()
         const deviceId = await sdk.getDeviceId()
         const { otpToken, deviceToken, deviceEncryptionKey } = await createEmailToken(deviceId, em)
         // Set config + callback rồi mở màn nhập OTP hosted của Circle.
@@ -105,7 +105,7 @@ export default function EnterEmail() {
       localStorage.setItem('ez_user_token', userToken)
       localStorage.setItem('ez_encryption_key', encryptionKey)
       localStorage.setItem('ez_email', email.trim())
-      const sdk = getSDK()
+      const sdk = await getSDK()
       const walletData = await initializeWallet(userToken)
       const challengeId = walletData?.data?.challengeId
       if (challengeId) await executeChallenge(sdk, userToken, encryptionKey, challengeId)

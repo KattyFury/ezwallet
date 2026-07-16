@@ -1,7 +1,17 @@
-import { W3SSdk } from '@circle-fin/w3s-pw-web-sdk'
 import { MOCK, MOCK_RATES } from './mock'
 
 let sdk = null
+
+// ⚡ NẠP LƯỜI Circle SDK (2026-07-17) — ĐỪNG đổi lại thành `import { W3SSdk } from '...'` ở đầu file.
+// Đo được (vite build tách chunk theo package): BẢN THÂN w3s-pw-web-sdk chỉ 31 KB, nhưng nó KÉO THEO
+// firebase 262 KB + crypto-browserify 480 KB (elliptic/asn1/bn.js/diffie-hellman…, do polyfill
+// `crypto` trong vite.config.js) = ~740 KB ≈ 60% bundle. Import TĨNH ở đây khiến mọi màn lỡ import
+// circle.js (HomeSend chỉ cần ensureWalletAddress!) đều lôi cả 740 KB đó vào lần vẽ đầu → 2.7s màn
+// trắng trên 4G. import() động → 740 KB chỉ tải khi THỰC SỰ cần ký PIN.
+async function loadW3SSdk() {
+  const m = await import('@circle-fin/w3s-pw-web-sdk')
+  return m.W3SSdk
+}
 
 // ⚠️⚠️ QUYẾT ĐỊNH (2026-07-01, user chốt): TOÀN BỘ màn Circle (PIN + tạo ví + câu hỏi bảo mật)
 // = ENGLISH THUẦN, KHÔNG setLocalizations. Lý do: Circle chỉ cho localize MỘT PHẦN (vài headline),
@@ -10,9 +20,13 @@ let sdk = null
 // (headline Việt + phần còn lại Anh + lỗi "Tạo mã PINPIN") XẤU HƠN là để English nhất quán.
 // → Chấp nhận English toàn bộ khâu PIN cho tới khi Circle hỗ trợ localization đầy đủ (hoặc đổi tech).
 // ĐỪNG thêm setLocalizations lại nếu chưa xác nhận Circle localize được HẾT (gồm cả chữ lỗi runtime).
-export function getSDK() {
+// ⚠️ ASYNC (đổi 2026-07-17 khi nạp lười SDK) — MỌI chỗ gọi PHẢI `await getSDK()`.
+// Quên await → truyền Promise vào chỗ chờ SDK thật → PIN chết câm. Đã sửa cả 6 chỗ gọi:
+// EnterEmail(×3), PinGate, Security, SendConfirm, Swap.
+export async function getSDK() {
   if (MOCK) return {}   // mock: không init SDK thật
   if (!sdk) {
+    const W3SSdk = await loadW3SSdk()
     sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
   }
   return sdk

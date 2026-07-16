@@ -20,7 +20,7 @@ export default function PinGate() {
       const { userToken, encryptionKey } = await refreshSession()
       const walletId = localStorage.getItem('ez_wallet_id')
       const challengeId = await signMessageChallenge(userToken, walletId)
-      await executeChallenge(getSDK(), userToken, encryptionKey, challengeId)
+      await executeChallenge(await getSDK(), userToken, encryptionKey, challengeId)
       sessionStorage.setItem('ez_pin_ok', '1')
       navigate(next)
     } catch (e) {

@@ -77,7 +77,7 @@ export default function SendConfirm() {
 
       // User ký bằng PIN qua W3S SDK. executeChallenge (circle.js) đã xử lý: nhập SAI PIN
       // → iframe tự cho nhập lại; nhập ĐÚNG → resolve → chạy tiếp xuống dưới (KHÔNG văng ra).
-      await executeChallenge(getSDK(), userToken, encryptionKey, data.challengeId)
+      await executeChallenge(await getSDK(), userToken, encryptionKey, data.challengeId)
 
       setDone(true)   // ký thành công → khóa màn, không cho gửi lại
       navigate('SendReceipt', { address, name, amount, memo, currency, timestamp: Date.now() })

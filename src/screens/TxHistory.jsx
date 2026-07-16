@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
 import { getDisplayCurrency, displayNum, displaySymbol } from '../data'
-import { TOKENS, getTxMemo, getDisplayRates } from '../chain'
+import { TOKENS, getTxMemo, getDisplayRates, isFaucetAddress } from '../chain'
 import Icon from '../components/Icon'
 import { t } from '../i18n'
 import { loadContacts } from '../store'
@@ -67,7 +67,10 @@ function txInfo(tx, walletAddr, contacts, rates) {
 // Icon (trái) + cụm tiền (phải) neo Ở HÀNG 1-2 (top-align). Ranh giới NGÀY ở DateHeader.
 function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, onAdd }) {
   const { isSend, amount, symbol, usd, counter, name } = txInfo(tx, walletAddr, contacts, rates)
-  const who = name || shortAddr(counter)
+  // Tiền từ faucet → hiện "Faucet" thay vì địa chỉ 0x lạ (user chốt 07-17). Ưu tiên tên danh bạ
+  // nếu user tự đặt. Danh sách faucet tra từ ArcScan — xem chain.js.
+  const isFaucet = !isSend && isFaucetAddress(counter)
+  const who = name || (isFaucet ? 'Faucet' : shortAddr(counter))
   return (
     <button onClick={onClick} style={{
       display: 'flex', alignItems: 'flex-start', gap: 12, width: '100%',
@@ -93,7 +96,7 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, on
           <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
             At <span className="num">{timeLabel(tx.timeStamp)}</span>
           </span>
-          {!isSwap && !name && counter && (
+          {!isSwap && !name && !isFaucet && counter && (   /* Faucet là máy phát tiền test, lưu vào danh bạ vô nghĩa */
             <span onClick={e => { e.stopPropagation(); onAdd(counter) }}
               style={{ flexShrink: 0, fontSize: 'var(--fs-tiny)', fontWeight: 'var(--fw-medium)', color: 'var(--color-brand)', border: '1px solid var(--color-brand)', borderRadius: 6, padding: '1px 8px', whiteSpace: 'nowrap' }}>
               Add to Contacts

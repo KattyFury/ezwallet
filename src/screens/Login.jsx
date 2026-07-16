@@ -2,7 +2,6 @@ import logoLong from '../../design/logo.svg'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
 import React, { useState, useEffect, useRef } from 'react'
-import { W3SSdk } from '@circle-fin/w3s-pw-web-sdk'
 import { getCookie, setCookie, deleteCookie } from 'cookies-next'
 import { createSocialToken, initializeWallet, executeChallenge, getWalletAddress, GOOGLE_CLIENT_ID } from '../circle'
 import { t } from '../i18n'
@@ -45,7 +44,12 @@ export default function Login() {
   // Khởi tạo SDK 1 lần lúc mount với config restore từ cookies + callback onLoginComplete.
   // Lần đầu (cookies rỗng) → vô hại. Sau redirect Google (cookies còn + URL có hash token)
   // → SDK constructor tự đọc hash và gọi onLoginComplete để hoàn tất đăng nhập.
+  // ⚡ SDK nạp lười + KHÔNG chặn vẽ màn (2026-07-17). Trước: `import { W3SSdk } from '...'` ở đầu
+  // file → màn Login (màn ĐẦU TIÊN người mới thấy) phải chờ tải xong ~740KB firebase+crypto rồi mới
+  // vẽ được cái logo. Giờ effect vẫn dựng SDK y như cũ (cho luồng Google redirect), nhưng bằng
+  // import() động chạy NỀN → logo + nút hiện ngay, SDK về sau.
   useEffect(() => {
+    let cancelled = false
     const onLoginComplete = async (error, result) => {
       COOKIE_KEYS.forEach(k => deleteCookie(k))   // deviceToken dùng 1 lần → dọn ngay
       if (error) { setGoogleErr(googleErrMsg(error)); setRestoring(false); return }
@@ -89,28 +93,42 @@ export default function Login() {
       }
     }
 
-    const sdk = new W3SSdk({
-      appSettings: { appId: getCookie('appId') || APP_ID },
-      loginConfigs: {
-        deviceToken: getCookie('deviceToken') || '',
-        deviceEncryptionKey: getCookie('deviceEncryptionKey') || '',
-        google: {
-          clientId: getCookie('google.clientId') || GOOGLE_CLIENT_ID,
-          redirectUri: window.location.origin,
-          selectAccountPrompt: true,
-        },
-      },
-    }, onLoginComplete)
-    sdkRef.current = sdk
+    // Đang quay lại từ redirect (URL có token) → hiện trạng thái "đang đăng nhập" NGAY,
+    // không đợi SDK tải xong.
+    const restoringNow = /access_token|id_token|code=/.test(window.location.hash + window.location.search)
+    if (restoringNow) setRestoring(true)
 
-    // Đang quay lại từ redirect (URL có token) → hiện trạng thái "đang đăng nhập"
-    if (/access_token|id_token|code=/.test(window.location.hash + window.location.search)) setRestoring(true)
-    else ensureDeviceId(sdk).catch(() => {})   // xin trước cho đỡ trễ lúc bấm nút (không phải lúc restore)
+    import('@circle-fin/w3s-pw-web-sdk').then(({ W3SSdk }) => {
+      if (cancelled) return
+      const sdk = new W3SSdk({
+        appSettings: { appId: getCookie('appId') || APP_ID },
+        loginConfigs: {
+          deviceToken: getCookie('deviceToken') || '',
+          deviceEncryptionKey: getCookie('deviceEncryptionKey') || '',
+          google: {
+            clientId: getCookie('google.clientId') || GOOGLE_CLIENT_ID,
+            redirectUri: window.location.origin,
+            selectAccountPrompt: true,
+          },
+        },
+      }, onLoginComplete)
+      sdkRef.current = sdk
+      // xin trước cho đỡ trễ lúc bấm nút (không phải lúc restore)
+      if (!restoringNow) ensureDeviceId(sdk).catch(() => {})
+    }).catch(() => {})
+    return () => { cancelled = true }
   }, [])
 
   async function handleGoogleLogin() {
     setGoogleErr('')
     try {
+      // sdkRef có thể CHƯA có nếu bấm trước lúc import() động xong (từ 07-17 SDK nạp lười).
+      // Trước đây SDK dựng đồng bộ trong useEffect nên không bao giờ null → giờ phải tự lo.
+      // (Nút Google đang ẩn khỏi UI nên nhánh này chưa chạy, nhưng đừng để lại mìn cho lúc bật lại.)
+      if (!sdkRef.current) {
+        const { W3SSdk } = await import('@circle-fin/w3s-pw-web-sdk')
+        sdkRef.current = new W3SSdk({ appSettings: { appId: APP_ID } })
+      }
       const sdk = sdkRef.current
       const deviceId = await ensureDeviceId(sdk)
       const { deviceToken, deviceEncryptionKey } = await createSocialToken(deviceId)

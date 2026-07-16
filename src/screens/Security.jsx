@@ -23,7 +23,7 @@ export default function Security() {
       const { userToken, encryptionKey } = await refreshSession()
       const challengeId = await resetPinChallenge(userToken)
       setPinStatus(t('Nhập PIN...'))
-      await executeChallenge(getSDK(), userToken, encryptionKey, challengeId)
+      await executeChallenge(await getSDK(), userToken, encryptionKey, challengeId)
       setPinStatus(t('Đổi PIN thành công!'))
       setTimeout(() => setPinStatus(''), 2000)
     } catch (e) {
