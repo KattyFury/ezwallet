@@ -145,7 +145,11 @@ export default function Login() {
     <div className="screen">
       {/* Hàng 1-5: logo + slogan, canh giữa */}
       <div className="row-1-5 center col" style={{ gap: '3dvh' }}>
-        <img src={logoLong} alt="ezwallet" style={{ width: '56%' }} />
+        {/* 50% BỀ NGANG MÀN (user chốt 07-17). KHÔNG dùng width:'50%' — đó là 50% của khung
+            .row-1-5 đang thụt lề 20px mỗi bên, ra 175px = 44.9% màn. Tỉ lệ khung/màn còn ĐỔI theo
+            máy nên không có % cố định nào của khung = 50% màn. Neo thẳng vào màn:
+            .screen = min(100vw, --screen-max) → nửa màn = min(50vw, --screen-max / 2). */}
+        <img src={logoLong} alt="ezwallet" style={{ width: 'min(50vw, calc(var(--screen-max) / 2))' }} />
         <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center' }}>
           {t('Tạo ví bằng email, gửi nhận tiền')}<br />{t('một cách dễ dàng')}
         </span>

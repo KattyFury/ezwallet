@@ -64,6 +64,12 @@
   --is-item:    17px;   /* cặp --fs-item   17 */
   --is-label:   15px;   /* cặp --fs-label  15 */
 
+  /* ── BỀ NGANG MÀN ──
+     .screen = min(100vw, --screen-max). Muốn đặt kích cỡ theo % CỦA MÀN (không phải % của khung
+     cha đang bị thụt lề 20px), dùng: min(<x>vw, calc(var(--screen-max) * <x/100>)).
+     Vd logo Login = 50% màn → min(50vw, calc(var(--screen-max) / 2)). */
+  --screen-max: 430px;
+
   /* Font weights — thang đậm–nhạt cho tương phản Barlow */
   --fw-light:     300;   /* NHẠT — số hero lớn (số dư, số tiền): thanh thoát, chỉ dùng cho chữ TO */
   --fw-normal:    400;   /* body, nội dung đọc */
@@ -107,7 +113,7 @@ body {
      minmax(0,1fr) chặn trần = bề ngang .screen; nội dung dài tự cắt/cuộn trong ô của nó. */
   grid-template-columns: minmax(0, 1fr);
   height: 100dvh;
-  max-width: 430px;
+  max-width: var(--screen-max);
   margin: 0 auto;
   background: var(--color-white);
   overflow: hidden;
