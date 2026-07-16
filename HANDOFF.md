@@ -162,11 +162,16 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 ## 9. Việc tiếp theo
 
-1. **User test swap thật** 1 lần số nhỏ trên deploy (ký PIN) — mô phỏng đã đạt nhưng chưa test PIN thật đầu-cuối.
-2. **Trạng thái giao dịch thật** — poll txHash sau gửi/swap → "đã lên blockchain" (Arc finality <1s).
-3. **Google login làm lại** qua Google Identity Services → đi luồng email (userId=email, full quyền PIN) khi user yêu cầu — thay đổi kiến trúc, làm riêng 1 buổi.
-4. Batch gửi nhiều người (Multicall3From, encoder sẵn).
-5. Tối giản tiếp UI cho người già (ẩn yếu tố crypto thừa) — user chỉ từng chỗ khi vào việc.
+> 🔴 **VIỆC 1 LÀ CHẶN — làm TRƯỚC mọi thứ khác trong phiên sau.**
+
+1. 🔴 **TEST PIN TRÊN DEPLOY — GẤP, chưa ai xác nhận.** Phiên 07-17 đổi `getSDK()` **sync → async** (nạp lười SDK, mục 10) và thêm `await` ở 6 chỗ gọi (EnterEmail ×3, PinGate, Security, SendConfirm, Swap). **Circle SDK không chạy localhost → KHÔNG test được ở máy, đã đẩy lên deploy mà chưa ai thử.** Việc phải làm: đăng nhập → mở khoá PIN → gửi 1 lần số nhỏ. **Màn PIN không hiện = nghi thiếu `await getSDK()` ở đâu đó** → `grep -rn "getSDK()" src/ | grep -v "await getSDK()"` phải ra RỖNG. Hỏng nặng thì revert commit `78ac6da`.
+2. **User test swap thật** 1 lần số nhỏ trên deploy (ký PIN) — mô phỏng đã đạt nhưng chưa test PIN thật đầu-cuối. (Gộp luôn với việc 1.)
+3. **Icon `!` (warning) — CHỜ USER CHỌN HƯỚNG, đừng tự sửa.** User báo icon `!` trông nhỏ hơn hẳn icon Send/Receive dù CÙNG ô 17px (`--is-item`). Đã đo ra nguyên nhân: mũi tên up/down vẽ nét đậm cao **80/100** viewBox, còn `warning.svg` thì **vòng tròn chiếm 80/100 nhưng dấu `!` bên trong chỉ ~45** → cùng ô mà mực ít hơn nửa. Không phải lỗi cỡ, mà do icon này có VÒNG BAO còn icon kia thì không. 2 hướng: (a) phóng riêng icon warning to hơn thang `--is-*`, (b) sửa `warning.svg` cho dấu `!` chiếm nhiều viewBox hơn / bỏ vòng tròn. **Icon là bộ user tự vẽ → phải hỏi, xem cảnh báo 🎨 cuối mục 5.**
+4. **Trạng thái giao dịch thật** — poll txHash sau gửi/swap → "đã lên blockchain" (Arc finality <1s).
+5. **Google login làm lại** qua Google Identity Services → đi luồng email (userId=email, full quyền PIN) khi user yêu cầu — thay đổi kiến trúc, làm riêng 1 buổi.
+6. Batch gửi nhiều người (Multicall3From, encoder sẵn).
+7. Tối giản tiếp UI cho người già (ẩn yếu tố crypto thừa) — user chỉ từng chỗ khi vào việc.
+8. **Còn tối ưu được nữa nếu cần** (chưa làm, không cấp bách): `@circle-fin/app-kit` + `swap-kit` + `adapter-viem-v2` nằm trong `package.json` nhưng **KHÔNG chỗ nào import** (functions chỉ nhắc trong comment) → gỡ khỏi deps cho gọn. Chunk SDK+firebase vẫn 1002KB: phần lớn là **crypto-browserify** do `nodePolyfills({ include: [...'crypto'] })` ở `vite.config.js` — thử bỏ `'crypto'` xem SDK còn chạy không, nhưng **chỉ test được trên deploy** nên rủi ro, đừng làm chung phiên với việc khác.
 
 ---
 
@@ -211,5 +216,8 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 - **Mở ví = chính PIN Circle**, không tạo passcode riêng (đã thử app passcode + KV, bỏ vì rối). Email OTP đã thử → tắt (OTP mất PIN).
 - **Google/SSO không gắn được PIN** (platform-level) → mỗi phương thức login = 1 userId/ví riêng. Giữ Email+PIN mặc định.
 - **Tiền hiển thị base USD**, USDC=$1 (bỏ vòng VND — double-conversion làm "$5"→"$4.99").
+- **KHÔNG BAO GIỜ vẽ con số tiền mà mình chưa chắc** (07-17, bug nặng nhất từ trước tới nay): đọc hỏng → **giữ số cũ / hiện `…`**, TUYỆT ĐỐI không trả 0 rồi hiện `$0.00`. Chỉ 0 THẬT (đọc thành công, số dư đúng bằng 0) mới được hiện `$0.00`. Áp cho mọi chỗ: `getTokenBalances` ném lỗi thay vì nuốt, cache chỉ ghi khi đủ cả 3 token, `BalanceHeader` chặn `null`/`NaN`, màn nào cũng phải truyền `loading` THẬT (đừng hardcode `false`).
+- **W3SSdk PHẢI nạp lười** (07-17): đừng đổi lại thành `import { W3SSdk } from '@circle-fin/w3s-pw-web-sdk'` ở đầu `circle.js`/`Login.jsx` — nó kéo theo ~740KB firebase+crypto vào lần vẽ đầu (nhanh 3.4× nhờ bỏ cái này). `getSDK()` là **async**, mọi chỗ gọi phải `await`.
+- **Nhận diện Faucet = theo ĐỊA CHỈ** (`chain.js` `isFaucetAddress`, tra từ ArcScan bằng hành vi "gửi nhiều ví + chưa bao giờ nhận về"), KHÔNG dựa mỗi cờ thời gian + KHÔNG chặn theo symbol (faucet phát cả 3 token 1 lượt).
 - **Rà thiết kế = ĐO, không nhìn bằng mắt** (07-16): chạy `npm run mock` + Playwright chụp mọi màn ở **360/390/430px** và dump hình học DOM (so `scrollWidth` vs `clientWidth`, tìm phần tử rộng hơn `.screen`). Cách này lôi ra cột grid phình 425/390 mà mắt chỉ thấy "bị cắt kỳ kỳ" — và bác bỏ 1 nghi ngờ sai (tưởng bar xanh NavBar bị lệch, đo ra nằm đúng chỗ). Script mẫu: chụp + kiểm `OVERFLOW-X`/`CLIPPED-TEXT` tự động.
 - **Docs tham chiếu:** Circle developers.circle.com · Arc docs.arc.io (MCP arc-docs). Đọc docs thật + verify bằng API/eth_call, KHÔNG đoán.
