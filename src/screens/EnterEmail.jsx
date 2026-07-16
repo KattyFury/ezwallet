@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import Icon from '../components/Icon'
 import { useNav } from '../nav'
 import { createSession, createEmailToken, getSDK, initializeWallet, executeChallenge, getWalletAddress } from '../circle'
 import { t } from '../i18n'
@@ -165,9 +164,10 @@ export default function EnterEmail() {
                   border: 'none', borderRadius: 10,
                   background: 'var(--color-gray)', cursor: 'pointer',
                   fontSize: 'var(--fs-md-lg)', fontFamily: 'inherit', color: 'var(--color-content)',
-                  opacity: 0.8, alignSelf: 'flex-start',
+                  opacity: 0.8, alignSelf: 'flex-start', maxWidth: '100%',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
-                <Icon name="hint" size={20} color="var(--color-muted)" style={{ marginRight: 6, verticalAlign: 'middle' }} />{s}
+                {s}
               </button>
             ))}
           </div>
@@ -175,7 +175,9 @@ export default function EnterEmail() {
 
         {/* Domain suggestions khi gõ phần trước @ */}
         {showDomains && suggestions.length === 0 && (
-          <div style={{ position: 'absolute', top: 'calc(50% + 32px)', left: 0, right: 0, display: 'flex', gap: 8, marginTop: 8 }}>
+          // flexWrap: 3 chip @gmail/@yahoo/@icloud ở cỡ chữ 21 KHÔNG đủ chỗ trên 1 hàng (350px) →
+          // trước đây tràn khỏi mép phải màn. Cho xuống dòng thay vì cắt/tràn.
+          <div style={{ position: 'absolute', top: 'calc(50% + 32px)', left: 0, right: 0, display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
             {DOMAINS.map(d => (
               <button key={d} onClick={() => applyDomain(d)}
                 style={{

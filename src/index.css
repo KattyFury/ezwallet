@@ -10,7 +10,13 @@
   /* ── MÀU CHỮ — trắng/đen là chân ái ── */
   --color-black:      #000000;   /* text chính + tiêu đề + nút */
   --color-content:    #000000;   /* nội dung chính = đen */
-  --color-muted:      #AEAEB2;   /* text phụ (xám đậm) — DÙNG CHO CHỮ */
+  /* TEXT PHỤ = XÁM ĐẬM (user chốt 2026-07-16). Ưu tiên số 1 của app là TO–RÕ cho người già đọc
+     được, nên text phụ KHÔNG được nhạt: #AEAEB2 cũ chỉ đạt tương phản 2.3:1 trên nền trắng = TRƯỢT
+     chuẩn WCAG AA (cần 4.5:1). Nhưng cũng KHÔNG được quá đậm: #48484A (màu slogan cũ, hardcode)
+     đạt 9.1:1 = gần như ĐEN, mất phân cấp chính/phụ.
+     → #636366 = 6.0:1: đạt AA thoải mái mà mắt vẫn đọc ra là XÁM. Đây là 1 nguồn duy nhất cho mọi
+     text phụ — đừng hardcode màu xám rời rạc nữa (bug 07-16: slogan Login lạc hệ #48484A). */
+  --color-muted:      #636366;   /* text phụ = XÁM ĐẬM — DÙNG CHO CHỮ */
   --color-faint:      #E5E5EA;   /* icon ẩn / chevron / placeholder (xám nhạt) */
 
   /* ── MÀU CHỨC NĂNG ── */
@@ -47,10 +53,10 @@
 
   /* ── CỠ ICON — LUÔN BÁM THEO CỠ CHỮ ĐI KÈM ──
      User chốt 2026-07-16: "icon phải tương đồng với chữ, chữ to icon nhỏ là sai".
-     Icon đứng cạnh chữ nào thì lấy --is-* GHÉP CẶP với --fs-* của chữ đó (cùng số px).
+     TOÀN BỘ icon có chữ đi kèm PHẢI lấy --is-* GHÉP CẶP với --fs-* của chữ đó (cùng số px).
      ĐỪNG đặt size={14}/{18}/{20} rời rạc nữa — tăng cỡ chữ là icon lệch ngay (bug 07-16).
-     Ngoại lệ hợp lệ: icon ĐỨNG MỘT MÌNH làm hình chính (SendReceipt check 76, ComingSoon 48)
-     và icon xếp TRÊN nhãn trong action-card (icon là hình chính, nhãn là phụ chú). */
+     Chỉ icon ĐỨNG MỘT MÌNH (không có chữ nào bên cạnh để match) mới giữ số cứng: SendReceipt
+     check 76, ComingSoon shield 48, avatar Contacts, nút xoá QR, nút đảo chiều Swap, numpad erase. */
   --is-title:   30px;   /* cặp --fs-title  30 */
   --is-num:     24px;   /* cặp --fs-num    24 */
   --is-md-lg:   21px;   /* cặp --fs-md-lg  21 — button, navbar */

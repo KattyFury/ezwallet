@@ -49,7 +49,7 @@ export default function MenuScreen() {
         <div key={id} className={`row-${i + 4}`} style={{ display: 'flex', alignItems: 'center' }}>
           <button className="menu-item" style={{ width: '100%', opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
-            <Icon name={icon} size={24} color="var(--color-content)" />
+            <Icon name={icon} size="var(--is-md-lg)" color="var(--color-content)" />
             <span style={{ flex: 1, fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>{t(label)}</span>
             {!disabled && <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" />}
           </button>
@@ -65,7 +65,7 @@ export default function MenuScreen() {
           sessionStorage.removeItem('ez_pin_ok')   // đăng nhập lại phải qua cổng PIN
           window.location.reload()
         }}>
-          <Icon name="out" size={24} color="var(--color-error)" />
+          <Icon name="out" size="var(--is-md-lg)" color="var(--color-error)" />
           <span style={{ flex: 1, fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)' }}>{t('Đăng xuất')}</span>
         </button>
       </div>

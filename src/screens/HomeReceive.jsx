@@ -81,15 +81,15 @@ export default function HomeReceive() {
 
       <div className="row-9 action-grid">
         <button className="action-card" onClick={handleShare}>
-          <Icon name="share" size={22} />
+          <Icon name="share" size="var(--is-item)" />
           <span>{copied ? t('Đã copy!') : t('Chia sẻ')}</span>
         </button>
         <button className="action-card primary" onClick={() => navigate('CreateQR')}>
-          <Icon name="qr" size={22} color="var(--color-white)" />
+          <Icon name="qr" size="var(--is-item)" color="var(--color-white)" />
           <span>{t('Tạo QR')}</span>
         </button>
         <button className="action-card" onClick={() => navigate('SavedQRList')}>
-          <Icon name="download" size={22} />
+          <Icon name="download" size="var(--is-item)" />
           <span>{t('Kho QR')}</span>
         </button>
       </div>

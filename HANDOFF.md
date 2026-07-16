@@ -90,12 +90,15 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 | **Nhận tiền / PNL / verify / success** | `--color-primary` | `#16A34A` (+soft `#DCFCE7`) |
 | **Mất tiền / lỗi / bug** | `--color-error` | `#DC2626` (+soft `#FEE2E2`) |
 | **Warning** | `--color-warning` | `#F59E0B` (+soft `#FEF3C7`) |
-| Chữ chính / phụ | `--color-black` / `--color-muted` | `#000` / `#AEAEB2` |
+| Chữ chính | `--color-black` | `#000` |
+| **Chữ phụ = XÁM ĐẬM** (user chốt 07-16) | `--color-muted` | `#636366` |
 | Border / nền / divider (KHÔNG làm màu chữ) | `--color-gray` | `#E5E5EA` |
 
 > Quy tắc: yếu tố **thương hiệu → brand blue**; yếu tố **tích cực/nhận/success → xanh lá**. Đừng lẫn. `--color-brand` là 1 nguồn duy nhất cho nút — đổi màu brand chỉ sửa 1 dòng.
+>
+> **Chữ phụ = `--color-muted` #636366 (XÁM ĐẬM), KHÔNG hardcode màu xám rời rạc.** Lý do chốt số này: ưu tiên số 1 của app là TO–RÕ cho người già → `#AEAEB2` cũ chỉ đạt tương phản **2.3:1** trên nền trắng = **trượt WCAG AA** (cần 4.5:1), người già đọc không ra; nhưng `#48484A` (màu slogan Login hardcode cũ) lại **9.1:1 = gần như đen**, mất phân cấp chính/phụ. `#636366` = **6.0:1**: đạt AA thoải mái mà mắt vẫn đọc ra là xám.
 
-**Cỡ ICON — LUÔN ghép cặp với cỡ chữ đi kèm (user chốt 2026-07-16: "icon phải tương đồng với chữ, chữ to icon nhỏ là sai"):** thang `--is-*` trong `:root` ghép 1-1 với `--fs-*` (`--is-title 30 / --is-num 24 / --is-md-lg 21 / --is-body 19 / --is-item 17 / --is-label 15`). Icon đứng cạnh chữ nào thì `size="var(--is-<cỡ chữ đó>)"`. **ĐỪNG đặt `size={14}`/`{18}` rời rạc** — tăng cỡ chữ là icon lệch ngay (đúng bug 07-16: chữ lên 19–24 mà icon còn 12–15). Ngoại lệ hợp lệ (giữ số cứng): icon **đứng một mình làm hình chính** (SendReceipt check 76, ComingSoon 48), icon **xếp TRÊN nhãn** trong `.action-card` (icon là hình chính, nhãn là phụ chú), icon trong **badge tròn** (TxHistory), nút xoá QR.
+**Cỡ ICON — TOÀN BỘ phải match cỡ chữ đi kèm (user chốt 2026-07-16: "icon phải tương đồng với chữ, chữ to icon nhỏ là sai" · "Icon toàn bộ phải match font size"):** thang `--is-*` trong `:root` ghép 1-1 với `--fs-*` (`--is-title 30 / --is-num 24 / --is-md-lg 21 / --is-body 19 / --is-item 17 / --is-label 15`). Icon đứng cạnh chữ nào thì `size="var(--is-<cỡ chữ đó>)"`. **ĐỪNG đặt `size={14}`/`{18}` rời rạc** — tăng cỡ chữ là icon lệch ngay (đúng bug 07-16: chữ lên 19–24 mà icon còn 12–15). Áp cả cho icon-trên-nhãn trong `.action-card` (→ `--is-item`) và badge tròn TxHistory. **Chỉ icon ĐỨNG MỘT MÌNH** (không có chữ nào bên cạnh để match) mới giữ số cứng: SendReceipt check 76, ComingSoon shield 48, avatar Contacts, nút xoá QR, nút đảo chiều Swap, numpad erase.
 
 **Quy tắc cứng:**
 - **`.screen` PHẢI có `grid-template-columns: minmax(0,1fr)` — ĐỪNG BAO GIỜ BỎ.** Không khai cột → cột ngầm = `auto` = giãn theo NỘI DUNG RỘNG NHẤT; chỉ 1 thông báo/địa chỉ dài (`nowrap`) là cột phình quá bề ngang màn → **MỌI hàng** (số dư, list token, nút, NavBar) bị kéo rộng theo → nội dung lệch phải + `overflow:hidden` cắt cụt mép phải. Đây là bug "màn hình không hiển thị hết / số tiền không hiện" 07-16.
@@ -169,6 +172,11 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 ## 10. Thay đổi gần đây (rút gọn)
 
+- **07-16b (xám cho chữ phụ · icon match font toàn bộ · fix màn Sign in with Email):**
+  - **Chữ phụ → `--color-muted` = `#636366` (xám đậm)**, thay `#AEAEB2` (2.3:1, trượt AA — người già đọc không ra). Slogan Login bỏ hardcode `#48484A` (9.1:1, gần như đen) → dùng token. Lý do & số đo ở mục 5.
+  - **Icon match font TOÀN BỘ** (user chốt): áp `--is-*` cho cả action-card (22→`--is-item`), menu leading/out (24→`--is-md-lg`), Login mail (22→`--is-md-lg`), badge TxHistory. Chỉ icon đứng một mình còn số cứng.
+  - **EnterEmail:** chip domain `@gmail/@yahoo/@icloud` ở cỡ chữ 21 không đủ 1 hàng 350px → **tràn khỏi mép phải màn** → thêm `flexWrap:'wrap'` (giờ 2 hàng). **BỎ icon bóng đèn** ở gợi ý email quen thuộc (user: "nhìn xấu, mỗi email là được") → gợi ý chỉ còn email, dài thì cắt "…" trong khung (`maxWidth:100%` + ellipsis). Xoá import `Icon` mồ côi.
+  - **Màn Login: user duyệt, KHÔNG đụng nữa.** Số đo hiện tại (390×844): logo 196×64 = 50.3% ngang, tâm 20.5%dvh (⚠️ `width:'56%'` là 56% của KHUNG 350px chứ không phải màn) · slogan 21px w400, tâm 30.3%dvh · nút 280×51 = 71.8% ngang, **tâm đúng 90%dvh = vị trí 9**. Khoảng 33%→87%dvh bỏ trống (hơn nửa màn) — user chấp nhận.
 - **07-16 (RÀ LẠI TOÀN BỘ THIẾT KẾ sau khi tăng cỡ chữ — sửa 3 bug GỐC):** User báo "lỗi nặng, số tiền không hiện, màn hình không hiển thị hết, thông báo cái chữ to cái chữ nhỏ". Rà bằng **Playwright + mock mode** (chụp mọi màn ở 360/390/430px + dump hình học DOM, không đoán bằng mắt) → hoá ra phần lớn quy về **3 lỗi gốc, sửa 3 chỗ là hết cả loạt**:
   1. **`.screen` thiếu `grid-template-columns`** → cột ngầm `auto` phình theo thông báo dài nhất (đo: cột **425px** trong khung **390px**) → kéo lệch MỌI hàng, cắt cụt mép phải (số dư, `$0.0(`, nút Paste, chữ Menu). Fix: `grid-template-columns: minmax(0,1fr)` + `minWidth:0` cho flex item chữ `nowrap`. Sau fix `.screen` scrollWidth 465→390 = khít khung, 430px sạch hoàn toàn.
   2. **`<button>`/`<input>` không kế thừa font** → ra **Arial** giữa app Barlow (user tự phát hiện ở địa chỉ ví màn Receive; `Swap.jsx` từng phải vá tay `fontFamily:'inherit'` = đúng bệnh này). Fix: rule global `button, input, textarea, select { font-family: inherit }`.

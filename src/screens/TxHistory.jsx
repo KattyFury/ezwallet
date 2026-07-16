@@ -80,7 +80,7 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, on
         background: isSend ? 'var(--color-info-soft)' : 'var(--color-primary-soft)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <Icon name={isSend ? 'up' : 'down'} size={22} color={isSend ? 'var(--color-info)' : 'var(--color-primary)'} />
+        <Icon name={isSend ? 'up' : 'down'} size="var(--is-item)" color={isSend ? 'var(--color-info)' : 'var(--color-primary)'} />
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>

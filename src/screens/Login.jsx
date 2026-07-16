@@ -146,7 +146,7 @@ export default function Login() {
       {/* Hàng 1-5: logo + slogan, canh giữa */}
       <div className="row-1-5 center col" style={{ gap: '3dvh' }}>
         <img src={logoLong} alt="ezwallet" style={{ width: '56%' }} />
-        <span style={{ fontSize: 'var(--fs-md-lg)', color: '#48484A', textAlign: 'center' }}>
+        <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center' }}>
           {t('Tạo ví bằng email, gửi nhận tiền')}<br />{t('một cách dễ dàng')}
         </span>
       </div>
@@ -159,7 +159,7 @@ export default function Login() {
         <button className="btn btn-primary"
           style={{ width: '80%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10 }}
           onClick={() => navigate('EnterEmail')}>
-          <Icon name="mail" size={22} />
+          <Icon name="mail" size="var(--is-md-lg)" />
           <span style={{ whiteSpace: 'nowrap' }}>{t('Đăng nhập với Email')}</span>
         </button>
       </div>
