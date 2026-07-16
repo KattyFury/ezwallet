@@ -61,14 +61,14 @@ export default function Language() {
       <button className="menu-item" style={{ gridRow: 2 }} onClick={() => setLangPicker(true)}>
         <span style={LABEL}>Language</span>
         <span style={CHIP}>English</span>
-        <Icon name="right2" size={15} color="var(--color-faint)" style={{ marginLeft: 8 }} />
+        <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" style={{ marginLeft: 8 }} />
       </button>
 
       {/* Tiền tệ = HÀNG 3 — bấm mở popup (USD/EUR chọn được; CNY/VND khoá) */}
       <button className="menu-item" style={{ gridRow: 3 }} onClick={() => setCurPicker(true)}>
         <span style={LABEL}>Default currency</span>
         <span style={CHIP}>{CUR_SHORT[currency] || 'USD'}</span>
-        <Icon name="right2" size={15} color="var(--color-faint)" style={{ marginLeft: 8 }} />
+        <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" style={{ marginLeft: 8 }} />
       </button>
 
       <div className="row-10 row10-single">

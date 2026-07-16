@@ -38,7 +38,7 @@ export default function CreateQR() {
       <div className="row-2 center" style={{ padding: '0 4px' }}>
         {fromLibrary ? (
           <div className="memo-row" style={{ width: '100%' }}>
-            <Icon name="pencil" size={18} color="var(--color-muted)" />
+            <Icon name="pencil" size="var(--is-md-lg)" color="var(--color-muted)" />
             <input className="memo-input" value={name} onChange={e => setName(e.target.value)} placeholder="Name your QR" maxLength={30} />
           </div>
         ) : (
@@ -54,7 +54,7 @@ export default function CreateQR() {
           </span>
           <button onClick={() => setShowCur(true)}
             style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 4, border: '1.5px solid var(--color-gray)', borderRadius: 10, padding: '6px 10px', background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
-            {cur}<Icon name="down2" size={12} color="var(--color-muted)" />
+            {cur}<Icon name="down2" size="var(--is-md-lg)" color="var(--color-muted)" />
           </button>
         </div>
       </div>

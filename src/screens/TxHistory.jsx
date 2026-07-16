@@ -253,7 +253,7 @@ export default function TxHistory() {
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 {shortAddr(d.counter)}
                 <button onClick={() => copyCounter(d.counter)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 0 }}>
-                  <Icon name={copied ? 'check' : 'copy'} size={16} color={copied ? 'var(--color-primary)' : 'var(--color-muted)'} />
+                  <Icon name={copied ? 'check' : 'copy'} size="var(--is-item)" color={copied ? 'var(--color-primary)' : 'var(--color-muted)'} />
                 </button>
               </span>
             </DetailRow>

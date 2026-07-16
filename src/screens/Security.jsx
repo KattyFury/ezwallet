@@ -57,13 +57,13 @@ export default function Security() {
       <button className="menu-item" style={{ gridRow: 3 }} onClick={copyAddr}>
         <span style={LABEL}>{t('Địa chỉ ví')}</span>
         <span style={{ ...VALUE, color: copied ? 'var(--color-primary)' : 'var(--color-muted)' }}>{copied ? t('Đã sao chép') : shortAddr}</span>
-        <Icon name="copy" size={16} color="var(--color-faint)" />
+        <Icon name="copy" size="var(--is-item)" color="var(--color-faint)" />
       </button>
       <button className="menu-item" style={{ gridRow: 4 }} onClick={handleResetPin}>
         <span style={LABEL}>{t('Đổi PIN')}</span>
         {pinStatus
           ? <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-primary)' }}>{pinStatus}</span>
-          : <Icon name="right2" size={15} color="var(--color-faint)" />}
+          : <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" />}
       </button>
 
       <div className="row-10 row10-single">

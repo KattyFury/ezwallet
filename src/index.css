@@ -45,6 +45,19 @@
   --fs-content:  20px;   /* alias → --fs-body */
   --fs-sub:      16px;   /* alias → --fs-label */
 
+  /* ── CỠ ICON — LUÔN BÁM THEO CỠ CHỮ ĐI KÈM ──
+     User chốt 2026-07-16: "icon phải tương đồng với chữ, chữ to icon nhỏ là sai".
+     Icon đứng cạnh chữ nào thì lấy --is-* GHÉP CẶP với --fs-* của chữ đó (cùng số px).
+     ĐỪNG đặt size={14}/{18}/{20} rời rạc nữa — tăng cỡ chữ là icon lệch ngay (bug 07-16).
+     Ngoại lệ hợp lệ: icon ĐỨNG MỘT MÌNH làm hình chính (SendReceipt check 76, ComingSoon 48)
+     và icon xếp TRÊN nhãn trong action-card (icon là hình chính, nhãn là phụ chú). */
+  --is-title:   30px;   /* cặp --fs-title  30 */
+  --is-num:     24px;   /* cặp --fs-num    24 */
+  --is-md-lg:   21px;   /* cặp --fs-md-lg  21 — button, navbar */
+  --is-body:    19px;   /* cặp --fs-body   19 — nội dung, thông báo */
+  --is-item:    17px;   /* cặp --fs-item   17 */
+  --is-label:   15px;   /* cặp --fs-label  15 */
+
   /* Font weights — thang đậm–nhạt cho tương phản Barlow */
   --fw-light:     300;   /* NHẠT — số hero lớn (số dư, số tiền): thanh thoát, chỉ dùng cho chữ TO */
   --fw-normal:    400;   /* body, nội dung đọc */
@@ -55,6 +68,12 @@
 
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* FONT CHO Ô ĐIỀU KHIỂN — ĐỪNG BỎ. Trình duyệt KHÔNG cho button/input/textarea/select kế thừa
+   font của cha: mặc định chúng dùng font hệ thống (Arial). Mọi <button>/<input> nào quên khai
+   fontFamily sẽ lòi ra chữ ARIAL giữa app Barlow (vd địa chỉ ví ở màn Receive — bug 07-16).
+   Ép inherit ở đây = 1 nguồn duy nhất; chỗ nào cần font khác vẫn tự khai đè được. */
+button, input, textarea, select { font-family: inherit; }
 
 html, body, #root {
   height: 100%;
@@ -75,6 +94,12 @@ body {
   position: relative;   /* làm mốc cho nút nổi (vd Show tokens neo đúng ranh giới hàng 6/7) */
   display: grid;
   grid-template-rows: repeat(10, 1fr);
+  /* CỘT PHẢI KHOÁ minmax(0,1fr) — KHÔNG bỏ dòng này.
+     Không khai báo cột → cột ngầm = auto = giãn theo NỘI DUNG RỘNG NHẤT. Chỉ cần 1 thông báo/địa
+     chỉ dài (nowrap) là cột phình quá bề ngang màn → MỌI hàng (số dư, list token, nút, NavBar) bị
+     kéo rộng theo → nội dung lệch phải và bị overflow:hidden cắt cụt mép phải (bug 07-16).
+     minmax(0,1fr) chặn trần = bề ngang .screen; nội dung dài tự cắt/cuộn trong ô của nó. */
+  grid-template-columns: minmax(0, 1fr);
   height: 100dvh;
   max-width: 430px;
   margin: 0 auto;

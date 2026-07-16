@@ -51,7 +51,7 @@ export default function MenuScreen() {
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
             <Icon name={icon} size={24} color="var(--color-content)" />
             <span style={{ flex: 1, fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>{t(label)}</span>
-            {!disabled && <Icon name="right2" size={15} color="var(--color-faint)" />}
+            {!disabled && <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" />}
           </button>
         </div>
       ))}

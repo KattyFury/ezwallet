@@ -158,7 +158,7 @@ export default function Contacts() {
                     <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)' }}>
                       {c.address.slice(0, 6)}...{c.address.slice(-4)}
                     </span>
-                    <Icon name={copiedId === c.id ? 'check' : 'copy'} size={14} color={copiedId === c.id ? 'var(--color-primary)' : 'var(--color-muted)'} />
+                    <Icon name={copiedId === c.id ? 'check' : 'copy'} size="var(--is-label)" color={copiedId === c.id ? 'var(--color-primary)' : 'var(--color-muted)'} />
                   </button>
                 </div>
                 <button onClick={() => navigate('SendAmount', { address: c.address, name: c.name })}

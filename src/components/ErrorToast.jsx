@@ -23,10 +23,10 @@ export default function ErrorToast({ message }) {
       background: 'var(--color-error-soft)', borderRadius: 12, padding: '12px 14px',
       display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
     }}>
-      <Icon name="warning" size={18} color="var(--color-error)" style={{ flexShrink: 0 }} />
+      <Icon name="warning" size="var(--is-body)" color="var(--color-error)" style={{ flexShrink: 0 }} />
       <span style={{ flex: 1, fontSize: 'var(--fs-label)', color: 'var(--color-content)' }}>{message}</span>
       <button onClick={() => setVisible(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: 2 }}>
-        <Icon name="x" size={14} color="var(--color-error)" />
+        <Icon name="x" size="var(--is-label)" color="var(--color-error)" />
       </button>
     </div>
   )

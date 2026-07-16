@@ -6,7 +6,7 @@ import { useNav } from '../nav'
 import { getDisplayCurrency, displayNum, displaySymbol } from '../data'
 import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates } from '../chain'
 import { ensureWalletAddress } from '../circle'
-import NotifArea from '../components/NotifArea'
+import NotifArea, { NOTIF_FS } from '../components/NotifArea'
 import { t } from '../i18n'
 
 // USDC (trái) và $98.59 (phải) phải CÙNG font + CÙNG màu — dùng chung 1 style object
@@ -106,7 +106,7 @@ export default function HomeSend() {
 
                 {/* Tên token thật (USDC/EURC/cirBTC) + huy hiệu đã xác minh (xanh lá của app) */}
                 <span style={TOKEN_TEXT_STYLE}>{tk.symbol}</span>
-                <Icon name="check" size={20} color="var(--color-primary)" />
+                <Icon name="check" size="var(--is-num)" color="var(--color-primary)" />
 
                 {/* CÙNG font + CÙNG màu với "USDC" bên trái (TOKEN_TEXT_STYLE) — theo toggle chung ở trên */}
                 <span style={{ ...TOKEN_TEXT_STYLE, marginLeft: 'auto' }}>
@@ -127,20 +127,22 @@ export default function HomeSend() {
 
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
         <NotifArea
+          // Chữ NGẮN để nằm trọn 1 dòng ở cỡ chung của vùng thông báo (NOTIF_FS) — câu dài cũ
+          // ("save people's wallet addresses") đã tràn 397px trong ô 350px, bị cắt "…" sẵn rồi.
           hints={[
-            { label: 'Contacts', desc: "save people's wallet addresses" },
-            { label: 'Scan QR', desc: "scan the recipient's QR" },
-            { label: 'Paste', desc: "paste the recipient's address" },
+            { label: 'Contacts', desc: 'saved addresses' },
+            { label: 'Scan QR', desc: "scan their QR code" },
+            { label: 'Paste', desc: 'paste an address' },
           ]}
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
               <div onClick={() => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } localStorage.setItem('ez_faucet_pending', String(Date.now())); window.open('https://faucet.circle.com/', '_blank') }}
                 style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-label)', color: 'var(--color-content)' }}>
-                  <Icon name="warning" size={18} color="var(--color-warning)" style={{ flexShrink: 0 }} />
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: NOTIF_FS, color: 'var(--color-content)' }}>
+                  <Icon name="warning" size="var(--is-item)" color="var(--color-warning)" style={{ flexShrink: 0 }} />
                   {t('Hết USDC để trả phí giao dịch')}
                 </span>
-                <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-content)', paddingLeft: 26 }}>
+                <span style={{ fontSize: NOTIF_FS, color: 'var(--color-content)', paddingLeft: 26 }}>
                   {t('Bấm để nhận USDC testnet từ')}{' '}
                   <span style={{ color: 'var(--color-warning)', textDecoration: 'underline' }}>Faucet</span>
                 </span>

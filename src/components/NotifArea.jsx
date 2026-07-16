@@ -64,14 +64,23 @@ const STYLE = {
 
 // 1 dòng — bắt buộc 1 hàng (không xuống dòng), cắt "..." nếu dài, để tối đa số thông báo
 // hiện được trong vùng cố định (rows 7-8).
-const ROW_TEXT = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
+// minWidth:0 BẮT BUỘC: đây là flex item, mặc định min-width:auto = KHÔNG co dưới bề rộng chữ →
+// nowrap sẽ ĐẨY RỘNG cả hàng thay vì cắt "…" (chính là thứ làm phình cột grid, lệch cả màn).
+const ROW_TEXT = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }
+
+// MỘT CỠ CHỮ DUY NHẤT cho cả vùng thông báo (hint / cảnh báo / thông báo thật) — trước đây hint và
+// cảnh báo dùng --fs-label (15) còn thông báo dùng --fs-body (19) → cùng 1 chỗ mà cái to cái nhỏ.
+// Chọn --fs-item 17 (user chốt 2026-07-16): đủ to cho người già, mà câu thông báo dài (vd
+// "Faucet successful · received 20.00 EURC") vẫn nằm gần trọn 1 dòng — 19px thì cắt "…" mất SỐ TIỀN.
+// Icon trong vùng này lấy cặp --is-item.
+export const NOTIF_FS = 'var(--fs-item)'
 
 // Hint = MỘT thông báo dài nhiều dòng (không phải nhiều thông báo riêng), mức ưu tiên THẤP
 // NHẤT, KHÔNG nút X, không bấm được — luôn tồn tại, bị thông báo thật đẩy lên rồi mờ dần
 // (như 1 khối) khi hết chỗ hiển thị. Nền VÀNG theo đúng màu cảnh báo/hint quy định của app.
 function HintBlock({ lines }) {
   return (
-    <div style={{ background: 'var(--color-warning-soft)', borderRadius: 12, padding: '8px 14px', display: 'flex', flexDirection: 'column', gap: 2, fontSize: 'var(--fs-label)', color: 'var(--color-content)', textAlign: 'left' }}>
+    <div style={{ background: 'var(--color-warning-soft)', borderRadius: 12, padding: '8px 14px', display: 'flex', flexDirection: 'column', gap: 2, fontSize: NOTIF_FS, color: 'var(--color-content)', textAlign: 'left' }}>
       {lines.map((h, i) => (
         <div key={i} style={ROW_TEXT}><span style={{ fontWeight: 'var(--fw-medium)' }}>{h.label}</span> = {h.desc}</div>
       ))}
@@ -135,11 +144,11 @@ export default function NotifArea({ hints = [], warning = null }) {
             // Chiều cao = đúng nút "Gửi" trong Contacts.jsx (height 40, cố định) — đỡ tốn space,
             // hiện được nhiều thông báo hơn trong vùng cố định (hàng 7-8).
             <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: s.bg, borderRadius: 12, height: 40, minHeight: 40, padding: '0 14px', cursor: clickable ? 'pointer' : 'default' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 'var(--fs-body)', color: 'var(--color-content)', ...ROW_TEXT }}>
-                <Icon name={s.icon} size={18} color={s.color} style={{ flexShrink: 0 }} />
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: NOTIF_FS, color: 'var(--color-content)', ...ROW_TEXT }}>
+                <Icon name={s.icon} size="var(--is-item)" color={s.color} style={{ flexShrink: 0 }} />
                 <span style={ROW_TEXT}>{n.text}</span>
               </span>
-              <button onClick={e => clear(n.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: 2 }}><Icon name="x" size={14} color={s.color} /></button>
+              <button onClick={e => clear(n.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: 2 }}><Icon name="x" size="var(--is-label)" color={s.color} /></button>
             </div>
           )
         })}

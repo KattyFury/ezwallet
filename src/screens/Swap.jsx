@@ -26,7 +26,7 @@ function TokenRow({ sym, onClick, big }) {
       style={{ display: 'flex', alignItems: 'center', gap: big ? 10 : 8, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
       <img src={`/tokens/${sym.toLowerCase()}.png`} alt={sym} style={{ width: d, height: d, borderRadius: '50%' }} />
       <span className="num" style={{ fontSize: big ? 28 : 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
-      <Icon name="down2" size={big ? 14 : 11} color="var(--color-muted)" />
+      <Icon name="down2" size={big ? 'var(--is-num)' : 'var(--is-item)'} color="var(--color-muted)" />
     </button>
   )
 }
@@ -234,7 +234,7 @@ export default function Swap() {
           }}
           disabled={!canSwap && !error} onClick={handleSwap}>
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
-            {success && <Icon name="check" size={18} color="var(--color-white)" />}
+            {success && <Icon name="check" size="var(--is-md-lg)" color="var(--color-white)" />}
             {error || status || 'Swap'}
           </span>
         </button>

@@ -1,6 +1,6 @@
 # HANDOFF — EZwallet
 
-**Cập nhật:** 2026-07-15 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** https://ezwallet.pages.dev (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
+**Cập nhật:** 2026-07-16 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** https://ezwallet.pages.dev (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
 
 > **Ví stablecoin cho người dùng phổ thông / người già.** UX đơn giản, mobile-first.
 > ĐẦU MỖI PHIÊN đọc CẢ `HANDOFF.md` (file này) + `CLAUDE.md` (cách làm việc với user).
@@ -95,7 +95,12 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 > Quy tắc: yếu tố **thương hiệu → brand blue**; yếu tố **tích cực/nhận/success → xanh lá**. Đừng lẫn. `--color-brand` là 1 nguồn duy nhất cho nút — đổi màu brand chỉ sửa 1 dòng.
 
+**Cỡ ICON — LUÔN ghép cặp với cỡ chữ đi kèm (user chốt 2026-07-16: "icon phải tương đồng với chữ, chữ to icon nhỏ là sai"):** thang `--is-*` trong `:root` ghép 1-1 với `--fs-*` (`--is-title 30 / --is-num 24 / --is-md-lg 21 / --is-body 19 / --is-item 17 / --is-label 15`). Icon đứng cạnh chữ nào thì `size="var(--is-<cỡ chữ đó>)"`. **ĐỪNG đặt `size={14}`/`{18}` rời rạc** — tăng cỡ chữ là icon lệch ngay (đúng bug 07-16: chữ lên 19–24 mà icon còn 12–15). Ngoại lệ hợp lệ (giữ số cứng): icon **đứng một mình làm hình chính** (SendReceipt check 76, ComingSoon 48), icon **xếp TRÊN nhãn** trong `.action-card` (icon là hình chính, nhãn là phụ chú), icon trong **badge tròn** (TxHistory), nút xoá QR.
+
 **Quy tắc cứng:**
+- **`.screen` PHẢI có `grid-template-columns: minmax(0,1fr)` — ĐỪNG BAO GIỜ BỎ.** Không khai cột → cột ngầm = `auto` = giãn theo NỘI DUNG RỘNG NHẤT; chỉ 1 thông báo/địa chỉ dài (`nowrap`) là cột phình quá bề ngang màn → **MỌI hàng** (số dư, list token, nút, NavBar) bị kéo rộng theo → nội dung lệch phải + `overflow:hidden` cắt cụt mép phải. Đây là bug "màn hình không hiển thị hết / số tiền không hiện" 07-16.
+- **Flex item chứa chữ `nowrap` PHẢI có `minWidth: 0`** — mặc định `min-width:auto` = không co dưới bề rộng chữ → `nowrap` ĐẨY RỘNG cả hàng thay vì cắt "…" (nguồn cơn làm phình cột grid ở trên).
+- **KHÔNG dựa vào `<button>`/`<input>` kế thừa font** — trình duyệt ép font hệ thống (Arial). Đã có rule global `button, input, textarea, select { font-family: inherit }` ở `index.css`; đừng xoá (bug 07-16: địa chỉ ví màn Receive ra Arial giữa app Barlow).
 - KHÔNG em-dash `—` (dùng en-dash `–`); placeholder rỗng dùng `…`. KHÔNG emoji.
 - Thông báo/hint = **nền màu nhạt iOS-style, KHÔNG viền**: Nhận=xanh lá, Gửi=brand blue, Lỗi=đỏ, Cảnh báo=vàng. Trong box nền màu: chữ FULL ĐEN, phân cấp bằng đậm/nhạt.
 - Nút lọc/toggle BẬT = nền trắng + viền brand + chữ brand (không tô đặc).
@@ -164,6 +169,13 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 ## 10. Thay đổi gần đây (rút gọn)
 
+- **07-16 (RÀ LẠI TOÀN BỘ THIẾT KẾ sau khi tăng cỡ chữ — sửa 3 bug GỐC):** User báo "lỗi nặng, số tiền không hiện, màn hình không hiển thị hết, thông báo cái chữ to cái chữ nhỏ". Rà bằng **Playwright + mock mode** (chụp mọi màn ở 360/390/430px + dump hình học DOM, không đoán bằng mắt) → hoá ra phần lớn quy về **3 lỗi gốc, sửa 3 chỗ là hết cả loạt**:
+  1. **`.screen` thiếu `grid-template-columns`** → cột ngầm `auto` phình theo thông báo dài nhất (đo: cột **425px** trong khung **390px**) → kéo lệch MỌI hàng, cắt cụt mép phải (số dư, `$0.0(`, nút Paste, chữ Menu). Fix: `grid-template-columns: minmax(0,1fr)` + `minWidth:0` cho flex item chữ `nowrap`. Sau fix `.screen` scrollWidth 465→390 = khít khung, 430px sạch hoàn toàn.
+  2. **`<button>`/`<input>` không kế thừa font** → ra **Arial** giữa app Barlow (user tự phát hiện ở địa chỉ ví màn Receive; `Swap.jsx` từng phải vá tay `fontFamily:'inherit'` = đúng bệnh này). Fix: rule global `button, input, textarea, select { font-family: inherit }`.
+  3. **Icon không theo cỡ chữ** → chữ đã lên 19–24 mà icon còn 12–15 ("chữ to icon nhỏ"). Fix: thêm thang **`--is-*` ghép cặp `--fs-*`** (mục 5) + thay hết `size={số}` rời rạc bằng token (chevron menu 15→21, check token 20→24, navbar 20→21, copy/dropdown/warning…).
+  - **NotifArea về MỘT cỡ chữ** `NOTIF_FS = --fs-item (17)` cho cả hint + cảnh báo + thông báo thật (trước: hint/cảnh báo 15 vs thông báo 19 → "cái to cái nhỏ"). **Chọn 17 chứ không 19** (user chốt): 19 thì câu dài bị cắt "…" ĐÚNG CHỖ SỐ TIỀN ("Faucet successful · received 2…"); 17 giữ nguyên câu chữ mà số tiền vẫn đọc được. Icon vùng này → `--is-item`.
+  - **Rút gọn chữ hint** HomeSend/HomeReceive (câu cũ "save people's wallet addresses" đo được 397px trong ô 350px → vốn ĐÃ bị cắt sẵn, chỉ là bug cột phình che mất).
+  - Verify: `npm run build` pass, mock KHÔNG lọt bundle prod (grep ví mock = 0).
 - **07-15 (rebrand logo gradient · 1 font Barlow · tăng size chữ · fix số dư · PIN gọn · mock mode):** Gộp nhiều lần sửa trong ngày, trạng thái CUỐI:
   - **Logo** bản GRADIENT (icon ví "EZ"): `design/logo.svg` viewBox `1160×380` (Login+biên lai, canvas dùng tỉ lệ này), `logo-icon.svg` (chỉ icon), `fav_icon.png`, `icon.png` 512. Logo Login/PinGate width **56%**.
   - **Font:** toàn app **1 font Barlow** (bỏ IBM Plex + Barlow Condensed). Cỡ đặt tên: size to (title 30) / **vừa-to (21)** / vừa (19); số hero (BalanceHeader, `.amount-display`) → Light 300; tiêu đề → semibold 600. Áp vừa-to: navbar, menu+Sign out, Login slogan, EnterEmail (icon hint 20), Send (Gửi cho/recipient/note/nút USD), địa chỉ Receive, confirm+receipt (chính vừa-to, phụ vừa).
@@ -184,4 +196,5 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 - **Mở ví = chính PIN Circle**, không tạo passcode riêng (đã thử app passcode + KV, bỏ vì rối). Email OTP đã thử → tắt (OTP mất PIN).
 - **Google/SSO không gắn được PIN** (platform-level) → mỗi phương thức login = 1 userId/ví riêng. Giữ Email+PIN mặc định.
 - **Tiền hiển thị base USD**, USDC=$1 (bỏ vòng VND — double-conversion làm "$5"→"$4.99").
+- **Rà thiết kế = ĐO, không nhìn bằng mắt** (07-16): chạy `npm run mock` + Playwright chụp mọi màn ở **360/390/430px** và dump hình học DOM (so `scrollWidth` vs `clientWidth`, tìm phần tử rộng hơn `.screen`). Cách này lôi ra cột grid phình 425/390 mà mắt chỉ thấy "bị cắt kỳ kỳ" — và bác bỏ 1 nghi ngờ sai (tưởng bar xanh NavBar bị lệch, đo ra nằm đúng chỗ). Script mẫu: chụp + kiểm `OVERFLOW-X`/`CLIPPED-TEXT` tự động.
 - **Docs tham chiếu:** Circle developers.circle.com · Arc docs.arc.io (MCP arc-docs). Đọc docs thật + verify bằng API/eth_call, KHÔNG đoán.

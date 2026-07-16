@@ -85,7 +85,7 @@ export default function SendAmount() {
           </span>
           <button onClick={() => setShowCur(true)}
             style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 4, border: '1.5px solid var(--color-gray)', borderRadius: 10, padding: '6px 10px', background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
-            {cur}<Icon name="down2" size={12} color="var(--color-muted)" />
+            {cur}<Icon name="down2" size="var(--is-md-lg)" color="var(--color-muted)" />
           </button>
         </div>
         {overBalance && (

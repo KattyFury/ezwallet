@@ -133,7 +133,7 @@ export default function SendConfirm() {
         </div>
 
         <div className="warning-badge" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <Icon name="warning" size={16} color="var(--color-warning)" />{t('Giao dịch không thể hoàn tác sau khi xác nhận')}
+          <Icon name="warning" size="var(--is-label)" color="var(--color-warning)" />{t('Giao dịch không thể hoàn tác sau khi xác nhận')}
         </div>
 
         {loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>{t('Đang mở xác nhận PIN...')}</span>}

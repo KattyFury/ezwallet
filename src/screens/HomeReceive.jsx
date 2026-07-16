@@ -65,15 +65,17 @@ export default function HomeReceive() {
           <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>
             {shortenAddr(walletAddr)}
           </span>
-          <Icon name={addrCopied ? 'check' : 'copy'} size={18} color={addrCopied ? 'var(--color-primary)' : 'var(--color-muted)'} />
+          <Icon name={addrCopied ? 'check' : 'copy'} size="var(--is-md-lg)" color={addrCopied ? 'var(--color-primary)' : 'var(--color-muted)'} />
         </button>
       </div>
 
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
+        {/* Chữ NGẮN để nằm trọn 1 dòng ở cỡ chung của vùng thông báo (NOTIF_FS) — câu dài cũ
+            ("make a QR for the exact amount") tràn ô 350px, bị cắt "…" sẵn rồi. */}
         <NotifArea hints={[
-          { label: 'Share', desc: 'share your wallet address' },
-          { label: 'Create QR', desc: 'make a QR for the exact amount' },
-          { label: 'QR Library', desc: 'keep your frequently used QRs' },
+          { label: 'Share', desc: 'send your address' },
+          { label: 'Create QR', desc: 'QR for an amount' },
+          { label: 'QR Library', desc: 'your saved QRs' },
         ]} />
       </div>
 
