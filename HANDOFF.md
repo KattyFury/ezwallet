@@ -99,6 +99,8 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 >
 > **TÁCH KHỐI BẰNG NỀN, KHÔNG BẰNG VIỀN (user chốt 07-17c: "giao diện chưa nhấn nhá").** Card/tile → `background: var(--color-surface)` + `border: none` + bo góc 20. Viền xám trên nền trắng làm mọi khối **bằng vai phải lứa, nhìn bẹt**, không có nhân vật chính. Phần tử con nằm TRONG card thì để **nền trắng** → tự nổi lên (vd chip token màn Swap). **ĐỪNG dùng `--color-gray` (#E5E5EA) làm nền mảng lớn** — nó là cỡ dành cho nét viền 1px, trải rộng ra thì nặng và bẩn. Mẫu đang áp: `Swap.jsx` const `CARD`.
 >
+> **07-17d — chuẩn trên ĐÃ ÁP TOÀN APP (user chốt "lấy Swap làm chuẩn"):** `.action-card` (Home Send/Receive) · `.confirm-box` (SendConfirm/Receipt) · `.memo-row` + `.address-input` (mọi ô nhập text — user chốt Ô NHẬP cũng nền surface không viền; lỗi = `box-shadow inset` đỏ thay viền) · chip USD/EUR (SendAmount/CreateQR) · chip Language/Onboarding · tile SavedQRList. **Bo góc: card lớn 20, chip/ô nhỏ giữ 8–12** (user chốt — bo 20 trên phần tử thấp thành viên thuốc). Chip/toggle BẬT vẫn viền brand (luật riêng, giữ). `warning-badge` về đúng luật nền vàng nhạt + chữ đen (trước lạc luật viền vàng + chữ vàng). Dead CSS chưa ai dùng, ĐỂ NGUYÊN chưa xoá: `.tip-box` `.swap-box` `.recipient-box` `.option-row`/`.option-radio`.
+>
 > **Chữ phụ = `--color-muted` #636366 (XÁM ĐẬM), KHÔNG hardcode màu xám rời rạc.** Lý do chốt số này: ưu tiên số 1 của app là TO–RÕ cho người già → `#AEAEB2` cũ chỉ đạt tương phản **2.3:1** trên nền trắng = **trượt WCAG AA** (cần 4.5:1), người già đọc không ra; nhưng `#48484A` (màu slogan Login hardcode cũ) lại **9.1:1 = gần như đen**, mất phân cấp chính/phụ. `#636366` = **6.0:1**: đạt AA thoải mái mà mắt vẫn đọc ra là xám.
 
 **Cỡ ICON — TOÀN BỘ phải match cỡ chữ đi kèm (user chốt 2026-07-16: "icon phải tương đồng với chữ, chữ to icon nhỏ là sai" · "Icon toàn bộ phải match font size"):** thang `--is-*` trong `:root` ghép 1-1 với `--fs-*` (`--is-title 30 / --is-num 24 / --is-md-lg 21 / --is-body 19 / --is-item 17 / --is-label 15`). Icon đứng cạnh chữ nào thì `size="var(--is-<cỡ chữ đó>)"`. **ĐỪNG đặt `size={14}`/`{18}` rời rạc** — tăng cỡ chữ là icon lệch ngay (đúng bug 07-16: chữ lên 19–24 mà icon còn 12–15). Áp cả cho icon-trên-nhãn trong `.action-card` (→ `--is-item`) và badge tròn TxHistory. **Chỉ icon ĐỨNG MỘT MÌNH** (không có chữ nào bên cạnh để match) mới giữ số cứng: SendReceipt check 76, ComingSoon shield 48, avatar Contacts, nút xoá QR, nút đảo chiều Swap, numpad erase.
@@ -137,6 +139,7 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 ## 7. Gotchas Circle/Arc (xương máu)
 
 **Circle W3S:**
+- **Màn PIN = iframe `pw-auth.circle.com` (cross-origin) → KHÔNG auto-mở bàn phím số được.** User muốn (07-17d) nhưng đã đọc source SDK xác nhận: browser cấm focus vào input trong iframe khác origin, iOS còn bắt user chạm trực tiếp mới mở keyboard, SDK không có option nào. Nằm hoàn toàn phía Circle — ĐỪNG tốn công đào lại.
 - 2 format chainId: W3S = `ARC-TESTNET`, Stablecoin Kit = `Arc_Testnet`.
 - **userToken sống 60 phút** → `refreshSession()` TRƯỚC mọi thao tác PIN, không thì SDK từ chối trước cả khi hiện màn PIN ("userToken had expired").
 - **Sai PIN KHÔNG đóng iframe** — SDK bắn `onError` nhưng modal cho nhập lại. `executeChallenge` BỎ QUA `RETRYABLE_CODES` (155112/155703/155704/155115/155705), chỉ settle khi success/lỗi terminal (reject sớm = user nhập đúng lại nhưng promise đã chết → "văng ra"). `155701` = user tự huỷ.
@@ -182,6 +185,12 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 ---
 
 ## 10. Thay đổi gần đây (rút gọn)
+
+- **07-17d (đồng bộ chuẩn Swap toàn app + icon thông báo center-trái):**
+  - **Icon thông báo/hint = CENTER-TRÁI cả khối** (user chốt: khối 3 dòng thì icon ngang dòng 2, không dính dòng 1): HintBlock (`NotifArea.jsx`) thêm icon `hint.svg` màu warning; hint faucet (`HomeSend.jsx`) icon warning chuyển từ hàng 1 xuống giữa khối, bỏ hack `paddingLeft:26`. Cấu trúc: flex row `alignItems:center`, icon là item riêng `flexShrink:0`, chữ gói cột riêng `minWidth:0`.
+  - **Chuẩn Swap (nền surface, không viền) áp toàn app** — chi tiết danh sách ở mục 5 (blockquote 07-17d).
+  - Verify: build pass ×2 · Playwright mock 390px chụp HomeSend / PasteAddress / SendAmount / SendConfirm / Language / Receive / CreateQR / QRLibrary — layout đúng, `pageerrors: none`.
+  - PIN auto-mở bàn phím: KHÔNG làm được (gotcha mới đầu mục 7).
 
 - **07-17c (ĐẬP ĐI XÂY LẠI màn Swap — BỎ BÀN PHÍM SỐ, chuyển sang THANH TRƯỢT %):** user đưa design + spec, đây là port nguyên hướng đó.
   - **Vì sao:** đối tượng EZwallet = người mới + người già → không bắt gõ từng chữ số. Giờ chỉ kéo "bao nhiêu % tài sản". **ĐỪNG nhét Numpad lại vào màn Swap** (SendAmount/CreateQR vẫn giữ numpad — chỉ Swap bỏ).

@@ -87,12 +87,17 @@ export const NOTIF_FS = 'var(--fs-item)'
 // Hint = MỘT thông báo dài nhiều dòng (không phải nhiều thông báo riêng), mức ưu tiên THẤP
 // NHẤT, KHÔNG nút X, không bấm được — luôn tồn tại, bị thông báo thật đẩy lên rồi mờ dần
 // (như 1 khối) khi hết chỗ hiển thị. Nền VÀNG theo đúng màu cảnh báo/hint quy định của app.
+// Icon hint.svg đứng CENTER-TRÁI cả khối (user chốt 07-17: khối 3 dòng thì icon ngang dòng 2,
+// KHÔNG dính dòng 1) → icon là flex item riêng + alignItems:center, chữ gói trong cột bên phải.
 function HintBlock({ lines }) {
   return (
-    <div style={{ background: 'var(--color-warning-soft)', borderRadius: 12, padding: '8px 14px', display: 'flex', flexDirection: 'column', gap: 2, fontSize: NOTIF_FS, color: 'var(--color-content)', textAlign: 'left' }}>
-      {lines.map((h, i) => (
-        <div key={i} style={ROW_TEXT}><span style={{ fontWeight: 'var(--fw-medium)' }}>{h.label}</span> = {h.desc}</div>
-      ))}
+    <div style={{ background: 'var(--color-warning-soft)', borderRadius: 12, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: NOTIF_FS, color: 'var(--color-content)', textAlign: 'left' }}>
+      <Icon name="hint" size="var(--is-item)" color="var(--color-warning)" style={{ flexShrink: 0 }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+        {lines.map((h, i) => (
+          <div key={i} style={ROW_TEXT}><span style={{ fontWeight: 'var(--fw-medium)' }}>{h.label}</span> = {h.desc}</div>
+        ))}
+      </div>
     </div>
   )
 }

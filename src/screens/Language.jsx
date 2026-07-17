@@ -32,7 +32,7 @@ export default function Language() {
 
   // Chip giá trị ĐỒNG BỘ cho mọi hàng (cùng 1 style).
   const LABEL = { flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }
-  const CHIP = { fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', border: '1.5px solid var(--color-gray)', borderRadius: 10, padding: '6px 14px' }
+  const CHIP = { fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', border: 'none', background: 'var(--color-surface)', borderRadius: 10, padding: '6px 14px' }
 
   // 1 popup dùng chung cho cả ngôn ngữ & tiền tệ: option locked = nút mờ, disabled (không bấm).
   const Picker = ({ title, options, active, onPick, onClose }) => (

@@ -145,15 +145,16 @@ export default function HomeSend() {
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
               <div onClick={() => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } localStorage.setItem('ez_faucet_pending', String(Date.now())); window.open('https://faucet.circle.com/', '_blank') }}
-                style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 6, cursor: 'pointer' }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: NOTIF_FS, color: 'var(--color-content)' }}>
-                  <Icon name="warning" size="var(--is-item)" color="var(--color-warning)" style={{ flexShrink: 0 }} />
-                  {t('Hết USDC để trả phí giao dịch')}
-                </span>
-                <span style={{ fontSize: NOTIF_FS, color: 'var(--color-content)', paddingLeft: 26 }}>
-                  {t('Bấm để nhận USDC testnet từ')}{' '}
-                  <span style={{ color: 'var(--color-warning)', textDecoration: 'underline' }}>Faucet</span>
-                </span>
+                style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                {/* Icon CENTER-TRÁI cả khối 2 dòng (user chốt 07-17) — không dính dòng 1 */}
+                <Icon name="warning" size="var(--is-item)" color="var(--color-warning)" style={{ flexShrink: 0 }} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
+                  <span style={{ fontSize: NOTIF_FS, color: 'var(--color-content)' }}>{t('Hết USDC để trả phí giao dịch')}</span>
+                  <span style={{ fontSize: NOTIF_FS, color: 'var(--color-content)' }}>
+                    {t('Bấm để nhận USDC testnet từ')}{' '}
+                    <span style={{ color: 'var(--color-warning)', textDecoration: 'underline' }}>Faucet</span>
+                  </span>
+                </div>
               </div>
             ) : null
           }

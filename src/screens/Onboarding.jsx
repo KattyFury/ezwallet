@@ -26,7 +26,7 @@ export default function Onboarding() {
   const Row = ({ label, value, onClick }) => (
     <button className="menu-item" style={{ width: '100%', padding: '16px 4px' }} onClick={onClick}>
       <span style={{ flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>{label}</span>
-      <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-content)', border: '1.5px solid var(--color-gray)', borderRadius: 8, padding: '4px 12px', marginRight: 8 }}>{value}</span>
+      <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-content)', border: 'none', background: 'var(--color-surface)', borderRadius: 8, padding: '4px 12px', marginRight: 8 }}>{value}</span>
       <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" />
     </button>
   )
