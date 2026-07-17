@@ -180,6 +180,16 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 ## 10. Thay đổi gần đây (rút gọn)
 
+- **07-17c (ĐẬP ĐI XÂY LẠI màn Swap — BỎ BÀN PHÍM SỐ, chuyển sang THANH TRƯỢT %):** user đưa design + spec, đây là port nguyên hướng đó.
+  - **Vì sao:** đối tượng EZwallet = người mới + người già → không bắt gõ từng chữ số. Giờ chỉ kéo "bao nhiêu % tài sản". **ĐỪNG nhét Numpad lại vào màn Swap** (SendAmount/CreateQR vẫn giữ numpad — chỉ Swap bỏ).
+  - **Bản đồ hàng (user giao):** 1 tiêu đề · **2-6** You pay ⇅ You receive + khối Rate/Fee · **7** hint số chẵn · **8** thanh trượt · **9** nút Swap · 10 NavBar.
+  - **Thanh trượt** (`components/PctSlider.jsx`): 6 mốc 0/20/40/60/80/100, kéo tự do 1%, **hút nam châm ±2%** quanh mốc, bấm thẳng vào track là nhảy tới. **CHỈ nhãn %** — user chốt BỎ nhãn tiền ($0/$15/$29) dưới mốc vì thừa. Dùng pointer events + setPointerCapture, KHÔNG `<input type=range>` (không tuỳ biến được mốc/bong bóng, iOS bắt trúng thumb mới kéo).
+  - **Hàng 7 = gợi ý số chẵn** (`src/roundHint.js` + `test/roundHint.test.mjs`): kéo theo % ra số lẻ ($732 → 1% = $7.32) → khi gần một số chẵn thì hiện "Release to use $7", **thả tay là chốt đúng số đó**. Ngưỡng = **min(1 bước trượt, 25% số đang kéo)** — cần CẢ HAI: thiếu vế 1 thì gợi ý kéo user đi xa hơn 1 nấc; thiếu vế 2 thì $7.32 nhảy lên $10 (+36%, giật mình). Chỉ hiện **khi đang kéo** và **pct < 100** (100% = "đổi hết", gợi ý số nhỏ hơn là sai ý). Đổi 2 hằng số → chạy lại `node test/roundHint.test.mjs`.
+  - **Bẫy đã dính khi làm, đừng lặp:** (1) thả tay vào hint mà dùng `floorTo` → hứa "$50.00" ra **$49.99** → phải làm tròn GẦN NHẤT rồi mới kẹp trần `floorTo(available)`; (2) `Fee` gas Arc <1 cent → `.toFixed(2)` ra "$0.00" nhìn như hỏng → hiện **`< $0.01`**.
+  - **Màu:** giữ **brand blue** của app (mockup user gửi màu tím — đó là ảnh minh hoạ, không phải đổi thương hiệu).
+  - Verify: build pass · Playwright mock 390px kéo 54% → hint $50.00 → thả ra đúng 46.30 EURC = $50.00, không tràn ngang, không lỗi JS. `test/roundHint.test.mjs` 15/15.
+  - ⚠️ CHƯA test PIN thật (Circle SDK không chạy localhost) — vẫn là việc 1 mục 9.
+
 - **07-17b (SỬA REGRESSION do chính phiên 07-17 gây ra — ví 1000 USDC báo "khả dụng 0.00", gửi + swap đều chết):**
   - **Nguyên nhân gốc: RPC Arc trả HTTP 429 (rate limit), và phiên 07-17 TỰ ĐÂM VÀO NÓ.** Phiên trước thêm `readBalance` retry 3 lần/token → mỗi lần đọc số dư bắn tới **9 request** (3 token × 3 lần) thay vì 3 → 429 → `Promise.all` all-or-nothing → 1 token hỏng giết cả 3 → hàm ném lỗi → HomeSend tự thử lại mỗi 3s → **vòng lặp chết, 429 vĩnh viễn**. "Retry cho chắc ăn" chính là thủ phạm.
   - **Chỗ vỡ ra mặt user:** phiên 07-17 đổi `getTokenBalances` sang NÉM LỖI nhưng **quên dọn đúng 2 màn tiêu tiền** — `SendAmount.jsx` `.catch(() => setAvailableAmt(0))` và `Swap.jsx` `.catch(() => {})` (+ `spendableOf(sym, undefined)` = 0) → cả 2 vẽ **0** = đúng cái nguyên tắc "không vẽ số chưa chắc" mà phiên đó vừa đặt ra. Ví 1000 USDC → "Insufficient balance (available: 0.00 USD)", nút chết.
