@@ -93,8 +93,11 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 | Chữ chính | `--color-black` | `#000` |
 | **Chữ phụ = XÁM ĐẬM** (user chốt 07-16) | `--color-muted` | `#636366` |
 | Border / nền / divider (KHÔNG làm màu chữ) | `--color-gray` | `#E5E5EA` |
+| **NỀN TILE/CARD** (mảng nền lớn, thay cho viền) | `--color-surface` | `#F2F2F7` |
 
 > Quy tắc: yếu tố **thương hiệu → brand blue**; yếu tố **tích cực/nhận/success → xanh lá**. Đừng lẫn. `--color-brand` là 1 nguồn duy nhất cho nút — đổi màu brand chỉ sửa 1 dòng.
+>
+> **TÁCH KHỐI BẰNG NỀN, KHÔNG BẰNG VIỀN (user chốt 07-17c: "giao diện chưa nhấn nhá").** Card/tile → `background: var(--color-surface)` + `border: none` + bo góc 20. Viền xám trên nền trắng làm mọi khối **bằng vai phải lứa, nhìn bẹt**, không có nhân vật chính. Phần tử con nằm TRONG card thì để **nền trắng** → tự nổi lên (vd chip token màn Swap). **ĐỪNG dùng `--color-gray` (#E5E5EA) làm nền mảng lớn** — nó là cỡ dành cho nét viền 1px, trải rộng ra thì nặng và bẩn. Mẫu đang áp: `Swap.jsx` const `CARD`.
 >
 > **Chữ phụ = `--color-muted` #636366 (XÁM ĐẬM), KHÔNG hardcode màu xám rời rạc.** Lý do chốt số này: ưu tiên số 1 của app là TO–RÕ cho người già → `#AEAEB2` cũ chỉ đạt tương phản **2.3:1** trên nền trắng = **trượt WCAG AA** (cần 4.5:1), người già đọc không ra; nhưng `#48484A` (màu slogan Login hardcode cũ) lại **9.1:1 = gần như đen**, mất phân cấp chính/phụ. `#636366` = **6.0:1**: đạt AA thoải mái mà mắt vẫn đọc ra là xám.
 
