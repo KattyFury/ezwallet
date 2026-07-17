@@ -142,6 +142,7 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 - Lỗi Circle: luôn trả nguyên văn `message (HTTP status, code)` lên UI. SDK error không phải Error chuẩn — dò `e?.message || e?.error?.message`.
 
 **Arc / Stablecoin Kit:**
+- **RPC công cộng `rpc.testnet.arc.network` RATE LIMIT rất chặt → HTTP 429.** Bắn 3 `balanceOf` song song là dính ngay (đo 07-17: hỏng 5/5). Mọi lệnh đọc nhiều thứ cùng lúc PHẢI gộp **Multicall3** (`0xcA11bde05977b3631167028862bE2a173976CA11`, đã khai trong `defineChain` ở `chain.js` → `publicClient.multicall()` tự dùng). Retry phải giãn ≥600ms — backoff ngắn (250ms) chỉ đổ thêm dầu vào lửa. Docs Arc không ghi con số giới hạn cụ thể; trang "running a node" chỉ nói node riêng = "No rate limits".
 - Gas trả bằng USDC (nội bộ 18 decimals): phí = `eth_gasPrice × gasUnits / 1e18`, rất rẻ. Chưa có paymaster.
 - Kit `amount` = **base units** (mục 4). Swap quá nhỏ → 422 `331001`.
 
@@ -166,6 +167,7 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 1. 🔴 **TEST PIN TRÊN DEPLOY — GẤP, chưa ai xác nhận.** Phiên 07-17 đổi `getSDK()` **sync → async** (nạp lười SDK, mục 10) và thêm `await` ở 6 chỗ gọi (EnterEmail ×3, PinGate, Security, SendConfirm, Swap). **Circle SDK không chạy localhost → KHÔNG test được ở máy, đã đẩy lên deploy mà chưa ai thử.** Việc phải làm: đăng nhập → mở khoá PIN → gửi 1 lần số nhỏ. **Màn PIN không hiện = nghi thiếu `await getSDK()` ở đâu đó** → `grep -rn "getSDK()" src/ | grep -v "await getSDK()"` phải ra RỖNG. Hỏng nặng thì revert commit `78ac6da`.
 2. **User test swap thật** 1 lần số nhỏ trên deploy (ký PIN) — mô phỏng đã đạt nhưng chưa test PIN thật đầu-cuối. (Gộp luôn với việc 1.)
+   - Tiện thể xác nhận fix **07-17b** (mục 10): màn Gửi + Swap phải hiện **số dư THẬT**, không còn "khả dụng 0.00"; RPC nghẽn thì hiện `…` rồi tự về số đúng.
 3. **Icon `!` (warning) — CHỜ USER CHỌN HƯỚNG, đừng tự sửa.** User báo icon `!` trông nhỏ hơn hẳn icon Send/Receive dù CÙNG ô 17px (`--is-item`). Đã đo ra nguyên nhân: mũi tên up/down vẽ nét đậm cao **80/100** viewBox, còn `warning.svg` thì **vòng tròn chiếm 80/100 nhưng dấu `!` bên trong chỉ ~45** → cùng ô mà mực ít hơn nửa. Không phải lỗi cỡ, mà do icon này có VÒNG BAO còn icon kia thì không. 2 hướng: (a) phóng riêng icon warning to hơn thang `--is-*`, (b) sửa `warning.svg` cho dấu `!` chiếm nhiều viewBox hơn / bỏ vòng tròn. **Icon là bộ user tự vẽ → phải hỏi, xem cảnh báo 🎨 cuối mục 5.**
 4. **Trạng thái giao dịch thật** — poll txHash sau gửi/swap → "đã lên blockchain" (Arc finality <1s).
 5. **Google login làm lại** qua Google Identity Services → đi luồng email (userId=email, full quyền PIN) khi user yêu cầu — thay đổi kiến trúc, làm riêng 1 buổi.
@@ -176,6 +178,13 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 ---
 
 ## 10. Thay đổi gần đây (rút gọn)
+
+- **07-17b (SỬA REGRESSION do chính phiên 07-17 gây ra — ví 1000 USDC báo "khả dụng 0.00", gửi + swap đều chết):**
+  - **Nguyên nhân gốc: RPC Arc trả HTTP 429 (rate limit), và phiên 07-17 TỰ ĐÂM VÀO NÓ.** Phiên trước thêm `readBalance` retry 3 lần/token → mỗi lần đọc số dư bắn tới **9 request** (3 token × 3 lần) thay vì 3 → 429 → `Promise.all` all-or-nothing → 1 token hỏng giết cả 3 → hàm ném lỗi → HomeSend tự thử lại mỗi 3s → **vòng lặp chết, 429 vĩnh viễn**. "Retry cho chắc ăn" chính là thủ phạm.
+  - **Chỗ vỡ ra mặt user:** phiên 07-17 đổi `getTokenBalances` sang NÉM LỖI nhưng **quên dọn đúng 2 màn tiêu tiền** — `SendAmount.jsx` `.catch(() => setAvailableAmt(0))` và `Swap.jsx` `.catch(() => {})` (+ `spendableOf(sym, undefined)` = 0) → cả 2 vẽ **0** = đúng cái nguyên tắc "không vẽ số chưa chắc" mà phiên đó vừa đặt ra. Ví 1000 USDC → "Insufficient balance (available: 0.00 USD)", nút chết.
+  - **Fix:** (1) `readAllBalances` gộp **Multicall3 = 1 request** cho cả 3 token (số dư còn nhất quán cùng 1 block), retry 2 lần backoff **600/1200ms** (mức 250/500ms cũ quá ngắn cho rate limit); (2) SendAmount đọc hỏng → giữ `null` = `…` + tự thử lại 3s, KHÔNG về 0; (3) Swap đọc hỏng → không ghi `balances`, `Available: …`, khoá nút 50%/100% (bấm 100% khi số dư giả 0 sẽ điền "0").
+  - **Verify RPC thật:** song song **0/5** → Multicall3 **8/8** (2 vòng dính 429 lẻ tẻ, retry cứu được). `npm run build` pass.
+  - ⚠️ Vẫn CHƯA test luồng PIN thật trên deploy (Circle SDK không chạy localhost) — việc 1 mục 9 còn nguyên.
 
 - **07-17 (số dư không còn bịa · app nhẹ gấp 3.4 lần · nhãn Faucet):**
   - **BỊA SỐ DƯ (bug nặng nhất):** `getTokenBalances` bọc mỗi `balanceOf` trong try/catch rồi trả `{amount:0}` khi lỗi → RPC Arc hỏng lẻ tẻ từng token → hiện 0 y như số dư THẬT bằng 0 → fetch sau ăn thì nhảy về đúng ("0 0 22 → 240 0 0"), và số bịa còn được GHI VÀO CACHE lan sang mọi màn. Thêm 2 chỗ hardcode `loading={false}` + `totalUsd=0` (MenuScreen/HomeReceive) → "chuyển màn về 0 0 0". **Nguyên tắc mới: KHÔNG BAO GIỜ vẽ số chưa chắc — chỉ 0 THẬT mới được hiện "$0.00"**, chưa biết → `…`. `readBalance` thử lại 3 lần rồi NÉM LỖI; chỉ ghi cache khi cả 3 token đọc thật thành công; HomeSend hỏng thì giữ `…` + tự thử lại mỗi 3s. Verify Playwright giả lập RPC: hỏng hoàn toàn → `…` ✓ · hồi phục → tự về $240 ✓ · **chập chờn 50%/call reload 6 lần → không lần nào ra số sai ✓**.
@@ -216,6 +225,7 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 - **Mở ví = chính PIN Circle**, không tạo passcode riêng (đã thử app passcode + KV, bỏ vì rối). Email OTP đã thử → tắt (OTP mất PIN).
 - **Google/SSO không gắn được PIN** (platform-level) → mỗi phương thức login = 1 userId/ví riêng. Giữ Email+PIN mặc định.
 - **Tiền hiển thị base USD**, USDC=$1 (bỏ vòng VND — double-conversion làm "$5"→"$4.99").
+- **RPC công cộng Arc CÓ RATE LIMIT (429) → đọc số dư PHẢI gộp Multicall3, 1 request** (07-17b). Đo thật: 3 `balanceOf` song song = hỏng **5/5**; tuần tự nghỉ 350ms vẫn 5/5 hỏng; nghỉ 700ms/token mới qua (>2s = quá chậm); **Multicall3 = 8/8 thành công, 1 request**. Multicall3 chuẩn ở `0xcA11bde05977b3631167028862bE2a173976CA11` (docs Arc → Contract addresses), khai trong `defineChain` → viem tự dùng. **ĐỪNG quay lại đọc từng token + retry mỗi token** — đó chính là cách tự đâm vào rate limit (chi tiết ở mục 10, mốc 07-17b).
 - **KHÔNG BAO GIỜ vẽ con số tiền mà mình chưa chắc** (07-17, bug nặng nhất từ trước tới nay): đọc hỏng → **giữ số cũ / hiện `…`**, TUYỆT ĐỐI không trả 0 rồi hiện `$0.00`. Chỉ 0 THẬT (đọc thành công, số dư đúng bằng 0) mới được hiện `$0.00`. Áp cho mọi chỗ: `getTokenBalances` ném lỗi thay vì nuốt, cache chỉ ghi khi đủ cả 3 token, `BalanceHeader` chặn `null`/`NaN`, màn nào cũng phải truyền `loading` THẬT (đừng hardcode `false`).
 - **W3SSdk PHẢI nạp lười** (07-17): đừng đổi lại thành `import { W3SSdk } from '@circle-fin/w3s-pw-web-sdk'` ở đầu `circle.js`/`Login.jsx` — nó kéo theo ~740KB firebase+crypto vào lần vẽ đầu (nhanh 3.4× nhờ bỏ cái này). `getSDK()` là **async**, mọi chỗ gọi phải `await`.
 - **Nhận diện Faucet = theo ĐỊA CHỈ** (`chain.js` `isFaucetAddress`, tra từ ArcScan bằng hành vi "gửi nhiều ví + chưa bao giờ nhận về"), KHÔNG dựa mỗi cờ thời gian + KHÔNG chặn theo symbol (faucet phát cả 3 token 1 lượt).

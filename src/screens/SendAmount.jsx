@@ -42,7 +42,15 @@ export default function SendAmount() {
     const tok = effectiveToken(cur)
     setAvailableAmt(null)
     // spendableOf: USDC chừa lại 1 làm phí mạng (gas Arc trả bằng USDC) — khách không gửi hết được
-    getTokenInfo(walletAddr, tok).then(i => setAvailableAmt(spendableOf(tok, i.balance))).catch(() => setAvailableAmt(0))
+    // ⚠️ Đọc hỏng → GIỮ null (hiện "…"), TUYỆT ĐỐI KHÔNG setAvailableAmt(0): 0 giả làm nút chết +
+    // báo "Số dư không đủ (khả dụng: 0.00)" DÙ VÍ ĐANG CÓ TIỀN — bug 07-17, ví 1000 USDC không gửi
+    // được. Thử lại sau 3s để tự hồi khi RPC hết nghẽn.
+    let alive = true, retry
+    const load = () => getTokenInfo(walletAddr, tok)
+      .then(i => { if (alive) setAvailableAmt(spendableOf(tok, i.balance)) })
+      .catch(() => { if (alive) retry = setTimeout(load, 3000) })
+    load()
+    return () => { alive = false; clearTimeout(retry) }
   }, [cur, walletAddr])
 
   const amount = parseFloat(digits || '0')

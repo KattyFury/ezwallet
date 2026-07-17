@@ -79,11 +79,16 @@ export default function Swap() {
   const overBalance = hasBal && amountNum > available + 1e-9
   const canSwap = SWAP_ENABLED && amountNum > 0 && !overBalance && !loading
 
+  // ⚠️ Đọc hỏng → KHÔNG ghi gì vào balances (giữ "chưa biết" → hiện "…"), đừng để rơi về 0:
+  // 0 giả = "Available: 0" dù ví đang có tiền (bug 07-17). Thử lại sau 3s để tự hồi khi RPC hết nghẽn.
   function loadBalances() {
     if (!walletAddress) return
-    getTokenBalances(walletAddress).then(ts => {
-      const map = {}; ts.forEach(tk => { map[tk.symbol] = tk.amount }); setBalances(map)
-    }).catch(() => {})
+    let alive = true, retry
+    const load = () => getTokenBalances(walletAddress)
+      .then(ts => { if (!alive) return; const map = {}; ts.forEach(tk => { map[tk.symbol] = tk.amount }); setBalances(map) })
+      .catch(() => { if (alive) retry = setTimeout(load, 3000) })
+    load()
+    return () => { alive = false; clearTimeout(retry) }
   }
   useEffect(loadBalances, [walletAddress])
 
@@ -188,12 +193,13 @@ export default function Swap() {
             </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
               <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>
-                Available: <span className="num">{(available).toFixed(decimalsFor(fromSym))}</span>
+                Available: <span className="num">{hasBal ? available.toFixed(decimalsFor(fromSym)) : '…'}</span>
               </span>
               <div style={{ display: 'flex', gap: 6 }}>
+                {/* Chưa biết số dư → khoá: bấm 100% khi available=0 giả sẽ điền "0" (bug 07-17) */}
                 {[['50%', 0.5], ['100%', 1]].map(([label, pct]) => (
-                  <button key={label} onClick={() => setInput(String(floorTo(available * pct, decimalsFor(fromSym))))}
-                    style={{ border: '1.5px solid var(--color-brand)', color: 'var(--color-brand)', background: 'var(--color-white)', borderRadius: 8, padding: '3px 12px', fontSize: 'var(--fs-label)', fontFamily: 'inherit', cursor: 'pointer' }}>
+                  <button key={label} disabled={!hasBal} onClick={() => setInput(String(floorTo(available * pct, decimalsFor(fromSym))))}
+                    style={{ border: `1.5px solid ${hasBal ? 'var(--color-brand)' : 'var(--color-gray)'}`, color: hasBal ? 'var(--color-brand)' : 'var(--color-muted)', background: 'var(--color-white)', borderRadius: 8, padding: '3px 12px', fontSize: 'var(--fs-label)', fontFamily: 'inherit', cursor: hasBal ? 'pointer' : 'default' }}>
                     {label}
                   </button>
                 ))}

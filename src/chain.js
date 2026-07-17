@@ -2,12 +2,16 @@ import { createPublicClient, http, decodeEventLog, parseAbiItem } from 'viem'
 import { defineChain } from 'viem'
 import { MOCK, MOCK_AMOUNTS, MOCK_RATES } from './mock'
 
+// Multicall3 chuẩn có sẵn trên Arc Testnet (docs Arc → Network → Contract addresses:
+// "Aggregates multiple read calls into a single call for efficient data retrieval").
+// Khai trong chain để publicClient.multicall() gộp N lệnh đọc vào 1 request — xem getTokenBalances.
 export const arcTestnet = defineChain({
   id: 5042002,
   name: 'Arc Testnet',
   nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
   rpcUrls: { default: { http: ['https://rpc.testnet.arc.network'] } },
   blockExplorers: { default: { name: 'ArcScan', url: 'https://testnet.arcscan.app' } },
+  contracts: { multicall3: { address: '0xcA11bde05977b3631167028862bE2a173976CA11' } },
 })
 
 export const publicClient = createPublicClient({
@@ -86,22 +90,37 @@ async function fetchPrices() {
   return priceCache
 }
 
-// Đọc balanceOf 1 token, CÓ THỬ LẠI. RPC Arc thỉnh thoảng lỗi/timeout lẻ tẻ từng call.
-// Thử 3 lần, giãn dần 250/500ms. Hết 3 lần vẫn hỏng → NÉM LỖI (đừng nuốt).
-async function readBalance(token, walletAddress, tries = 3) {
+// Đọc số dư CẢ 3 TOKEN bằng ĐÚNG 1 HTTP request (Multicall3 gộp 3 balanceOf).
+//
+// ⚠️ RPC công cộng của Arc CÓ RATE LIMIT (docs Arc "running-a-node" quảng cáo chạy node riêng =
+// "No rate limits" → endpoint chung thì có). Đo thật 2026-07-17: bắn 3 balanceOf SONG SONG →
+// HTTP 429, hỏng 5/5 lần. Tuần tự nghỉ 350ms vẫn 5/5 hỏng; phải nghỉ 700ms/token mới qua (>2s
+// mới có số dư = quá chậm). Gộp Multicall3 → 5/5 thành công, 1 request/lần đọc.
+//
+// ĐỪNG QUAY LẠI đọc từng token rồi retry: bản cũ (readBalance thử 3 lần/token) bắn tới 9 request
+// mỗi lần đọc số dư → TỰ ĐÂM vào rate limit → 429 → càng retry càng hỏng (HomeSend còn tự thử lại
+// mỗi 3s → vòng lặp chết). Đó CHÍNH LÀ bug "1000 USDC mà báo khả dụng 0.00" ngày 07-17.
+// Bonus: multicall đọc cả 3 token trong CÙNG 1 block → số dư nhất quán, không lệch block.
+//
+// Thử lại 2 lần cho trường hợp 429/timeout lẻ tẻ, giãn 600/1200ms (rate limit cần nghỉ LÂU hơn
+// hẳn mức 250/500ms cũ). Hết lượt vẫn hỏng → NÉM LỖI (đừng nuốt → xem cảnh báo getTokenBalances).
+async function readAllBalances(walletAddress, tries = 3) {
   let lastErr
   for (let i = 0; i < tries; i++) {
     try {
-      const raw = await publicClient.readContract({
-        address: token.address,
-        abi: ERC20_ABI,
-        functionName: 'balanceOf',
-        args: [walletAddress],
+      const raws = await publicClient.multicall({
+        allowFailure: false,   // 1 token hỏng → ném lỗi, KHÔNG trả 0 bịa
+        contracts: TOKENS.map(token => ({
+          address: token.address,
+          abi: ERC20_ABI,
+          functionName: 'balanceOf',
+          args: [walletAddress],
+        })),
       })
-      return Number(raw) / Math.pow(10, token.decimals)
+      return raws.map((raw, k) => Number(raw) / Math.pow(10, TOKENS[k].decimals))
     } catch (e) {
       lastErr = e
-      if (i < tries - 1) await new Promise(r => setTimeout(r, 250 * (i + 1)))
+      if (i < tries - 1) await new Promise(r => setTimeout(r, 600 * (i + 1)))
     }
   }
   throw lastErr
@@ -123,7 +142,7 @@ export async function getTokenBalances(walletAddress) {
   // thì chấp nhận được, còn SỐ DƯ sai thì không.
   const [prices, amounts] = await Promise.all([
     fetchPrices(),
-    Promise.all(TOKENS.map(token => readBalance(token, walletAddress))),
+    readAllBalances(walletAddress),   // 1 request cho cả 3 token (Multicall3) — đừng tách ra lại
   ])
   // Hiện MỌI token hỗ trợ (kể cả số dư 0 THẬT) — ví luôn thấy đủ USDC/EURC/cirBTC (user chốt 07-15)
   const out = TOKENS.map((token, i) => {
