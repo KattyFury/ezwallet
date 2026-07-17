@@ -22,12 +22,10 @@ const ShowQR      = lazy(() => import('./screens/ShowQR'))
 const SavedQRList = lazy(() => import('./screens/SavedQRList'))
 const Contacts    = lazy(() => import('./screens/Contacts'))
 const QRScanner   = lazy(() => import('./screens/QRScanner'))
-const ComingSoon  = lazy(() => import('./screens/ComingSoon'))
 const TxHistory   = lazy(() => import('./screens/TxHistory'))
 const Language    = lazy(() => import('./screens/Language'))
 const Security    = lazy(() => import('./screens/Security'))
 const About       = lazy(() => import('./screens/About'))
-const Onboarding  = lazy(() => import('./screens/Onboarding'))
 const PinGate     = lazy(() => import('./screens/PinGate'))
 
 const SCREENS = {
@@ -40,8 +38,6 @@ const SCREENS = {
   Language,
   Security,
   About,
-  ComingSoon,
-  Onboarding,
   PinGate,
 }
 
