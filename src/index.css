@@ -61,9 +61,9 @@
   --fs-num:      24px;   /* Barlow — số trong list (token amount, VND) */
   --fs-md-lg:    21px;   /* "font vừa-to" — BUTTON + slogan + chữ khi NHẬP text (to hơn nội dung 2px) */
   --fs-body:     19px;   /* "font vừa" — NỘI DUNG chữ (nhỏ hơn font vừa-to) */
-  --fs-item:     17px;   /* IBM UI — item list */
-  --fs-label:    15px;   /* IBM UI — label, text phụ, placeholder */
-  --fs-tiny:     13px;   /* badge / ghi chú rất nhỏ */
+  --fs-item:     17px;   /* "font vừa-nhỏ" — item list */
+  --fs-label:    15px;   /* "font nhỏ" — label, text phụ, placeholder */
+  --fs-tiny:     13px;   /* "font mini" — badge / ghi chú rất nhỏ */
   --fs-content:  20px;   /* alias → --fs-body */
   --fs-sub:      16px;   /* alias → --fs-label */
 

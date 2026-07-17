@@ -168,8 +168,12 @@ export default function Login() {
             máy nên không có % cố định nào của khung = 50% màn. Neo thẳng vào màn:
             .screen = min(100vw, --screen-max) → nửa màn = min(50vw, --screen-max / 2). */}
         <img src={logoLong} alt="ezwallet" style={{ width: 'min(50vw, calc(var(--screen-max) / 2))' }} />
-        <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center' }}>
-          {t('Tạo ví bằng email, gửi nhận tiền')}<br />{t('một cách dễ dàng')}
+        {/* Rộng ĐÚNG BẰNG nút "Sign in with Email" (user chốt 07-17): nút = width 80% của khung
+            gridRow 9/11, span này = 80% của khung .row-1-5 — hai khung đều là ô lưới CÙNG MỘT CỘT
+            của .screen nên cùng bề ngang → 80% khớp 80%. KHÔNG ép <br /> nữa: chữ tự xuống dòng
+            cho vừa bề ngang đó (câu dài/ngắn theo ngôn ngữ + cỡ chữ vẫn tự vỡ dòng đúng). */}
+        <span style={{ width: '80%', fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center' }}>
+          {t('Tạo ví bằng email, gửi nhận tiền một cách dễ dàng')}
         </span>
       </div>
 

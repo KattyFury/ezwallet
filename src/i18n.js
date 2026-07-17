@@ -2,8 +2,9 @@
 // Đổi ngôn ngữ = reload (đọc lại LANG). Auto-detect theo trình duyệt nếu chưa chọn.
 const EN = {
   // Login / EnterEmail
-  'Tạo ví bằng email, gửi nhận tiền': 'Create a wallet with email,',
-  'một cách dễ dàng': 'send & receive money easily',
+  // MỘT chuỗi liền, KHÔNG tách 2 key + <br /> như trước: ép ngắt dòng cứng thì câu dài/ngắn theo
+  // ngôn ngữ + cỡ chữ đều xuống dòng sai chỗ. Để nguyên câu → CSS tự xuống dòng vừa bề ngang nút.
+  'Tạo ví bằng email, gửi nhận tiền một cách dễ dàng': 'Create a wallet with email, send & receive money easily',
   'Đăng nhập với Email': 'Sign in with Email',
   'Đăng nhập với Google': 'Sign in with Google',
   'Tiếp tục': 'Continue',
@@ -159,8 +160,7 @@ const EN = {
 
 // Tiếng Trung (giản thể)
 const ZH = {
-  'Tạo ví bằng email, gửi nhận tiền': '用邮箱创建钱包，',
-  'một cách dễ dàng': '轻松收发资金',
+  'Tạo ví bằng email, gửi nhận tiền một cách dễ dàng': '用邮箱创建钱包，轻松收发资金',
   'Đăng nhập với Email': '用邮箱登录',
   'Đăng nhập với Google': '用 Google 登录',
   'Tiếp tục': '继续', 'Quay lại': '返回', 'Đang xử lý...': '处理中...', 'Có lỗi xảy ra': '出现错误',
