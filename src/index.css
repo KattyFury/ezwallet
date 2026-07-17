@@ -48,6 +48,11 @@
   --color-warning-soft: #FEF3C7; /* nền nhạt cảnh báo */
   --color-white:        #FFFFFF;
   --color-gray:         #E5E5EA; /* xám nhạt — border / nền / divider (KHÔNG làm màu chữ) */
+  /* NỀN TILE/CARD — xám rất nhạt, dùng THAY viền để tách khối khỏi nền trắng (user chốt 07-17c:
+     "giao diện chưa nhấn nhá" — card viền xám trên nền trắng nhìn bẹt, mọi khối bằng vai phải lứa).
+     Nhạt hơn hẳn --color-gray (E5E5EA) vì đây là mảng NỀN LỚN, không phải nét viền 1px.
+     Đúng mốc thẩm mỹ user thích: Coinbase Wallet — "tile bo tròn nền nhạt, tối giản viền". */
+  --color-surface:      #F2F2F7; /* nền tile/card (iOS systemGray6) */
 
   /* ── FONT — 1 font duy nhất: BARLOW (mọi biến trỏ về Barlow, giữ tên cũ để không phải sửa JSX) ── */
   --font-base:      'Barlow', sans-serif;              /* NỘI DUNG: menu, mô tả, hint, thông báo, input, memo */
@@ -57,6 +62,7 @@
 
   /* ── CỠ CHỮ (scale gợi ý — đã mở khóa, tùy chỉnh được) ── */
   --fs-amount:   52px;   /* Barlow display — số tiền lớn */
+  --fs-huge:     38px;   /* "size siêu to" — số chính màn Swap (bậc giữa 52 và 30) */
   --fs-title:    30px;   /* "size to" — TIÊU ĐỀ trang */
   --fs-num:      24px;   /* Barlow — số trong list (token amount, VND) */
   --fs-md-lg:    21px;   /* "font vừa-to" — BUTTON + slogan + chữ khi NHẬP text (to hơn nội dung 2px) */

@@ -209,11 +209,14 @@ export default function Swap() {
     }
   }
 
-  const CARD = { border: '1.5px solid var(--color-gray)', borderRadius: 16, background: 'var(--color-white)', padding: '14px 16px' }
-  // Số chính của mỗi card = "size to" (--fs-title 30) + Light 300. Cỡ LỚN NHẤT trong thang mà 2 card
-  // + khối Rate/Fee vẫn vừa hàng 2-6 (đo 390×844: --fs-amount 52 → cần 426px / có 417px = TRÀN).
+  // Card = NỀN XÁM NHẠT, KHÔNG VIỀN, bo góc to (user chốt 07-17c, đúng mockup user gửi).
+  // Trước là viền xám + nền trắng → chìm vào nền trắng của .screen, không tách khối.
+  // Chip token bên trong giữ NỀN TRẮNG → nổi bật trên card xám (không cần thêm viền đậm).
+  const CARD = { border: 'none', borderRadius: 20, background: 'var(--color-surface)', padding: '14px 16px' }
+  // Số chính của mỗi card = "size siêu to" (--fs-huge 38) + Light 300 — bậc user thêm vào thang
+  // riêng cho màn này (30 nhìn nhỏ & xấu, 52 thì TRÀN hàng 2-6: cần 426px / có 417px).
   // ⚠️ ĐỪNG đặt số cứng ở đây (cũ: 38/46/32 — ngoài thang, user chốt 07-17c phải đồng bộ thang).
-  const AMT = { fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-light)', lineHeight: 1.05 }
+  const AMT = { fontSize: 'var(--fs-huge)', fontWeight: 'var(--fw-light)', lineHeight: 1.05 }
 
   // 1 card = nhãn + [token ▼ ... Available] + số to + quy đổi. Available hiện ở CẢ 2 card (design user).
   function SideCard({ label, sym, onPick, amount, disp }) {
