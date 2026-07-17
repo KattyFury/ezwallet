@@ -2,7 +2,7 @@
 
 **Cập nhật:** 2026-07-18 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** https://ezwallet.pages.dev (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
 
-> **Ví stablecoin cho người dùng phổ thông / người già.** UX đơn giản, mobile-first. Dự án đã gần chốt (user hài lòng ~07-18).
+> **Ví stablecoin cho người dùng phổ thông / người già.** UX đơn giản, mobile-first. **Đã chạm mốc user hài lòng (07-18): toàn bộ luồng — login, PIN, gửi, swap tiền thật — user tự test trên deploy, chạy mượt.**
 > ĐẦU MỖI PHIÊN đọc CẢ `HANDOFF.md` (file này) + `CLAUDE.md` (cách làm việc với user).
 > Nguyên tắc: **chạy tech chuẩn Circle/Arc, đọc docs + verify bằng API/eth_call thật trước khi làm, KHÔNG đoán.**
 > Lịch sử chi tiết từng phiên: `git log` (mô tả commit ghi đủ) — file này chỉ giữ TRẠNG THÁI CUỐI + luật + bài học.
@@ -53,7 +53,7 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 
 - **Email login → tạo ví** (userId=email, authMode PIN) + câu hỏi bảo mật. **Khoá mở ví:** mở lại app → `PinGate` tự bật PIN Circle (ký message rỗng, không gas). Google login **ẩn khỏi UI** (hạ tầng giữ, gồm dep `cookies-next` + `refreshSocialToken`). Email OTP đã dựng nhưng TẮT (`EMAIL_OTP_ENABLED=false`).
 - **Gửi tiền** USDC/EURC/cirBTC (`send.js`): transfer thường hoặc qua Memo contract khi có lời nhắn (UTF-8 ok). `idempotencyKey` chống gửi trùng.
-- **Swap** USDC↔EURC↔cirBTC — BẬT, verify eth_simulateV1 đạt. Màn Swap = thanh trượt % (5 mốc 0/25/50/75/100, nam châm ±2%) + chip gợi ý số chẵn BỘ BA sàn·sàn+0.5·trần (`roundHint.js`, test `node test/roundHint.test.mjs` 17/17).
+- **Swap** USDC↔EURC↔cirBTC — BẬT, verify eth_simulateV1 đạt + **user test TIỀN THẬT trên deploy OK (07-18)**. Màn Swap = thanh trượt % (5 mốc 0/25/50/75/100, nam châm ±2%) + chip gợi ý số chẵn BỘ BA sàn·sàn+0.5·trần (`roundHint.js`, test `node test/roundHint.test.mjs` 17/17).
 - **Balance on-chain + tỷ giá live** có cache (`_balCache`/`_ratesCache`) — chuyển màn hiện số cũ ngay, fetch nền cập nhật.
 - **TxHistory** (ArcScan + memo event, box xám, nhóm theo ngày), **Contacts** (per-account, avatar cropper, box xám), **QR** (tạo/quét/kho), **thông báo in-app** (NotifArea), **biên lai** (canvas → Photos qua Web Share), per-account store (`store.js`).
 - **Đổi PIN** (email user): `PUT /v1/w3s/user/pin` ✅. **`refreshSession()`** gọi TRƯỚC mọi thao tác PIN (userToken sống 60').
@@ -153,13 +153,14 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 
 ## 9. Việc tiếp theo
 
-1. 🔴 **TEST PIN TRÊN DEPLOY — CHẶN, chưa ai xác nhận** (đổi `getSDK` async 07-17): đăng nhập → mở khoá PIN → gửi 1 lần nhỏ → swap thật 1 lần nhỏ. Hỏng nặng revert `78ac6da`.
-2. **Icon warning `!` nhìn nhỏ hơn icon khác cùng ô** — nguyên nhân: dấu `!` chỉ chiếm ~45/100 viewBox trong vòng tròn. CHỜ USER CHỌN: (a) phóng riêng, (b) user vẽ lại. Icon là bộ user vẽ — hỏi trước.
-3. **Icon QR Library mới** — user sẽ tự vẽ (đã gợi ý: 2 thẻ xếp chồng + góc QR, viewBox 100 stroke 10). Vẽ xong thay trong `HomeReceive`.
-4. **Trạng thái giao dịch thật** — poll txHash sau gửi → "đã lên blockchain" (swap đã có 2 trạng thái submitted/successful).
-5. **Google login làm lại** qua Google Identity Services → đi luồng email (đổi kiến trúc, làm riêng buổi).
-6. Batch gửi nhiều người (Multicall3From, encoder sẵn).
-7. **Tối ưu bundle:** chunk SDK ~1MB phần lớn là crypto-browserify (polyfill `crypto` trong `vite.config.js`) — thử bỏ `'crypto'` xem SDK còn chạy không, NHƯNG chỉ test được trên deploy → làm riêng phiên, đừng gộp việc khác.
+> ✅ **07-18 user XÁC NHẬN TRÊN DEPLOY: mọi thứ chạy mượt — PIN (sau đổi `getSDK` async) + swap tiền thật OK.** Không còn việc chặn.
+
+1. **Icon warning `!` nhìn nhỏ hơn icon khác cùng ô** — nguyên nhân: dấu `!` chỉ chiếm ~45/100 viewBox trong vòng tròn. CHỜ USER CHỌN: (a) phóng riêng, (b) user vẽ lại. Icon là bộ user vẽ — hỏi trước.
+2. **Icon QR Library mới** — user sẽ tự vẽ (đã gợi ý: 2 thẻ xếp chồng + góc QR, viewBox 100 stroke 10). Vẽ xong thay trong `HomeReceive`.
+3. **Trạng thái giao dịch thật** — poll txHash sau gửi → "đã lên blockchain" (swap đã có 2 trạng thái submitted/successful).
+4. **Google login làm lại** qua Google Identity Services → đi luồng email (đổi kiến trúc, làm riêng buổi).
+5. Batch gửi nhiều người (Multicall3From, encoder sẵn).
+6. **Tối ưu bundle:** chunk SDK ~1MB phần lớn là crypto-browserify (polyfill `crypto` trong `vite.config.js`) — thử bỏ `'crypto'` xem SDK còn chạy không, NHƯNG chỉ test được trên deploy → làm riêng phiên, đừng gộp việc khác.
 
 ---
 
