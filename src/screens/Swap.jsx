@@ -210,7 +210,10 @@ export default function Swap() {
   }
 
   const CARD = { border: '1.5px solid var(--color-gray)', borderRadius: 16, background: 'var(--color-white)', padding: '14px 16px' }
-  const AMT = { fontSize: 38, fontWeight: 'var(--fw-light)', lineHeight: 1.05 }   // số hero → Light 300 (design system)
+  // Số chính của mỗi card = "size to" (--fs-title 30) + Light 300. Cỡ LỚN NHẤT trong thang mà 2 card
+  // + khối Rate/Fee vẫn vừa hàng 2-6 (đo 390×844: --fs-amount 52 → cần 426px / có 417px = TRÀN).
+  // ⚠️ ĐỪNG đặt số cứng ở đây (cũ: 38/46/32 — ngoài thang, user chốt 07-17c phải đồng bộ thang).
+  const AMT = { fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-light)', lineHeight: 1.05 }
 
   // 1 card = nhãn + [token ▼ ... Available] + số to + quy đổi. Available hiện ở CẢ 2 card (design user).
   function SideCard({ label, sym, onPick, amount, disp }) {
