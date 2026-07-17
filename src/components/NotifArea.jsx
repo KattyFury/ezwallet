@@ -95,7 +95,8 @@ function HintBlock({ lines }) {
       <Icon name="hint" size="var(--is-item)" color="var(--color-warning)" style={{ flexShrink: 0 }} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
         {lines.map((h, i) => (
-          <div key={i} style={ROW_TEXT}><span style={{ fontWeight: 'var(--fw-medium)' }}>{h.label}</span> = {h.desc}</div>
+          // Format "X: desc" (user chốt 07-17f, trước là "X = desc")
+          <div key={i} style={ROW_TEXT}><span style={{ fontWeight: 'var(--fw-medium)' }}>{h.label}</span>: {h.desc}</div>
         ))}
       </div>
     </div>

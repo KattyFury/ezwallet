@@ -61,24 +61,31 @@ export default function HomeReceive() {
         <QRCodeCanvas value={walletAddr || '0x'} size={512} level="M" includeMargin />
       </div>
 
-      <div className="row-3-5 center col" style={{ gap: 14 }}>
-        <QRCodeSVG value={walletAddr || '0x'} size={200} level="M" />
-        <button onClick={handleCopyAddr} style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-          <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>
-            {shortenAddr(walletAddr)}
-          </span>
-          {/* Icon hành động = brand blue (ngôn ngữ Swap, user chốt 07-17e); copy xong = xanh lá success */}
-          <Icon name={addrCopied ? 'check' : 'copy'} size="var(--is-md-lg)" color={addrCopied ? 'var(--color-primary)' : 'var(--color-brand)'} />
-        </button>
+      {/* Cụm QR + địa chỉ MỞ RỘNG ra hàng 3-6 (user chốt 07-17f — trước chỉ 3-5, QR 200px nhỏ,
+          quét xa không ăn). QR co giãn 'min(30dvh, 78vw)': lớn hết cỡ phần hàng 3-6 CÒN LẠI phía
+          trên dòng địa chỉ. paddingBottom 6.6dvh = nhường đúng chỗ dòng địa chỉ ở 55dvh. */}
+      <div style={{ gridRow: '3 / 7', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: '6.6dvh', minWidth: 0 }}>
+        <QRCodeSVG value={walletAddr || '0x'} size={512} level="M" style={{ width: 'min(30dvh, 78vw)', height: 'min(30dvh, 78vw)' }} />
       </div>
+      {/* Địa chỉ + copy: neo absolute top 55% = TRÙNG toạ độ nút "Hold to show tokens" màn Gửi
+          (user chốt 07-17f "càng tốt") — qua lại 2 tab, dòng phụ nằm đúng 1 chỗ. */}
+      <button onClick={handleCopyAddr} style={{ position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10, display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>
+          {shortenAddr(walletAddr)}
+        </span>
+        {/* Icon hành động = brand blue (ngôn ngữ Swap, user chốt 07-17e); copy xong = xanh lá success */}
+        <Icon name={addrCopied ? 'check' : 'copy'} size="var(--is-md-lg)" color={addrCopied ? 'var(--color-primary)' : 'var(--color-brand)'} />
+      </button>
 
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
         {/* Chữ NGẮN để nằm trọn 1 dòng ở cỡ chung của vùng thông báo (NOTIF_FS) — câu dài cũ
             ("make a QR for the exact amount") tràn ô 350px, bị cắt "…" sẵn rồi. */}
         <NotifArea hints={[
-          { label: 'Share', desc: 'send your address' },
-          { label: 'Create QR', desc: 'QR for an amount' },
-          { label: 'QR Library', desc: 'your saved QRs' },
+          // Text user chốt 07-17f ("moss used" = typo của "most used"; "Custom the receive amount"
+          // sửa ngữ pháp thành "Custom receive amount" — đã báo user)
+          { label: 'Share', desc: 'Share your address' },
+          { label: 'Create QR', desc: 'Custom receive amount' },
+          { label: 'QR Library', desc: 'Store your most used QRs' },
         ]} />
       </div>
 

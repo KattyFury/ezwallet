@@ -135,20 +135,25 @@ export default function Contacts() {
         {t('Danh bạ')}
       </div>
 
-      <div className="row-2-8 scroll-thin" style={{ width: '100%', justifyContent: contacts.length ? 'flex-start' : 'center' }}>
+      {/* BOX XÁM chung cho cả danh sách (user chốt 07-17f: "phân vùng rõ ra cho người ta dễ hình
+          dung đó là 1 box"). Padding ngang của box = lề CÂN 2 BÊN cho mọi hàng (trước hàng full-bleed:
+          PFP sát lề trái còn nút option thụt 4px + rãnh scrollbar → user bắt lỗi "lệch trái"). */}
+      <div className="row-2-8" style={{ width: '100%', ...(contacts.length ? { background: 'var(--color-surface)', borderRadius: 20, padding: '4px 16px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' } : {}) }}>
         {contacts.length === 0 ? (
           <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{t('Chưa có danh bạ')}</span>
         ) : (
-          contacts.map(c => {
+          <div className="scroll-thin" style={{ overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column' }}>
+          {contacts.map(c => {
             return (
               <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '14px 0' }}>
                 {c.avatar ? (
                   <img src={c.avatar} alt="" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                 ) : (
-                  // Chưa có ảnh → vòng xám + dấu "+" trắng, bấm vào để thêm avatar
+                  // Chưa có ảnh → vòng TRẮNG VIỀN XÁM (nằm trong box xám → theo luật chip trắng
+                  // 07-17f), dấu "+" muted, bấm vào để thêm avatar
                   <button onClick={() => openEdit(c)}
-                    style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--color-gray)', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon name="add" size={24} color="var(--color-white)" />
+                    style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--color-white)', border: '1.5px solid var(--color-gray)', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon name="add" size={24} color="var(--color-muted)" />
                   </button>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
@@ -171,7 +176,8 @@ export default function Contacts() {
                 </button>
               </div>
             )
-          })
+          })}
+          </div>
         )}
       </div>
 
@@ -193,11 +199,13 @@ export default function Contacts() {
             ) : (
               <>
                 <div className="popup-title">{form.id ? 'Edit contact' : t('Thêm danh bạ')}</div>
+                {/* Vòng thêm PFP dùng CÙNG xám surface với ô nhập bên dưới (user bắt lỗi 07-17f:
+                    2 vùng xám khác màu — trước là --color-gray #E5E5EA vs surface #F2F2F7) */}
                 <button onClick={() => fileRef.current?.click()}
-                  style={{ alignSelf: 'center', width: 80, height: 80, borderRadius: '50%', border: 'none', cursor: 'pointer', overflow: 'hidden', background: form.pfp ? 'transparent' : 'var(--color-gray)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+                  style={{ alignSelf: 'center', width: 80, height: 80, borderRadius: '50%', border: 'none', cursor: 'pointer', overflow: 'hidden', background: form.pfp ? 'transparent' : 'var(--color-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
                   {form.pfp
                     ? <img src={form.pfp} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <Icon name="add" size={30} color="var(--color-white)" />}
+                    : <Icon name="add" size={30} color="var(--color-muted)" />}
                 </button>
                 <input className="address-input" placeholder={t('Tên')} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ fontSize: 'var(--fs-body)' }} />
                 <input className="address-input" placeholder="0x..." value={form.addr} onChange={e => setForm(f => ({ ...f, addr: e.target.value }))} style={{ fontSize: 'var(--fs-body)' }} />

@@ -30,9 +30,10 @@ export default function Language() {
 
   function pickCur(code) { setCurrency(code); localStorage.setItem('ez_currency', code); setCurPicker(false) }
 
-  // Chip giá trị ĐỒNG BỘ cho mọi hàng (cùng 1 style).
+  // Chip giá trị = ĐÚNG KIỂU chip token màn Swap (user chốt 07-17f "match với các button dropdown
+  // khác"): TRẮNG + VIỀN XÁM (nằm trong box xám) + MŨI TÊN XUỐNG down2 NẰM TRONG chip. Bấm mở popup.
   const LABEL = { flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }
-  const CHIP = { fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', border: 'none', background: 'var(--color-surface)', borderRadius: 10, padding: '6px 14px' }
+  const CHIP = { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', border: '1.5px solid var(--color-gray)', background: 'var(--color-white)', borderRadius: 999, padding: '5px 10px 5px 14px' }
 
   // 1 popup dùng chung cho cả ngôn ngữ & tiền tệ: option locked = nút mờ, disabled (không bấm).
   const Picker = ({ title, options, active, onPick, onClose }) => (
@@ -57,19 +58,18 @@ export default function Language() {
         Language &amp; Currency
       </div>
 
-      {/* Ngôn ngữ = HÀNG 2 — bấm mở popup (English chọn được; Việt/Trung khoá) */}
-      <button className="menu-item" style={{ gridRow: 2 }} onClick={() => setLangPicker(true)}>
-        <span style={LABEL}>Language</span>
-        <span style={CHIP}>English</span>
-        <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" style={{ marginLeft: 8 }} />
-      </button>
-
-      {/* Tiền tệ = HÀNG 3 — bấm mở popup (USD/EUR chọn được; CNY/VND khoá) */}
-      <button className="menu-item" style={{ gridRow: 3 }} onClick={() => setCurPicker(true)}>
-        <span style={LABEL}>Default currency</span>
-        <span style={CHIP}>{CUR_SHORT[currency] || 'USD'}</span>
-        <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" style={{ marginLeft: 8 }} />
-      </button>
+      {/* BOX XÁM chứa nội dung hàng 2-3 (user chốt 07-17f) — 2 hàng: Ngôn ngữ (English khoá) +
+          Tiền tệ (USD/EUR chọn được). Bấm cả hàng mở popup. */}
+      <div style={{ gridRow: '2 / 4', background: 'var(--color-surface)', borderRadius: 20, padding: '0 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', minWidth: 0 }}>
+        <button className="menu-item" onClick={() => setLangPicker(true)}>
+          <span style={LABEL}>Language</span>
+          <span style={CHIP}>English<Icon name="down2" size="var(--is-item)" color="var(--color-muted)" /></span>
+        </button>
+        <button className="menu-item" onClick={() => setCurPicker(true)}>
+          <span style={LABEL}>Default currency</span>
+          <span style={CHIP}>{CUR_SHORT[currency] || 'USD'}<Icon name="down2" size="var(--is-item)" color="var(--color-muted)" /></span>
+        </button>
+      </div>
 
       <div className="row-10 row10-single">
         <button className="btn btn-primary" onClick={() => navigate('MenuScreen')}>{t('Quay lại')}</button>

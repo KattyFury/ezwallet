@@ -5,13 +5,14 @@ import { useRef, useState } from 'react'
 //
 // Hành vi (spec user):
 // - Kéo TỰ DO, độ chính xác 1%.
-// - HÚT NAM CHÂM vào 6 mốc 0/20/40/60/80/100 khi thumb lọt trong ±SNAP_ZONE% → cảm giác "cạch" đúng mốc.
+// - HÚT NAM CHÂM vào 5 mốc 0/25/50/75/100 khi thumb lọt trong ±SNAP_ZONE% (user chốt 07-17f —
+//   trước là 6 mốc bước 20) → cảm giác "cạch" đúng mốc.
 // - Chạm/bấm thẳng vào bất kỳ đâu trên thanh (kể cả mốc) → nhảy tới đó luôn, không cần kéo.
 // - CHỈ % — KHÔNG hiện nhãn tiền ($0/$15/$29…) dưới mốc (user chốt: thừa, rối).
 //
 // ⚠️ Dùng POINTER EVENTS + setPointerCapture, KHÔNG dùng <input type=range>: range không tuỳ biến
 // được mốc/bong bóng, và iOS bắt buộc kéo đúng thumb mới ăn (bấm vào track không nhảy).
-const MARKERS = [0, 20, 40, 60, 80, 100]
+const MARKERS = [0, 25, 50, 75, 100]
 const SNAP_ZONE = 2   // ±2% quanh mốc thì hút vào mốc (spec user)
 
 // ⚠️ THỤT LỀ THANH TRƯỢT — ĐỪNG BỎ (user chốt 07-17c: "nó phải cách lề chuẩn số đo mình quy định").
@@ -65,7 +66,7 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
         <div ref={trackRef} style={{ position: 'relative', width: '100%', height: 4, borderRadius: 2, background: 'var(--color-gray)' }}>
           {/* Phần đã chọn */}
           <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: dim, borderRadius: 2, transition: dragging ? 'none' : 'width .15s ease' }} />
-          {/* 6 mốc */}
+          {/* 5 mốc */}
           {MARKERS.map(m => (
             <div key={m} style={{
               position: 'absolute', left: `${m}%`, top: '50%', transform: 'translate(-50%,-50%)',

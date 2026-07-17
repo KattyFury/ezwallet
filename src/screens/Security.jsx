@@ -40,8 +40,11 @@ export default function Security() {
     setCopied(true); setTimeout(() => setCopied(false), 1500)
   }
 
+  // VALUE lên fs-item 17 (user 07-17f: "nội dung hơi nhỏ" — trước fs-label 15)
   const LABEL = { flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }
-  const VALUE = { fontSize: 'var(--fs-label)', color: 'var(--color-muted)', maxWidth: '55%', textAlign: 'right', wordBreak: 'break-all' }
+  const VALUE = { fontSize: 'var(--fs-item)', color: 'var(--color-muted)', maxWidth: '55%', textAlign: 'right', wordBreak: 'break-all' }
+  // Trạng thái đổi PIN: LỖI phải ĐỎ cho bật (user 07-17f — "Error: User canceled" đen/xanh không bật)
+  const pinErr = /^(Error|Lỗi|Not available)/.test(pinStatus)
 
   return (
     <div className="screen">
@@ -49,22 +52,25 @@ export default function Security() {
         {t('Bảo mật')}
       </div>
 
-      {/* MỖI MỤC = 1 HÀNG riêng (row 2-5), KHÔNG line xám ngăn cách (user chốt). */}
-      <div className="menu-item" style={{ gridRow: 2 }}>
-        <span style={LABEL}>{t('Email đăng nhập')}</span>
-        <span style={VALUE}>{email}</span>
+      {/* BOX XÁM chung hàng 2-4 (user chốt 07-17f); trong box KHÔNG line xám ngăn cách (luật cũ giữ).
+          Đổi PIN vẫn dùng CHEVRON PHẢI right2 (user chốt: nó là hàng đi tiếp, không phải dropdown). */}
+      <div style={{ gridRow: '2 / 5', background: 'var(--color-surface)', borderRadius: 20, padding: '0 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', minWidth: 0 }}>
+        <div className="menu-item">
+          <span style={LABEL}>{t('Email đăng nhập')}</span>
+          <span style={VALUE}>{email}</span>
+        </div>
+        <button className="menu-item" onClick={copyAddr}>
+          <span style={LABEL}>{t('Địa chỉ ví')}</span>
+          <span style={{ ...VALUE, color: copied ? 'var(--color-primary)' : 'var(--color-muted)' }}>{copied ? t('Đã sao chép') : shortAddr}</span>
+          <Icon name="copy" size="var(--is-item)" color="var(--color-brand)" />
+        </button>
+        <button className="menu-item" onClick={handleResetPin}>
+          <span style={LABEL}>{t('Đổi PIN')}</span>
+          {pinStatus
+            ? <span style={{ fontSize: 'var(--fs-item)', color: pinErr ? 'var(--color-error)' : 'var(--color-primary)' }}>{pinStatus}</span>
+            : <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" />}
+        </button>
       </div>
-      <button className="menu-item" style={{ gridRow: 3 }} onClick={copyAddr}>
-        <span style={LABEL}>{t('Địa chỉ ví')}</span>
-        <span style={{ ...VALUE, color: copied ? 'var(--color-primary)' : 'var(--color-muted)' }}>{copied ? t('Đã sao chép') : shortAddr}</span>
-        <Icon name="copy" size="var(--is-item)" color="var(--color-faint)" />
-      </button>
-      <button className="menu-item" style={{ gridRow: 4 }} onClick={handleResetPin}>
-        <span style={LABEL}>{t('Đổi PIN')}</span>
-        {pinStatus
-          ? <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-primary)' }}>{pinStatus}</span>
-          : <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" />}
-      </button>
 
       <div className="row-10 row10-single">
         <button className="btn btn-primary" onClick={() => navigate('MenuScreen')}>{t('Quay lại')}</button>

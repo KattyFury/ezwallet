@@ -98,7 +98,7 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, on
           </span>
           {!isSwap && !name && !isFaucet && counter && (   /* Faucet là máy phát tiền test, lưu vào danh bạ vô nghĩa */
             <span onClick={e => { e.stopPropagation(); onAdd(counter) }}
-              style={{ flexShrink: 0, fontSize: 'var(--fs-tiny)', fontWeight: 'var(--fw-medium)', color: 'var(--color-brand)', border: '1px solid var(--color-brand)', borderRadius: 6, padding: '1px 8px', whiteSpace: 'nowrap' }}>
+              style={{ flexShrink: 0, fontSize: 'var(--fs-tiny)', fontWeight: 'var(--fw-medium)', color: 'var(--color-brand)', border: '1px solid var(--color-brand)', borderRadius: 6, padding: '1px 8px', whiteSpace: 'nowrap', background: 'var(--color-white)' }}>
               Add to Contacts
             </span>
           )}
@@ -211,8 +211,11 @@ export default function TxHistory() {
         {t('Lịch sử giao dịch')}
       </div>
 
-      <div className="row-2-8 scroll-thin" style={{
-        display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start',
+      {/* BOX XÁM chung bao cả lịch sử (user chốt 07-17f "phân ra ranh giới"). Mask mờ đáy nằm ở
+          DIV TRONG — đặt lên box thì nền xám mờ theo, lem sang trắng. */}
+      <div className="row-2-8" style={{ background: 'var(--color-surface)', borderRadius: 20, padding: '4px 14px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' }}>
+      <div className="scroll-thin" style={{
+        display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start', height: '100%', overflowY: 'auto',
         WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
         maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
       }}>
@@ -233,6 +236,7 @@ export default function TxHistory() {
           })
           return nodes
         })()}
+      </div>
       </div>
 
       <div style={{ gridRow: '9 / 11', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>

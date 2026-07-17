@@ -101,6 +101,8 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 >
 > **07-17d — chuẩn trên ĐÃ ÁP TOÀN APP (user chốt "lấy Swap làm chuẩn"):** `.action-card` (Home Send/Receive) · `.confirm-box` (SendConfirm/Receipt) · `.memo-row` + `.address-input` (mọi ô nhập text — user chốt Ô NHẬP cũng nền surface không viền; lỗi = `box-shadow inset` đỏ thay viền) · chip USD/EUR (SendAmount/CreateQR) · chip Language/Onboarding · tile SavedQRList. **Bo góc: card lớn 20, chip/ô nhỏ giữ 8–12** (user chốt — bo 20 trên phần tử thấp thành viên thuốc). Chip/toggle BẬT vẫn viền brand (luật riêng, giữ). `warning-badge` về đúng luật nền vàng nhạt + chữ đen (trước lạc luật viền vàng + chữ vàng). Dead CSS `.tip-box` `.swap-box` `.recipient-box` `.option-row`/`.option-radio` ĐÃ XOÁ (user duyệt 07-17d); `.recipient-avatar` cũng không ai dùng nhưng user chưa kêu — để nguyên.
 >
+> **07-17f — LUẬT BỔ SUNG (user chốt): phần tử BẤM ĐƯỢC nằm TRONG box xám → TRẮNG + VIỀN XÁM 1.5px** ("khi có 1 button nằm trong vùng box xám button đó thành trắng viền xám" — giống chip token màn Swap). Box xám giờ phủ: vùng token HomeSend, list Contacts/TxHistory, nội dung Language/Security/About (xem mục 10 · 07-17f).
+>
 > **Chữ phụ = `--color-muted` #636366 (XÁM ĐẬM), KHÔNG hardcode màu xám rời rạc.** Lý do chốt số này: ưu tiên số 1 của app là TO–RÕ cho người già → `#AEAEB2` cũ chỉ đạt tương phản **2.3:1** trên nền trắng = **trượt WCAG AA** (cần 4.5:1), người già đọc không ra; nhưng `#48484A` (màu slogan Login hardcode cũ) lại **9.1:1 = gần như đen**, mất phân cấp chính/phụ. `#636366` = **6.0:1**: đạt AA thoải mái mà mắt vẫn đọc ra là xám.
 
 **Cỡ ICON — TOÀN BỘ phải match cỡ chữ đi kèm (user chốt 2026-07-16: "icon phải tương đồng với chữ, chữ to icon nhỏ là sai" · "Icon toàn bộ phải match font size"):** thang `--is-*` trong `:root` ghép 1-1 với `--fs-*` (`--is-title 30 / --is-num 24 / --is-md-lg 21 / --is-body 19 / --is-item 17 / --is-label 15`). Icon đứng cạnh chữ nào thì `size="var(--is-<cỡ chữ đó>)"`. **ĐỪNG đặt `size={14}`/`{18}` rời rạc** — tăng cỡ chữ là icon lệch ngay (đúng bug 07-16: chữ lên 19–24 mà icon còn 12–15). Áp cả cho icon-trên-nhãn trong `.action-card` (→ `--is-item`) và badge tròn TxHistory. **Chỉ icon ĐỨNG MỘT MÌNH** (không có chữ nào bên cạnh để match) mới giữ số cứng: SendReceipt check 76, ComingSoon shield 48, avatar Contacts, nút xoá QR, nút đảo chiều Swap, numpad erase.
@@ -185,6 +187,17 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 ---
 
 ## 10. Thay đổi gần đây (rút gọn)
+
+- **07-17f (đợt "box xám hoá" toàn app + chi tiết theo danh sách 12 mục user giao):**
+  - **LUẬT MỚI user chốt: phần tử BẤM ĐƯỢC nằm TRONG box xám → TRẮNG + VIỀN XÁM** (như chip token Swap). Đã áp: nút "Hold to show tokens", chip English/USD (Language), avatar placeholder Contacts, chip "Add to Contacts" (TxHistory — thêm nền trắng).
+  - **Slider Swap 5 mốc 0/25/50/75/100** (trước 6 mốc bước 20) — `PctSlider.jsx` MARKERS.
+  - **Box xám mới:** vùng token HomeSend (hàng 3→5.5, `height calc(100%+5dvh)` thò nửa hàng 6 để ôm nút Hold; mask mờ đáy để ở DIV TRONG kẻo nền xám lem) · list Contacts (row 2-8; padding box tự cân lề — fix "lệch trái") · list TxHistory (row 2-8) · Language hàng 2-3 · Security hàng 2-4 · About hàng 2-8.
+  - **Hint đổi format `X: desc`** (NotifArea, trước `X =`). Text mới user chốt — Gửi: Contacts: Saved addresses · Scan QR: Scan QR to send · Paste: Paste address to send. Nhận: Share: Share your address · Create QR: Custom receive amount (user viết "Custom the receive amount" — sửa ngữ pháp, ĐÃ BÁO) · QR Library: Store your most used QRs ("moss"=typo "most").
+  - **QRScanner:** cụm (ô quét + chú thích) căn tâm hàng 1-6 (trước 1-5, chú thích absolute); thêm dòng 2 fs-body muted: "Real-life QR codes are not supported yet – crypto wallet QRs only"; dòng chính lên fs-md-lg.
+  - **Receive:** QR phóng `min(30dvh, 78vw)` chiếm hàng 3-6 (trước 200px hàng 3-5 — quét xa không ăn); dòng địa chỉ+copy neo absolute top 55% = TRÙNG toạ độ nút Hold màn Gửi.
+  - **Add contact:** vòng PFP đổi `--color-gray`→`--color-surface` (user bắt 2 xám khác màu), icon `+` trắng→muted.
+  - **Security/About:** VALUE 15→17 (`--fs-item`, user chê nhỏ); Security trạng thái đổi PIN LỖI = ĐỎ (regex `^(Error|Lỗi|Not available)` — trước lỗi cũng xanh lá); icon copy Security→brand.
+  - Verify: build ✓ test 17/17 ✓ Playwright mock 390px 10 màn `pageerrors: none`.
 
 - **07-17e (NavBar thoáng + hint "nhiệt tình" + phân cấp đậm nhạt kiểu Swap lan ra app):**
   - **NavBar hạ 1 bậc: chữ + icon `--fs/is-body` 19** (trước md-lg 21 — user chê "hơi thô"). Nút bấm vẫn 21.

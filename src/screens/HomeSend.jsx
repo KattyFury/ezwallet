@@ -35,9 +35,10 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
       style={{
         position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
-        // Nền surface theo chuẩn chung (user 07-17e: nút này "lạc quẻ" — trước dùng --color-gray,
-        // đúng màu mà luật mục 5 HANDOFF cấm làm nền mảng)
-        padding: '0 22px', borderRadius: 50, border: 'none', background: 'var(--color-surface)',
+        // Nút NẰM TRONG box xám (vùng token 07-17f) → TRẮNG + VIỀN XÁM để nổi trên nền surface
+        // (luật user 07-17f: "button nằm trong vùng box xám thì thành trắng viền xám", giống chip
+        // token màn Swap). Chữ GIỮ muted — user dặn "vẫn dùng màu xám đen chứ không cho màu đen".
+        padding: '0 22px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
         color: 'var(--color-muted)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
         fontWeight: 'var(--fw-medium)', cursor: 'pointer',
         WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
@@ -86,13 +87,16 @@ export default function HomeSend() {
     <div className="screen">
       <BalanceHeader totalUsd={totalUsd} loading={loading} />
 
-      {/* Hàng 3-5: danh sách token, cuộn được; mờ dần ở ĐÁY. Nút "Hold to show tokens" nằm GIỮA
-          hàng 6 (dưới list, tách hẳn khỏi vùng thông báo hàng 7 để không tưởng bấm ra thông báo). */}
-      <div className="row-3-5 scroll-thin" style={{
-        display: 'flex', flexDirection: 'column', gap: 26, overflowY: 'auto', paddingTop: 2, paddingBottom: 8,
-        WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
-        maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
-      }}>
+      {/* Hàng 3-5.5 (user chốt 07-17f): BOX XÁM surface chứa danh sách token — kéo dài thêm 5dvh
+          xuống nửa hàng 6 (height calc bên dưới; grid không cắt phần thò) để nút "Hold to show
+          tokens" (absolute top 55% = đúng mép dưới box) nằm GỌN TRONG box. Cuộn + mờ đáy nằm ở
+          DIV TRONG — đặt mask lên box thì cả nền xám bị mờ theo, lem sang trắng. */}
+      <div className="row-3-5" style={{ background: 'var(--color-surface)', borderRadius: 20, padding: '12px 16px 0', height: 'calc(100% + 5dvh)', minWidth: 0 }}>
+        <div className="scroll-thin" style={{
+          display: 'flex', flexDirection: 'column', gap: 26, overflowY: 'auto', height: '100%', paddingTop: 2, paddingBottom: 52,
+          WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
+          maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
+        }}>
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>{t('Đang tải...')}</div>
         ) : tokens.length === 0 ? (
@@ -128,6 +132,7 @@ export default function HomeSend() {
             ))}
           </>
         )}
+        </div>
       </div>
 
       {/* Nổi giữa hàng 6 (position:absolute trong ShowTokensButton) — KHÔNG chiếm hàng riêng */}
@@ -140,9 +145,10 @@ export default function HomeSend() {
           // Chữ NGẮN để nằm trọn 1 dòng ở cỡ chung của vùng thông báo (NOTIF_FS) — câu dài cũ
           // ("save people's wallet addresses") đã tràn 397px trong ô 350px, bị cắt "…" sẵn rồi.
           hints={[
-            { label: 'Contacts', desc: 'saved addresses' },
-            { label: 'Scan QR', desc: "scan their QR code" },
-            { label: 'Paste', desc: 'paste an address' },
+            // Text user chốt 07-17f (format "X: desc")
+            { label: 'Contacts', desc: 'Saved addresses' },
+            { label: 'Scan QR', desc: 'Scan QR to send' },
+            { label: 'Paste', desc: 'Paste address to send' },
           ]}
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
