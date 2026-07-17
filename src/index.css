@@ -27,21 +27,15 @@
   --color-brand:        #0B53BF; /* MÀU THƯƠNG HIỆU (đặc) — CHỮ/VIỀN brand (nav active, filter, option) */
   --grad-brand: linear-gradient(180deg, #0088FF 0%, #0B53BF 100%); /* GRADIENT thương hiệu (dọc: 0088FF trên → 0B53BF dưới) — NỀN nút CTA + action-card primary (stunning, không flat) */
 
-  /* ── GRADIENT TRẠNG THÁI (user chốt 2026-07-16) — nút đổi màu xanh lá/vàng/đỏ cũng phải có
-     gradient "y chang logo": DỌC, nhạt trên → đậm dưới, cùng độ chuyển (ΔL 10.4 · ΔS 10.9 — đo
-     ngược từ --grad-brand #0088FF→#0B53BF).
-     ⚠️ KHÁC --grad-brand ở chỗ NEO: brand lấy --color-brand làm ĐÁY rồi nâng sáng lên đỉnh. Ở đây
-     màu ngữ nghĩa là ĐỈNH, đáy là bản ĐẬM hơn — tức đẩy cả dải xuống phía tối. Lý do: nâng sáng
-     kiểu brand thì chữ trắng trên xanh lá tụt còn 1.79:1 và trên vàng 1.77:1 = KHÔNG ĐỌC NỔI, đi
-     ngược ưu tiên số 1 (to–rõ cho người già). Đẩy tối thì chữ trắng LUÔN ≥ mức hôm nay:
-       xanh lá  đỉnh 3.30:1 → đáy 6.40:1   (grad-brand: 3.52 → 6.99 — gần như trùng profile)
-       đỏ       đỉnh 4.83:1 → đáy 7.16:1
-       vàng     CHỮ ĐEN: đỉnh 9.78:1 → đáy 5.88:1  (chữ TRẮNG trên vàng chỉ 2.15:1 → CẤM)
-     Cũng KHÔNG dịch hue như brand (−8°): brand đi từ xanh dương nên vô hại, nhưng áp cho vàng ra
-     CAM (#FF9936) và cho đỏ ra HỒNG (#EE495F) — sai màu ngữ nghĩa. Giữ nguyên hue. */
-  --grad-primary: linear-gradient(180deg, #16A34A 0%, #176D37 100%); /* xanh lá — success/nhận (chữ trắng) */
-  --grad-warning: linear-gradient(180deg, #F59E0B 0%, #B87B13 100%); /* vàng — cảnh báo (CHỮ ĐEN, không phải trắng) */
-  --grad-error:   linear-gradient(180deg, #DC2626 0%, #A52828 100%); /* đỏ — lỗi/xoá (chữ trắng) */
+  /* ── GRADIENT TRẠNG THÁI (user chốt 2026-07-17d, THAY bộ "đẩy tối" cũ 07-16) — cùng hướng
+     brand: DỌC, nhạt trên → đậm dưới, ĐÁY = đúng màu ngữ nghĩa (--color-primary/warning/error).
+     ⚠️ 0%/100% trong CSS là VỊ TRÍ điểm neo (0%=mép trên, 100%=mép dưới), KHÔNG phải cường độ màu
+     — cả 2 đầu đều màu đặc 100% (user dặn 07-17d: đừng diễn đạt "trên 0%" gây hiểu nhầm màu nhạt).
+     Tương phản đo được (WCAG, đo tại 2 đầu dải): chữ TRẮNG trên xanh lá 2.22→3.30 · trên đỏ
+     3.26→4.83 · chữ ĐEN trên vàng 13.89→9.78 (vàng vẫn BẮT BUỘC chữ đen). */
+  --grad-primary: linear-gradient(180deg, #34C759 0%, #16A34A 100%); /* xanh lá — success/nhận (chữ trắng) */
+  --grad-warning: linear-gradient(180deg, #FFCC00 0%, #F59E0B 100%); /* vàng — cảnh báo (CHỮ ĐEN, không phải trắng) */
+  --grad-error:   linear-gradient(180deg, #FF4D51 0%, #DC2626 100%); /* đỏ — lỗi/xoá (chữ trắng) */
   --color-error:        #DC2626; /* đỏ — lỗi / xóa bỏ */
   --color-error-soft:   #FEE2E2; /* nền nhạt đỏ */
   --color-warning:      #F59E0B; /* vàng cảnh báo */
@@ -385,41 +379,6 @@ body {
 .pin-dot.filled { background: var(--color-black); }
 .pin-dot.error  { border-color: var(--color-error); background: var(--color-error); }
 
-/* ── Option row (Recovery) ── */
-.option-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  height: 100%;
-  padding: 0 12px;
-  border: 1.5px solid var(--color-gray);
-  border-radius: 12px;
-}
-
-.option-row.selected { border-color: var(--color-brand); }
-.option-row.disabled { opacity: 0.4; }
-
-.option-radio {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 2px solid var(--color-gray);
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.option-radio.selected { border-color: var(--color-brand); }
-
-.option-radio.selected::after {
-  content: '';
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--color-brand);
-}
-
 /* ── Additional row spans ── */
 .row-1-2  { grid-row: 1 / 3; }
 .row-3-5  { grid-row: 3 / 6; }
@@ -525,34 +484,6 @@ body {
   color: var(--color-white);
 }
 
-/* ── Tip / dashed hint ── */
-.tip-box {
-  width: 100%;
-  height: 100%;
-  border: 1px dashed var(--color-gray);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0 16px;
-  font-size: var(--fs-label);
-  color: var(--color-muted);
-  text-align: center;
-}
-
-/* ── Swap boxes ── */
-.swap-box {
-  height: 100%;
-  border: 1.5px solid var(--color-gray);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  padding: 0 12px;
-  gap: 10px;
-  cursor: pointer;
-  background: var(--color-white);
-}
-
 /* ── Modal ── */
 .modal-overlay {
   position: fixed;
@@ -617,15 +548,6 @@ body {
   padding: 0 2px;
   display: flex;
   align-items: center;
-}
-
-.recipient-box {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  border: 1.5px solid var(--color-gray);
-  border-radius: 12px;
 }
 
 .recipient-avatar {
