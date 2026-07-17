@@ -67,7 +67,8 @@ export default function HomeReceive() {
           <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>
             {shortenAddr(walletAddr)}
           </span>
-          <Icon name={addrCopied ? 'check' : 'copy'} size="var(--is-md-lg)" color={addrCopied ? 'var(--color-primary)' : 'var(--color-muted)'} />
+          {/* Icon hành động = brand blue (ngôn ngữ Swap, user chốt 07-17e); copy xong = xanh lá success */}
+          <Icon name={addrCopied ? 'check' : 'copy'} size="var(--is-md-lg)" color={addrCopied ? 'var(--color-primary)' : 'var(--color-brand)'} />
         </button>
       </div>
 

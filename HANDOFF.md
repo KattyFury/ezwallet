@@ -186,6 +186,13 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 
 ## 10. Thay đổi gần đây (rút gọn)
 
+- **07-17e (NavBar thoáng + hint "nhiệt tình" + phân cấp đậm nhạt kiểu Swap lan ra app):**
+  - **NavBar hạ 1 bậc: chữ + icon `--fs/is-body` 19** (trước md-lg 21 — user chê "hơi thô"). Nút bấm vẫn 21.
+  - **Hint slider Swap SPEC MỚI (user chốt): BỘ BA sàn · sàn+0.5 · trần** — 24.40 → [24, 24.5, 25]; 23.3 → [23, 23.5, 24]. `roundHint.js` VIẾT LẠI (bỏ MANTISSAS/REL_CAP/ngưỡng "gần" — chính ngưỡng đó làm 24.40 thiếu 24.5, user chê "hơi thiếu"); số <1 (cirBTC) co đơn vị theo 10^k → 0.008327 ra [0.008, 0.0085, 0.009]. Vẫn: không vượt số dư, không lặp số đang đứng, pct<100 mới hiện. Test viết lại 17/17 (`node test/roundHint.test.mjs`). 3 chip EURC vừa 390px không tràn (đo Playwright).
+  - **Đậm nhạt Swap (user: "quan trọng nhớ bold"):** label You pay/receive + GIÁ TRỊ Rate/Fee → `--fw-medium` (label Rate/Fee giữ thường). 
+  - **Ngôn ngữ Swap lan ra màn khác (user: "áp dụng tài tình, hài hòa"):** icon hành động/dẫn đầu = BRAND BLUE — copy ở Receive (copied vẫn hoá xanh lá success), icon mục Menu (Sign out giữ đỏ ngữ nghĩa). Nút "Hold to show tokens" (HomeSend) đổi nền `--color-gray` → `--color-surface` (user báo "lạc quẻ"; màu cũ vốn bị luật mục 5 cấm làm nền mảng).
+  - Verify: build pass · test 17/17 · Playwright mock 390px (HomeSend/Menu/Receive/Swap kéo 58%) `pageerrors: none`.
+
 - **07-17d (đồng bộ chuẩn Swap toàn app + icon thông báo center-trái):**
   - **Gradient trạng thái MỚI (user chốt, thay bộ "đẩy tối" 07-16):** xanh lá `#34C759→#16A34A` · đỏ `#FF4D51→#DC2626` · vàng `#FFCC00→#F59E0B` (dọc, nhạt trên → đậm dưới, đáy = màu ngữ nghĩa). ⚠️ User dặn cách nói: 0%/100% trong CSS là VỊ TRÍ neo, cả 2 đầu đều màu đặc — đừng diễn đạt "trên 0%" như thể màu nhạt. Tương phản đo được ghi ở comment `:root`.
   - **Icon thông báo/hint = CENTER-TRÁI cả khối** (user chốt: khối 3 dòng thì icon ngang dòng 2, không dính dòng 1): HintBlock (`NotifArea.jsx`) thêm icon `hint.svg` màu warning; hint faucet (`HomeSend.jsx`) icon warning chuyển từ hàng 1 xuống giữa khối, bỏ hack `paddingLeft:26`. Cấu trúc: flex row `alignItems:center`, icon là item riêng `flexShrink:0`, chữ gói cột riêng `minWidth:0`.

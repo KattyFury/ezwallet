@@ -75,8 +75,8 @@
      check 76, ComingSoon shield 48, avatar Contacts, nút xoá QR, nút đảo chiều Swap, numpad erase. */
   --is-title:   30px;   /* cặp --fs-title  30 */
   --is-num:     24px;   /* cặp --fs-num    24 */
-  --is-md-lg:   21px;   /* cặp --fs-md-lg  21 — button, navbar */
-  --is-body:    19px;   /* cặp --fs-body   19 — nội dung, thông báo */
+  --is-md-lg:   21px;   /* cặp --fs-md-lg  21 — button */
+  --is-body:    19px;   /* cặp --fs-body   19 — nội dung, thông báo, navbar (07-17e: hạ từ md-lg cho thoáng) */
   --is-item:    17px;   /* cặp --fs-item   17 */
   --is-label:   15px;   /* cặp --fs-label  15 */
 
@@ -410,7 +410,7 @@ body {
   align-items: center;
   justify-content: center;
   font-family: var(--font-condensed);
-  font-size: var(--fs-md-lg);
+  font-size: var(--fs-body);   /* "font vừa" 19 (user chốt 07-17e — 21 nhìn thô, hạ 1 bậc cho thoáng) */
   font-weight: var(--fw-medium);
   color: var(--color-muted);
   background: none;

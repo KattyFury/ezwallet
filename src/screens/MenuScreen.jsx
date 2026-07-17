@@ -53,7 +53,8 @@ export default function MenuScreen() {
         <div key={id} className={`row-${i + 4}`} style={{ display: 'flex', alignItems: 'center' }}>
           <button className="menu-item" style={{ width: '100%', opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
-            <Icon name={icon} size="var(--is-md-lg)" color="var(--color-content)" />
+            {/* Icon dẫn đầu = brand blue (ngôn ngữ Swap, user chốt 07-17e); Sign out vẫn đỏ ngữ nghĩa */}
+            <Icon name={icon} size="var(--is-md-lg)" color="var(--color-brand)" />
             <span style={{ flex: 1, fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>{t(label)}</span>
             {!disabled && <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" />}
           </button>

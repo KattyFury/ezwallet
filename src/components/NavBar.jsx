@@ -24,7 +24,7 @@ export default function NavBar({ active }) {
           {active === tab.id && (
             <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '70%', height: 5, borderRadius: '0 0 5px 5px', background: 'var(--color-brand)' }} />
           )}
-          <Icon name={tab.icon} size="var(--is-md-lg)" color={active === tab.id ? 'var(--color-black)' : 'var(--color-muted)'} style={{ marginBottom: 2 }} />
+          <Icon name={tab.icon} size="var(--is-body)" color={active === tab.id ? 'var(--color-black)' : 'var(--color-muted)'} style={{ marginBottom: 2 }} />
           {t(tab.label)}
         </button>
       ))}

@@ -35,7 +35,9 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
       style={{
         position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
-        padding: '0 22px', borderRadius: 50, border: 'none', background: 'var(--color-gray)',
+        // Nền surface theo chuẩn chung (user 07-17e: nút này "lạc quẻ" — trước dùng --color-gray,
+        // đúng màu mà luật mục 5 HANDOFF cấm làm nền mảng)
+        padding: '0 22px', borderRadius: 50, border: 'none', background: 'var(--color-surface)',
         color: 'var(--color-muted)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
         fontWeight: 'var(--fw-medium)', cursor: 'pointer',
         WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',

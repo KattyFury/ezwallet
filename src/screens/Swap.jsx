@@ -101,8 +101,8 @@ export default function Swap() {
   const amountDisplay = toDisplay(amountNum, fromSym)
 
   // ── HÀNG 7: gợi ý số chẵn — theo ĐƠN VỊ TOKEN ĐANG PAY (user chốt 07-17c), KHÔNG theo USD ──
-  // Chip BẤM ĐƯỢC (không phải "Release to use" — user không ưng kiểu đó): 7.35 EURC → [7] [7.5].
-  // pct===100 = "đổi hết" → gợi ý số nhỏ hơn là sai ý user.
+  // Chip BẤM ĐƯỢC (không phải "Release to use" — user không ưng kiểu đó). Spec 07-17e "hint nhiệt
+  // tình": BỘ BA sàn·sàn+0.5·trần — 7.35 EURC → [7] [7.5] [8]. pct===100 = "đổi hết" → không gợi ý.
   const hints = (hasBal && pct < 100 && amountNum > 0 && !loading)
     ? roundHints(amountNum, available, decimalsFor(fromSym)) : []
 
@@ -224,7 +224,8 @@ export default function Swap() {
     const balKnown = balances[sym] !== undefined
     return (
       <div style={{ ...CARD, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{label}</span>
+        {/* Phân cấp đậm nhạt (user chốt 07-17e "quan trọng nhớ bold"): label vai trò card = medium */}
+        <span style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>{label}</span>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
           <TokenRow sym={sym} onClick={onPick} />
           <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -291,7 +292,8 @@ export default function Swap() {
           {[['Rate', rateTxt], ['Fee', feeTxt]].map(([k, v], i) => (
             <div key={k} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0, borderTop: i ? '1px solid var(--color-gray)' : 'none', paddingTop: i ? 6 : 0 }}>
               <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{k}</span>
-              <span className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-content)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{v}</span>
+              {/* Giá trị = phần quan trọng của hàng → medium (label xám thường, user chốt 07-17e) */}
+              <span className="num" style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>{v}</span>
             </div>
           ))}
         </div>
