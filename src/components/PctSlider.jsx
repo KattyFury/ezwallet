@@ -14,6 +14,13 @@ import { useRef, useState } from 'react'
 const MARKERS = [0, 20, 40, 60, 80, 100]
 const SNAP_ZONE = 2   // ±2% quanh mốc thì hút vào mốc (spec user)
 
+// ⚠️ THỤT LỀ THANH TRƯỢT — ĐỪNG BỎ (user chốt 07-17c: "nó phải cách lề chuẩn số đo mình quy định").
+// `.screen` chừa lề 20px mỗi bên. Nếu để track chạy hết bề ngang hàng thì mọi thứ NEO Ở MỐC 0%/100%
+// (thumb, bong bóng %, nhãn "0%"/"100%") đều canh giữa quanh đầu mút → thò NỬA MÌNH ra ngoài, đè lên
+// lề 20px và chạm mép màn (đúng lỗi user bắt). Thụt track vào EDGE px thì phần thò ra vẫn nằm gọn
+// trong 20px: nhãn "100%" rộng ~40px → nửa = 20px = vừa khít lề, thumb 26px → nửa = 13px < 20px.
+const EDGE = 22
+
 export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disabled }) {
   const trackRef = useRef(null)
   const [dragging, setDragging] = useState(false)
@@ -39,7 +46,7 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
   const dim = disabled ? 'var(--color-gray)' : 'var(--color-brand)'
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', userSelect: 'none' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', userSelect: 'none', padding: `0 ${EDGE}px` }}>
       {/* Bong bóng % — bám theo thumb. translateX(-50%) để tâm bong bóng trùng tâm thumb ở MỌI vị trí. */}
       <div style={{ position: 'relative', height: 30, marginBottom: 2 }}>
         <div style={{

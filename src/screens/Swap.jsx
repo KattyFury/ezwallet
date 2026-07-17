@@ -5,7 +5,7 @@ import PctSlider from '../components/PctSlider'
 import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress } from '../circle'
 import { getTokenBalances, getDisplayRates, cachedRates, estimateFeeUsd } from '../chain'
 import { spendableOf, floorTo, getDisplayCurrency, displaySymbol } from '../data'
-import { roundHint } from '../roundHint'
+import { roundHints, fmtHint } from '../roundHint'
 import { addNotif } from '../notif'
 import { t } from '../i18n'
 
@@ -17,7 +17,9 @@ const SWAP_ENABLED = true
 
 // ══ MÀN SWAP — KHÔNG BÀN PHÍM SỐ (user chốt 07-17, đập đi xây lại) ══
 // Đối tượng EZwallet = người mới + người lớn tuổi → KHÔNG bắt gõ từng chữ số. Thay bằng THANH TRƯỢT
-// chọn % SỐ DƯ ("kéo bao nhiêu % tài sản") + hàng GỢI Ý SỐ CHẴN để thả tay vào số đẹp.
+// chọn % SỐ DƯ ("kéo bao nhiêu % tài sản") + hàng 7 GỢI Ý SỐ CHẴN BẤM ĐƯỢC.
+// ⚠️ Mọi thứ tính theo ĐƠN VỊ TOKEN ĐANG PAY, KHÔNG theo USD (user chốt 07-17c). Dòng "~ $xx" dưới
+// số chỉ là quy đổi cho dễ hình dung — ĐỪNG lấy nó làm gốc tính toán.
 // Bản đồ hàng (user giao): 1 tiêu đề · 2-6 You pay/You receive + Rate/Fee · 7 hint · 8 slider ·
 // 9 nút Swap · 10 NavBar. ĐỪNG nhét lại Numpad vào đây.
 const SWAP_TOKENS = ['USDC', 'EURC', 'cirBTC']
@@ -58,8 +60,7 @@ export default function Swap() {
   const [fromSym, setFromSym] = useState('EURC') // mặc định: cứu cánh "hết USDC" → đổi token khác VỀ USDC
   const [toSym, setToSym] = useState('USDC')
   const [pct, setPct] = useState(0)              // % SỐ DƯ đang chọn (0-100) — nguồn sự thật duy nhất của số tiền
-  const [dragging, setDragging] = useState(false)
-  const [snapAmt, setSnapAmt] = useState(null)   // số tiền CHẴN đã chốt khi thả tay (đơn vị token) — ghi đè pct
+  const [snapAmt, setSnapAmt] = useState(null)   // số tiền CHẴN user bấm chọn ở hàng 7 (đơn vị token) — ghi đè pct
   const [estAmt, setEstAmt] = useState(null)
   const [balances, setBalances] = useState({})
   const [rates, setRates] = useState(() => cachedRates())
@@ -95,20 +96,15 @@ export default function Swap() {
     const r = rateOf(sym), rc = rateOf(cur)
     return r && rc ? (tokenAmt * r) / rc : null
   }
-  const fromDisplay = (dispAmt, sym) => {
-    const r = rateOf(sym), rc = rateOf(cur)
-    return r && rc ? (dispAmt * rc) / r : null
-  }
   const fmtDisp = v => (v === null ? null : `${curSym}${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
 
-  const availDisplay = hasBal ? toDisplay(available, fromSym) : null
   const amountDisplay = toDisplay(amountNum, fromSym)
 
-  // ── HÀNG 7: gợi ý số chẵn ──
-  // CHỈ khi ĐANG KÉO (chữ "Release to use" = thả tay là ăn) và CHƯA kéo hết.
-  // pct===100 = "đổi hết" → gợi ý số nhỏ hơn là sai ý user (xem roundHint.js).
-  const hintDisplay = (dragging && pct < 100 && amountDisplay !== null && availDisplay !== null)
-    ? roundHint(amountDisplay, availDisplay) : null
+  // ── HÀNG 7: gợi ý số chẵn — theo ĐƠN VỊ TOKEN ĐANG PAY (user chốt 07-17c), KHÔNG theo USD ──
+  // Chip BẤM ĐƯỢC (không phải "Release to use" — user không ưng kiểu đó): 7.35 EURC → [7] [7.5].
+  // pct===100 = "đổi hết" → gợi ý số nhỏ hơn là sai ý user.
+  const hints = (hasBal && pct < 100 && amountNum > 0 && !loading)
+    ? roundHints(amountNum, available, decimalsFor(fromSym)) : []
 
   const overBalance = hasBal && amountNum > available + 1e-9
   const canSwap = SWAP_ENABLED && amountNum > 0 && !overBalance && !loading
@@ -155,19 +151,11 @@ export default function Swap() {
     setPct(p)
   }
 
-  // Thả tay: đang có gợi ý số chẵn → CHỐT vào số đó (đúng nghĩa "Release to use $X").
-  // Lưu snapAmt (token) + kéo pct về đúng vị trí số đó để thumb không nhảy lung tung.
-  function onDragEnd() {
-    setDragging(false)
-    if (hintDisplay === null) return
-    const tokenAmt = fromDisplay(hintDisplay, fromSym)
-    if (tokenAmt === null || !(tokenAmt > 0) || tokenAmt > available + 1e-9) return
-    // Làm tròn GẦN NHẤT rồi mới kẹp trần, KHÔNG floorTo: floor luôn cắt xuống → hứa "Release to use
-    // $50.00" mà ra $49.99 (46.2963 EURC → floor 46.29 → ×1.08 = $49.99). Kẹp trần = floorTo(available)
-    // để không bao giờ vượt số dư (toFixed/round có thể đội lên trên khả dụng → Kit chửi "vượt số dư").
-    const d = decimalsFor(fromSym)
-    const rounded = Math.round(tokenAmt * 10 ** d) / 10 ** d
-    const final = Math.min(rounded, floorTo(available, d))
+  // Bấm chip số chẵn → chốt đúng số đó. Số đã là đơn vị token sẵn (roundHints tính theo token)
+  // nên KHÔNG quy đổi gì thêm — chỉ kẹp trần cho chắc, rồi kéo pct về đúng vị trí để thumb khớp.
+  function pickHint(tokenAmt) {
+    const final = Math.min(tokenAmt, floorTo(available, decimalsFor(fromSym)))
+    if (!(final > 0)) return
     setSnapAmt(final)
     if (available > 0) setPct(Math.max(0, Math.min(100, (final / available) * 100)))
   }
@@ -246,7 +234,7 @@ export default function Swap() {
           </span>
           <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>{sym}</span>
         </div>
-        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{disp !== null ? `≈ ${fmtDisp(disp)}` : ' '}</span>
+        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{disp !== null ? `~ ${fmtDisp(disp)}` : ' '}</span>
       </div>
     )
   }
@@ -256,16 +244,16 @@ export default function Swap() {
   const feeTxt = (() => {
     if (feeUsd === null) return '…'
     const v = feeUsd / (rateOf(cur) || 1)
-    if (v <= 0) return `≈ ${curSym}0.00`
-    return v < 0.005 ? `< ${curSym}0.01` : `≈ ${curSym}${v.toFixed(2)}`
+    if (v <= 0) return `~ ${curSym}0.00`
+    return v < 0.005 ? `< ${curSym}0.01` : `~ ${curSym}${v.toFixed(2)}`
   })()
 
   const estNum = estAmt !== null ? parseFloat(estAmt) : null
   const rateTxt = (() => {
     // Tỷ giá THẬT từ báo giá Kit khi đã có (gồm cả phí provider); chưa có thì lấy tỷ giá thị trường
-    if (estNum && amountNum > 0) return `1 ${fromSym} ≈ ${(estNum / amountNum).toFixed(4)} ${toSym}`
+    if (estNum && amountNum > 0) return `1 ${fromSym} ~ ${(estNum / amountNum).toFixed(4)} ${toSym}`
     const rf = rateOf(fromSym), rt = rateOf(toSym)
-    return rf && rt ? `1 ${fromSym} ≈ ${(rf / rt).toFixed(4)} ${toSym}` : '…'
+    return rf && rt ? `1 ${fromSym} ~ ${(rf / rt).toFixed(4)} ${toSym}` : '…'
   })()
 
   return (
@@ -303,23 +291,23 @@ export default function Swap() {
         </div>
       </div>
 
-      {/* Hàng 7: GỢI Ý SỐ CHẴN — chừa chỗ cố định, mờ dần khi đổi (spec). Trống thì vẫn giữ ô,
-          KHÔNG để layout nhảy khi hint hiện/tắt. */}
-      <div className="row-7" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0 }}>
-        <div style={{
-          opacity: hintDisplay !== null ? 1 : 0, transition: 'opacity .18s ease',
-          background: 'var(--color-info-soft)', borderRadius: 12, padding: '8px 16px',
-          fontSize: 'var(--fs-item)', color: 'var(--color-content)', whiteSpace: 'nowrap',
-          overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%',
-        }}>
-          Release to use <span className="num" style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{hintDisplay !== null ? fmtDisp(hintDisplay) : '–'}</span>
+      {/* Hàng 7: GỢI Ý SỐ CHẴN — chip BẤM ĐƯỢC, theo đơn vị token đang Pay (user chốt 07-17c).
+          Chừa chỗ cố định + mờ dần khi đổi: KHÔNG để layout nhảy lúc gợi ý hiện/tắt. */}
+      <div className="row-7" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: hints.length ? 1 : 0, transition: 'opacity .18s ease', pointerEvents: hints.length ? 'auto' : 'none', minWidth: 0 }}>
+          {hints.map(v => (
+            <button key={v} onClick={() => pickHint(v)}
+              style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}>
+              <span className="num" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
+              <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-brand)' }}> {fromSym}</span>
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Hàng 8: thanh trượt % số dư */}
       <div className="row-8" style={{ minWidth: 0 }}>
-        <PctSlider pct={Math.round(pct)} onChange={onPct} disabled={!hasBal || loading}
-          onDragStart={() => setDragging(true)} onDragEnd={onDragEnd} />
+        <PctSlider pct={Math.round(pct)} onChange={onPct} disabled={!hasBal || loading} />
       </div>
 
       {/* Hàng 9: nút Swap = NƠI DUY NHẤT hiện mọi trạng thái giao dịch (Preparing… / Enter PIN… /
