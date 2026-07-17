@@ -3,7 +3,6 @@ dist/
 .wrangler/
 .env
 .env.txt
-dev-server.js
 .env.local
 .env.*.local
 .dev.vars

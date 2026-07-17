@@ -18,7 +18,7 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 - **Balance/giá:** đọc on-chain bằng viem (`src/chain.js`) + giá CoinGecko (cache 60s, có fallback). **Swap:** Circle Stablecoin Kit REST (mục 4). **QR:** `qrcode.react` (tạo) + `jsqr` (quét — iOS không có BarcodeDetector).
 - **Secrets** (`.env.txt` + `.dev.vars` gitignored, set trên Cloudflare Dashboard): `API_KEY` (Circle W3S), `KIT_KEY` (Stablecoin Kit).
 - **ID hardcode** (không phải secret): APP_ID `518fec6a-4680-5175-9de6-0810fb3dfd04`, GOOGLE_CLIENT_ID `51031114717-...googleusercontent.com`.
-- **Dev local (Windows — KHÔNG dùng `wrangler pages dev`, lỗi "write EOF"):** Terminal 1 `node dev-server.js` (proxy 8787, import trực tiếp `functions/api/*` nên logic luôn khớp Cloudflare) + Terminal 2 `npm run dev` (Vite 5173). ⚠️ **Circle SDK KHÔNG chạy localhost** (thiếu crypto polyfill) → luồng PIN/login/swap chỉ test được trên deploy.
+- **Dev local (Windows — KHÔNG dùng `wrangler pages dev`, lỗi "write EOF"):** `dev-server.js` CÓ trên GitHub (bỏ khỏi `.gitignore` 07-17b — nó không chứa secret, chỉ ĐỌC `API_KEY` từ `.env.txt`; trước đây bị ignore nên máy thứ 2 kéo repo về là thiếu file, không dev local được). Terminal 1 `node dev-server.js` (proxy 8787, import trực tiếp `functions/api/*` nên logic luôn khớp Cloudflare) + Terminal 2 `npm run dev` (Vite 5173). ⚠️ **Circle SDK KHÔNG chạy localhost** (thiếu crypto polyfill) → luồng PIN/login/swap chỉ test được trên deploy.
 - **MOCK MODE — `npm run mock` (canh UI/flow local, KHÔNG cần Circle):** `src/mock.js` + cờ `VITE_MOCK=1` (`.env.mock`, Vite `--mode mock`). Bỏ qua Login/PIN → vào thẳng HomeSend với **ví ảo + số dư ảo**; chặn `/api/*` + ArcScan trả data giả (`installMockFetch`); nút Gửi/Swap **giả lập thành công** (không gọi Circle, không mất tiền). Gate ở `chain.js` (balances/rates/fee), `circle.js` (getSDK/refreshSession/executeChallenge/estimate+executeSwap). **KHÔNG vào production** (build prod không có cờ). Chỉ để dựng giao diện — luồng tiền THẬT vẫn test deploy. Số dư ảo sửa ở `MOCK_AMOUNTS` trong `src/mock.js`.
 
 **Token trên Arc Testnet:**
@@ -173,7 +173,8 @@ Tài nguyên AI (nạp trước khi build): Circle [skills](https://developers.c
 5. **Google login làm lại** qua Google Identity Services → đi luồng email (userId=email, full quyền PIN) khi user yêu cầu — thay đổi kiến trúc, làm riêng 1 buổi.
 6. Batch gửi nhiều người (Multicall3From, encoder sẵn).
 7. Tối giản tiếp UI cho người già (ẩn yếu tố crypto thừa) — user chỉ từng chỗ khi vào việc.
-8. **Còn tối ưu được nữa nếu cần** (chưa làm, không cấp bách): `@circle-fin/app-kit` + `swap-kit` + `adapter-viem-v2` nằm trong `package.json` nhưng **KHÔNG chỗ nào import** (functions chỉ nhắc trong comment) → gỡ khỏi deps cho gọn. Chunk SDK+firebase vẫn 1002KB: phần lớn là **crypto-browserify** do `nodePolyfills({ include: [...'crypto'] })` ở `vite.config.js` — thử bỏ `'crypto'` xem SDK còn chạy không, nhưng **chỉ test được trên deploy** nên rủi ro, đừng làm chung phiên với việc khác.
+8. **Còn tối ưu được nữa nếu cần** (chưa làm, không cấp bách): chunk SDK+firebase vẫn ~1002KB, phần lớn là **crypto-browserify** do `nodePolyfills({ include: [...'crypto'] })` ở `vite.config.js` — thử bỏ `'crypto'` xem SDK còn chạy không, nhưng **chỉ test được trên deploy** nên rủi ro, đừng làm chung phiên với việc khác. *(3 dep thừa app-kit/swap-kit/adapter-viem-v2 đã gỡ 07-17b.)*
+9. **3 icon chưa dùng: `back.svg`, `facebook.svg`, `swap.svg`** — user chốt 07-17b GIỮ LẠI (icon user tự vẽ, để dành). Đừng rà lại rồi đòi xoá nữa.
 
 ---
 
