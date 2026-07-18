@@ -137,6 +137,10 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 - Gas trả bằng USDC (nội bộ 18 decimals), rất rẻ — hiện `< $0.01` thay vì `$0.00`.
 - Kit `amount` = base units (mục 4).
 
+**PWA (thêm vào màn hình chính iOS):**
+- **Dải xám trên cùng ở status bar = nền `body`.** iOS standalone PWA thiếu `viewport-fit=cover` (index.html) nên nội dung bó trong safe-area; vùng status bar (ngoài viewport) bị iOS lấp bằng **màu nền `body`**. Trước để `--color-gray` → lộ dải xám. Fix 07-19: `body background = --color-white` (index.css) → hoà trắng với `.screen`. **ĐỪNG đổi body bg về xám lại.** Muốn full-bleed kiểu native thì thêm `viewport-fit=cover` + `env(safe-area-inset-*)` padding cho `.screen` (đụng lưới 10 hàng — user đã chọn KHÔNG làm, giữ nền trắng).
+- iOS cache meta/manifest lúc "Add to Home Screen" → đổi manifest/meta không ăn cho tới khi **xoá app + Add lại** (đổi CSS như trên thì ăn ngay lần mở kế).
+
 **Khác:**
 - iOS Safari: không BarcodeDetector → jsQR; Web Share API lưu Photos; không dùng `clipboard.readText()` (dialog phiền).
 - Màn không có NotifArea → lỗi hiện qua `ErrorToast` (truyền `sendError` qua navigate).
