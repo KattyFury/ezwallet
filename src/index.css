@@ -113,7 +113,7 @@ body {
   font-family: var(--font-base);
   font-size: var(--fs-content);
   color: var(--color-content);
-  background: var(--color-gray);
+  background: var(--color-white);   /* nền TRẮNG — dải status bar (PWA iOS) hoà trắng, không lộ xám */
   -webkit-font-smoothing: antialiased;
 }
 
