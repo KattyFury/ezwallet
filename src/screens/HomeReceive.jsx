@@ -61,20 +61,26 @@ export default function HomeReceive() {
         <QRCodeCanvas value={walletAddr || '0x'} size={512} level="M" includeMargin />
       </div>
 
-      {/* Cụm QR + địa chỉ MỞ RỘNG ra hàng 3-6 (user chốt 07-17f — trước chỉ 3-5, QR 200px nhỏ,
-          quét xa không ăn). QR co giãn 'min(30dvh, 78vw)': lớn hết cỡ phần hàng 3-6 CÒN LẠI phía
-          trên dòng địa chỉ. paddingBottom 6.6dvh = nhường đúng chỗ dòng địa chỉ ở 55dvh. */}
-      <div style={{ gridRow: '3 / 7', display: 'flex', alignItems: 'center', justifyContent: 'center', paddingBottom: '6.6dvh', minWidth: 0 }}>
+      {/* QR neo ĐÚNG hàng 3-5 (user chốt 07-19: trước để 3-6 + paddingBottom "nhường chỗ" cho dòng
+          địa chỉ ở hàng 6 → QR bị đẩy lệch tâm khỏi khối 3 hàng. Giờ hàng 6 dành riêng cho
+          nút địa chỉ, không chồng lấn nữa nên QR canh giữa thẳng trong đúng 3 hàng). */}
+      <div style={{ gridRow: '3 / 6', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0 }}>
         <QRCodeSVG value={walletAddr || '0x'} size={512} level="M" style={{ width: 'min(30dvh, 78vw)', height: 'min(30dvh, 78vw)' }} />
       </div>
       {/* Địa chỉ + copy: neo absolute top 55% = TRÙNG toạ độ nút "Hold to show tokens" màn Gửi
           (user chốt 07-17f "càng tốt") — qua lại 2 tab, dòng phụ nằm đúng 1 chỗ.
-          07-19: ẩn địa chỉ rút gọn + icon copy riêng, chỉ còn 1 dòng hướng dẫn "bấm để copy"
-          (user chốt: địa chỉ 0x... không ai đọc được, khỏi hiện cho gọn). */}
-      <button onClick={handleCopyAddr} style={{ position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10, background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap' }}>
-        <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: addrCopied ? 'var(--color-primary)' : 'var(--color-muted)' }}>
-          {addrCopied ? t('Đã copy!') : t('Bấm để copy địa chỉ ví của bạn')}
-        </span>
+          07-19: ẩn địa chỉ rút gọn + icon copy riêng, chỉ còn 1 dòng hướng dẫn "bấm để copy" —
+          ĐỒNG BỘ hẳn kiểu nút với ShowTokensButton (HomeSend.jsx) cho khớp cặp 2 tab (user chốt:
+          cùng pill trắng viền xám, cùng cỡ chữ, để nhìn như 1 CẶP nút chứ không phải chữ trôi nổi). */}
+      <button onClick={handleCopyAddr} style={{
+        position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
+        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
+        padding: '0 22px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
+        color: addrCopied ? 'var(--color-primary)' : 'var(--color-muted)', fontFamily: 'var(--font-condensed)',
+        fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', cursor: 'pointer', whiteSpace: 'nowrap',
+        WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
+      }}>
+        {addrCopied ? t('Đã copy!') : t('Bấm để copy địa chỉ ví của bạn')}
       </button>
 
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>

@@ -1,9 +1,13 @@
 // Hàng đợi thông báo in-app (localStorage). Dùng cho HomeSend hiển thị ở vùng hint.
 const KEY = 'ez_notifs'
+const DAY_MS = 24 * 60 * 60 * 1000
 
+// CHỈ GIỮ 24H (user chốt 07-19, đè quyết định "không hết hạn" 07-15 — thông báo swap/gửi/nhận cũ
+// dồn đống nhìn rối): thông báo quá 24h tự rớt khỏi danh sách hiện ra, không cần dismiss tay.
 export function getNotifs() {
   try {
-    return JSON.parse(localStorage.getItem(KEY) || '[]')   // KHÔNG hết hạn (user chốt 2026-07-15): luôn giữ trạng thái ví mới nhất
+    const list = JSON.parse(localStorage.getItem(KEY) || '[]')
+    return list.filter(n => Date.now() - (n.ts || 0) <= DAY_MS)
   } catch { return [] }
 }
 
