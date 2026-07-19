@@ -2,9 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import NavBar from '../components/NavBar'
 import Icon from '../components/Icon'
 import PctSlider from '../components/PctSlider'
+import Numpad from '../components/Numpad'
 import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress } from '../circle'
 import { getTokenBalances, getDisplayRates, cachedRates, estimateFeeUsd } from '../chain'
-import { spendableOf, floorTo, getDisplayCurrency, displaySymbol } from '../data'
+import { spendableOf, floorTo, getDisplayCurrency, displaySymbol, amountFontSize } from '../data'
 import { roundHints, fmtHint } from '../roundHint'
 import { addNotif } from '../notif'
 import { t } from '../i18n'
@@ -15,13 +16,15 @@ import { t } from '../i18n'
 // Tắt lại nếu cần: đổi SWAP_ENABLED = false.
 const SWAP_ENABLED = true
 
-// ══ MÀN SWAP — KHÔNG BÀN PHÍM SỐ (user chốt 07-17, đập đi xây lại) ══
-// Đối tượng EZwallet = người mới + người lớn tuổi → KHÔNG bắt gõ từng chữ số. Thay bằng THANH TRƯỢT
-// chọn % SỐ DƯ ("kéo bao nhiêu % tài sản") + hàng 7 GỢI Ý SỐ CHẴN BẤM ĐƯỢC.
+// ══ MÀN SWAP — SLIDER + NUMPAD SONG SONG (user chốt 07-19, nới lại quyết định 07-17) ══
+// Đối tượng EZwallet = người mới + người lớn tuổi → mặc định vẫn là THANH TRƯỢT chọn % SỐ DƯ
+// ("kéo bao nhiêu % tài sản") + hàng 7 GỢI Ý SỐ CHẴN BẤM ĐƯỢC (giữ nguyên, KHÔNG bỏ — user chốt
+// 07-19 "giữ cả slider"). Bấm thẳng vào số "You pay" → mở sheet Numpad để gõ tay CHÍNH XÁC (user
+// 07-19: cần nhập số lẻ mà slider/hint không kéo/chọn tới được) — xong bấm Done để áp dụng.
 // ⚠️ Mọi thứ tính theo ĐƠN VỊ TOKEN ĐANG PAY, KHÔNG theo USD (user chốt 07-17c). Dòng "~ $xx" dưới
 // số chỉ là quy đổi cho dễ hình dung — ĐỪNG lấy nó làm gốc tính toán.
 // Bản đồ hàng (user giao): 1 tiêu đề · 2-6 You pay/You receive + Rate/Fee · 7 hint · 8 slider ·
-// 9 nút Swap · 10 NavBar. ĐỪNG nhét lại Numpad vào đây.
+// 9 nút Swap · 10 NavBar.
 const SWAP_TOKENS = ['USDC', 'EURC', 'cirBTC']
 const decimalsFor = sym => (sym === 'cirBTC' ? 6 : 2)
 
@@ -160,6 +163,34 @@ export default function Swap() {
     if (available > 0) setPct(Math.max(0, Math.min(100, (final / available) * 100)))
   }
 
+  // ── Numpad (user chốt 07-19) — bấm vào số "You pay" mở sheet nhập tay, SONG SONG với slider ──
+  // KHÔNG kẹp trần ở available: cho gõ vượt số dư y hệt SendAmount, overBalance đã tự bắt lỗi (đỏ +
+  // khoá nút Swap) — kẹp âm thầm sẽ khiến người dùng tưởng gõ nhầm mà không hiểu vì sao số tự hạ.
+  const [numpadOpen, setNumpadOpen] = useState(false)
+  const [digits, setDigits] = useState('')
+  function openNumpad() {
+    if (loading) return
+    setDigits(amountNum > 0 ? String(amountNum) : '')
+    setNumpadOpen(true)
+  }
+  function handleNumKey(key) {
+    if (key === 'BACK') { setDigits(d => d.slice(0, -1)); return }
+    if (key === '.') { setDigits(d => (d.includes('.') ? d : (d === '' ? '0.' : d + '.'))); return }
+    if (digits.length >= 12) return
+    if (digits === '0') { setDigits(key); return }
+    setDigits(d => d + key)
+  }
+  function closeNumpad() {
+    const val = parseFloat(digits || '0')
+    if (val > 0) {
+      if (success) { setSuccess(false); setStatus('') }
+      const final = floorTo(val, decimalsFor(fromSym))
+      setSnapAmt(final)
+      if (available > 0) setPct(Math.max(0, Math.min(100, (final / available) * 100)))
+    }
+    setNumpadOpen(false)
+  }
+
   // Đảo chiều: 180° cho nút (spec) + reset số (số dư 2 token khác nhau → giữ % cũ là vô nghĩa)
   const [flip, setFlip] = useState(0)
   function swapDir() { setFromSym(toSym); setToSym(fromSym); resetAmount(); setFlip(f => f + 180) }
@@ -218,30 +249,36 @@ export default function Swap() {
   // ⚠️ ĐỪNG đặt số cứng ở đây (cũ: 38/46/32 — ngoài thang, user chốt 07-17c phải đồng bộ thang).
   const AMT = { fontSize: 'var(--fs-huge)', fontWeight: 'var(--fw-light)', lineHeight: 1.05 }
 
-  // 1 card = nhãn + [token ▼ ... Available] + số to + quy đổi. Available hiện ở CẢ 2 card (design user).
-  function SideCard({ label, sym, onPick, amount, disp }) {
+  // 1 card = nhãn + [số to + chip token gộp 1 hàng] + quy đổi/Available (design gọn 07-19: trước
+  // đây chip token đứng RIÊNG 1 hàng trên cùng Available, rồi số to lại ghi thêm ký hiệu token lần
+  // nữa bên cạnh → "EURC" LẶP 2 LẦN. Giờ chip đứng NGAY CẠNH số to (chỉ 1 chỗ hiện ký hiệu token),
+  // Available dời xuống dòng cuối ghép chung với quy đổi ~$ cho gọn — user chốt "gộp chip vào chung
+  // hàng số". Bấm thẳng vào SỐ (không phải chip) mở Numpad — chỉ "You pay" có onAmountClick.
+  function SideCard({ label, sym, onPick, amount, disp, onAmountClick }) {
     const known = amount !== null
     const balKnown = balances[sym] !== undefined
+    const availTxt = balKnown ? `${spendableOf(sym, balances[sym]).toFixed(decimalsFor(sym))} ${sym}` : null
+    const dispTxt = disp !== null ? `~ ${fmtDisp(disp)}` : null
     return (
       <div style={{ ...CARD, display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {/* Phân cấp đậm nhạt (user chốt 07-17e "quan trọng nhớ bold"): label vai trò card = medium */}
-        <span style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>{label}</span>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-          <TokenRow sym={sym} onClick={onPick} />
-          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {/* Số dư chưa đọc được → "…", KHÔNG vẽ 0 (bug 07-17) */}
-            Available: <span className="num" style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-medium)' }}>
-              {balKnown ? `${spendableOf(sym, balances[sym]).toFixed(decimalsFor(sym))} ${sym}` : '…'}
-            </span>
-          </span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, minWidth: 0 }}>
-          <span className="num" style={{ ...AMT, color: overBalance ? 'var(--color-error)' : known && amount > 0 ? 'var(--color-content)' : 'var(--color-faint)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {/* "size vừa" (user chốt 07-19, trước --fs-label 15 nhìn quá nhỏ) */}
+        <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>{label}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+          <span className="num" onClick={onAmountClick} style={{
+            ...AMT, color: overBalance ? 'var(--color-error)' : known && amount > 0 ? 'var(--color-content)' : 'var(--color-faint)',
+            whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0,
+            cursor: onAmountClick ? 'text' : 'default',
+          }}>
             {known ? amount.toFixed(decimalsFor(sym)) : '…'}
           </span>
-          <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>{sym}</span>
+          <TokenRow sym={sym} onClick={onPick} />
         </div>
-        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{disp !== null ? `~ ${fmtDisp(disp)}` : ' '}</span>
+        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {dispTxt}
+          {dispTxt && availTxt ? ' · ' : ''}
+          {/* Số dư chưa đọc được → "…", KHÔNG vẽ 0 (bug 07-17) */}
+          {availTxt ? <>Available: <span className="num" style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-medium)' }}>{availTxt}</span></> : (!dispTxt ? ' ' : '')}
+        </span>
       </div>
     )
   }
@@ -267,6 +304,29 @@ export default function Swap() {
     <div className="screen">
       {picker && <TokenPicker current={picker === 'from' ? fromSym : toSym} onSelect={sym => selectToken(picker, sym)} onClose={() => setPicker(null)} />}
 
+      {/* Sheet Numpad (user chốt 07-19) — bấm ra ngoài hoặc "Done" đều CHỐT số đã gõ (không có nút
+          huỷ riêng: xoá hết rồi đóng = giữ nguyên số cũ, xem closeNumpad). */}
+      {numpadOpen && (
+        <div className="popup-overlay" onClick={closeNumpad}>
+          <div style={{
+            position: 'fixed', left: 0, right: 0, bottom: 0, zIndex: 101,
+            background: 'var(--color-white)', borderRadius: '20px 20px 0 0',
+            padding: '18px 20px 24px', display: 'flex', flexDirection: 'column', gap: 14,
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ textAlign: 'center' }}>
+              <span className="num" style={{ fontSize: amountFontSize(digits || '0', 40, 10), fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>
+                {digits || '0'}<span className="caret">_</span>
+              </span>
+              <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', marginLeft: 6 }}>{fromSym}</span>
+            </div>
+            <div style={{ height: 260 }}>
+              <Numpad onKey={handleNumKey} showComma />
+            </div>
+            <button className="btn btn-primary" style={{ width: '100%' }} onClick={closeNumpad}>Done</button>
+          </div>
+        </div>
+      )}
+
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
         {t('Đổi tiền')}
       </div>
@@ -274,7 +334,7 @@ export default function Swap() {
       {/* Hàng 2-6: You pay ⇅ You receive + Rate/Fee (user giao) */}
       <div style={{ gridRow: '2 / 7', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, minWidth: 0 }}>
         <div style={{ position: 'relative' }}>
-          <SideCard label="You pay" sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay} />
+          <SideCard label="You pay" sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay} onAmountClick={openNumpad} />
 
           {/* Nút đảo chiều — ĐÈ lên ranh giới 2 card (viền trắng như "đục lỗ"), xoay 180° mỗi lần bấm */}
           <div style={{ display: 'flex', justifyContent: 'center', margin: '-14px 0', position: 'relative', zIndex: 3 }}>

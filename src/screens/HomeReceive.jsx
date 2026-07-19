@@ -68,13 +68,13 @@ export default function HomeReceive() {
         <QRCodeSVG value={walletAddr || '0x'} size={512} level="M" style={{ width: 'min(30dvh, 78vw)', height: 'min(30dvh, 78vw)' }} />
       </div>
       {/* Địa chỉ + copy: neo absolute top 55% = TRÙNG toạ độ nút "Hold to show tokens" màn Gửi
-          (user chốt 07-17f "càng tốt") — qua lại 2 tab, dòng phụ nằm đúng 1 chỗ. */}
-      <button onClick={handleCopyAddr} style={{ position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10, display: 'flex', alignItems: 'center', gap: 8, background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap' }}>
-        <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>
-          {shortenAddr(walletAddr)}
+          (user chốt 07-17f "càng tốt") — qua lại 2 tab, dòng phụ nằm đúng 1 chỗ.
+          07-19: ẩn địa chỉ rút gọn + icon copy riêng, chỉ còn 1 dòng hướng dẫn "bấm để copy"
+          (user chốt: địa chỉ 0x... không ai đọc được, khỏi hiện cho gọn). */}
+      <button onClick={handleCopyAddr} style={{ position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10, background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: addrCopied ? 'var(--color-primary)' : 'var(--color-muted)' }}>
+          {addrCopied ? t('Đã copy!') : t('Bấm để copy địa chỉ ví của bạn')}
         </span>
-        {/* Icon hành động = brand blue (ngôn ngữ Swap, user chốt 07-17e); copy xong = xanh lá success */}
-        <Icon name={addrCopied ? 'check' : 'copy'} size="var(--is-md-lg)" color={addrCopied ? 'var(--color-primary)' : 'var(--color-brand)'} />
       </button>
 
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
@@ -82,25 +82,28 @@ export default function HomeReceive() {
             ("make a QR for the exact amount") tràn ô 350px, bị cắt "…" sẵn rồi. */}
         <NotifArea hints={[
           // Text user chốt 07-17f ("moss used" = typo của "most used"; "Custom the receive amount"
-          // sửa ngữ pháp thành "Custom receive amount" — đã báo user)
-          { label: 'Share', desc: 'Share your address' },
+          // sửa ngữ pháp thành "Custom receive amount" — đã báo user). Thứ tự khớp lại theo layout
+          // nút hàng 9 (07-19: QR Storage trái · Create QR giữa · Share phải).
+          { label: 'QR Storage', desc: 'Store your most used QRs' },
           { label: 'Create QR', desc: 'Custom receive amount' },
-          { label: 'QR Library', desc: 'Store your most used QRs' },
+          { label: 'Share', desc: 'Share your address' },
         ]} />
       </div>
 
+      {/* Thứ tự nút 07-19 (user chốt): QR Storage trái · Create QR giữa · Share PHẢI — đa số thuận
+          tay phải, nút bấm nhiều nhất (Share) nên nằm bên phải dễ với. */}
       <div className="row-9 action-grid">
-        <button className="action-card" onClick={handleShare}>
-          <Icon name="share" size="var(--is-item)" />
-          <span>{copied ? t('Đã copy!') : t('Chia sẻ')}</span>
+        <button className="action-card" onClick={() => navigate('SavedQRList')}>
+          <Icon name="download" size="var(--is-item)" />
+          <span>{t('Kho QR')}</span>
         </button>
         <button className="action-card primary" onClick={() => navigate('CreateQR')}>
           <Icon name="qr" size="var(--is-item)" color="var(--color-white)" />
           <span>{t('Tạo QR')}</span>
         </button>
-        <button className="action-card" onClick={() => navigate('SavedQRList')}>
-          <Icon name="download" size="var(--is-item)" />
-          <span>{t('Kho QR')}</span>
+        <button className="action-card" onClick={handleShare}>
+          <Icon name="share" size="var(--is-item)" />
+          <span>{copied ? t('Đã copy!') : t('Chia sẻ')}</span>
         </button>
       </div>
 

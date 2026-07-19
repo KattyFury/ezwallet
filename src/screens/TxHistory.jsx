@@ -124,6 +124,60 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, on
   )
 }
 
+// Gộp cặp swap (2 dòng in/out CÙNG hash) thành 1 dòng "Swapped 10 EURC → 13.58 USDC" (user chốt
+// 07-19: trước đây mỗi swap hiện 2 dòng riêng, cả 2 đều ghi "Swapped" — rối, trùng lặp).
+function SwapRow({ outLeg, inLeg, cur, rates, onClick }) {
+  const amtOf = leg => parseFloat(leg.value) / Math.pow(10, parseInt(leg.tokenDecimal || 6))
+  const symOf = leg => leg.tokenSymbol || TOKEN_MAP[leg.contractAddress?.toLowerCase()]?.symbol || '?'
+  const amtOut = amtOf(outLeg), amtIn = amtOf(inLeg)
+  const symOut = symOf(outLeg), symIn = symOf(inLeg)
+  const usdIn = amtIn * (rates?.[symIn] ?? TOKEN_MAP[inLeg.contractAddress?.toLowerCase()]?.usdRate ?? 1)
+  return (
+    <button onClick={onClick} style={{
+      display: 'flex', alignItems: 'center', gap: 12, width: '100%',
+      padding: '14px 0', border: 'none', background: 'none', cursor: 'pointer',
+      fontFamily: 'inherit', textAlign: 'left',
+    }}>
+      <div style={{
+        width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
+        background: 'var(--color-info-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <Icon name="swap" size="var(--is-item)" color="var(--color-brand)" />
+      </div>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div className="num" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          Swapped {amtOut.toFixed(amtOut < 0.01 ? 6 : 2)} {symOut} → {amtIn.toFixed(amtIn < 0.01 ? 6 : 2)} {symIn}
+        </div>
+        <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', marginTop: 3 }}>
+          At <span className="num">{timeLabel(outLeg.timeStamp)}</span>
+        </div>
+      </div>
+      <div className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', flexShrink: 0 }}>
+        {rates ? `≈ ${displaySymbol(cur)}${displayNum(usdIn, cur, rates)}` : '…'}
+      </div>
+    </button>
+  )
+}
+
+// Chưa có hoạt động nào trong 24h → thay vì để trống trơn, hiện Hint "cách dùng" (user chốt 07-19).
+function HistoryHint() {
+  const lines = [
+    { label: t('Gửi'), desc: t('Chuyển tiền qua QR hoặc địa chỉ ví') },
+    { label: t('Nhận'), desc: t('Hiện mã QR để nhận tiền') },
+    { label: t('Đổi tiền'), desc: t('Đổi giữa USDC, EURC, cirBTC') },
+  ]
+  return (
+    <div style={{ margin: '24px 4px', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+      <Icon name="hint" size="var(--is-item)" color="var(--color-warning)" style={{ flexShrink: 0, marginTop: 2 }} />
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 'var(--fs-item)', color: 'var(--color-content)', textAlign: 'left' }}>
+        {lines.map((h, i) => (
+          <div key={i}><span style={{ fontWeight: 'var(--fw-medium)' }}>{h.label}</span>: {h.desc}</div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 function DetailRow({ label, children }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '7px 0' }}>
@@ -171,12 +225,15 @@ export default function TxHistory() {
     })
   }, [txs])
 
+  // CHỈ GIỮ 24H (user chốt 07-19): lịch sử cũ hơn 24h không hiện nữa — hết hoạt động gần đây thì
+  // hiện Hint "cách dùng" thay vì danh sách trống trơn.
+  const recent = txs.filter(tx => (Date.now() / 1000 - parseInt(tx.timeStamp)) <= 86400)
   const isSendTx = tx => tx.from?.toLowerCase() === walletAddr?.toLowerCase()
-  const filtered = txs.filter(tx => filter === 'all' ? true : filter === 'send' ? isSendTx(tx) : !isSendTx(tx))
+  const filtered = recent.filter(tx => filter === 'all' ? true : filter === 'send' ? isSendTx(tx) : !isSendTx(tx))
   // Hash nào ví vừa GỬI vừa NHẬN (2 transfer cùng tx) = SWAP → dòng ghi "Swapped", không "từ [lạ]".
   const swapHashes = (() => {
     const dir = {}, lower = walletAddr?.toLowerCase()
-    txs.forEach(tx => {
+    recent.forEach(tx => {
       const h = tx.hash; if (!dir[h]) dir[h] = { in: false, out: false }
       if (tx.from?.toLowerCase() === lower) dir[h].out = true
       if (tx.to?.toLowerCase() === lower) dir[h].in = true
@@ -184,6 +241,24 @@ export default function TxHistory() {
     const s = new Set(); for (const h in dir) if (dir[h].in && dir[h].out) s.add(h)
     return s
   })()
+  // Gộp 2 dòng in/out cùng hash Swap thành 1 mục hiển thị duy nhất — CHỈ gộp khi CẢ 2 chiều còn
+  // trong `filtered` (tab Gửi/Nhận lọc chỉ còn 1 chiều thì giữ dòng đơn như cũ).
+  function buildDisplayList(list) {
+    const seen = new Set()
+    const out = []
+    list.forEach(tx => {
+      if (!swapHashes.has(tx.hash)) { out.push(tx); return }
+      if (seen.has(tx.hash)) return
+      const legs = list.filter(t => t.hash === tx.hash)
+      if (legs.length < 2) { out.push(tx); return }
+      seen.add(tx.hash)
+      const lower = walletAddr?.toLowerCase()
+      const outLeg = legs.find(t => t.from?.toLowerCase() === lower)
+      const inLeg = legs.find(t => t.to?.toLowerCase() === lower)
+      out.push({ isSwapGroup: true, hash: tx.hash, outLeg, inLeg, timeStamp: tx.timeStamp })
+    })
+    return out
+  }
   const emptyMsg = filter === 'send' ? t('Chưa có giao dịch gửi') : filter === 'receive' ? t('Chưa có giao dịch nhận') : t('Chưa có giao dịch nào')
 
   useEffect(() => {
@@ -221,18 +296,25 @@ export default function TxHistory() {
       }}>
         {loading ? (
           <div style={{ width: '100%', textAlign: 'center', paddingTop: 40, color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>{t('Đang tải...')}</div>
+        ) : recent.length === 0 ? (
+          <HistoryHint />
         ) : filtered.length === 0 ? (
           <div style={{ width: '100%', textAlign: 'center', paddingTop: 40 }}>
             <div style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{emptyMsg}</div>
           </div>
         ) : (() => {
-          // Nhóm theo ngày: chèn DateHeader mỗi khi ngày đổi (txs sort desc sẵn từ API).
+          // Nhóm theo ngày: chèn DateHeader mỗi khi ngày đổi (đã gộp cặp swap trước đó).
+          const displayList = buildDisplayList(filtered)
           let last = null
           const nodes = []
-          filtered.forEach((tx, i) => {
-            const dl = dateLabel(tx.timeStamp)
+          displayList.forEach((item, i) => {
+            const dl = dateLabel(item.timeStamp)
             if (dl !== last) { nodes.push(<DateHeader key={`h-${dl}`} date={dl} first={i === 0} />); last = dl }
-            nodes.push(<TxRow key={tx.hash} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} cur={cur} rates={rates} memo={memos[tx.hash]} isSwap={swapHashes.has(tx.hash)} onAdd={a => navigate('Contacts', { addAddress: a })} />)
+            if (item.isSwapGroup) {
+              nodes.push(<SwapRow key={item.hash} outLeg={item.outLeg} inLeg={item.inLeg} cur={cur} rates={rates} onClick={() => setSelected(item.inLeg)} />)
+            } else {
+              nodes.push(<TxRow key={item.hash} tx={item} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(item)} cur={cur} rates={rates} memo={memos[item.hash]} isSwap={swapHashes.has(item.hash)} onAdd={a => navigate('Contacts', { addAddress: a })} />)
+            }
           })
           return nodes
         })()}
