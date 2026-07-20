@@ -278,7 +278,7 @@ export default function Swap() {
       : isTyping ? (typing ? 'var(--color-content)' : 'var(--color-faint)')
       : known && amount > 0 ? 'var(--color-content)' : 'var(--color-faint)'
     return (
-      <div style={{ ...CARD, flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly' }}>
+      <div style={{ ...CARD, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Phân cấp đậm nhạt (user chốt 07-17e "quan trọng nhớ bold"): label vai trò card = medium.
             Card cao 2 HÀNG nên chữ phụ lên --fs-body 19, số to base 52 (user chốt 07-20 to cho người già) */}
         <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>{label}</span>
@@ -351,79 +351,73 @@ export default function Swap() {
         {t('Đổi tiền')}
       </div>
 
-      {/* Hàng 2 → nửa hàng 6 (user quy hoạch 07-20): bắt đầu từ ĐẦU hàng 2, You pay = 2 HÀNG,
-          You receive = 2 HÀNG, Fee/Rate = nửa hàng 6 (dòng nhỏ). Nửa sau hàng 6 để trống —
-          chính là chỗ sheet numpad (55dvh) trồi lên tới. KHÔNG canh giữa dồn cụm như cũ. */}
-      <div style={{ gridRow: '2 / 7', display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-        <div style={{ flex: 2, minHeight: 0, display: 'flex' }}>
+      {/* KHU VỰC hàng 2→9 chia 3 KHỐI bằng justify-content:space-between (user chốt 07-20e): 2 khe
+          giữa các khối TỰ ĐỘNG BẰNG NHAU (cụm You-pay/receive ↔ cụm hint+slider ↔ nút Swap), không
+          chỗ nào trống lệch. paddingBottom 2dvh = khớp margin-bottom action-card màn Send/Receive. */}
+      <div style={{ gridRow: '2 / 10', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0, paddingBottom: '2dvh' }}>
+
+        {/* KHỐI 1: You pay ⇅ You receive + Fee/Rate */}
+        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <SideCard label="You pay" sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
             onAmount={openPad} typing={pad ? typed : null} />
+
+          {/* Nút đảo chiều — ĐÈ lên ranh giới 2 card (viền trắng như "đục lỗ"), xoay 180° mỗi lần bấm.
+              margin -18/-18 trên nút 44px → chiếm đúng 8px trong flow = khe giữa 2 card. */}
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '-18px 0', position: 'relative', zIndex: 3 }}>
+            <button onClick={swapDir} aria-label="Reverse direction"
+              style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid var(--color-white)', background: 'var(--color-info-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transform: `rotate(${flip}deg)`, transition: 'transform .3s ease' }}>
+              <Icon name="trade" size="var(--is-num)" color="var(--color-brand)" />
+            </button>
+          </div>
+
+          <SideCard label="You receive" sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} />
+
+          {/* Fee + Rate — 1 dòng NHỎ fs-item 17: Rate căn TRÁI · Fee căn PHẢI, số liệu ĐEN cho bật */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 10, padding: '0 16px' }}>
+            <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              Rate: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-medium)' }}>{rateTxt}</span>
+            </span>
+            <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>
+              Fee: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-medium)' }}>{feeTxt}</span>
+            </span>
+          </div>
         </div>
 
-        {/* Nút đảo chiều — ĐÈ lên ranh giới 2 card (viền trắng như "đục lỗ"), xoay 180° mỗi lần bấm.
-            margin -18/-18 trên nút 44px → chiếm đúng 8px trong flow = khe giữa 2 card. */}
-        <div style={{ display: 'flex', justifyContent: 'center', margin: '-18px 0', position: 'relative', zIndex: 3 }}>
-          <button onClick={swapDir} aria-label="Reverse direction"
-            style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid var(--color-white)', background: 'var(--color-info-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transform: `rotate(${flip}deg)`, transition: 'transform .3s ease' }}>
-            <Icon name="trade" size="var(--is-num)" color="var(--color-brand)" />
+        {/* KHỐI 2: gợi ý số chẵn (chip) + thanh trượt % — cùng 1 cụm */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '1dvh', minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: hints.length ? 1 : 0, transition: 'opacity .18s ease', pointerEvents: hints.length ? 'auto' : 'none', minWidth: 0 }}>
+              {hints.map(v => (
+                <button key={v} onClick={() => pickHint(v)}
+                  style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}>
+                  <span className="num" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
+                  <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-brand)' }}> {fromSym}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div style={{ minWidth: 0 }}>
+            <PctSlider pct={Math.round(pct)} onChange={onPct} disabled={!hasBal || loading} />
+          </div>
+        </div>
+
+        {/* KHỐI 3: nút Swap = HÌNH DẠNG + VỊ TRÍ như action-card Scan QR/Create QR (user chốt 07-20e):
+            bo góc 20 (vuông hơn pill), cao 8dvh, rộng 66.67% căn giữa. Vẫn là NƠI DUY NHẤT hiện trạng
+            thái (Preparing/Enter PIN/Submitted/lỗi). Ưu tiên: lỗi > trạng thái > 'Swap'. */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
+            style={{
+              width: '66.67%', height: '8dvh', borderRadius: 20, overflow: 'hidden',
+              ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
+              ...(success ? { opacity: 1 } : null),
+            }}
+            disabled={!canSwap && !error} onClick={handleSwap}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+              {success && <Icon name="check" size="var(--is-md-lg)" color="var(--color-white)" />}
+              {error || status || 'Swap'}
+            </span>
           </button>
         </div>
-
-        <div style={{ flex: 2, minHeight: 0, display: 'flex' }}>
-          <SideCard label="You receive" sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} />
-        </div>
-
-        {/* Fee + Rate — NỬA HÀNG 6, 1 dòng NHỎ (fs-item 17 = font nút "Hold to show tokens").
-            User chốt 07-20b: Rate căn TRÁI – Fee căn PHẢI (tách 2 đầu cho dễ đọc), nhãn xám
-            nhưng SỐ LIỆU ĐEN cho bật (bản gộp 1 cụm giữa nhìn "mờ nhạt"). */}
-        <div style={{ flex: 0.5, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 8, padding: '0 16px' }}>
-          <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            Rate: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-medium)' }}>{rateTxt}</span>
-          </span>
-          <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>
-            Fee: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-medium)' }}>{feeTxt}</span>
-          </span>
-        </div>
-
-        {/* Nửa sau hàng 6 để trống — vùng sheet numpad trồi lên (55dvh) */}
-        <div style={{ flex: 0.5 }} />
-      </div>
-
-      {/* Hàng 7: GỢI Ý SỐ CHẴN — chip BẤM ĐƯỢC, theo đơn vị token đang Pay (user chốt 07-17c).
-          Chừa chỗ cố định + mờ dần khi đổi: KHÔNG để layout nhảy lúc gợi ý hiện/tắt. */}
-      <div className="row-7" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: hints.length ? 1 : 0, transition: 'opacity .18s ease', pointerEvents: hints.length ? 'auto' : 'none', minWidth: 0 }}>
-          {hints.map(v => (
-            <button key={v} onClick={() => pickHint(v)}
-              style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}>
-              <span className="num" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
-              <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-brand)' }}> {fromSym}</span>
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Hàng 8: thanh trượt % số dư */}
-      <div className="row-8" style={{ minWidth: 0 }}>
-        <PctSlider pct={Math.round(pct)} onChange={onPct} disabled={!hasBal || loading} />
-      </div>
-
-      {/* Hàng 9: nút Swap = NƠI DUY NHẤT hiện mọi trạng thái giao dịch (Preparing… / Enter PIN… /
-          Submitted / lỗi) — KHÔNG có dòng lỗi riêng (user chốt). Ưu tiên: lỗi > trạng thái > 'Swap'. */}
-      <div className="row-9" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
-          style={{
-            width: '66.67%', overflow: 'hidden',
-            ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
-            // Thành công = nút XANH LÁ gradient (.btn-success) — ép opacity 1 để không bị mờ dù disabled
-            ...(success ? { opacity: 1 } : null),
-          }}
-          disabled={!canSwap && !error} onClick={handleSwap}>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
-            {success && <Icon name="check" size="var(--is-md-lg)" color="var(--color-white)" />}
-            {error || status || 'Swap'}
-          </span>
-        </button>
       </div>
 
       <NavBar active="Swap" />

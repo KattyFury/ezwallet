@@ -26,8 +26,28 @@ export default function SendAmount() {
   const qrCurrency = CURRENCIES.includes(params.currency) ? params.currency : null
   const [cur, setCur] = useState(qrCurrency || 'USD')
   const [digits, setDigits] = useState(params.amount ? String(params.amount) : '')
-  const [memo, setMemo] = useState(params.memo || '')
+  // NOTE MẶC ĐỊNH (user chốt 07-20e): user set 1 lần trong popup → mọi lần gửi memo tự điền sẵn note đó
+  // (hiện như VALUE thật chứ không phải placeholder mờ). Click vào ô để gõ → note default BIẾN MẤT,
+  // gõ tự do (noteTouched chặn không xoá lại ở các lần focus sau).
+  const [defaultNote, setDefaultNote] = useState(() => localStorage.getItem('ez_default_note') || '')
+  const [memo, setMemo] = useState(params.memo || localStorage.getItem('ez_default_note') || '')
+  const [noteTouched, setNoteTouched] = useState(false)
+  const [showNote, setShowNote] = useState(false)      // popup set default note
+  const [draftNote, setDraftNote] = useState('')       // giá trị đang gõ trong popup
   const [showCur, setShowCur] = useState(false)
+
+  function openNotePopup() { setDraftNote(defaultNote); setShowNote(true) }
+  function saveDefaultNote() {
+    const v = draftNote.trim()
+    localStorage.setItem('ez_default_note', v)
+    // Nếu ô memo đang trống hoặc còn là default cũ (chưa gõ tay) → cập nhật hiển thị ngay theo note mới
+    if (!noteTouched || memo === '' || memo === defaultNote) { setMemo(v); setNoteTouched(false) }
+    setDefaultNote(v); setShowNote(false)
+  }
+  // Click vào ô note lần đầu mà đang là note default → xoá để gõ mới (user chốt 07-20e)
+  function onNoteFocus() {
+    if (!noteTouched && defaultNote && memo === defaultNote) { setMemo(''); setNoteTouched(true) }
+  }
   const [availableAmt, setAvailableAmt] = useState(null) // số dư của TOKEN đang chọn (đơn vị token thật)
   const [walletAddr, setWalletAddr] = useState(null)
 
@@ -78,40 +98,50 @@ export default function SendAmount() {
         {t('Gửi tiền')}
       </div>
 
-      <div className="row-2 center" style={{ gap: 6 }}>
-        <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)' }}>{t('Gửi cho:')}</span>
-        <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>
-          {name || shortenAddr(address)}
-        </span>
-      </div>
-
-      <div className="row-3-4 center col" style={{ gap: 6 }}>
-        {/* Số to như màn số dư, LUÔN căn giữa; chip tiền tệ neo BÌA PHẢI (không bám theo bề rộng số nữa) */}
-        <div style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="num" style={{ fontSize: amountFontSize((cur === 'USD' ? '$' : '') + digits, 52, 9), fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: overBalance ? 'var(--color-error)' : digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
-            {cur === 'USD' ? displaySymbol('USDC') : ''}{digits}<span className="caret">_</span>
+      {/* Cụm Send-to / số tiền / note XÍCH GẦN NHAU (user chốt 07-20e: trước 3 khối rải rác giữa
+          hàng 2-5 nhìn rời rạc) — gom vào 1 flex column căn giữa vùng hàng 2-5, gap gọn 2dvh. */}
+      <div style={{ gridRow: '2 / 6', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2dvh', minWidth: 0 }}>
+        <div className="center" style={{ gap: 6 }}>
+          <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)' }}>{t('Gửi cho:')}</span>
+          <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>
+            {name || shortenAddr(address)}
           </span>
-          <button onClick={() => setShowCur(true)}
-            style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', borderRadius: 10, padding: '6px 10px', background: 'var(--color-surface)', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
-            {cur}<Icon name="down2" size="var(--is-md-lg)" color="var(--color-muted)" />
+        </div>
+
+        <div className="center col" style={{ gap: 6 }}>
+          {/* Số to, LUÔN căn giữa; chip tiền tệ neo BÌA PHẢI (không bám theo bề rộng số nữa) */}
+          <div style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="num" style={{ fontSize: amountFontSize((cur === 'USD' ? '$' : '') + digits, 52, 9), fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: overBalance ? 'var(--color-error)' : digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
+              {cur === 'USD' ? displaySymbol('USDC') : ''}{digits}<span className="caret">_</span>
+            </span>
+            <button onClick={() => setShowCur(true)}
+              style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', borderRadius: 10, padding: '6px 10px', background: 'var(--color-surface)', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
+              {cur}<Icon name="down2" size="var(--is-md-lg)" color="var(--color-muted)" />
+            </button>
+          </div>
+          {overBalance && (
+            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>
+              {t('Số dư không đủ (khả dụng:')} {availableStr})
+            </span>
+          )}
+        </div>
+
+        {/* Ô note + icon option (mở popup set note mặc định) BÊN PHẢI (user chốt 07-20e) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+          <input
+            className="address-input"
+            placeholder={t('Nội dung chuyển khoản (không bắt buộc)')}
+            value={memo}
+            onFocus={onNoteFocus}
+            onChange={e => { setMemo(e.target.value); setNoteTouched(true) }}
+            maxLength={100}
+            style={{ flex: 1, minWidth: 0, height: 52, fontSize: 'var(--fs-md-lg)' }}
+          />
+          <button onClick={openNotePopup} aria-label="Set default note"
+            style={{ flexShrink: 0, width: 52, height: 52, borderRadius: 10, border: 'none', background: 'var(--color-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="option" size="var(--is-md-lg)" color="var(--color-muted)" />
           </button>
         </div>
-        {overBalance && (
-          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>
-            {t('Số dư không đủ (khả dụng:')} {availableStr})
-          </span>
-        )}
-      </div>
-
-      <div className="row-5 center">
-        <input
-          className="address-input"
-          placeholder={t('Nội dung chuyển khoản (không bắt buộc)')}
-          value={memo}
-          onChange={e => setMemo(e.target.value)}
-          maxLength={100}
-          style={{ width: '100%', height: 52, fontSize: 'var(--fs-md-lg)' }}
-        />
       </div>
 
       {/* Numpad panel XÁM phím TRẮNG (user chốt 07-20 đồng bộ sheet Swap): nửa hàng 6 → đáy màn,
@@ -133,6 +163,23 @@ export default function SendAmount() {
           {t('Tiếp tục')}
         </button>
       </div>
+
+      {/* Popup SET DEFAULT NOTE — chuẩn .popup-card (tâm vùng hàng 1-6). Set 1 lần → mọi lần gửi
+          memo tự điền note này (user chốt 07-20e). */}
+      {showNote && (
+        <div className="popup-overlay" onClick={() => setShowNote(false)}>
+          <div className="popup-card" onClick={e => e.stopPropagation()}>
+            <div className="popup-title">Set your default note</div>
+            <input className="address-input" placeholder="Type here" value={draftNote}
+              onChange={e => setDraftNote(e.target.value)} maxLength={100} autoFocus
+              style={{ width: '100%', height: 52, fontSize: 'var(--fs-md-lg)' }} />
+            <div className="popup-actions">
+              <button className="btn btn-secondary" onClick={() => setShowNote(false)}>{t('Quay lại')}</button>
+              <button className="btn btn-primary" onClick={saveDefaultNote}>{t('Lưu')}</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Popup chọn tiền tệ — chuẩn .popup-card (tâm vùng hàng 2-5, chừa bàn phím nửa dưới) */}
       {showCur && (

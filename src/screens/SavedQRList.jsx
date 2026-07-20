@@ -12,15 +12,16 @@ export default function SavedQRList() {
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState('')
   const [amountStr, setAmountStr] = useState('')
+  const [pendingDelete, setPendingDelete] = useState(null)   // QR đang chờ xác nhận xóa (user chốt 07-20e)
   const walletAddr = localStorage.getItem('ez_wallet_addr') || ''
 
   const amountNum = parseFloat(amountStr || '0')
 
-  function handleDelete(id, e) {
-    e.stopPropagation()
-    const updated = list.filter(q => q.id !== id)
-    setList(updated)
-    saveSavedQRs(updated)
+  // Bấm dấu × → MỞ POPUP xác nhận (không xóa ngay — chống bấm nhầm, như Delete contact)
+  function askDelete(q, e) { e.stopPropagation(); setPendingDelete(q) }
+  function confirmDelete() {
+    const updated = list.filter(q => q.id !== pendingDelete.id)
+    setList(updated); saveSavedQRs(updated); setPendingDelete(null)
   }
 
   function resetForm() { setAdding(false); setName(''); setAmountStr('') }
@@ -49,7 +50,7 @@ export default function SavedQRList() {
               // Xem QR đã lưu (không lưu lại), Back về Kho QR. Hiển thị: QR · Tên (đen) · số tiền (xám).
               <button key={q.id} onClick={() => navigate('ShowQR', { amount: q.amount, currency: c, name: q.name, fromStorage: true, saveToLibrary: false, back: 'SavedQRList' })}
                 style={{ position: 'relative', border: 'none', borderRadius: 20, background: 'var(--color-surface)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '12px 8px 10px', fontFamily: 'inherit' }}>
-                <span onClick={e => handleDelete(q.id, e)} style={{ position: 'absolute', top: 6, right: 6, display: 'flex' }}><Icon name="x" size={14} color="var(--color-muted)" /></span>
+                <span onClick={e => askDelete(q, e)} style={{ position: 'absolute', top: 6, right: 6, display: 'flex' }}><Icon name="x" size={14} color="var(--color-muted)" /></span>
                 <QRCodeSVG value={`ezwallet:${walletAddr}?amount=${q.amount}&cur=${c}`} size={58} level="M" />
                 {q.name && <span style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.name}</span>}
                 <span className="num" style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)' }}>{label}</span>
@@ -81,6 +82,19 @@ export default function SavedQRList() {
             <div className="popup-actions">
               <button className="btn btn-secondary" onClick={resetForm}>{t('Hủy')}</button>
               <button className="btn btn-primary" disabled={!(amountNum > 0)} onClick={handleSave}>{t('Lưu')}</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Xác nhận xóa QR — chuẩn popup (tâm vùng hàng 1-6). "Delete QR: <tên>" (không tên → số tiền) */}
+      {pendingDelete && (
+        <div className="popup-overlay" onClick={() => setPendingDelete(null)}>
+          <div className="popup-card" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
+            <div className="popup-title">Delete QR: {pendingDelete.name || fmtMoney(pendingDelete.amount, pendingDelete.currency || 'USD')}</div>
+            <div className="popup-actions" style={{ marginTop: 4 }}>
+              <button className="btn btn-secondary" onClick={() => setPendingDelete(null)}>{t('Quay lại')}</button>
+              <button className="btn btn-error" onClick={confirmDelete}>Confirm</button>
             </div>
           </div>
         </div>

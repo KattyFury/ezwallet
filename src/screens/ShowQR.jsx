@@ -33,10 +33,9 @@ export default function ShowQR() {
     saveImageToPhotos(canvas, `ezwallet-qr-${amount}.png`)
   }
 
-  // Tiêu đề (user chốt 07-20d): mở QR ĐÃ LƯU từ kho (fromStorage) → "QR Storage: <tên>", QR không
-  // đặt tên → "QR Storage: Item". Tạo QR mới (màn Nhận / custom) → "Create receive QR".
-  // Phân biệt bằng cờ fromStorage, KHÔNG dựa vào có/không tên (QR lưu không tên vẫn thuộc kho).
-  const title = fromStorage ? `${t('Kho QR')}: ${name || 'Item'}` : t('Tạo QR nhận tiền')
+  // Tiêu đề (user chốt 07-20e): mở QR ĐÃ LƯU từ kho (fromStorage) → "QR: <tên>" (bỏ chữ "Storage"
+  // cho gọn, tên dài đỡ thiếu chỗ), QR không đặt tên → "QR: Item". Tạo QR mới → "Create receive QR".
+  const title = fromStorage ? `QR: ${name || 'Item'}` : t('Tạo QR nhận tiền')
 
   return (
     <div className="screen">
