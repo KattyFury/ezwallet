@@ -14,16 +14,22 @@
 
 ---
 
-<!-- ─────────────────────────────────────────────────────────────
-     DEMO — chèn ảnh/GIF của bạn vào đây
-     Ví dụ:
-       ![EZwallet demo](docs/demo.gif)
-       <img src="docs/screenshot-home.png" width="280" />
-     ───────────────────────────────────────────────────────────── -->
-
 <div align="center">
 
-*(demo GIF / screenshots go here)*
+<table>
+<tr>
+<td align="center" width="33%"><img src="docs/01-home.png" width="230" alt="Home"><br><sub><b>Balance & tokens</b></sub></td>
+<td align="center" width="33%"><img src="docs/03-send.png" width="230" alt="Send money"><br><sub><b>Send, with a note</b></sub></td>
+<td align="center" width="33%"><img src="docs/04-swap.png" width="230" alt="Swap"><br><sub><b>Swap by % slider</b></sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/05-receive.png" width="230" alt="Receive"><br><sub><b>Receive by QR</b></sub></td>
+<td align="center"><img src="docs/02-contacts.png" width="230" alt="Contacts"><br><sub><b>Contacts</b></sub></td>
+<td align="center"><img src="docs/06-history.png" width="230" alt="History"><br><sub><b>History</b></sub></td>
+</tr>
+</table>
+
+<sub>Screens captured in mock mode — balances and contacts shown are dummy data.</sub>
 
 </div>
 
