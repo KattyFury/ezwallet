@@ -340,30 +340,39 @@ body {
    bấm vào SỐ TIỀN ở card "You pay" là numpad trồi lên). Overlay flex align-end để sheet
    nằm đáy + tự căn giữa ngang (KHÔNG dùng translateX trong .sheet — keyframe animate
    transform sẽ ĐÈ mất translateX, sheet nhảy ngang lúc trượt). */
+/* Overlay KHÔNG làm mờ màn chính (user chốt 07-20: numpad bật lên mà màn tối đi là SAI) —
+   trong suốt, chỉ để bắt click-ra-ngoài đóng sheet. */
 .sheet-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.45);
+  background: transparent;
   z-index: 100;
   display: flex;
   align-items: flex-end;
   justify-content: center;
 }
 @keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
-/* Sheet = NỬA DƯỚI màn (50dvh, đúng vùng hàng 6-10 của lưới) — numpad + nút bên trong đặt Y CHANG
-   layout SendAmount (user chốt 07-20 "đồng bộ giao diện"): spacer 0.75 + Numpad 2.5 + đệm 0.75 +
-   hàng nút 1 (Back/Done pill 44% như .row10-dual). Lề ngang 20px = đúng lề .screen. */
+/* Sheet numpad Swap (user quy hoạch 07-20): chiếm NỬA HÀNG 6 + hàng 7-10 (55→100dvh = 45dvh),
+   NỀN XÁM surface + PHÍM TRẮNG nổi lên — vùng xám CHÍNH LÀ vùng popup, không có khoảng trắng
+   thừa phía trên. Trong sheet: Numpad 30dvh (55→85) + hàng nút Back/Done 10dvh (85→95, khớp vị
+   trí .row10-dual) + đệm đáy 5dvh. Lề ngang 20px = đúng lề .screen. */
 .sheet {
   width: 100%;
   max-width: var(--screen-max);
-  height: 50dvh;
-  background: var(--color-white);
+  height: 45dvh;
+  background: var(--color-surface);
   border-radius: 20px 20px 0 0;
   padding: 0 20px;
   display: flex;
   flex-direction: column;
   animation: sheet-up .28s ease;
 }
+/* Phím trắng trên nền xám: tile bo góc, có khe 8px cho nút nổi rõ từng phím */
+.sheet .numpad { gap: 8px; }
+.sheet .numpad-row { gap: 8px; }
+.sheet .numpad-key { background: var(--color-white); border-radius: 12px; }
+.sheet .numpad-key:active { background: rgba(0,0,0,0.06); }
+.sheet .numpad-key.empty { background: transparent; }
 
 /* Caret nhấp nháy ở ô nhập số (SendAmount/CreateQR/Swap) — cho người dùng biết SỐ SẼ VÀO
    CHỖ NÀO khi bấm numpad (trước đây chỉ có '0' mờ, không rõ đang nhắm vào đâu). */
