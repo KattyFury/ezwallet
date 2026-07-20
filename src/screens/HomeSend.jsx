@@ -145,10 +145,10 @@ export default function HomeSend() {
           // Chữ NGẮN để nằm trọn 1 dòng ở cỡ chung của vùng thông báo (NOTIF_FS) — câu dài cũ
           // ("save people's wallet addresses") đã tràn 397px trong ô 350px, bị cắt "…" sẵn rồi.
           hints={[
-            // Text user chốt 07-17f (format "X: desc")
-            { label: 'Contacts', desc: 'Saved addresses' },
-            { label: 'Scan QR', desc: 'Scan QR to send' },
-            { label: 'Paste', desc: 'Paste address to send' },
+            // Rõ nghĩa hơn (user chốt 07-20, bắt chước kiểu Receive: mỗi dòng nói RÕ chức năng)
+            { label: 'Contacts', desc: 'Send to a saved contact' },
+            { label: 'Scan QR', desc: 'Scan a QR to pay' },
+            { label: 'Paste', desc: 'Paste a wallet address' },
           ]}
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (

@@ -33,20 +33,29 @@ export default function ShowQR() {
     saveImageToPhotos(canvas, `ezwallet-qr-${amount}.png`)
   }
 
+  // Tiêu đề (user chốt 07-20): QR đã lưu (có tên) → "QR Storage – Coffee"; tạo mới → "Create receive QR".
+  const title = name ? `${t('Kho QR')} – ${name}` : t('Tạo QR nhận tiền')
+
   return (
     <div className="screen">
-      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        {t('Tạo QR nhận tiền')}
+      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', padding: '0 8px' }}>
+        {title}
       </div>
 
-      <div ref={wrapRef} className="row-3-6 center col" style={{ gap: 12 }}>
-        <QRCodeCanvas value={qrValue} size={200} level="M" />
-        <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)' }}>{amountText}</span>
-        <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{t('Cho người gửi quét mã này')}</span>
+      {/* QR TO = bằng QR màn Nhận (min(30dvh,78vw)), cao đúng 3 hàng (2-3-4). Dùng canvas để Share
+          xuất PNG được; render size 512 rồi ép bề ngang cho nét (user chốt 07-20). */}
+      <div ref={wrapRef} style={{ gridRow: '2 / 5', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0 }}>
+        <QRCodeCanvas value={qrValue} size={512} level="M" style={{ width: 'min(30dvh, 78vw)', height: 'min(30dvh, 78vw)' }} />
       </div>
 
-      {/* Chỉ 2 nút: [Chia sẻ] trắng (trái) · [Quay lại] xanh (phải) — ngang hàng */}
-      <div className="row-10 row10-dual">
+      {/* Hàng 5 trở xuống: số tiền TO (như số dư màn chính) + phụ đề cỡ vừa-to cho dễ đọc */}
+      <div style={{ gridRow: '5 / 9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', gap: 10, paddingTop: 8 }}>
+        <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-light)', lineHeight: 1, color: 'var(--color-content)' }}>{amountText}</span>
+        <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)' }}>{t('Cho người gửi quét mã này')}</span>
+      </div>
+
+      {/* Ranh giới hàng 9-10: [Chia sẻ] trắng (trái) · [Quay lại] xanh (phải) */}
+      <div className="row10-dual">
         <button className="btn btn-secondary" onClick={shareQR}>{t('Chia sẻ')}</button>
         <button className="btn btn-primary" onClick={() => navigate(back)}>{t('Quay lại')}</button>
       </div>

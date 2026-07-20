@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNav } from '../nav'
 import { QRCodeSVG } from 'qrcode.react'
 import Icon from '../components/Icon'
-import { fmtMoney } from '../data'
+import { fmtMoney, getDisplayCurrency, displaySymbol } from '../data'
 import { t } from '../i18n'
 import { loadSavedQRs, saveSavedQRs } from '../store'
 
@@ -75,7 +75,8 @@ export default function SavedQRList() {
           <div className="popup-card" onClick={e => e.stopPropagation()}>
             <div className="popup-title">Add to library</div>
             <input className="address-input" placeholder="Name (optional)" value={name} onChange={e => setName(e.target.value)} maxLength={30} style={{ fontSize: 'var(--fs-body)' }} />
-            <input className="address-input" placeholder="Amount" inputMode="decimal" value={amountStr}
+            {/* Label kèm ký hiệu tiền tệ MẶC ĐỊNH của user (user chốt 07-20: USDC→$, EURC→€…) */}
+            <input className="address-input" placeholder={`Amount (${displaySymbol(getDisplayCurrency())})`} inputMode="decimal" value={amountStr}
               onChange={e => setAmountStr(e.target.value.replace(/[^\d.]/g, ''))} style={{ fontSize: 'var(--fs-body)' }} />
             <div className="popup-actions">
               <button className="btn btn-secondary" onClick={resetForm}>{t('Hủy')}</button>

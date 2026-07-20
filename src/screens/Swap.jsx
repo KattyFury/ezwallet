@@ -224,8 +224,11 @@ export default function Swap() {
       await executeChallenge(await getSDK(), userToken, encryptionKey, res.challengeId)
 
       // ✅ TRẠNG THÁI 1 — PIN đã ký, lệnh swap ĐÃ GỬI lên Arc ("đề nghị thành công")
+      // 1 THÔNG BÁO DUY NHẤT cho swap (user chốt 07-20: gộp "Swapped..." + "Swap complete·received"
+      // làm một) → "Swapped X EURC to ~Y USDC (complete)". NotifArea KHÔNG thêm thông báo nhận riêng
+      // cho leg vào của swap nữa (đã tắt branch outHashes bên đó).
       const outTxt = res.amountOut ? ` to ~${parseFloat(res.amountOut).toFixed(decimalsFor(toSym))} ${toSym}` : ` to ${toSym}`
-      addNotif(`Swapped ${amountNum} ${fromSym}${outTxt}`, 'sent', null, `swap-${Date.now()}`)   // NotifArea (Home)
+      addNotif(`Swapped ${amountNum} ${fromSym}${outTxt} (complete)`, 'sent', null, `swap-${Date.now()}`)   // NotifArea (Home)
       resetAmount()
       setSuccess(true); setStatus('Swap submitted')
       setLoading(false)
@@ -246,6 +249,8 @@ export default function Swap() {
     } catch (e) {
       setLoading(false)
       if (e?.code === 155701) { setStatus(''); return }  // user tự hủy PIN → im lặng
+      // Swap thất bại → thông báo cùng dạng gộp, đuôi "(failed)" (user chốt 07-20)
+      addNotif(`Swapped ${amountNum} ${fromSym} to ${toSym} (failed)`, 'error', null, `swap-fail-${Date.now()}`)
       const msg = e?.message || e?.error?.message || (typeof e === 'string' ? e : 'Swap failed')
       setError(msg); setStatus('')
     }

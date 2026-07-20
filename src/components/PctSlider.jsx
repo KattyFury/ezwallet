@@ -13,7 +13,9 @@ import { useRef, useState } from 'react'
 // ⚠️ Dùng POINTER EVENTS + setPointerCapture, KHÔNG dùng <input type=range>: range không tuỳ biến
 // được mốc/bong bóng, và iOS bắt buộc kéo đúng thumb mới ăn (bấm vào track không nhảy).
 const MARKERS = [0, 25, 50, 75, 100]
-const SNAP_ZONE = 2   // ±2% quanh mốc thì hút vào mốc (spec user)
+// ±9% quanh mốc thì HÚT vào mốc (user chốt 07-20: "bấm chính xác lắm mới trúng" — nam châm cũ ±2%
+// quá hẹp). Zone 18% rộng mà giữa 2 mốc cách 25% nên vẫn chừa ~7% kéo tự do, không mất cảm giác kéo.
+const SNAP_ZONE = 9
 
 // ⚠️ THỤT LỀ THANH TRƯỢT — ĐỪNG BỎ (user chốt 07-17c: "nó phải cách lề chuẩn số đo mình quy định").
 // `.screen` chừa lề 20px mỗi bên. Nếu để track chạy hết bề ngang hàng thì mọi thứ NEO Ở MỐC 0%/100%
@@ -66,11 +68,11 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
         <div ref={trackRef} style={{ position: 'relative', width: '100%', height: 4, borderRadius: 2, background: 'var(--color-gray)' }}>
           {/* Phần đã chọn */}
           <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: dim, borderRadius: 2, transition: dragging ? 'none' : 'width .15s ease' }} />
-          {/* 5 mốc */}
+          {/* 5 mốc — to hơn (07-20: 8→14) cho người già dễ nhắm */}
           {MARKERS.map(m => (
             <div key={m} style={{
               position: 'absolute', left: `${m}%`, top: '50%', transform: 'translate(-50%,-50%)',
-              width: 8, height: 8, borderRadius: '50%', background: pct >= m ? dim : 'var(--color-gray)',
+              width: 14, height: 14, borderRadius: '50%', background: pct >= m ? dim : 'var(--color-gray)',
             }} />
           ))}
           {/* Thumb */}
@@ -83,13 +85,15 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
         </div>
       </div>
 
-      {/* Nhãn CHỈ % (không có nhãn tiền — user chốt) */}
-      <div style={{ position: 'relative', height: 18 }}>
+      {/* Nhãn % — to hơn (07-20: fs-label 15 → fs-item 17) + BẤM ĐƯỢC (chạm nhãn = nhảy tới mốc,
+          hitbox rộng padding 6px cho ngón tay người già). Không có nhãn tiền (user chốt). */}
+      <div style={{ position: 'relative', height: 26, marginTop: 4 }}>
         {MARKERS.map(m => (
-          <span key={m} style={{
-            position: 'absolute', left: `${m}%`, transform: 'translateX(-50%)',
-            fontSize: 'var(--fs-label)', color: pct === m ? 'var(--color-brand)' : 'var(--color-muted)',
+          <span key={m} onClick={() => !disabled && onChange(m)} style={{
+            position: 'absolute', left: `${m}%`, transform: 'translateX(-50%)', padding: '4px 6px',
+            fontSize: 'var(--fs-item)', color: pct === m ? 'var(--color-brand)' : 'var(--color-muted)',
             fontWeight: pct === m ? 'var(--fw-semibold)' : 'var(--fw-normal)', whiteSpace: 'nowrap',
+            cursor: disabled ? 'default' : 'pointer', WebkitUserSelect: 'none', userSelect: 'none',
           }}>
             {m}%
           </span>

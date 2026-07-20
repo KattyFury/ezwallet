@@ -49,7 +49,8 @@ function pollIncoming(after) {
           const faucetPending = parseInt(localStorage.getItem('ez_faucet_pending') || '0')
           const isFaucet = isFaucetAddress(tx.from) || (faucetPending && Date.now() - faucetPending < 3600000)
           if (outHashes.has(tx.hash)) {
-            addNotif(`Swap complete · received ${amt} ${symbol}`, 'received', tx.hash, `recv-${tx.hash}`)
+            // Leg VÀO của swap: KHÔNG thêm thông báo nhận riêng (user chốt 07-20 gộp 2 thông báo swap
+            // làm 1) — màn Swap đã bắn "Swapped X to ~Y (complete)". Vẫn markNotified để không lặp.
           } else if (isFaucet) {
             addNotif(`Faucet successful · received ${amt} ${symbol}`, 'received', tx.hash, `recv-${tx.hash}`)
           } else {
