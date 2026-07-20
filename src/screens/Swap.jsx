@@ -281,7 +281,8 @@ export default function Swap() {
           <TokenRow sym={sym} onClick={onPick} />
           <div onClick={onAmount} style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end', cursor: onAmount ? 'pointer' : 'default' }}>
             <span className="num" style={{ fontSize: amountFontSize(amtStr, 52, 8), fontWeight: 'var(--fw-light)', lineHeight: 1.05, color: amtColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {isTyping ? <>{typing || '0'}<span className="caret">_</span></> : amtStr}
+              {/* Đang gõ mà CHƯA có số → CHỈ caret "_" xám nhấp nháy, KHÔNG vẽ số 0 mờ (user chốt 07-20) */}
+              {isTyping ? <>{typing}<span className="caret">_</span></> : amtStr}
             </span>
           </div>
         </div>
@@ -325,8 +326,9 @@ export default function Swap() {
           Back = hủy số vừa gõ; Done/bấm ra ngoài = giữ số. */}
       {pad && (
         <div className="sheet-overlay" onClick={() => setPad(false)}>
-          <div className="sheet" onClick={e => e.stopPropagation()}>
-            <div style={{ flex: 6, minHeight: 0, paddingTop: 12 }}>
+          <div className="sheet numpad-gray" onClick={e => e.stopPropagation()}>
+            {/* paddingTop 24 (07-20b: vùng xám trên dày lên, phím thấp xuống — trước 12 "chật trên thừa dưới") */}
+            <div style={{ flex: 6, minHeight: 0, paddingTop: 24 }}>
               <Numpad onKey={onPadKey} showComma />
             </div>
             <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
@@ -364,11 +366,15 @@ export default function Swap() {
           <SideCard label="You receive" sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} />
         </div>
 
-        {/* Fee + Rate — NỬA HÀNG 6, 1 dòng NHỎ (fs-item 17 = font nút "Hold to show tokens",
-            user chốt 07-20: nằm 1 hàng nên không được to, format "Fee: X – Rate: Y") */}
-        <div style={{ flex: 0.5, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: 8 }}>
-          <span className="num" style={{ fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            Fee: {feeTxt} – Rate: {rateTxt}
+        {/* Fee + Rate — NỬA HÀNG 6, 1 dòng NHỎ (fs-item 17 = font nút "Hold to show tokens").
+            User chốt 07-20b: Rate căn TRÁI – Fee căn PHẢI (tách 2 đầu cho dễ đọc), nhãn xám
+            nhưng SỐ LIỆU ĐEN cho bật (bản gộp 1 cụm giữa nhìn "mờ nhạt"). */}
+        <div style={{ flex: 0.5, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 8, padding: '0 16px' }}>
+          <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            Rate: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-medium)' }}>{rateTxt}</span>
+          </span>
+          <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>
+            Fee: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-medium)' }}>{feeTxt}</span>
           </span>
         </div>
 

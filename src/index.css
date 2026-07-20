@@ -367,12 +367,14 @@ body {
   flex-direction: column;
   animation: sheet-up .28s ease;
 }
-/* Phím trắng trên nền xám: tile bo góc, có khe 8px cho nút nổi rõ từng phím */
-.sheet .numpad { gap: 8px; }
-.sheet .numpad-row { gap: 8px; }
-.sheet .numpad-key { background: var(--color-white); border-radius: 12px; }
-.sheet .numpad-key:active { background: rgba(0,0,0,0.06); }
-.sheet .numpad-key.empty { background: transparent; }
+/* Numpad "XÁM" (user chốt 07-20 "hợp gu"): vùng nền xám surface + PHÍM TRẮNG tile bo 12, khe 8px
+   cho từng nút nổi rõ. Dùng CHUNG cho sheet Swap + panel numpad màn Gửi (SendAmount) + Custom QR
+   (CreateQR) — thêm class "numpad-gray" lên container là ăn. */
+.numpad-gray .numpad { gap: 8px; }
+.numpad-gray .numpad-row { gap: 8px; }
+.numpad-gray .numpad-key { background: var(--color-white); border-radius: 12px; }
+.numpad-gray .numpad-key:active { background: rgba(0,0,0,0.06); }
+.numpad-gray .numpad-key.empty { background: transparent; }
 
 /* Caret nhấp nháy ở ô nhập số (SendAmount/CreateQR/Swap) — cho người dùng biết SỐ SẼ VÀO
    CHỖ NÀO khi bấm numpad (trước đây chỉ có '0' mờ, không rõ đang nhắm vào đâu). */

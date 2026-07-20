@@ -59,13 +59,13 @@ export default function CreateQR() {
         </div>
       </div>
 
-      {/* Numpad ở hàng 6.75-8.25 (đồng bộ SendAmount/Swap): gridRow 6/10, spacer 0.75 + numpad 2.5 + đệm dưới 0.75 */}
-      <div style={{ gridRow: '6 / 10', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 0.75 }} />
-        <div style={{ flex: 2.5, minHeight: 0 }}>
+      {/* Numpad panel XÁM phím TRẮNG (user chốt 07-20 đồng bộ sheet Swap + SendAmount): nửa hàng 6
+          → đáy màn, full-bleed, bo góc trên; nút [Hủy][Tạo QR] .row10-dual nổi trên nền xám. */}
+      <div className="numpad-gray" style={{ gridRow: '6 / 11', margin: '5dvh -20px 0', padding: '24px 20px 0', background: 'var(--color-surface)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 6, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />
         </div>
-        <div style={{ flex: 0.75 }} />
+        <div style={{ flex: 3 }} />
       </div>
 
       {/* Nút [Hủy][Tạo QR] = vị trí chuẩn row10-dual (hàng 9-10) */}
