@@ -327,10 +327,12 @@ export default function Swap() {
       {pad && (
         <div className="sheet-overlay" onClick={() => setPad(false)}>
           <div className="sheet numpad-gray" onClick={e => e.stopPropagation()}>
-            {/* paddingTop 24 (07-20b: vùng xám trên dày lên, phím thấp xuống — trước 12 "chật trên thừa dưới") */}
-            <div style={{ flex: 6, minHeight: 0, paddingTop: 24 }}>
+            {/* Đệm xám trên 24px + phím THẤP lại (07-20c: numpad 5.5 phần thay vì 6 — phím cũ quá to),
+                khe 0.5 trước hàng nút; Back/Done GIỮ NGUYÊN biên hàng 9-10 (flex 2 = 85-95dvh). */}
+            <div style={{ flex: 5.5, minHeight: 0, paddingTop: 24 }}>
               <Numpad onKey={onPadKey} showComma />
             </div>
+            <div style={{ flex: 0.5 }} />
             <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
               <button className="btn btn-secondary" style={{ width: '44%' }} onClick={cancelPad}>{t('Quay lại')}</button>
               <button className="btn btn-primary" style={{ width: '44%' }} onClick={() => setPad(false)}>{t('Xong')}</button>

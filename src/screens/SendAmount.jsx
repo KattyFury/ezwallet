@@ -118,10 +118,11 @@ export default function SendAmount() {
           full-bleed (margin âm bù lề .screen), bo góc trên. Numpad flex 6 + vùng nút/đệm flex 3
           (nút [Quay lại][Tiếp tục] là .row10-dual absolute, nổi trên nền xám đúng hàng 9-10). */}
       <div className="numpad-gray" style={{ gridRow: '6 / 11', margin: '5dvh -20px 0', padding: '24px 20px 0', background: 'var(--color-surface)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ flex: 6, minHeight: 0 }}>
+        {/* Numpad 5.5 phần (07-20c: phím thấp lại một tẹo), nút .row10-dual vẫn neo biên hàng 9-10 */}
+        <div style={{ flex: 5.5, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />
         </div>
-        <div style={{ flex: 3 }} />
+        <div style={{ flex: 3.5 }} />
       </div>
 
       {/* Nút [Quay lại][Tiếp tục] = vị trí CHUẨN row10-dual (hàng 9-10, canh giữa quanh ranh giới 9/10) */}
