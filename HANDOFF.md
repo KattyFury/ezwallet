@@ -112,7 +112,9 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 
 - **Lưới 10 hàng** (`.screen` grid 10×1fr, 100dvh, padding `0 20px`, `position:relative`). Sub-screen: hàng 1 tiêu đề, nút ở `.row10-single`/`.row10-dual` (absolute top 85dvh, tự ép `grid-row:auto`). 4 màn chính: NavBar hàng 10 full-bleed, chữ+icon `--fs/is-body 19`.
 - **⚠️ `.screen` PHẢI có `grid-template-columns: minmax(0,1fr)`** — bỏ là 1 chuỗi `nowrap` dài phình cột, lệch cả màn. **Flex item chứa chữ nowrap PHẢI `minWidth:0`.**
-- **Numpad = hàng 6.5–8.5** (`gridRow 6/9`, spacer 0.5 + Numpad 2.5), nút Back/Continue riêng ở `.row10-dual` (SendAmount, CreateQR).
+- **Numpad = hàng 6.5–8.5** (`gridRow 6/9`, spacer 0.5 + Numpad 2.5), nút Back/Continue riêng ở `.row10-dual` (SendAmount, CreateQR). **Riêng Swap (07-20):** numpad KHÔNG nằm trong lưới — bấm SỐ TIỀN card "You pay" → bottom-sheet `.sheet-overlay/.sheet` trượt từ dưới lên (như PIN), gõ live cập nhật số + pct + estimate, "Done"/nền tối đóng; slider + chip gợi ý giữ nguyên.
+- **TxHistory LUÔN hiển thị ĐẦY ĐỦ lịch sử** (user chốt 07-20, sửa hiểu nhầm 07-19: từng cắt còn 24h + hint cách dùng → SAI). Chỉ THÔNG BÁO (NotifArea) mới là thứ "trong ngày"; lịch sử là sổ đối soát, không cắt, KHÔNG hint trong đó.
+- **Chevron `right2` (hàng đi tiếp) = `--color-brand`** (07-20, trước là `--color-faint` nhìn như disabled); `--color-faint` chỉ còn cho placeholder/icon ẩn. Ô nhập text chuẩn = cao 52 + `--fs-md-lg` (email/memo/paste address đã đồng bộ).
 - **Input text ở hàng 1-4 hoặc popup neo nửa trên** (`.popup-card` tâm 30dvh) — bàn phím iPhone che nửa dưới. Không autoFocus trong popup. **Khoá cuộn trang** (`App.jsx` listener) — ĐỪNG xoá.
 - **Vị trí 55dvh = "dòng phụ giữa màn"** dùng chung: nút Hold-to-show (Gửi) và dòng địa chỉ+copy (Nhận) neo absolute top 55% → qua lại tab không nhảy. QR màn Nhận = `min(30dvh, 78vw)` chiếm hàng 3-6.
 - **HomeSend:** h1-2 số dư · h3-5.5 box token · h7-8 NotifArea · h9 3 action-card · h10 NavBar. **QRScanner:** cụm ô quét + 2 dòng chú thích căn tâm hàng 1-6.

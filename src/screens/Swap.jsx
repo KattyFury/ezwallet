@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import NavBar from '../components/NavBar'
 import Icon from '../components/Icon'
 import PctSlider from '../components/PctSlider'
+import Numpad from '../components/Numpad'
 import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress } from '../circle'
 import { getTokenBalances, getDisplayRates, cachedRates, estimateFeeUsd } from '../chain'
 import { spendableOf, floorTo, getDisplayCurrency, displaySymbol } from '../data'
@@ -15,13 +16,16 @@ import { t } from '../i18n'
 // Tắt lại nếu cần: đổi SWAP_ENABLED = false.
 const SWAP_ENABLED = true
 
-// ══ MÀN SWAP — KHÔNG BÀN PHÍM SỐ (user chốt 07-17, đập đi xây lại) ══
-// Đối tượng EZwallet = người mới + người lớn tuổi → KHÔNG bắt gõ từng chữ số. Thay bằng THANH TRƯỢT
+// ══ MÀN SWAP — slider % + chip gợi ý + NUMPAD BOTTOM-SHEET ══
+// Đối tượng EZwallet = người mới + người lớn tuổi → mặc định KHÔNG bắt gõ từng chữ số: THANH TRƯỢT
 // chọn % SỐ DƯ ("kéo bao nhiêu % tài sản") + hàng 7 GỢI Ý SỐ CHẴN BẤM ĐƯỢC.
+// BỔ SUNG 07-20 (user yêu cầu, thay chốt "đừng nhét lại Numpad" cũ 07-17): bấm vào SỐ TIỀN ở card
+// "You pay" → numpad TRƯỢT TỪ DƯỚI LÊN (như màn nhập PIN) để gõ số chính xác; gõ tới đâu số + ước
+// tính nhận + slider cập nhật tới đó; bấm "Done"/nền tối để đóng. Slider và chip vẫn giữ nguyên.
 // ⚠️ Mọi thứ tính theo ĐƠN VỊ TOKEN ĐANG PAY, KHÔNG theo USD (user chốt 07-17c). Dòng "~ $xx" dưới
 // số chỉ là quy đổi cho dễ hình dung — ĐỪNG lấy nó làm gốc tính toán.
 // Bản đồ hàng (user giao): 1 tiêu đề · 2-6 You pay/You receive + Rate/Fee · 7 hint · 8 slider ·
-// 9 nút Swap · 10 NavBar. ĐỪNG nhét lại Numpad vào đây.
+// 9 nút Swap · 10 NavBar.
 const SWAP_TOKENS = ['USDC', 'EURC', 'cirBTC']
 const decimalsFor = sym => (sym === 'cirBTC' ? 6 : 2)
 
@@ -70,6 +74,8 @@ export default function Swap() {
   const [status, setStatus] = useState('')
   const [success, setSuccess] = useState(false)   // true = vừa swap xong → nút xanh lá báo thành công
   const [picker, setPicker] = useState(null)
+  const [pad, setPad] = useState(false)      // numpad bottom-sheet đang mở
+  const [typed, setTyped] = useState('')     // chuỗi đang gõ trên numpad (hiện live ở card You pay)
   const debounceRef = useRef(null)
 
   const cur = getDisplayCurrency()
@@ -142,7 +148,35 @@ export default function Swap() {
     return () => clearTimeout(debounceRef.current)
   }, [amountNum, fromSym, toSym])
 
-  function resetAmount() { setPct(0); setSnapAmt(null); setEstAmt(null); setError('') }
+  function resetAmount() { setPct(0); setSnapAmt(null); setEstAmt(null); setError(''); setTyped('') }
+
+  // ── NUMPAD bottom-sheet: bấm số tiền You pay → mở; gõ tới đâu áp tới đó (snapAmt + kéo pct theo) ──
+  function openPad() {
+    if (!hasBal || loading) return
+    if (success) { setSuccess(false); setStatus('') }
+    // Seed chuỗi gõ = số đang chọn (nếu có) để bấm lùi sửa được, không bắt gõ lại từ đầu
+    setTyped(amountNum > 0 ? String(amountNum) : '')
+    setPad(true)
+  }
+  function applyTyped(s) {
+    setTyped(s)
+    const n = parseFloat(s)
+    setSnapAmt(s === '' ? 0 : (isNaN(n) ? 0 : n))
+    if (available > 0) setPct(Math.max(0, Math.min(100, ((isNaN(n) ? 0 : n) / available) * 100)))
+  }
+  function onPadKey(k) {
+    if (k === 'BACK') { applyTyped(typed.slice(0, -1)); return }
+    if (k === '.') {
+      if (typed.includes('.')) return
+      applyTyped(typed === '' ? '0.' : typed + '.')
+      return
+    }
+    // Chặn số dài vô lý: phần nguyên ≤ 9 chữ số, phần thập phân theo token (2 hoặc 6)
+    const [int = '', dec] = typed.split('.')
+    if (dec !== undefined) { if (dec.length >= decimalsFor(fromSym)) return }
+    else if (int.length >= 9) return
+    applyTyped(typed === '0' ? k : typed + k)
+  }
 
   // Kéo slider → bỏ snap cũ + bỏ trạng thái thành công cũ
   function onPct(p) {
@@ -219,9 +253,11 @@ export default function Swap() {
   const AMT = { fontSize: 'var(--fs-huge)', fontWeight: 'var(--fw-light)', lineHeight: 1.05 }
 
   // 1 card = nhãn + [token ▼ ... Available] + số to + quy đổi. Available hiện ở CẢ 2 card (design user).
-  function SideCard({ label, sym, onPick, amount, disp }) {
+  // onAmount (chỉ card You pay): bấm vào số → mở numpad. typing: chuỗi đang gõ (null = numpad đóng).
+  function SideCard({ label, sym, onPick, amount, disp, onAmount, typing }) {
     const known = amount !== null
     const balKnown = balances[sym] !== undefined
+    const typingColor = typing ? 'var(--color-content)' : 'var(--color-faint)'
     return (
       <div style={{ ...CARD, display: 'flex', flexDirection: 'column', gap: 6 }}>
         {/* Phân cấp đậm nhạt (user chốt 07-17e "quan trọng nhớ bold"): label vai trò card = medium */}
@@ -235,9 +271,11 @@ export default function Swap() {
             </span>
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, minWidth: 0 }}>
-          <span className="num" style={{ ...AMT, color: overBalance ? 'var(--color-error)' : known && amount > 0 ? 'var(--color-content)' : 'var(--color-faint)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {known ? amount.toFixed(decimalsFor(sym)) : '…'}
+        <div onClick={onAmount} style={{ display: 'flex', alignItems: 'baseline', gap: 8, minWidth: 0, cursor: onAmount ? 'pointer' : 'default' }}>
+          <span className="num" style={{ ...AMT, color: overBalance ? 'var(--color-error)' : typing !== null && typing !== undefined ? typingColor : known && amount > 0 ? 'var(--color-content)' : 'var(--color-faint)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {typing !== null && typing !== undefined
+              ? <>{typing || '0'}<span className="caret">_</span></>
+              : known ? amount.toFixed(decimalsFor(sym)) : '…'}
           </span>
           <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>{sym}</span>
         </div>
@@ -267,6 +305,24 @@ export default function Swap() {
     <div className="screen">
       {picker && <TokenPicker current={picker === 'from' ? fromSym : toSym} onSelect={sym => selectToken(picker, sym)} onClose={() => setPicker(null)} />}
 
+      {/* Numpad bottom-sheet — trượt từ dưới lên như màn nhập PIN (user chốt 07-20). Bấm nền tối
+          hoặc "Done" để đóng; số đã gõ GIỮ NGUYÊN (snapAmt đã áp live theo từng phím). */}
+      {pad && (
+        <div className="sheet-overlay" onClick={() => setPad(false)}>
+          <div className="sheet" onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+              <button onClick={() => setPad(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)', padding: '8px 8px 4px' }}>
+                {t('Xong')}
+              </button>
+            </div>
+            <div style={{ height: 240 }}>
+              <Numpad onKey={onPadKey} showComma />
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
         {t('Đổi tiền')}
       </div>
@@ -274,7 +330,8 @@ export default function Swap() {
       {/* Hàng 2-6: You pay ⇅ You receive + Rate/Fee (user giao) */}
       <div style={{ gridRow: '2 / 7', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10, minWidth: 0 }}>
         <div style={{ position: 'relative' }}>
-          <SideCard label="You pay" sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay} />
+          <SideCard label="You pay" sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
+            onAmount={openPad} typing={pad ? typed : null} />
 
           {/* Nút đảo chiều — ĐÈ lên ranh giới 2 card (viền trắng như "đục lỗ"), xoay 180° mỗi lần bấm */}
           <div style={{ display: 'flex', justifyContent: 'center', margin: '-14px 0', position: 'relative', zIndex: 3 }}>

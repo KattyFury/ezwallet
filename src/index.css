@@ -17,7 +17,7 @@
      → #636366 = 6.0:1: đạt AA thoải mái mà mắt vẫn đọc ra là XÁM. Đây là 1 nguồn duy nhất cho mọi
      text phụ — đừng hardcode màu xám rời rạc nữa (bug 07-16: slogan Login lạc hệ #48484A). */
   --color-muted:      #636366;   /* text phụ = XÁM ĐẬM — DÙNG CHO CHỮ */
-  --color-faint:      #E5E5EA;   /* icon ẩn / chevron / placeholder (xám nhạt) */
+  --color-faint:      #E5E5EA;   /* icon ẩn / placeholder (xám nhạt) — chevron right2 giờ dùng --color-brand */
 
   /* ── MÀU CHỨC NĂNG ── */
   --color-primary:      #16A34A; /* xanh lá — active, NHẬN tiền / tích cực */
@@ -335,6 +335,29 @@ body {
 .numpad-key:active  { background: rgba(0,0,0,0.06); }
 .numpad-key.empty   { pointer-events: none; }
 .numpad.disabled    { opacity: 0.2; pointer-events: none; }
+
+/* ── Bottom sheet numpad (Swap) — trượt TỪ DƯỚI LÊN như màn nhập PIN (user chốt 07-20:
+   bấm vào SỐ TIỀN ở card "You pay" là numpad trồi lên). Overlay flex align-end để sheet
+   nằm đáy + tự căn giữa ngang (KHÔNG dùng translateX trong .sheet — keyframe animate
+   transform sẽ ĐÈ mất translateX, sheet nhảy ngang lúc trượt). */
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+@keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+.sheet {
+  width: 100%;
+  max-width: var(--screen-max);
+  background: var(--color-white);
+  border-radius: 20px 20px 0 0;
+  padding: 4px 16px calc(12px + env(safe-area-inset-bottom));
+  animation: sheet-up .28s ease;
+}
 
 /* Caret nhấp nháy ở ô nhập số (SendAmount/CreateQR/Swap) — cho người dùng biết SỐ SẼ VÀO
    CHỖ NÀO khi bấm numpad (trước đây chỉ có '0' mờ, không rõ đang nhắm vào đâu). */
