@@ -65,8 +65,11 @@ function txInfo(tx, walletAddr, contacts, rates) {
 //   (h1-2)  hàng2: At 14:32   [+ Add]  ← nút Add DỜI xuống  | 5.00 USDC  (token thật, xám — h1-2)
 //           hàng3-4: Note: <memo> (nếu có, dài thì xuống dòng)
 // Icon (trái) + cụm tiền (phải) neo Ở HÀNG 1-2 (top-align). Ranh giới NGÀY ở DateHeader.
-function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, onAdd }) {
+function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, swapInfo, onAdd }) {
   const { isSend, amount, symbol, usd, counter, name } = txInfo(tx, walletAddr, contacts, rates)
+  // Swap: tiêu đề nói RÕ hướng "Swapped <số> <token ra> to <token vào>" (user chốt 07-20d — trước
+  // chỉ "Swapped" thiếu thông tin). Cần swapInfo (2 leg) từ TxHistory; thiếu thì fallback "Swapped".
+  const swapTitle = swapInfo ? `Swapped ${swapInfo.outAmt.toFixed(swapInfo.outAmt < 0.01 ? 6 : 2)} ${swapInfo.outSym} to ${swapInfo.inSym}` : 'Swapped'
   // Tiền từ faucet → hiện "Faucet" thay vì địa chỉ 0x lạ (user chốt 07-17). Ưu tiên tên danh bạ
   // nếu user tự đặt. Danh sách faucet tra từ ArcScan — xem chain.js.
   const isFaucet = !isSend && isFaucetAddress(counter)
@@ -91,12 +94,12 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, on
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* hàng 1: ai — cỡ item, đậm */}
         <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {isSwap ? 'Swapped' : `${isSend ? 'Sent to' : 'Received from'} ${who}`}
+          {isSwap ? swapTitle : `${isSend ? 'Sent to' : 'Received from'} ${who}`}
         </div>
-        {/* hàng 2: At <giờ> + nút [+ Add] (DỜI XUỐNG đây — trước ở hàng 1 nhìn xấu) */}
+        {/* hàng 2: trạng thái/giờ + nút [+ Add]. Swap → "Swap completed · At <giờ>" (user chốt 07-20d) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
           <span style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)' }}>
-            At <span className="num">{timeLabel(tx.timeStamp)}</span>
+            {isSwap ? 'Swap completed · ' : ''}At <span className="num">{timeLabel(tx.timeStamp)}</span>
           </span>
           {!isSwap && !name && !isFaucet && counter && (   /* Faucet là máy phát tiền test, lưu vào danh bạ vô nghĩa */
             <span onClick={e => { e.stopPropagation(); onAdd(counter) }}
@@ -188,6 +191,21 @@ export default function TxHistory() {
     const s = new Set(); for (const h in dir) if (dir[h].in && dir[h].out) s.add(h)
     return s
   })()
+  // Thông tin cặp swap cho tiêu đề "Swapped <outAmt> <outSym> to <inSym>": mỗi hash swap có leg
+  // RA (from=ví) + leg VÀO (to=ví). Cả 2 dòng của cùng swap dùng CHUNG chuỗi này (chỉ khác số ±
+  // bên phải). Dò từ `txs` (không phải `filtered`) để tab Gửi/Nhận lọc còn 1 chiều vẫn có đủ hướng.
+  const swapPairs = (() => {
+    const m = {}, lower = walletAddr?.toLowerCase()
+    const amtOf = leg => parseFloat(leg.value) / Math.pow(10, parseInt(leg.tokenDecimal || 6))
+    const symOf = leg => leg.tokenSymbol || TOKEN_MAP[leg.contractAddress?.toLowerCase()]?.symbol || '?'
+    swapHashes.forEach(h => {
+      const legs = txs.filter(t => t.hash === h)
+      const outLeg = legs.find(t => t.from?.toLowerCase() === lower)
+      const inLeg = legs.find(t => t.to?.toLowerCase() === lower)
+      if (outLeg && inLeg) m[h] = { outAmt: amtOf(outLeg), outSym: symOf(outLeg), inSym: symOf(inLeg) }
+    })
+    return m
+  })()
   const emptyMsg = filter === 'send' ? t('Chưa có giao dịch gửi') : filter === 'receive' ? t('Chưa có giao dịch nhận') : t('Chưa có giao dịch nào')
 
   useEffect(() => {
@@ -238,7 +256,7 @@ export default function TxHistory() {
           filtered.forEach((tx, i) => {
             const dl = dateLabel(tx.timeStamp)
             if (dl !== last) { nodes.push(<DateHeader key={`h-${dl}`} date={dl} first={i === 0} />); last = dl }
-            nodes.push(<TxRow key={`${tx.hash}-${tx.from}-${tx.to}-${i}`} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} cur={cur} rates={rates} memo={memos[tx.hash]} isSwap={swapHashes.has(tx.hash)} onAdd={a => navigate('Contacts', { addAddress: a })} />)
+            nodes.push(<TxRow key={`${tx.hash}-${tx.from}-${tx.to}-${i}`} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} cur={cur} rates={rates} memo={memos[tx.hash]} isSwap={swapHashes.has(tx.hash)} swapInfo={swapPairs[tx.hash]} onAdd={a => navigate('Contacts', { addAddress: a })} />)
           })
           return nodes
         })()}
