@@ -13,9 +13,10 @@ import { useRef, useState } from 'react'
 // ⚠️ Dùng POINTER EVENTS + setPointerCapture, KHÔNG dùng <input type=range>: range không tuỳ biến
 // được mốc/bong bóng, và iOS bắt buộc kéo đúng thumb mới ăn (bấm vào track không nhảy).
 const MARKERS = [0, 25, 50, 75, 100]
-// ±9% quanh mốc thì HÚT vào mốc (user chốt 07-20: "bấm chính xác lắm mới trúng" — nam châm cũ ±2%
-// quá hẹp). Zone 18% rộng mà giữa 2 mốc cách 25% nên vẫn chừa ~7% kéo tự do, không mất cảm giác kéo.
-const SNAP_ZONE = 9
+// 2 mức hút KHÁC NHAU theo hành vi (user chốt 07-20d): CLICK/TAP = hút MẠNH (±9%) cho dễ trúng mốc;
+// ĐANG KÉO = hút NHẸ (±2%) để không lấn ý người kéo (nam châm mạnh lúc kéo làm lệch giá trị muốn chọn).
+const SNAP_TAP = 9
+const SNAP_DRAG = 2
 
 // ⚠️ THỤT LỀ THANH TRƯỢT — ĐỪNG BỎ (user chốt 07-17c: "nó phải cách lề chuẩn số đo mình quy định").
 // `.screen` chừa lề 20px mỗi bên. Nếu để track chạy hết bề ngang hàng thì mọi thứ NEO Ở MỐC 0%/100%
@@ -28,12 +29,13 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
   const trackRef = useRef(null)
   const [dragging, setDragging] = useState(false)
 
-  // x màn hình → % (0-100, làm tròn 1%), có hút nam châm quanh mốc
-  function pctFromEvent(e) {
+  // x màn hình → % (0-100, làm tròn 1%), có hút nam châm quanh mốc. snapZone = độ mạnh hút:
+  // to (SNAP_TAP) lúc click, nhỏ (SNAP_DRAG) lúc kéo.
+  function pctFromEvent(e, snapZone) {
     const r = trackRef.current.getBoundingClientRect()
     const raw = ((e.clientX - r.left) / r.width) * 100
     const clamped = Math.max(0, Math.min(100, raw))
-    const snapped = MARKERS.find(m => Math.abs(clamped - m) <= SNAP_ZONE)
+    const snapped = MARKERS.find(m => Math.abs(clamped - m) <= snapZone)
     return snapped !== undefined ? snapped : Math.round(clamped)
   }
 
@@ -41,9 +43,9 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
     if (disabled) return
     e.currentTarget.setPointerCapture(e.pointerId)
     setDragging(true); onDragStart?.()
-    onChange(pctFromEvent(e))
+    onChange(pctFromEvent(e, SNAP_TAP))   // chạm đầu tiên = như click → hút mạnh
   }
-  function move(e) { if (dragging && !disabled) onChange(pctFromEvent(e)) }
+  function move(e) { if (dragging && !disabled) onChange(pctFromEvent(e, SNAP_DRAG)) }   // kéo → hút nhẹ
   function up() { if (!dragging) return; setDragging(false); onDragEnd?.() }
 
   const dim = disabled ? 'var(--color-gray)' : 'var(--color-brand)'
