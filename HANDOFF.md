@@ -126,7 +126,7 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 ## 7. Gotchas Circle/Arc (xương máu — giữ vĩnh viễn)
 
 **Circle W3S:**
-- **Màn PIN = iframe `pw-auth.circle.com` (cross-origin):** không sửa được UI, English thuần, **KHÔNG auto-mở bàn phím số được** (browser cấm focus xuyên origin, iOS bắt chạm trực tiếp — user hỏi rồi, ĐỪNG đào lại).
+- **Màn PIN = iframe `pw-auth.circle.com` (cross-origin):** không sửa được UI, English thuần, **KHÔNG auto-mở bàn phím số được** (browser cấm focus xuyên origin, iOS bắt chạm trực tiếp — user hỏi rồi, ĐỪNG đào lại). **Cũng KHÔNG đóng iframe sớm hơn được sau khi nhập xong PIN** (user hỏi 07-20): SDK đã tự gỡ iframe NGAY tại message `onComplete` (đọc source `messageHandler`); phần "đứng lại" 1-3s sau khi gõ số = spinner Circle xử lý challenge bên trong iframe. Tự gỡ iframe khi challenge chưa settle = mất kết quả ký (root cause bug PIN cũ) — ĐỪNG làm.
 - **`getSDK()` là ASYNC (nạp lười 740KB SDK+polyfill)** — mọi chỗ gọi PHẢI `await getSDK()`. Quên await → PIN chết câm. Check: `grep -rn "getSDK()" src/ | grep -v await` phải RỖNG.
 - **userToken sống 60'** → `refreshSession()` trước MỌI thao tác PIN.
 - **Sai PIN KHÔNG đóng iframe** — `executeChallenge` BỎ QUA `RETRYABLE_CODES` (155112/155703/155704/155115/155705), chỉ settle khi success/lỗi terminal. `155701` = user tự huỷ → im lặng.
