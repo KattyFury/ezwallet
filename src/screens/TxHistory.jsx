@@ -159,25 +159,6 @@ function SwapRow({ outLeg, inLeg, cur, rates, onClick }) {
   )
 }
 
-// Chưa có hoạt động nào trong 24h → thay vì để trống trơn, hiện Hint "cách dùng" (user chốt 07-19).
-function HistoryHint() {
-  const lines = [
-    { label: t('Gửi'), desc: t('Chuyển tiền qua QR hoặc địa chỉ ví') },
-    { label: t('Nhận'), desc: t('Hiện mã QR để nhận tiền') },
-    { label: t('Đổi tiền'), desc: t('Đổi giữa USDC, EURC, cirBTC') },
-  ]
-  return (
-    <div style={{ margin: '24px 4px', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-      <Icon name="hint" size="var(--is-item)" color="var(--color-warning)" style={{ flexShrink: 0, marginTop: 2 }} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 'var(--fs-item)', color: 'var(--color-content)', textAlign: 'left' }}>
-        {lines.map((h, i) => (
-          <div key={i}><span style={{ fontWeight: 'var(--fw-medium)' }}>{h.label}</span>: {h.desc}</div>
-        ))}
-      </div>
-    </div>
-  )
-}
-
 function DetailRow({ label, children }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '7px 0' }}>
@@ -225,15 +206,14 @@ export default function TxHistory() {
     })
   }, [txs])
 
-  // CHỈ GIỮ 24H (user chốt 07-19): lịch sử cũ hơn 24h không hiện nữa — hết hoạt động gần đây thì
-  // hiện Hint "cách dùng" thay vì danh sách trống trơn.
-  const recent = txs.filter(tx => (Date.now() / 1000 - parseInt(tx.timeStamp)) <= 86400)
+  // LỊCH SỬ LUÔN HIỂN THỊ ĐẦY ĐỦ (user chốt 07-20: chỉ THÔNG BÁO mới giới hạn trong ngày,
+  // lịch sử giao dịch là sổ đối soát — không cắt 24h, không hint).
   const isSendTx = tx => tx.from?.toLowerCase() === walletAddr?.toLowerCase()
-  const filtered = recent.filter(tx => filter === 'all' ? true : filter === 'send' ? isSendTx(tx) : !isSendTx(tx))
+  const filtered = txs.filter(tx => filter === 'all' ? true : filter === 'send' ? isSendTx(tx) : !isSendTx(tx))
   // Hash nào ví vừa GỬI vừa NHẬN (2 transfer cùng tx) = SWAP → dòng ghi "Swapped", không "từ [lạ]".
   const swapHashes = (() => {
     const dir = {}, lower = walletAddr?.toLowerCase()
-    recent.forEach(tx => {
+    txs.forEach(tx => {
       const h = tx.hash; if (!dir[h]) dir[h] = { in: false, out: false }
       if (tx.from?.toLowerCase() === lower) dir[h].out = true
       if (tx.to?.toLowerCase() === lower) dir[h].in = true
@@ -296,8 +276,6 @@ export default function TxHistory() {
       }}>
         {loading ? (
           <div style={{ width: '100%', textAlign: 'center', paddingTop: 40, color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>{t('Đang tải...')}</div>
-        ) : recent.length === 0 ? (
-          <HistoryHint />
         ) : filtered.length === 0 ? (
           <div style={{ width: '100%', textAlign: 'center', paddingTop: 40 }}>
             <div style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{emptyMsg}</div>
