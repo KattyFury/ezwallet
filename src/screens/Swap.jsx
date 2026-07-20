@@ -76,6 +76,7 @@ export default function Swap() {
   const [picker, setPicker] = useState(null)
   const [pad, setPad] = useState(false)      // numpad bottom-sheet đang mở
   const [typed, setTyped] = useState('')     // chuỗi đang gõ trên numpad (hiện live ở card You pay)
+  const padPrev = useRef(null)               // số trước khi mở numpad — nút Back trong sheet khôi phục lại
   const debounceRef = useRef(null)
 
   const cur = getDisplayCurrency()
@@ -154,9 +155,15 @@ export default function Swap() {
   function openPad() {
     if (!hasBal || loading) return
     if (success) { setSuccess(false); setStatus('') }
+    padPrev.current = { snapAmt, pct }   // để nút Back hủy được số vừa gõ
     // Seed chuỗi gõ = số đang chọn (nếu có) để bấm lùi sửa được, không bắt gõ lại từ đầu
     setTyped(amountNum > 0 ? String(amountNum) : '')
     setPad(true)
+  }
+  function cancelPad() {   // Back: khôi phục số như trước khi mở numpad
+    const p = padPrev.current
+    if (p) { setSnapAmt(p.snapAmt); setPct(p.pct) }
+    setPad(false)
   }
   function applyTyped(s) {
     setTyped(s)
@@ -305,19 +312,20 @@ export default function Swap() {
     <div className="screen">
       {picker && <TokenPicker current={picker === 'from' ? fromSym : toSym} onSelect={sym => selectToken(picker, sym)} onClose={() => setPicker(null)} />}
 
-      {/* Numpad bottom-sheet — trượt từ dưới lên như màn nhập PIN (user chốt 07-20). Bấm nền tối
-          hoặc "Done" để đóng; số đã gõ GIỮ NGUYÊN (snapAmt đã áp live theo từng phím). */}
+      {/* Numpad bottom-sheet — trượt từ dưới lên, layout Y CHANG màn Send money (user chốt 07-20
+          "đồng bộ giao diện"): sheet = nửa dưới màn, spacer 0.75 + Numpad 2.5 + đệm 0.75 + hàng nút
+          Back/Done pill 44% (chuẩn .row10-dual). Back = hủy số vừa gõ; Done/nền tối = giữ số. */}
       {pad && (
         <div className="sheet-overlay" onClick={() => setPad(false)}>
           <div className="sheet" onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              <button onClick={() => setPad(false)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)', padding: '8px 8px 4px' }}>
-                {t('Xong')}
-              </button>
-            </div>
-            <div style={{ height: 240 }}>
+            <div style={{ flex: 0.75 }} />
+            <div style={{ flex: 2.5, minHeight: 0 }}>
               <Numpad onKey={onPadKey} showComma />
+            </div>
+            <div style={{ flex: 0.75 }} />
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+              <button className="btn btn-secondary" style={{ width: '44%' }} onClick={cancelPad}>{t('Quay lại')}</button>
+              <button className="btn btn-primary" style={{ width: '44%' }} onClick={() => setPad(false)}>{t('Xong')}</button>
             </div>
           </div>
         </div>

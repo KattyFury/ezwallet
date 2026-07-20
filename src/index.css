@@ -350,12 +350,18 @@ body {
   justify-content: center;
 }
 @keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+/* Sheet = NỬA DƯỚI màn (50dvh, đúng vùng hàng 6-10 của lưới) — numpad + nút bên trong đặt Y CHANG
+   layout SendAmount (user chốt 07-20 "đồng bộ giao diện"): spacer 0.75 + Numpad 2.5 + đệm 0.75 +
+   hàng nút 1 (Back/Done pill 44% như .row10-dual). Lề ngang 20px = đúng lề .screen. */
 .sheet {
   width: 100%;
   max-width: var(--screen-max);
+  height: 50dvh;
   background: var(--color-white);
   border-radius: 20px 20px 0 0;
-  padding: 4px 16px calc(12px + env(safe-area-inset-bottom));
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
   animation: sheet-up .28s ease;
 }
 
