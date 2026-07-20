@@ -209,10 +209,13 @@ export default function Contacts() {
                 </button>
                 <input className="address-input" placeholder={t('Tên')} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ fontSize: 'var(--fs-body)' }} />
                 <input className="address-input" placeholder="0x..." value={form.addr} onChange={e => setForm(f => ({ ...f, addr: e.target.value }))} style={{ fontSize: 'var(--fs-body)' }} />
-                {/* SỬA: dòng chữ đỏ "Delete contact" (không phải nút — tránh lòi 3 nút), bấm → confirm */}
+                {/* SỬA: dòng chữ đỏ "Delete contact" (không phải nút — tránh lòi 3 nút), bấm → confirm.
+                    margin dọc 14px (user chốt 07-20: cách xa ô địa chỉ trên + cặp Back/Save dưới cho
+                    khỏi bấm nhầm — gap popup-card 12px + 14px = ~26px mỗi phía). Popup vẫn tự căn giữa
+                    vùng hàng 1-6 nhờ top:30dvh + translateY(-50%). */}
                 {form.id && (
                   <button onClick={() => setConfirmDelete(true)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)', fontFamily: 'inherit', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', padding: '2px 0', textAlign: 'center' }}>
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)', fontFamily: 'inherit', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', padding: '2px 0', margin: '14px 0', textAlign: 'center' }}>
                     Delete contact
                   </button>
                 )}
