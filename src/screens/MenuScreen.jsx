@@ -56,7 +56,7 @@ export default function MenuScreen() {
             {/* Icon dẫn đầu = brand blue (ngôn ngữ Swap, user chốt 07-17e); Sign out vẫn đỏ ngữ nghĩa */}
             <Icon name={icon} size="var(--is-md-lg)" color="var(--color-brand)" />
             <span style={{ flex: 1, fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>{t(label)}</span>
-            {!disabled && <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" />}
+            {!disabled && <Icon name="right2" size="var(--is-md-lg)" color="var(--color-brand)" />}
           </button>
         </div>
       ))}

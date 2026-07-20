@@ -37,7 +37,7 @@ export default function PasteAddress() {
           placeholder="0x..."
           value={address}
           onChange={e => { setAddress(e.target.value); setDirty(true) }}
-          style={{ width: '100%', height: 48, fontSize: 'var(--fs-body)' }}
+          style={{ width: '100%', height: 52, fontSize: 'var(--fs-md-lg)' }}   /* đồng bộ chuẩn ô nhập text (email/memo): cao 52 + --fs-md-lg */
         />
         {showError && (
           <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>

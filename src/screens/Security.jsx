@@ -68,7 +68,7 @@ export default function Security() {
           <span style={LABEL}>{t('Đổi PIN')}</span>
           {pinStatus
             ? <span style={{ fontSize: 'var(--fs-item)', color: pinErr ? 'var(--color-error)' : 'var(--color-primary)' }}>{pinStatus}</span>
-            : <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" />}
+            : <Icon name="right2" size="var(--is-md-lg)" color="var(--color-brand)" />}
         </button>
       </div>
 

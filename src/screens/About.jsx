@@ -34,7 +34,7 @@ export default function About() {
             <button key={label} className="menu-item" onClick={() => window.open(link, '_blank')}>
               <span style={LABEL}>{t(label)}</span>
               {value && <span style={VALUE}>{value}</span>}
-              <Icon name="right2" size="var(--is-md-lg)" color="var(--color-faint)" />
+              <Icon name="right2" size="var(--is-md-lg)" color="var(--color-brand)" />
             </button>
           ) : (
             <div key={label} className="menu-item">
