@@ -8,7 +8,7 @@ import { loadSavedQRs, saveSavedQRs } from '../store'
 
 export default function ShowQR() {
   const { navigate, params } = useNav()
-  const { amount, currency = 'USD', name = '', saveToLibrary, back = 'HomeReceive' } = params
+  const { amount, currency = 'USD', name = '', saveToLibrary, fromStorage, back = 'HomeReceive' } = params
   const walletAddr = localStorage.getItem('ez_wallet_addr') || ''
   const qrValue = `ezwallet:${walletAddr}?amount=${amount}&cur=${currency}`
   // MỘT CHUỖI MỘT STYLE: "$2" / "2 USDC" (fmtMoney) — không tách bold số + regular đơn vị.
@@ -33,8 +33,10 @@ export default function ShowQR() {
     saveImageToPhotos(canvas, `ezwallet-qr-${amount}.png`)
   }
 
-  // Tiêu đề (user chốt 07-20): QR đã lưu (có tên) → "QR Storage – Coffee"; tạo mới → "Create receive QR".
-  const title = name ? `${t('Kho QR')} – ${name}` : t('Tạo QR nhận tiền')
+  // Tiêu đề (user chốt 07-20d): mở QR ĐÃ LƯU từ kho (fromStorage) → "QR Storage: <tên>", QR không
+  // đặt tên → "QR Storage: Item". Tạo QR mới (màn Nhận / custom) → "Create receive QR".
+  // Phân biệt bằng cờ fromStorage, KHÔNG dựa vào có/không tên (QR lưu không tên vẫn thuộc kho).
+  const title = fromStorage ? `${t('Kho QR')}: ${name || 'Item'}` : t('Tạo QR nhận tiền')
 
   return (
     <div className="screen">
