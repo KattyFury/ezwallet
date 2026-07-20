@@ -118,7 +118,6 @@ export async function getWalletAddress(userToken) {
       body: JSON.stringify({ action: 'getAddress', userToken }),
     })
     const data = await res.json()
-    console.log('[getWalletAddress]', data)
     return data || null
   } catch (e) {
     console.error('[getWalletAddress error]', e)
