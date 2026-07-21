@@ -291,14 +291,16 @@ export default function Swap() {
             </span>
           </div>
         </div>
+        {/* Hàng phụ = --fs-item 17 ("vừa-nhỏ"), NHỎ HƠN nhãn You pay/receive 19 ("vừa") — user chốt
+            07-21: để 2 cái bằng nhau làm mất phân cấp nặng–nhẹ. Available và ~$ đồng bộ cùng cỡ. */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
-          <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {/* Số dư chưa đọc được → "…", KHÔNG vẽ 0 (bug 07-17) */}
             Available: <span className="num" style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-medium)' }}>
               {balKnown ? `${spendableOf(sym, balances[sym]).toFixed(decimalsFor(sym))} ${sym}` : '…'}
             </span>
           </span>
-          <span className="num" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>{disp !== null ? `~ ${fmtDisp(disp)}` : ''}</span>
+          <span className="num" style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>{disp !== null ? `~ ${fmtDisp(disp)}` : ''}</span>
         </div>
       </div>
     )
@@ -354,7 +356,7 @@ export default function Swap() {
       {/* KHU VỰC hàng 2→9 chia 3 KHỐI bằng justify-content:space-between (user chốt 07-20e): 2 khe
           giữa các khối TỰ ĐỘNG BẰNG NHAU (cụm You-pay/receive ↔ cụm hint+slider ↔ nút Swap), không
           chỗ nào trống lệch. paddingBottom 2dvh = khớp margin-bottom action-card màn Send/Receive. */}
-      <div style={{ gridRow: '2 / 10', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0, paddingBottom: '2dvh' }}>
+      <div style={{ gridRow: '2 / 10', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
 
         {/* KHỐI 1: You pay ⇅ You receive + Fee/Rate */}
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
@@ -404,13 +406,17 @@ export default function Swap() {
           </div>
         </div>
 
-        {/* KHỐI 3: nút Swap = HÌNH DẠNG + VỊ TRÍ như action-card Scan QR/Create QR (user chốt 07-20e):
-            bo góc 20 (vuông hơn pill), cao 8dvh, rộng 66.67% căn giữa. Vẫn là NƠI DUY NHẤT hiện trạng
-            thái (Preparing/Enter PIN/Submitted/lỗi). Ưu tiên: lỗi > trạng thái > 'Swap'. */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {/* KHỐI 3: nút Swap — pill mặc định `.btn` (bo 50, cao 6dvh) ĐỒNG TÂM với action-card
+            Scan QR (Send) / Create QR (Receive) — user chốt 07-21, đảo bản 07-20e (vuông 8dvh làm
+            lệch so với các màn khác). Cách căn: khối này copy y hệt hình học `.action-grid`
+            (`height 8dvh` + `marginBottom 2dvh`, nằm cuối flex space-between của vùng 2/10) → band
+            80→88dvh, nút 6dvh canh giữa band ⇒ TÂM 84dvh = đúng tâm action-card. ĐỪNG thêm
+            paddingBottom cho vùng cha, marginBottom ở đây đã lo phần chừa 2dvh.
+            Nút vẫn là NƠI DUY NHẤT hiện trạng thái. Ưu tiên: lỗi > trạng thái > 'Swap'. */}
+        <div style={{ height: '8dvh', marginBottom: '2dvh', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
             style={{
-              width: '66.67%', height: '8dvh', borderRadius: 20, overflow: 'hidden',
+              width: '66.67%', overflow: 'hidden',
               ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
               ...(success ? { opacity: 1 } : null),
             }}

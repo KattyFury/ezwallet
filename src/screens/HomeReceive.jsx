@@ -84,15 +84,12 @@ export default function HomeReceive() {
       </button>
 
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
-        {/* Chữ NGẮN để nằm trọn 1 dòng ở cỡ chung của vùng thông báo (NOTIF_FS) — câu dài cũ
-            ("make a QR for the exact amount") tràn ô 350px, bị cắt "…" sẵn rồi. */}
+        {/* Mỗi dòng = 1 CÂU đủ nghĩa, từ khoá gạch chân BẤM ĐƯỢC → đi đúng nơi nút cùng tên ở
+            hàng 9 dẫn tới (user chốt 07-21). Thứ tự khớp layout nút: QR Storage · Create QR · Share. */}
         <NotifArea hints={[
-          // Text user chốt 07-17f ("moss used" = typo của "most used"; "Custom the receive amount"
-          // sửa ngữ pháp thành "Custom receive amount" — đã báo user). Thứ tự khớp lại theo layout
-          // nút hàng 9 (07-19: QR Storage trái · Create QR giữa · Share phải).
-          { label: 'QR Storage', desc: 'Store your most used QRs' },
-          { label: 'Create QR', desc: 'Custom receive amount' },
-          { label: 'Share', desc: 'Share your address' },
+          { label: 'QR Storage', desc: 'is where you keep your most used QRs', onClick: () => navigate('SavedQRList') },
+          { label: 'Create QR', desc: 'to receive the exact amount you want', onClick: () => navigate('CreateQR') },
+          { label: 'Share', desc: 'your wallet address via messages and social', onClick: handleShare },
         ]} />
       </div>
 

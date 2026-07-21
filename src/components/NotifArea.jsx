@@ -90,14 +90,21 @@ export const NOTIF_FS = 'var(--fs-item)'
 // (như 1 khối) khi hết chỗ hiển thị. Nền VÀNG theo đúng màu cảnh báo/hint quy định của app.
 // Icon hint.svg đứng CENTER-TRÁI cả khối (user chốt 07-17: khối 3 dòng thì icon ngang dòng 2,
 // KHÔNG dính dòng 1) → icon là flex item riêng + alignItems:center, chữ gói trong cột bên phải.
+// Format mới (user chốt 07-21): mỗi dòng là 1 CÂU HOÀN CHỈNH, từ khoá đầu câu GẠCH CHÂN + BẤM ĐƯỢC
+// (đi đúng nơi mà nút cùng tên ở hàng 9 dẫn tới), KHÔNG bold nữa. Câu dài → cho XUỐNG DÒNG
+// (không nowrap/ellipsis như thông báo thật, kẻo cắt mất nghĩa).
 function HintBlock({ lines }) {
   return (
     <div style={{ background: 'var(--color-warning-soft)', borderRadius: 12, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: NOTIF_FS, color: 'var(--color-content)', textAlign: 'left' }}>
       <Icon name="hint" size="var(--is-item)" color="var(--color-warning)" style={{ flexShrink: 0 }} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
         {lines.map((h, i) => (
-          // Format "X: desc" (user chốt 07-17f, trước là "X = desc")
-          <div key={i} style={ROW_TEXT}><span style={{ fontWeight: 'var(--fw-medium)' }}>{h.label}</span>: {h.desc}</div>
+          <div key={i} style={{ minWidth: 0, lineHeight: 1.35 }}>
+            <span
+              onClick={h.onClick ? e => { e.stopPropagation(); h.onClick() } : undefined}
+              style={{ textDecoration: 'underline', textUnderlineOffset: 3, cursor: h.onClick ? 'pointer' : 'default' }}
+            >{h.label}</span>{h.desc ? ` ${h.desc}` : ''}
+          </div>
         ))}
       </div>
     </div>

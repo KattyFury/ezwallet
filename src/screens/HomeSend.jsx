@@ -142,13 +142,12 @@ export default function HomeSend() {
 
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
         <NotifArea
-          // Chữ NGẮN để nằm trọn 1 dòng ở cỡ chung của vùng thông báo (NOTIF_FS) — câu dài cũ
-          // ("save people's wallet addresses") đã tràn 397px trong ô 350px, bị cắt "…" sẵn rồi.
+          // Mỗi dòng = 1 CÂU đủ nghĩa, từ khoá gạch chân BẤM ĐƯỢC → đi đúng nơi nút cùng tên ở
+          // hàng 9 dẫn tới (user chốt 07-21).
           hints={[
-            // Rõ nghĩa hơn (user chốt 07-20, bắt chước kiểu Receive: mỗi dòng nói RÕ chức năng)
-            { label: 'Contacts', desc: 'Send to a saved contact' },
-            { label: 'Scan QR', desc: 'Scan a QR to pay' },
-            { label: 'Paste', desc: 'Paste a wallet address' },
+            { label: 'Contacts', desc: 'is where you save wallet addresses of people you know', onClick: () => navigate('Contacts') },
+            { label: 'Scan QR', desc: "of the receiver to send money", onClick: () => navigate('QRScanner') },
+            { label: 'Paste', desc: "the receiver's wallet address to send money", onClick: () => navigate('PasteAddress') },
           ]}
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
