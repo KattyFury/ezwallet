@@ -383,9 +383,12 @@ export default function Swap() {
           </div>
         </div>
 
-        {/* KHỐI 2: gợi ý số chẵn (chip) + thanh trượt % — cùng 1 cụm */}
+        {/* KHỐI 2: gợi ý số chẵn (chip) + thanh trượt % — cùng 1 cụm.
+            ⚠️ Hàng chip PHẢI có CHIỀU CAO CỐ ĐỊNH (height 40, không để co theo nội dung): `hints.map`
+            rỗng thì hàng cao 0 → khối 2 thấp đi → space-between đẩy cả cụm trượt xuống mỗi lần hint
+            hiện/tắt (bug user báo 07-21). Chừa sẵn chỗ = vị trí slider ĐỨNG YÊN, chip chỉ mờ/hiện. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1dvh', minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0 }}>
+          <div style={{ height: 40, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: hints.length ? 1 : 0, transition: 'opacity .18s ease', pointerEvents: hints.length ? 'auto' : 'none', minWidth: 0 }}>
               {hints.map(v => (
                 <button key={v} onClick={() => pickHint(v)}
