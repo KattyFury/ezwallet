@@ -90,7 +90,7 @@ export default function HomeReceive() {
           { label: 'QR Storage', desc: 'Keep your most frequently used QR codes', onClick: () => navigate('SavedQRList') },
           { label: 'Create QR', desc: 'Create a QR code to receive the exact amount', onClick: () => navigate('CreateQR') },
           // "via many ways" SAI ngữ pháp (via đã nghĩa là "qua/bằng") → "in many ways"
-          { label: 'Share Address', desc: 'Share your wallet address in many ways', onClick: handleShare },
+          { label: 'Share', desc: 'Share your wallet address in many ways', onClick: handleShare },
         ]} />
       </div>
 

@@ -102,7 +102,7 @@ function HintBlock({ lines }) {
           <div key={i} style={{ minWidth: 0, lineHeight: 1.35 }}>
             <span
               onClick={h.onClick ? e => { e.stopPropagation(); h.onClick() } : undefined}
-              style={{ textDecoration: 'underline', textUnderlineOffset: 3, cursor: h.onClick ? 'pointer' : 'default' }}
+              style={{ cursor: h.onClick ? 'pointer' : 'default' }}
             >{h.label}</span>{h.desc ? `: ${h.desc}` : ''}
           </div>
         ))}
