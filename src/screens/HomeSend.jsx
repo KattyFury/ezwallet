@@ -147,7 +147,7 @@ export default function HomeSend() {
           hints={[
             { label: 'Contacts', desc: 'Save people you send to often', onClick: () => navigate('Contacts') },
             { label: 'Scan QR', desc: 'Scan a QR code to send', onClick: () => navigate('QRScanner') },
-            { label: 'Paste', desc: 'Paste a wallet address', onClick: () => navigate('PasteAddress') },
+            { label: 'Paste', desc: 'Paste a wallet address to send', onClick: () => navigate('PasteAddress') },
           ]}
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (

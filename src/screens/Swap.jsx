@@ -284,21 +284,19 @@ export default function Swap() {
         <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>{label}</span>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
           <TokenRow sym={sym} onClick={onPick} />
-          {/* Ô SỐ TIỀN. Card "You pay" nhập được (onAmount) → bọc BOX TRẮNG VIỀN XÁM để người dùng
-              hiểu đây là VÙNG NHẬP LIỆU (user chốt 07-21: số nằm thẳng trên nền xám của card trông
-              như bị "lõm vào" = không bấm được). Card "You receive" chỉ hiển thị → để trần, không
-              box — đúng ngữ nghĩa input vs output, đừng đồng bộ hoá 2 bên. */}
+          {/* Ô SỐ TIỀN. BỎ box trắng viền xám bọc số (user chốt 07-22: box viền nhìn cứng, số dài
+              dễ tràn ra ngoài khung = xấu). Thay tín hiệu "bấm được" bằng CARET NHẤP NHÁY đứng sau
+              số NGAY CẢ KHI CHƯA gõ (card "You pay" có onAmount) — không cần khung vẫn biết đây là
+              vùng nhập liệu. Card "You receive" không có onAmount → không caret, không khung, trần
+              hoàn toàn. overflow:hidden ở wrapper là lưới an toàn: số dù dài cỡ nào cũng bị CẮT GỌN
+              trong card, không tràn ra ngoài (trước đây thiếu dòng này nên số bể layout). */}
           <div onClick={onAmount} style={{
-            flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
+            flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
             cursor: onAmount ? 'pointer' : 'default',
-            ...(onAmount ? {
-              background: 'var(--color-white)', border: '1.5px solid var(--color-gray)',
-              borderRadius: 12, padding: '2px 12px', minHeight: 56,
-            } : null),
           }}>
             <span className="num" style={{ fontSize: amountFontSize(amtStr, 52, 8), fontWeight: 'var(--fw-light)', lineHeight: 1.05, color: amtColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {/* Đang gõ mà CHƯA có số → CHỈ caret "_" xám nhấp nháy, KHÔNG vẽ số 0 mờ (user chốt 07-20) */}
-              {isTyping ? <>{typing}<span className="caret">_</span></> : amtStr}
+              {isTyping ? <>{typing}<span className="caret">_</span></> : <>{amtStr}{onAmount ? <span className="caret">_</span> : null}</>}
             </span>
           </div>
         </div>
