@@ -160,11 +160,13 @@ export default function EnterEmail() {
             {suggestions.map(s => (
               <button key={s} onClick={() => { setEmail(s); setError('') }}
                 style={{
+                  // Trắng + viền xám = tín hiệu BẤM ĐƯỢC (user chốt 07-21; nền xám cũ trông như lõm,
+                  // không ai biết bấm được). Bỏ opacity 0.8 cho chữ rõ hẳn.
                   textAlign: 'left', padding: '6px 12px',
-                  border: 'none', borderRadius: 10,
-                  background: 'var(--color-gray)', cursor: 'pointer',
+                  border: '1.5px solid var(--color-gray)', borderRadius: 10,
+                  background: 'var(--color-white)', cursor: 'pointer',
                   fontSize: 'var(--fs-md-lg)', fontFamily: 'inherit', color: 'var(--color-content)',
-                  opacity: 0.8, alignSelf: 'flex-start', maxWidth: '100%',
+                  alignSelf: 'flex-start', maxWidth: '100%',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                 {s}
@@ -181,9 +183,10 @@ export default function EnterEmail() {
             {DOMAINS.map(d => (
               <button key={d} onClick={() => applyDomain(d)}
                 style={{
-                  padding: '6px 12px', border: 'none', borderRadius: 10,
-                  background: 'var(--color-gray)', cursor: 'pointer',
-                  fontSize: 'var(--fs-md-lg)', fontFamily: 'inherit', color: 'var(--color-content)', opacity: 0.8,
+                  // Trắng + viền xám = bấm được (đồng bộ với gợi ý email ở trên)
+                  padding: '6px 12px', border: '1.5px solid var(--color-gray)', borderRadius: 10,
+                  background: 'var(--color-white)', cursor: 'pointer',
+                  fontSize: 'var(--fs-md-lg)', fontFamily: 'inherit', color: 'var(--color-content)',
                 }}>
                 {d}
               </button>

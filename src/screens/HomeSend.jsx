@@ -145,9 +145,9 @@ export default function HomeSend() {
           // Mỗi dòng = 1 CÂU đủ nghĩa, từ khoá gạch chân BẤM ĐƯỢC → đi đúng nơi nút cùng tên ở
           // hàng 9 dẫn tới (user chốt 07-21).
           hints={[
-            { label: 'Contacts', desc: 'Save wallet addresses of people you know', onClick: () => navigate('Contacts') },
-            { label: 'Scan QR', desc: "Scan the receiver's QR code to send", onClick: () => navigate('QRScanner') },
-            { label: 'Paste', desc: "Paste the receiver's wallet address to send", onClick: () => navigate('PasteAddress') },
+            { label: 'Contacts', desc: 'Save people you send to often', onClick: () => navigate('Contacts') },
+            { label: 'Scan QR', desc: 'Scan a QR code to send', onClick: () => navigate('QRScanner') },
+            { label: 'Paste', desc: 'Paste a wallet address', onClick: () => navigate('PasteAddress') },
           ]}
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (

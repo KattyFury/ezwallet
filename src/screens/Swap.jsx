@@ -284,7 +284,18 @@ export default function Swap() {
         <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>{label}</span>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
           <TokenRow sym={sym} onClick={onPick} />
-          <div onClick={onAmount} style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end', cursor: onAmount ? 'pointer' : 'default' }}>
+          {/* Ô SỐ TIỀN. Card "You pay" nhập được (onAmount) → bọc BOX TRẮNG VIỀN XÁM để người dùng
+              hiểu đây là VÙNG NHẬP LIỆU (user chốt 07-21: số nằm thẳng trên nền xám của card trông
+              như bị "lõm vào" = không bấm được). Card "You receive" chỉ hiển thị → để trần, không
+              box — đúng ngữ nghĩa input vs output, đừng đồng bộ hoá 2 bên. */}
+          <div onClick={onAmount} style={{
+            flex: 1, minWidth: 0, display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
+            cursor: onAmount ? 'pointer' : 'default',
+            ...(onAmount ? {
+              background: 'var(--color-white)', border: '1.5px solid var(--color-gray)',
+              borderRadius: 12, padding: '2px 12px', minHeight: 56,
+            } : null),
+          }}>
             <span className="num" style={{ fontSize: amountFontSize(amtStr, 52, 8), fontWeight: 'var(--fw-light)', lineHeight: 1.05, color: amtColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {/* Đang gõ mà CHƯA có số → CHỈ caret "_" xám nhấp nháy, KHÔNG vẽ số 0 mờ (user chốt 07-20) */}
               {isTyping ? <>{typing}<span className="caret">_</span></> : amtStr}

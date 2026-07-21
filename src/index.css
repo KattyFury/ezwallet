@@ -117,6 +117,16 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
+/* DESKTOP/TABLET (rộng hơn --screen-max 430 + lề): vùng NGOÀI khung app đổi sang XÁM cho đỡ chói
+   và thấy rõ ranh giới khung điện thoại (user chốt 07-21, đảo yêu cầu "về trắng" hồi 07-19).
+   ⚠️ CHỈ trong media query này — ĐỪNG đổi `body` mặc định về xám: trên iPhone PWA standalone, dải
+   status bar lấy đúng màu nền body → body xám = lộ dải xám trên đầu (bug 07-19). Điện thoại luôn
+   ≤430px nên không bao giờ chạm ngưỡng 481px này. `.screen` đã có nền trắng riêng nên khung app
+   vẫn trắng, không bị xám lây. */
+@media (min-width: 481px) {
+  body { background: var(--color-surface); }
+}
+
 /* ── Layout: Grid 10 hàng ── */
 .screen {
   position: relative;   /* làm mốc cho nút nổi (vd Show tokens neo đúng ranh giới hàng 6/7) */
@@ -456,10 +466,12 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  /* Chuẩn Swap (user chốt 07-17): tách khối bằng NỀN surface, KHÔNG viền, card lớn bo 20 */
+  /* NỀN TRẮNG + VIỀN XÁM = tín hiệu "BẤM ĐƯỢC" (user chốt 07-21, thay nền surface cũ: xám =
+     lõm vào = trông như vùng không bấm được). box-sizing:border-box global nên viền KHÔNG làm
+     đội kích thước card. Card `primary` (Scan QR / Create QR) vẫn gradient, không viền. */
   border-radius: 20px;
-  border: none;
-  background: var(--color-surface);
+  border: 1.5px solid var(--color-gray);
+  background: var(--color-white);
   color: var(--color-black);
   font-family: var(--font-condensed);
   font-size: var(--fs-item);
@@ -469,6 +481,7 @@ body {
 }
 
 .action-card.primary {
+  border: none;
   background: var(--grad-brand);
   color: var(--color-white);
 }
