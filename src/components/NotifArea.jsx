@@ -88,26 +88,22 @@ export const NOTIF_FS = 'var(--fs-item)'
 // Hint = MỘT thông báo dài nhiều dòng (không phải nhiều thông báo riêng), mức ưu tiên THẤP
 // NHẤT, KHÔNG nút X, không bấm được — luôn tồn tại, bị thông báo thật đẩy lên rồi mờ dần
 // (như 1 khối) khi hết chỗ hiển thị. HINT CHUẨN TOÀN APP (user chốt 07-22d): nền TRẮNG + VIỀN
-// XANH brand + chữ/icon XANH (đồng bộ chip gợi ý số tiền Swap + chip sign-in) — KHÔNG còn nền vàng.
-// Icon hint.svg đứng CENTER-TRÁI cả khối (user chốt 07-17: khối 3 dòng thì icon ngang dòng 2,
-// KHÔNG dính dòng 1) → icon là flex item riêng + alignItems:center, chữ gói trong cột bên phải.
-// Format mới (user chốt 07-21): mỗi dòng là 1 CÂU HOÀN CHỈNH, từ khoá đầu câu GẠCH CHÂN + BẤM ĐƯỢC
-// (đi đúng nơi mà nút cùng tên ở hàng 9 dẫn tới), KHÔNG bold nữa. Câu dài → cho XUỐNG DÒNG
+// XANH brand + chữ XANH (đồng bộ chip gợi ý số tiền Swap + chip sign-in) — KHÔNG nền vàng,
+// KHÔNG icon bóng đèn (user chốt 07-22e: bỏ icon hint.svg cho giống mọi hint khác — chỉ chữ + viền).
+// Format (user chốt 07-21): mỗi dòng là 1 CÂU HOÀN CHỈNH, từ khoá đầu câu = medium + BẤM ĐƯỢC
+// (đi đúng nơi mà nút cùng tên ở hàng 9 dẫn tới). Câu dài → cho XUỐNG DÒNG
 // (không nowrap/ellipsis như thông báo thật, kẻo cắt mất nghĩa).
 function HintBlock({ lines }) {
   return (
-    <div style={{ background: 'var(--color-white)', border: '1.5px solid var(--color-brand)', borderRadius: 12, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: NOTIF_FS, color: 'var(--color-brand)', textAlign: 'left' }}>
-      <Icon name="hint" size="var(--is-item)" color="var(--color-brand)" style={{ flexShrink: 0 }} />
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
-        {lines.map((h, i) => (
-          <div key={i} style={{ minWidth: 0, lineHeight: 1.35 }}>
-            <span
-              onClick={h.onClick ? e => { e.stopPropagation(); h.onClick() } : undefined}
-              style={{ fontWeight: 'var(--fw-medium)', cursor: h.onClick ? 'pointer' : 'default' }}
-            >{h.label}</span>{h.desc ? `: ${h.desc}` : ''}
-          </div>
-        ))}
-      </div>
+    <div style={{ background: 'var(--color-white)', border: '1.5px solid var(--color-brand)', borderRadius: 12, padding: '8px 14px', display: 'flex', flexDirection: 'column', gap: 4, fontSize: NOTIF_FS, color: 'var(--color-brand)', textAlign: 'left' }}>
+      {lines.map((h, i) => (
+        <div key={i} style={{ minWidth: 0, lineHeight: 1.35 }}>
+          <span
+            onClick={h.onClick ? e => { e.stopPropagation(); h.onClick() } : undefined}
+            style={{ fontWeight: 'var(--fw-medium)', cursor: h.onClick ? 'pointer' : 'default' }}
+          >{h.label}</span>{h.desc ? `: ${h.desc}` : ''}
+        </div>
+      ))}
     </div>
   )
 }

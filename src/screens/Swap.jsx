@@ -426,10 +426,12 @@ export default function Swap() {
                 ))}
               </div>
             ) : (!loading && !(amountNum > 0)) ? (
-              // Bấm text → mở numpad nhập số (user chốt 07-22d: "click vào hint thì bàn phím số hiện")
-              <span onClick={openPad} style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, cursor: 'pointer' }}>
-                Slide to choose an amount, or tap to enter one
-              </span>
+              // HINT = BUTTON viền xanh + chữ xanh (user chốt 07-22e: đồng bộ MỌI hint, KHÔNG chữ xám
+              // nhỏ) — bấm mở numpad nhập số.
+              <button onClick={openPad}
+                style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 16px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-brand)', whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
+                Slide to adjust or tap to enter
+              </button>
             ) : null}
           </div>
           <div style={{ minWidth: 0 }}>
