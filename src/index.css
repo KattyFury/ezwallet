@@ -117,14 +117,14 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* DESKTOP/TABLET (rộng hơn --screen-max 430 + lề): vùng NGOÀI khung app đổi sang XÁM cho đỡ chói
-   và thấy rõ ranh giới khung điện thoại (user chốt 07-21, đảo yêu cầu "về trắng" hồi 07-19).
-   ⚠️ CHỈ trong media query này — ĐỪNG đổi `body` mặc định về xám: trên iPhone PWA standalone, dải
-   status bar lấy đúng màu nền body → body xám = lộ dải xám trên đầu (bug 07-19). Điện thoại luôn
+/* DESKTOP/TABLET (rộng hơn --screen-max 430 + lề): vùng NGOÀI khung app đổi sang XANH THƯƠNG HIỆU
+   (user chốt 07-22 — "màu xanh của dự án / USDC"), thấy rõ ranh giới khung điện thoại.
+   ⚠️ CHỈ trong media query này — ĐỪNG đổi `body` mặc định về xanh: trên iPhone PWA standalone, dải
+   status bar lấy đúng màu nền body → body xanh = lộ dải xanh trên đầu. Điện thoại luôn
    ≤430px nên không bao giờ chạm ngưỡng 481px này. `.screen` đã có nền trắng riêng nên khung app
-   vẫn trắng, không bị xám lây. */
+   vẫn trắng, không bị xanh lây. */
 @media (min-width: 481px) {
-  body { background: var(--color-surface); }
+  body { background: var(--color-brand); }
 }
 
 /* ── Layout: Grid 10 hàng ── */
