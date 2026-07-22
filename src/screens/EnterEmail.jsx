@@ -165,7 +165,7 @@ export default function EnterEmail() {
                   textAlign: 'left', padding: '6px 12px',
                   border: '1.5px solid var(--color-brand)', borderRadius: 10,
                   background: 'var(--color-white)', cursor: 'pointer',
-                  fontSize: 'var(--fs-md-lg)', fontFamily: 'inherit', color: 'var(--color-brand)',
+                  fontSize: 'var(--fs-item)', fontFamily: 'inherit', color: 'var(--color-brand)',
                   fontWeight: 'var(--fw-medium)', alignSelf: 'flex-start', maxWidth: '100%',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
@@ -186,7 +186,7 @@ export default function EnterEmail() {
                   // Chip HINT chuẩn = viền xanh + chữ xanh (đồng bộ gợi ý email ở trên + chip Swap)
                   padding: '6px 12px', border: '1.5px solid var(--color-brand)', borderRadius: 10,
                   background: 'var(--color-white)', cursor: 'pointer',
-                  fontSize: 'var(--fs-md-lg)', fontFamily: 'inherit', color: 'var(--color-brand)',
+                  fontSize: 'var(--fs-item)', fontFamily: 'inherit', color: 'var(--color-brand)',
                   fontWeight: 'var(--fw-medium)',
                 }}>
                 {d}
