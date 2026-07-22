@@ -48,6 +48,7 @@
      Nhạt hơn hẳn --color-gray (E5E5EA) vì đây là mảng NỀN LỚN, không phải nét viền 1px.
      Đúng mốc thẩm mỹ user thích: Coinbase Wallet — "tile bo tròn nền nhạt, tối giản viền". */
   --color-surface:      #F2F2F7; /* nền tile/card (iOS systemGray6) */
+  --color-surface-2:    #D1D1D6; /* XÁM VỪA (iOS systemGray4) — nền PANEL BÀN PHÍM SỐ (user chốt 07-22g: numpad xám nhạt quá, cho xám vừa để phím trắng nổi) */
 
   /* ── FONT — 1 font duy nhất: BARLOW (mọi biến trỏ về Barlow, giữ tên cũ để không phải sửa JSX) ── */
   --font-base:      'Barlow', sans-serif;              /* NỘI DUNG: menu, mô tả, hint, thông báo, input, memo */
@@ -240,7 +241,7 @@ body {
 .btn-primary {
   background: var(--grad-brand);
   color: var(--color-white);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);   /* gradient đậm hơn nút trắng (.35 vs .25) — nền tối nuốt bóng, phải đậm hơn mới nhìn ngang bằng (user chốt 07-22g) */
 }
 
 .btn-secondary {
@@ -253,8 +254,8 @@ body {
 /* Nút TRẠNG THÁI — dùng class này, ĐỪNG tự chế inline `background: var(--color-primary)` nữa
    (nút phẳng lạc giữa các nút gradient). Màu theo hệ ngữ nghĩa: success/nhận = xanh lá,
    cảnh báo = vàng, lỗi/xoá = đỏ. Chi tiết công thức gradient xem :root --grad-*. */
-.btn-success { background: var(--grad-primary); color: var(--color-white); border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25); }
-.btn-error   { background: var(--grad-error);   color: var(--color-white); border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25); }
+.btn-success { background: var(--grad-primary); color: var(--color-white); border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35); }
+.btn-error   { background: var(--grad-error);   color: var(--color-white); border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35); }
 /* (Nút vàng warning chưa màn nào cần — khi thêm lại: nền var(--grad-warning) + BẮT BUỘC chữ ĐEN,
    chữ trắng trên vàng chỉ 2.15:1 người già không đọc được.) */
 
@@ -376,7 +377,7 @@ body {
   width: 100%;
   max-width: var(--screen-max);
   height: 45dvh;
-  background: var(--color-surface);
+  background: var(--color-surface-2);   /* xám vừa (user chốt 07-22g) */
   border-radius: 20px 20px 0 0;
   padding: 0 20px;
   display: flex;
@@ -491,7 +492,7 @@ body {
   border: none;
   background: var(--grad-brand);
   color: var(--color-white);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);   /* bóng đen dọc như .btn-primary */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);   /* gradient đậm hơn nút trắng như .btn-primary */
 }
 
 /* ── Send flow ── */

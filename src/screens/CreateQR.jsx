@@ -61,7 +61,7 @@ export default function CreateQR() {
 
       {/* Numpad panel XÁM phím TRẮNG (user chốt 07-20 đồng bộ sheet Swap + SendAmount): nửa hàng 6
           → đáy màn, full-bleed, bo góc trên; nút [Hủy][Tạo QR] .row10-dual nổi trên nền xám. */}
-      <div className="numpad-gray" style={{ gridRow: '6 / 11', margin: '5dvh -20px 0', padding: '24px 20px 0', background: 'var(--color-surface)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column' }}>
+      <div className="numpad-gray" style={{ gridRow: '6 / 11', margin: '5dvh -20px 0', padding: '24px 20px 0', background: 'var(--color-surface-2)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column' }}>
         {/* Numpad 5.5 phần (07-20c: phím thấp lại một tẹo), nút .row10-dual vẫn neo biên hàng 9-10 */}
         <div style={{ flex: 5.5, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />

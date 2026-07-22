@@ -383,7 +383,7 @@ export default function Swap() {
         {/* KHỐI 1: You pay ⇅ You receive + Fee/Rate */}
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <SideCard label="You pay" sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
-            onAmount={openPad} typing={pad ? typed : null} balLabel={null} />
+            onAmount={openPad} typing={pad ? typed : null} balLabel="Available" />
 
           {/* Nút đảo chiều — ĐÈ lên khe giữa 2 card (viền trắng như "đục lỗ"), xoay 180° mỗi lần bấm.
               margin -17/-17 trên nút 44px → chiếm 10px trong flow = KHE 10px giữa 2 card (user chốt
