@@ -286,7 +286,7 @@ export default function Swap() {
     const showZero = onAmount && !hasValue
     const [fitRef, fitSize] = useFitFontSize((showZero ? '' : amtStr) + (onAmount ? '_' : ''), { max: 52, min: 18 })
     return (
-      <div style={{ ...CARD, minWidth: 0, height: '20dvh', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+      <div style={{ ...CARD, minWidth: 0, height: '20dvh', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
         {/* Phân cấp đậm nhạt (user chốt 07-17e "quan trọng nhớ bold"): label vai trò card = medium.
             Card cao 2 HÀNG nên chữ phụ lên --fs-body 19, số to base 52 (user chốt 07-20 to cho người già) */}
         <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>{label}</span>
@@ -389,7 +389,7 @@ export default function Swap() {
               07-22b: chạm sát nhau xấu, tách ra 10px). Nút vẫn bắc cầu qua khe (đè 17px vào mỗi card). */}
           <div style={{ display: 'flex', justifyContent: 'center', margin: '-17px 0', position: 'relative', zIndex: 3 }}>
             <button onClick={swapDir} aria-label="Reverse direction"
-              style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid var(--color-white)', background: 'var(--color-info-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transform: `rotate(${flip}deg)`, transition: 'transform .3s ease' }}>
+              style={{ width: 44, height: 44, borderRadius: '50%', border: '5px solid var(--color-white)', background: 'var(--color-info-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transform: `rotate(${flip}deg)`, transition: 'transform .3s ease' }}>
               <Icon name="trade" size="var(--is-num)" color="var(--color-brand)" />
             </button>
           </div>
