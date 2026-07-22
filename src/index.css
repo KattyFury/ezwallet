@@ -233,9 +233,12 @@ body {
 
 .btn:disabled { opacity: 0.4; cursor: default; }
 
+/* Drop shadow THẲNG ĐỨNG (offset-x 0, đổ dọc xuống) cho nút GRADIENT nổi/bấm được — hợp hướng
+   gradient dọc của màu chủ đạo (user chốt 07-22c: "1 tí" shadow cho nút nổi). Bóng tô đúng màu nút. */
 .btn-primary {
   background: var(--grad-brand);
   color: var(--color-white);
+  box-shadow: 0 4px 12px rgba(11, 83, 191, 0.30);
 }
 
 .btn-secondary {
@@ -247,8 +250,8 @@ body {
 /* Nút TRẠNG THÁI — dùng class này, ĐỪNG tự chế inline `background: var(--color-primary)` nữa
    (nút phẳng lạc giữa các nút gradient). Màu theo hệ ngữ nghĩa: success/nhận = xanh lá,
    cảnh báo = vàng, lỗi/xoá = đỏ. Chi tiết công thức gradient xem :root --grad-*. */
-.btn-success { background: var(--grad-primary); color: var(--color-white); border: none; }
-.btn-error   { background: var(--grad-error);   color: var(--color-white); border: none; }
+.btn-success { background: var(--grad-primary); color: var(--color-white); border: none; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.30); }
+.btn-error   { background: var(--grad-error);   color: var(--color-white); border: none; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.30); }
 /* (Nút vàng warning chưa màn nào cần — khi thêm lại: nền var(--grad-warning) + BẮT BUỘC chữ ĐEN,
    chữ trắng trên vàng chỉ 2.15:1 người già không đọc được.) */
 
@@ -392,7 +395,7 @@ body {
 .caret {
   display: inline-block;
   margin-left: 2px;
-  color: var(--color-muted);
+  color: var(--color-content);   /* ĐEN như chữ số (user chốt 07-22c: caret xám lạc màu với text đen) */
   font-weight: var(--fw-normal);
   animation: caret-blink 1.1s step-end infinite;
 }
@@ -484,6 +487,7 @@ body {
   border: none;
   background: var(--grad-brand);
   color: var(--color-white);
+  box-shadow: 0 4px 12px rgba(11, 83, 191, 0.30);   /* bóng dọc như .btn-primary */
 }
 
 /* ── Send flow ── */

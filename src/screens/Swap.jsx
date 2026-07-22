@@ -37,7 +37,7 @@ function TokenRow({ sym, onClick }) {
       style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid var(--color-gray)', borderRadius: 999, background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'inherit', padding: '5px 12px 5px 6px' }}>
       <img src={`/tokens/${sym.toLowerCase()}.png`} alt={sym} style={{ width: 32, height: 32, borderRadius: '50%' }} />
       <span className="num" style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
-      <Icon name="down2" size="var(--is-body)" color="var(--color-muted)" />
+      <Icon name="down2" size="var(--is-body)" color="var(--color-brand)" />
     </button>
   )
 }

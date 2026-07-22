@@ -98,9 +98,9 @@ export default function SendAmount() {
         {t('Gửi tiền')}
       </div>
 
-      {/* Cụm Send-to / số tiền / note XÍCH GẦN NHAU (user chốt 07-20e: trước 3 khối rải rác giữa
-          hàng 2-5 nhìn rời rạc) — gom vào 1 flex column căn giữa vùng hàng 2-5, gap gọn 2dvh. */}
-      <div style={{ gridRow: '2 / 6', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '2dvh', minWidth: 0 }}>
+      {/* Cụm Send-to / số tiền / note — 1 flex column căn giữa vùng hàng 2-5. gap 4dvh (user chốt
+          07-22c: 2dvh quá sát/ngộp, tách ra 1 đoạn nhỏ cho thoáng — vẫn là cụm, chưa rải rạc). */}
+      <div style={{ gridRow: '2 / 6', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4dvh', minWidth: 0 }}>
         <div className="center" style={{ gap: 6 }}>
           <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)' }}>{t('Gửi cho:')}</span>
           <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>
@@ -116,7 +116,7 @@ export default function SendAmount() {
             </span>
             <button onClick={() => setShowCur(true)}
               style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', borderRadius: 10, padding: '6px 10px', background: 'var(--color-surface)', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
-              {cur}<Icon name="down2" size="var(--is-md-lg)" color="var(--color-muted)" />
+              {cur}<Icon name="down2" size="var(--is-md-lg)" color="var(--color-brand)" />
             </button>
           </div>
           {overBalance && (
