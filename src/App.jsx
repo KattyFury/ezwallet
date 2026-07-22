@@ -65,6 +65,23 @@ export default function App() {
     return () => window.removeEventListener('scroll', lock)
   }, [])
 
+  // PREFETCH lúc trình duyệt RẢNH (2026-07-22g — user: "app chưa mượt") → chuyển tab + bước PIN
+  // MƯỢT hơn. KHÔNG đổi logic: chỉ "làm nóng" cache các chunk (import() động vẫn chạy y hệt khi
+  // điều hướng thật). Các màn hay dùng nạp trước → đổi tab KHÔNG chớp trắng (Suspense fallback);
+  // Circle SDK ~1MB (chỉ cần lúc ký PIN) nạp nền → bước PIN không khựng vì tải nguội. Chạy khi
+  // trình duyệt rảnh nên KHÔNG tranh băng thông lúc mở app (không làm chậm màn đầu).
+  useEffect(() => {
+    const idle = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : cb => setTimeout(cb, 1600)
+    const cancel = window.cancelIdleCallback ? window.cancelIdleCallback.bind(window) : clearTimeout
+    const id = idle(() => {
+      import('./screens/HomeSend'); import('./screens/HomeReceive')
+      import('./screens/Swap'); import('./screens/MenuScreen')
+      import('./screens/SendAmount'); import('./screens/Contacts'); import('./screens/TxHistory')
+      if (import.meta.env.VITE_MOCK !== '1') import('@circle-fin/w3s-pw-web-sdk').catch(() => {})
+    })
+    return () => cancel(id)
+  }, [])
+
   const Screen = SCREENS[nav.screen] || SCREENS['Login']
 
   return (

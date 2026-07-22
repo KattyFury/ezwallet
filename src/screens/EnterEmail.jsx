@@ -163,7 +163,7 @@ export default function EnterEmail() {
                   // HINT CHUẨN TOÀN APP (user chốt 07-22d) = chip VIỀN XANH + CHỮ XANH + nền trắng
                   // (đồng bộ với chip gợi ý số tiền màn Swap). Bấm được.
                   textAlign: 'left', padding: '6px 12px',
-                  border: '1.5px solid var(--color-brand)', borderRadius: 10,
+                  border: '1.5px solid var(--color-brand)', borderRadius: 999,
                   background: 'var(--color-white)', cursor: 'pointer',
                   fontSize: 'var(--fs-item)', fontFamily: 'inherit', color: 'var(--color-brand)',
                   fontWeight: 'var(--fw-medium)', alignSelf: 'flex-start', maxWidth: '100%',
@@ -184,7 +184,7 @@ export default function EnterEmail() {
               <button key={d} onClick={() => applyDomain(d)}
                 style={{
                   // Chip HINT chuẩn = viền xanh + chữ xanh (đồng bộ gợi ý email ở trên + chip Swap)
-                  padding: '6px 12px', border: '1.5px solid var(--color-brand)', borderRadius: 10,
+                  padding: '6px 12px', border: '1.5px solid var(--color-brand)', borderRadius: 999,
                   background: 'var(--color-white)', cursor: 'pointer',
                   fontSize: 'var(--fs-item)', fontFamily: 'inherit', color: 'var(--color-brand)',
                   fontWeight: 'var(--fw-medium)',
