@@ -87,7 +87,8 @@ export const NOTIF_FS = 'var(--fs-item)'
 
 // Hint = MỘT thông báo dài nhiều dòng (không phải nhiều thông báo riêng), mức ưu tiên THẤP
 // NHẤT, KHÔNG nút X, không bấm được — luôn tồn tại, bị thông báo thật đẩy lên rồi mờ dần
-// (như 1 khối) khi hết chỗ hiển thị. Nền VÀNG theo đúng màu cảnh báo/hint quy định của app.
+// (như 1 khối) khi hết chỗ hiển thị. HINT CHUẨN TOÀN APP (user chốt 07-22d): nền TRẮNG + VIỀN
+// XANH brand + chữ/icon XANH (đồng bộ chip gợi ý số tiền Swap + chip sign-in) — KHÔNG còn nền vàng.
 // Icon hint.svg đứng CENTER-TRÁI cả khối (user chốt 07-17: khối 3 dòng thì icon ngang dòng 2,
 // KHÔNG dính dòng 1) → icon là flex item riêng + alignItems:center, chữ gói trong cột bên phải.
 // Format mới (user chốt 07-21): mỗi dòng là 1 CÂU HOÀN CHỈNH, từ khoá đầu câu GẠCH CHÂN + BẤM ĐƯỢC
@@ -95,8 +96,8 @@ export const NOTIF_FS = 'var(--fs-item)'
 // (không nowrap/ellipsis như thông báo thật, kẻo cắt mất nghĩa).
 function HintBlock({ lines }) {
   return (
-    <div style={{ background: 'var(--color-warning-soft)', borderRadius: 12, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: NOTIF_FS, color: 'var(--color-content)', textAlign: 'left' }}>
-      <Icon name="hint" size="var(--is-item)" color="var(--color-warning)" style={{ flexShrink: 0 }} />
+    <div style={{ background: 'var(--color-white)', border: '1.5px solid var(--color-brand)', borderRadius: 12, padding: '8px 14px', display: 'flex', alignItems: 'center', gap: 8, fontSize: NOTIF_FS, color: 'var(--color-brand)', textAlign: 'left' }}>
+      <Icon name="hint" size="var(--is-item)" color="var(--color-brand)" style={{ flexShrink: 0 }} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, minWidth: 0 }}>
         {lines.map((h, i) => (
           <div key={i} style={{ minWidth: 0, lineHeight: 1.35 }}>

@@ -412,16 +412,25 @@ export default function Swap() {
             rỗng thì hàng cao 0 → khối 2 thấp đi → space-between đẩy cả cụm trượt xuống mỗi lần hint
             hiện/tắt (bug user báo 07-21). Chừa sẵn chỗ = vị trí slider ĐỨNG YÊN, chip chỉ mờ/hiện. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1dvh', minWidth: 0 }}>
+          {/* Hàng height 40 CỐ ĐỊNH (slider không nhảy — xem note dưới): có số → chip gợi ý số chẵn;
+              CHƯA chọn số (slider 0) → text hướng dẫn (user chốt 07-22d) thay cho khoảng trống. */}
           <div style={{ height: 40, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: hints.length ? 1 : 0, transition: 'opacity .18s ease', pointerEvents: hints.length ? 'auto' : 'none', minWidth: 0 }}>
-              {hints.map(v => (
-                <button key={v} onClick={() => pickHint(v)}
-                  style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}>
-                  <span className="num" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
-                  <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-brand)' }}> {fromSym}</span>
-                </button>
-              ))}
-            </div>
+            {hints.length ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                {hints.map(v => (
+                  <button key={v} onClick={() => pickHint(v)}
+                    style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}>
+                    <span className="num" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
+                    <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-brand)' }}> {fromSym}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (!loading && !(amountNum > 0)) ? (
+              // Bấm text → mở numpad nhập số (user chốt 07-22d: "click vào hint thì bàn phím số hiện")
+              <span onClick={openPad} style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0, cursor: 'pointer' }}>
+                Slide to choose an amount, or tap to enter one
+              </span>
+            ) : null}
           </div>
           <div style={{ minWidth: 0 }}>
             <PctSlider pct={Math.round(pct)} onChange={onPct} disabled={!hasBal || loading} />

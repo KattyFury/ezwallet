@@ -160,13 +160,13 @@ export default function EnterEmail() {
             {suggestions.map(s => (
               <button key={s} onClick={() => { setEmail(s); setError('') }}
                 style={{
-                  // Trắng + viền xám = tín hiệu BẤM ĐƯỢC (user chốt 07-21; nền xám cũ trông như lõm,
-                  // không ai biết bấm được). Bỏ opacity 0.8 cho chữ rõ hẳn.
+                  // HINT CHUẨN TOÀN APP (user chốt 07-22d) = chip VIỀN XANH + CHỮ XANH + nền trắng
+                  // (đồng bộ với chip gợi ý số tiền màn Swap). Bấm được.
                   textAlign: 'left', padding: '6px 12px',
-                  border: '1.5px solid var(--color-gray)', borderRadius: 10,
+                  border: '1.5px solid var(--color-brand)', borderRadius: 10,
                   background: 'var(--color-white)', cursor: 'pointer',
-                  fontSize: 'var(--fs-md-lg)', fontFamily: 'inherit', color: 'var(--color-content)',
-                  alignSelf: 'flex-start', maxWidth: '100%',
+                  fontSize: 'var(--fs-md-lg)', fontFamily: 'inherit', color: 'var(--color-brand)',
+                  fontWeight: 'var(--fw-medium)', alignSelf: 'flex-start', maxWidth: '100%',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                 {s}
@@ -183,10 +183,11 @@ export default function EnterEmail() {
             {DOMAINS.map(d => (
               <button key={d} onClick={() => applyDomain(d)}
                 style={{
-                  // Trắng + viền xám = bấm được (đồng bộ với gợi ý email ở trên)
-                  padding: '6px 12px', border: '1.5px solid var(--color-gray)', borderRadius: 10,
+                  // Chip HINT chuẩn = viền xanh + chữ xanh (đồng bộ gợi ý email ở trên + chip Swap)
+                  padding: '6px 12px', border: '1.5px solid var(--color-brand)', borderRadius: 10,
                   background: 'var(--color-white)', cursor: 'pointer',
-                  fontSize: 'var(--fs-md-lg)', fontFamily: 'inherit', color: 'var(--color-content)',
+                  fontSize: 'var(--fs-md-lg)', fontFamily: 'inherit', color: 'var(--color-brand)',
+                  fontWeight: 'var(--fw-medium)',
                 }}>
                 {d}
               </button>

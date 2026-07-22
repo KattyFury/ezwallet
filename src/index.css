@@ -17,6 +17,7 @@
      → #636366 = 6.0:1: đạt AA thoải mái mà mắt vẫn đọc ra là XÁM. Đây là 1 nguồn duy nhất cho mọi
      text phụ — đừng hardcode màu xám rời rạc nữa (bug 07-16: slogan Login lạc hệ #48484A). */
   --color-muted:      #636366;   /* text phụ = XÁM ĐẬM — DÙNG CHO CHỮ */
+  --color-muted-2:    #8E8E93;   /* XÁM TRUNG BÌNH (iOS systemGray) — nav item CHƯA CHỌN (user chốt 07-22d: xám đậm nhìn dull) */
   --color-faint:      #E5E5EA;   /* icon ẩn / placeholder (xám nhạt) — chevron right2 giờ dùng --color-brand */
 
   /* ── MÀU CHỨC NĂNG ── */
@@ -233,27 +234,27 @@ body {
 
 .btn:disabled { opacity: 0.4; cursor: default; }
 
-/* Drop shadow THẲNG ĐỨNG (offset-x 0, đổ dọc xuống) cho nút NỔI/bấm được — hợp hướng gradient dọc.
-   User chốt 07-22d: shadow VỪA nhưng KHÔNG TỎA (blur nhỏ 6px, không diffuse) + BẬT rõ (alpha .42).
-   Nút gradient bóng tô đúng màu nút; nút TRẮNG bóng đen nhạt (xem .btn-secondary/.action-card). */
+/* Drop shadow THẲNG ĐỨNG (offset-x 0, đổ dọc xuống) cho MỌI nút NỔI/bấm được. User chốt 07-22d:
+   shadow VỪA nhưng KHÔNG TỎA (blur nhỏ 6px) + bóng ĐEN đồng nhất `rgba(0,0,0,.25)` cho mọi nút
+   (KHÔNG tô theo màu nút nữa). Áp cho .btn-primary/success/error/secondary + .action-card(.primary). */
 .btn-primary {
   background: var(--grad-brand);
   color: var(--color-white);
-  box-shadow: 0 4px 6px rgba(11, 83, 191, 0.42);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);
 }
 
 .btn-secondary {
   background: var(--color-white);
   color: var(--color-black);
   border: 1.5px solid var(--color-gray);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.16);   /* nút trắng cũng nổi (user chốt 07-22d) — bóng đen nhạt, không tỏa */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);   /* nút trắng cũng nổi (user chốt 07-22d) — bóng đen, không tỏa */
 }
 
 /* Nút TRẠNG THÁI — dùng class này, ĐỪNG tự chế inline `background: var(--color-primary)` nữa
    (nút phẳng lạc giữa các nút gradient). Màu theo hệ ngữ nghĩa: success/nhận = xanh lá,
    cảnh báo = vàng, lỗi/xoá = đỏ. Chi tiết công thức gradient xem :root --grad-*. */
-.btn-success { background: var(--grad-primary); color: var(--color-white); border: none; box-shadow: 0 4px 6px rgba(22, 163, 74, 0.42); }
-.btn-error   { background: var(--grad-error);   color: var(--color-white); border: none; box-shadow: 0 4px 6px rgba(220, 38, 38, 0.42); }
+.btn-success { background: var(--grad-primary); color: var(--color-white); border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25); }
+.btn-error   { background: var(--grad-error);   color: var(--color-white); border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25); }
 /* (Nút vàng warning chưa màn nào cần — khi thêm lại: nền var(--grad-warning) + BẮT BUỘC chữ ĐEN,
    chữ trắng trên vàng chỉ 2.15:1 người già không đọc được.) */
 
@@ -426,7 +427,7 @@ body {
   font-family: var(--font-condensed);
   font-size: var(--fs-body);   /* "font vừa" 19 (user chốt 07-17e — 21 nhìn thô, hạ 1 bậc cho thoáng) */
   font-weight: var(--fw-medium);
-  color: var(--color-muted);
+  color: var(--color-muted-2);   /* CHƯA CHỌN = xám trung bình (user chốt 07-22d) */
   background: none;
   border: none;
   cursor: pointer;
@@ -483,14 +484,14 @@ body {
   font-weight: var(--fw-medium);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.16);   /* nút trắng nổi (user chốt 07-22d), không tỏa */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);   /* nút trắng nổi (user chốt 07-22d), bóng đen không tỏa */
 }
 
 .action-card.primary {
   border: none;
   background: var(--grad-brand);
   color: var(--color-white);
-  box-shadow: 0 4px 6px rgba(11, 83, 191, 0.42);   /* bóng dọc như .btn-primary */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);   /* bóng đen dọc như .btn-primary */
 }
 
 /* ── Send flow ── */
