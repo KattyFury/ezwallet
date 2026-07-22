@@ -34,7 +34,7 @@ function TokenRow({ sym, onClick }) {
   // Chip to lên cho người già (user chốt 07-20 "cho các yếu tố to lên"): logo 32, chữ 19 (--fs-body)
   return (
     <button onClick={onClick}
-      style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid var(--color-gray)', borderRadius: 999, background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'inherit', padding: '5px 12px 5px 6px' }}>
+      style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid var(--color-gray)', borderRadius: 999, background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'inherit', padding: '5px 12px 5px 6px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)' }}>
       <img src={`/tokens/${sym.toLowerCase()}.png`} alt={sym} style={{ width: 32, height: 32, borderRadius: '50%' }} />
       <span className="num" style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
       <Icon name="down2" size="var(--is-body)" color="var(--color-brand)" />
@@ -271,7 +271,7 @@ export default function Swap() {
   // ("1000000") đã tràn thành "100000…" mà không co xuống — giờ đo canvas nên co ĐÚNG luôn vừa khít).
   // onAmount (chỉ card You pay): bấm vào VÙNG SỐ (cả khoảng trống bên phải chip) → mở numpad.
   // typing: chuỗi đang gõ trên numpad (null = numpad đóng).
-  function SideCard({ label, sym, onPick, amount, disp, onAmount, typing }) {
+  function SideCard({ label, sym, onPick, amount, disp, onAmount, typing, balLabel }) {
     const known = amount !== null
     const balKnown = balances[sym] !== undefined
     const isTyping = typing !== null && typing !== undefined
@@ -286,7 +286,7 @@ export default function Swap() {
     const showZero = onAmount && !hasValue
     const [fitRef, fitSize] = useFitFontSize((showZero ? '' : amtStr) + (onAmount ? '_' : ''), { max: 52, min: 18 })
     return (
-      <div style={{ ...CARD, minWidth: 0, height: '20dvh', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
+      <div style={{ ...CARD, minWidth: 0, height: 'calc(20dvh - 5px)', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
         {/* Phân cấp đậm nhạt (user chốt 07-17e "quan trọng nhớ bold"): label vai trò card = medium.
             Card cao 2 HÀNG nên chữ phụ lên --fs-body 19, số to base 52 (user chốt 07-20 to cho người già) */}
         <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>{label}</span>
@@ -316,10 +316,11 @@ export default function Swap() {
             07-21: để 2 cái bằng nhau làm mất phân cấp nặng–nhẹ. Available và ~$ đồng bộ cùng cỡ. */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
           <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {/* Số dư chưa đọc được → "…", KHÔNG vẽ 0 (bug 07-17) */}
-            Available: <span className="num" style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-medium)' }}>
+            {/* balLabel: You receive = "Balance", You pay = null (ẩn — user chốt 07-22f: bỏ dòng
+                Available bên You pay). Số dư chưa đọc được → "…", KHÔNG vẽ 0 (bug 07-17). */}
+            {balLabel ? <>{balLabel}: <span className="num" style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-medium)' }}>
               {balKnown ? `${spendableOf(sym, balances[sym]).toFixed(decimalsFor(sym))} ${sym}` : '…'}
-            </span>
+            </span></> : null}
           </span>
           <span className="num" style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>{disp !== null ? `~ ${fmtDisp(disp)}` : ''}</span>
         </div>
@@ -382,7 +383,7 @@ export default function Swap() {
         {/* KHỐI 1: You pay ⇅ You receive + Fee/Rate */}
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <SideCard label="You pay" sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
-            onAmount={openPad} typing={pad ? typed : null} />
+            onAmount={openPad} typing={pad ? typed : null} balLabel={null} />
 
           {/* Nút đảo chiều — ĐÈ lên khe giữa 2 card (viền trắng như "đục lỗ"), xoay 180° mỗi lần bấm.
               margin -17/-17 trên nút 44px → chiếm 10px trong flow = KHE 10px giữa 2 card (user chốt
@@ -394,7 +395,7 @@ export default function Swap() {
             </button>
           </div>
 
-          <SideCard label="You receive" sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} />
+          <SideCard label="You receive" sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} balLabel="Balance" />
 
           {/* Fee + Rate — 1 dòng NHỎ fs-item 17: Rate căn TRÁI · Fee căn PHẢI, số liệu ĐEN cho bật */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 10, padding: '0 16px' }}>
@@ -430,7 +431,7 @@ export default function Swap() {
               // nhỏ) — bấm mở numpad nhập số.
               <button onClick={openPad}
                 style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 16px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-brand)', whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
-                Slide to adjust or tap to enter
+                Slide to adjust or tap here to enter
               </button>
             ) : null}
           </div>

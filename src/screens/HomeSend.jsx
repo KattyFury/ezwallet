@@ -37,9 +37,10 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
         // Nút NẰM TRONG box xám (vùng token 07-17f) → TRẮNG + VIỀN XÁM để nổi trên nền surface
         // (luật user 07-17f: "button nằm trong vùng box xám thì thành trắng viền xám", giống chip
-        // token màn Swap). Chữ GIỮ muted — user dặn "vẫn dùng màu xám đen chứ không cho màu đen".
+        // token màn Swap). Chữ ĐEN + drop shadow (user chốt 07-22f: nút này phải nổi/bấm được rõ).
         padding: '0 22px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
-        color: 'var(--color-muted)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
+        color: 'var(--color-content)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
         fontWeight: 'var(--fw-medium)', cursor: 'pointer',
         WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
       }}
