@@ -384,11 +384,10 @@ export default function Swap() {
           <SideCard label="You pay" sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
             onAmount={openPad} typing={pad ? typed : null} />
 
-          {/* Nút đảo chiều — ĐÈ lên ranh giới 2 card (viền trắng như "đục lỗ"), xoay 180° mỗi lần bấm.
-              margin -22/-22 trên nút 44px → chiếm 0px trong flow: 2 card (mỗi cái 20dvh) CHẠM nhau,
-              tổng đúng 40dvh = hàng 2-5 (user chốt 07-22). Nút nằm gọn trên đường ranh, không đẩy
-              You receive lấn xuống hàng 6. */}
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '-22px 0', position: 'relative', zIndex: 3 }}>
+          {/* Nút đảo chiều — ĐÈ lên khe giữa 2 card (viền trắng như "đục lỗ"), xoay 180° mỗi lần bấm.
+              margin -17/-17 trên nút 44px → chiếm 10px trong flow = KHE 10px giữa 2 card (user chốt
+              07-22b: chạm sát nhau xấu, tách ra 10px). Nút vẫn bắc cầu qua khe (đè 17px vào mỗi card). */}
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '-17px 0', position: 'relative', zIndex: 3 }}>
             <button onClick={swapDir} aria-label="Reverse direction"
               style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid var(--color-white)', background: 'var(--color-info-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transform: `rotate(${flip}deg)`, transition: 'transform .3s ease' }}>
               <Icon name="trade" size="var(--is-num)" color="var(--color-brand)" />

@@ -124,7 +124,7 @@ body {
    ≤430px nên không bao giờ chạm ngưỡng 481px này. `.screen` đã có nền trắng riêng nên khung app
    vẫn trắng, không bị xanh lây. */
 @media (min-width: 481px) {
-  body { background: var(--color-brand); }
+  body { background: #0088FF; }   /* xanh sáng (đầu sáng gradient brand) — user chốt 07-22b: #0B53BF đậm hơi đau mắt */
 }
 
 /* ── Layout: Grid 10 hàng ── */
