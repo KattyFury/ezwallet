@@ -1,195 +1,213 @@
 # EZwallet Pitch Deck — Design Spec
 
 **For:** Claude Design (design handoff)
-**Companion doc:** `ezwallet-deck-content-spec.md` — that file defines the COPY/WHAT on each of the 9 pages. THIS file defines the VISUAL SYSTEM: exact colors, exact fonts, layout system, component patterns, and per-slide art direction.
+**Companion:** `ezwallet-deck-content-spec.md` defines the COPY (what each of the 9 pages says). THIS file defines the DESIGN: the visual system, the art direction, and the standard of excellence to hit.
 
-**Division of labor (same as content spec):** the content is locked — do not add, remove, or reword claims/features. Exact spacing, composition, and micro-layout are your call. This spec locks the **brand system** (color + type + motif) so every slide reads as one product; within that system you have creative latitude on layout.
-
-**Source of truth:** all colors/fonts below are the REAL EZwallet product design tokens (from `src/index.css`), so the deck matches the live app at `ezwallet.pages.dev`. Use these values verbatim — do not substitute approximate colors or a different font.
+**How to read this:** Sections 0–1 are the non-negotiable brand system (exact color + type). Sections 2–6 are the craft. Section 7 is per-slide art direction. Sections 8–10 are the guardrails and the bar for "done." Layout and composition are yours to invent within this system.
 
 ---
 
-## 0. Deliverable
+## 0. Design North Star
 
-- **9 slides**, 16:9 landscape (design at 1920×1080).
-- One consistent master template across all 9 (shared margins, header position, footer, page number).
-- Export: presentation-ready (PDF + editable source). Keep text as live text, not rasterized, wherever possible.
+> **The deck should feel like the product: calm, confident, and effortless — proof, not hype.**
+
+EZwallet's entire thesis is *"simple enough for your grandma."* The deck must earn that claim visually. If a slide feels busy, clever, or crowded, it's wrong. The most impressive thing about this deck should be how *quiet* and *sure of itself* it is. Big type, few words, deep whitespace, one idea per slide. Think Apple keynote restraint on a Coinbase-Wallet palette.
+
+Every slide answers one question in one breath. If a viewer has to hunt for the point, redesign.
 
 ---
 
-## 1. Brand Foundations
+## 1. Design Principles (apply to every slide)
 
-### 1.1 Color palette — use these exact hex values
+1. **One idea per slide.** A single headline thought, supported — never competing bullet clusters.
+2. **Big, light, generous.** Oversized type, Light-weight hero numbers, and whitespace as a design element, not leftover space.
+3. **Two moods, hard cut.** Blue-gradient slides are emotional beats (open, problem, close); white slides are calm product truth. Never blend them.
+4. **Color is meaning, not decoration.** Blue = brand/action, green = receive/success, orange = the *one* thing to look at. Nothing is colored "to look nice."
+5. **Honesty is the aesthetic.** Restraint reads as credibility. No fake dashboards, no invented metrics, no stock-photo hype. Real screenshots or nothing.
+
+---
+
+## 2. Brand Foundations — exact values, use verbatim
+
+All tokens are the REAL product design tokens (`src/index.css`), so the deck and the live app at `ezwallet.pages.dev` read as one brand. Do not approximate.
+
+### 2.1 Color palette
 
 **Primary / brand**
 | Token | Hex | Use |
 |---|---|---|
-| Brand blue | `#0B53BF` | Primary brand color: headers on light slides, key UI, solid brand fills, glyph circles |
-| Brand blue (light stop) | `#0088FF` | Top of the brand gradient; bright brand accent |
-| Brand soft | `#E2EAF7` | Pale brand tint — card backgrounds / chips on light slides |
+| Brand blue | `#0B53BF` | Headers on light slides, key UI, solid brand fills, glyph circles |
+| Brand blue (bright) | `#0088FF` | Top of the gradient; bright brand accent |
+| Brand soft | `#E2EAF7` | Pale brand tint for cards/chips on light slides |
 
-**Accent (use sparingly — see 1.2 rules)**
+**Accent — the single spotlight color (use once per slide, max)**
 | Token | Hex | Use |
 |---|---|---|
-| Accent orange | `#FF5F1F` | THE single emphasis color: one hero number, one keyword underline, active glyph, or CTA highlight per slide. Never body text. |
+| Accent orange | `#FF5F1F` | The one thing the eye should land on first: a hero number, one keyword, an underline, the CTA. **Never** body/caption text. |
 
-**Semantic (match the product's meaning — reuse for the Send/Receive story)**
-| Token | Hex | Soft tint | Meaning in product |
+**Semantic — carry the product's meaning**
+| Token | Hex | Soft tint | Meaning |
 |---|---|---|---|
-| Green | `#16A34A` | `#DCFCE7` | Receive / positive / success |
-| Red | `#DC2626` | `#FEE2E2` | Error / loss (use rarely in deck) |
-| Yellow | `#F59E0B` | `#FEF3C7` | Warning/attention (rare in deck; if used, text on it must be BLACK) |
+| Green | `#16A34A` | `#DCFCE7` | Receive / success / positive |
+| Red | `#DC2626` | `#FEE2E2` | Error / loss (rare in deck) |
+| Yellow | `#F59E0B` | `#FEF3C7` | Warning (rare; text on it is always BLACK) |
 
 **Neutrals**
 | Token | Hex | Use |
 |---|---|---|
-| Black / content | `#000000` | Primary text on light backgrounds |
-| Muted | `#636366` | Secondary text on light backgrounds (AA-compliant, 6:1) |
-| Muted-2 | `#8E8E93` | Tertiary / captions / de-emphasized labels |
-| Divider gray | `#E5E5EA` | Hairline dividers, borders — never as a text color, never as a large fill |
-| Surface | `#F2F2F7` | Neutral card/tile background on light slides |
-| White | `#FFFFFF` | Light-slide background; all text on gradient/dark slides |
+| Black | `#000000` | Primary text on light slides |
+| Muted | `#636366` | Secondary text on light (AA, 6:1) |
+| Muted-2 | `#8E8E93` | Captions, footer, de-emphasized labels |
+| Divider | `#E5E5EA` | Hairlines only — never text, never a large fill |
+| Surface | `#F2F2F7` | Neutral card/tile fill on light slides |
+| White | `#FFFFFF` | Light-slide background; all text on gradient slides |
 
-**Contrast rules (this product's ethos is accessibility — honor it):**
-- Body text must hit **WCAG AA (4.5:1)**. On white use `#000000` or `#636366`. On the blue gradient use `#FFFFFF`.
-- **Orange `#FF5F1F` fails AA for small text on white (~2.9:1).** Only use orange for LARGE display type (≥ ~40px), numerals, underlines, or graphical accents — never paragraph/caption text.
-- Never put white text on the yellow `#F59E0B`; if yellow appears, text on it is black.
+**Contrast (accessibility is the product's thesis — the deck must pass it):**
+- Body text hits **WCAG AA 4.5:1**: `#000000`/`#636366` on white; `#FFFFFF` on the gradient.
+- **Orange fails AA for small text on white (~2.9:1)** — use it only for large display type (≥ ~40px), numerals, underlines, or graphical accents.
+- Never white text on yellow.
 
-### 1.2 Backgrounds — two slide modes
+### 2.2 Backgrounds — two modes, hard cut
 
-Design each slide in ONE of two modes; don't mix backgrounds mid-slide.
+**A. Gradient mode — emotional beats.**
+Fill: linear gradient **180° top→bottom, `#0088FF` 0% → `#0B53BF` 100%** (both stops fully saturated; %s are positions). All text `#FFFFFF`; secondary text white 70–80%. Orange sings here — this is where the one accent lives. **Use for P1, P2, P9.**
 
-**A. Gradient mode (key/emotional slides).**
-- Fill: linear gradient **180° (top → bottom), `#0088FF` at 0% → `#0B53BF` at 100%`** (both stops fully saturated; 0%/100% are positions, not opacities).
-- All text = `#FFFFFF`. Secondary text = white at ~70–80% opacity.
-- Accent orange `#FF5F1F` pops beautifully on this blue — this is the best place for the one orange accent.
-- Use for: **P1 Title, P2 The Problem, P9 What's Next / CTA.** (P2 as a darker, heavier "pain" moment.)
+**B. Light mode — product truth.**
+Background `#FFFFFF`. Text `#000000` + `#636366`. Cards = `#F2F2F7` (or `#E2EAF7` for brand-flavored) with rounded corners and **no hard 1px borders** — separate blocks with soft fills, not outlines. Header/keyword emphasis in brand blue; one orange accent allowed. **Use for P3–P8.**
 
-**B. Light mode (content slides).**
-- Background: `#FFFFFF`.
-- Text: `#000000` (primary) + `#636366` (secondary).
-- Cards/tiles: `#F2F2F7` surface, or `#E2EAF7` brand-soft for brand-flavored cards — rounded corners, NO hard 1px gray borders on white (borders read as flat; use soft fills to separate).
-- Header/keyword emphasis: brand blue `#0B53BF`; one orange accent allowed per slide for the single most important word/number.
-- Use for: **P3, P4, P5, P6, P7, P8.**
+> **Rhythm:** gradient (P1) → gradient (P2) → light (P3–P8) → gradient (P9). Two gradient bookends plus the dark Problem beat frame the bright product middle. The mode switch itself tells the story: tension (blue) → relief (white) → invitation (blue).
 
-> Rhythm across the deck: gradient (P1) → gradient (P2) → light (P3–P8) → gradient (P9). The two gradient bookends + the dark Problem slide frame the light "product" middle.
+### 2.3 Typography — Barlow only
 
-### 1.3 Typography — Barlow only
+**One typeface, Barlow, everywhere.** Weights 300 / 400 / 500 / 600 — **never 700+** (Barlow bold is heavy; 600 is the ceiling).
 
-**Font family: Barlow for everything (headers + body).** No second typeface. Load weights 300, 400, 500, 600.
+| Weight | Role |
+|---|---|
+| **300 Light** | Large hero numerals ONLY (stat callouts, big numbers). Never below ~40px. |
+| **400 Regular** | Body, descriptions, taglines |
+| **500 Medium** | Labels, card titles, buttons, list items |
+| **600 SemiBold** | Slide titles, section headers, emphasis |
 
-**Weight discipline (from the product — keep it):**
-- **300 Light** → large HERO numerals only (stat callouts, big balance-style numbers). Light at large size = elegant; never use Light below ~40px.
-- **400 Regular** → body copy, descriptions.
-- **500 Medium** → labels, card titles, buttons, list items, important values.
-- **600 SemiBold** → slide titles (H1), section headers, active/emphasis.
-- **Never 700+** (Barlow bold is heavy/ugly — 600 is the ceiling).
-
-**Deck type scale (16:9 @1920×1080 — guidance, adjust within reason):**
-| Role | Barlow weight | Size (px) |
+**Deck type scale (16:9 @1920×1080 — guidance):**
+| Role | Weight | Size |
 |---|---|---|
 | Slide title (H1) | 600 | 72–88 |
 | Section subhead | 400 | 28–34 |
 | Hero number / big stat | 300 | 120–170 |
 | Card / feature title | 600 | 26–32 |
-| Body / card description | 400 | 20–24 |
+| Body / description | 400 | 20–24 |
 | Label / eyebrow / caption | 500 | 16–20 |
 | Footer / page number | 400 | 14–16 |
-| Glyph inside circle | 600 | scale to circle |
 
-- Tracking: default/normal. Titles may go slightly tight (−1 to −2%). Body stays normal.
-- Line-height: titles ~1.05–1.15; body ~1.35–1.5.
+Tracking normal (titles may go −1 to −2%). Line-height ~1.05–1.15 titles, ~1.35–1.5 body.
 
-### 1.4 Iconography motif — colored circle + glyph
+### 2.4 Iconography motif — colored circle + glyph
 
-Keep the established motif: **a solid colored circle containing a short 2–3 character glyph/label**, Barlow 600, glyph in white.
+A solid colored circle holding a short glyph, Barlow 600, glyph in white.
+- Default fill brand blue `#0B53BF` (or the gradient for richness).
+- **Echo the product's semantics:** Send → blue (up), Receive → green (down), Swap → blue (⇅), Contacts → blue.
+- Reserve orange for at most ONE circle per slide — the first thing to notice.
+- Flat color + white glyph; if depth, a tight vertical drop shadow (dark, not diffuse) matching the app's buttons.
+- Consistent stroke weight and size rhythm across all 9 slides.
 
-- Default circle fill = brand blue `#0B53BF` (or the `#0088FF→#0B53BF` gradient for a richer look).
-- **Reuse product semantics** where the content maps to them, so the deck echoes the app:
-  - Send → brand blue, up motif
-  - Receive → green `#16A34A`, down motif
-  - Swap → brand blue, swap/⇅ motif
-  - Contacts → brand blue
-- Reserve orange `#FF5F1F` for at most ONE highlighted circle per slide (the item you want the eye to land on first).
-- Circles are flat color + white glyph; if you add depth, use a subtle vertical drop shadow (dark, tight, not diffuse) consistent with the app's button shadows.
-- Keep glyph set consistent in stroke weight and size rhythm across all slides.
+### 2.5 Logo & product imagery
 
-### 1.5 Logo & product imagery
-
-- Use the real **EZwallet logo** (`design/logo.svg`, wordmark, viewBox 1160×380) on P1 and in the footer/CTA. On gradient slides use the white/knockout version; on light slides use the full-color/dark version.
-- **Product screenshots (P4 especially):** use REAL screenshots/GIFs from the live app once available (placeholders/icons until then, per content spec). The app UI is Barlow + brand blue on white — screenshots will already be on-brand. Frame them in a simple rounded device/card; do not recolor or restyle the UI.
+- Real **EZwallet logo** (`design/logo.svg`, wordmark) on P1 and footer/CTA — white/knockout on gradient, full-color on light.
+- **Real app screenshots/GIFs** for P4 (and optionally P3) once available; icons are placeholders until then. The app is already Barlow + brand-blue on white, so screenshots are on-brand — frame in a simple rounded device/card, never recolor.
 
 ---
 
-## 2. Global Layout System
+## 3. Copy & Language — READ THIS
 
-- **Consistent master:** same outer margin on every slide (suggest ~96px), same title baseline position, same footer zone.
-- **Title pattern:** H1 top-left (or top-center on P1/P9), optionally with a short orange underline or a small brand-blue eyebrow label above it. Keep the SAME treatment on all 9.
-- **Footer (every content slide):** small, muted — e.g. `EZwallet` wordmark left, page number right, in `#8E8E93` (light slides) or white-70% (gradient slides). Optional persistent micro-badge "Arc Testnet" (see guardrails).
-- **Multi-card slides (P3, P4, P5, P6):** align cards to one grid; equal card sizes; consistent internal padding; consistent gap. A 2×2 grid suits the 4-item slides; P6 (5 items) can be a row/stack — your call, but keep card style identical across slides.
-- **Whitespace:** generous. This is an accessibility-first product; the deck should feel calm and uncluttered, not dense. Coinbase-Wallet-level breathing room is the aesthetic target.
+**The app and this demo are in ENGLISH. Every visible string in the deck is English** — headers, labels, and especially any *example* or *mockup* text.
 
----
-
-## 3. Component Patterns (define once, reuse everywhere)
-
-- **Feature/flow card (P3, P4, P5):** rounded rectangle, `#F2F2F7` or `#E2EAF7` fill, no hard border. Top: glyph circle. Then Barlow 600 title. Then Barlow 400 description in `#636366`. Uniform size across the slide.
-- **Pain-point item (P2, on gradient):** glyph circle (consider muted/neutral or red-tinted for "pain"), white 600 title, white-80% one-liner. Three in a row or stack.
-- **Stat callout (P7):** huge Barlow **300** number (the "100%", "4/4", "1") — this is where the orange accent shines (make ONE of the three orange, or all three brand-blue with orange reserved for the single most impressive). Small 500 label beneath in muted/white.
-- **"What makes it different" row (P6):** compact title + one-liner per item; a small brand-blue glyph or check per item; keep it scannable.
-- **Links / CTA:** primary CTA = pill button, brand gradient fill, white 500 text, tight vertical drop shadow (matches the app's real buttons). Secondary links = plain text, brand blue on light / white on gradient, with the URL shown verbatim.
-- **Badge (track / status):** small rounded chip, brand-soft `#E2EAF7` fill + brand-blue text on light, or white-outline on gradient.
+- **On-chain message example (P6 "Messages on-chain"):** show it as **English**, e.g. **"Mommy, I sent you money"** (or "Happy birthday, Grandpa 💙"). Do **not** print a Vietnamese phrase on the slide. The *concept* — attaching a warm personal note to a transfer, the way people write a memo on a bank transfer — stays; the shown text is English. (This overrides the Vietnamese example string in the content doc, which was only a placeholder for the idea.)
+- Any placeholder amounts, names, or notes in a mockup are English and realistic (e.g. contact "Grandma", note "Mommy, I sent you money", amount "$20.00").
+- Keep microcopy tight and warm, matching the product's voice: plain, kind, no jargon.
 
 ---
 
-## 4. Accessibility (this is the product's whole thesis — the deck must embody it)
+## 4. Global Layout System
+
+- **One master template.** Same outer margin every slide (~96px), same title baseline, same footer zone. Consistency is what makes 9 slides feel like one deck.
+- **Title pattern.** H1 top-left (top-center on P1/P9), optionally a small brand-blue eyebrow above or a short orange underline below — same treatment on all 9.
+- **Footer (content slides).** Small and muted: `EZwallet` wordmark left, page number right, in `#8E8E93` (light) / white-70% (gradient). Optional persistent **"Arc Testnet"** micro-badge.
+- **Multi-card slides (P3–P6).** One grid; equal card sizes; identical padding and gaps; identical card style across every slide. 2×2 suits the four-item slides.
+- **Whitespace is the signature.** Calm, uncluttered, Coinbase-Wallet breathing room. When in doubt, remove an element and enlarge the rest.
+
+---
+
+## 5. Component Patterns (define once, reuse everywhere)
+
+- **Feature / flow card:** rounded rect, `#F2F2F7` or `#E2EAF7` fill, no border. Glyph circle → Barlow 600 title → Barlow 400 description in `#636366`. Uniform across the slide.
+- **Pain-point item (P2, gradient):** glyph circle (neutral or red-tinted), white 600 title, white-80% one-liner.
+- **Stat callout (P7):** huge Barlow **300** number — the visual peak of the deck. One of the three in orange (the most impressive), the rest brand blue; small 500 label beneath.
+- **Differentiator row (P6):** compact title + one-liner, small brand-blue glyph/check, scannable.
+- **CTA:** pill, brand-gradient fill, white 500 text, tight vertical drop shadow (like the real app buttons). Secondary links = plain text (brand blue on light / white on gradient) with the URL shown verbatim.
+- **Badge:** small rounded chip, brand-soft fill + brand-blue text (light) or white outline (gradient).
+
+---
+
+## 6. Motion (only if the deck is presented as a build/animated file)
+
+Keep it invisible-good: content **fades and rises ~12px** on entrance, 200–300ms, gentle ease-out; stagger cards ~60ms. The ⇅ swap glyph may do a single 180° flip on the Swap beat. No spins, bounces, or flashy transitions — motion should feel like the product's, calm and purposeful. If static, ignore this section.
+
+---
+
+## 7. Per-Slide Art Direction
+
+Content is fixed by the content spec; below is visual intent + a rough composition sketch.
+
+**P1 — Title · GRADIENT.** The hero. Centered EZwallet logo (white), tagline *"A stablecoin wallet simple enough for your grandma to use."* in Barlow 400. Small badge "DeFi Track — Build on Arc, 4-Week Hackathon." Credit line small at the bottom. One orange accent (a dot, or the tagline's key word). Vast space around the logo — confidence through emptiness.
+
+**P2 — The Problem · GRADIENT (heaviest slide).** "The Problem" + subhead. Three pain points (12-Word Seed Phrase / Long 0x Addresses / Gas Tokens & Fees) as glyph-circle + title + one-liner, evenly spaced. The bottom callout ("Most people abandon wallet setup at step one." / "…never get past account creation.") sits apart and slightly larger — the emotional gut-punch. This is the darkest, tensest beat.
+
+**P3 — Meet EZwallet · LIGHT (the exhale).** "Meet EZwallet" in brand blue, subhead *"could my mom use this?"*. 2×2 grid of the four feature cards (Email + PIN / Gas in USDC / Familiar Amounts / Accessible by Design), each a glyph circle + title + one-liner. Bright, warm, immediate relief after P2.
+
+**P4 — Core Flows · LIGHT (the proof).** Header + subhead. Four flow cards (Send / Receive / Swap / Contacts) with product-semantic icon colors (Send blue, Receive green, Swap blue, Contacts blue). **Reserve a large, clean area for a real device-framed screenshot or GIF** — this is the "it actually works" slide; screenshots beat icons the moment they exist. If showing a Send mockup, the note reads "Mommy, I sent you money."
+
+**P5 — Built on Arc + Circle · LIGHT.** Header + subhead ("not a wrapper"). Four stack items (Circle User-Controlled Wallets / Arc / Stablecoin Kit + LiFi / Cloudflare). Small official logos if available, else glyph circles. Clean and technical without feeling dense — communicate "real end-to-end integration," not a logo salad.
+
+**P6 — What Makes It Different · LIGHT.** Five title + one-liner rows, scannable. Spotlight the two strongest — **"Swap without typing"** and **"Messages on-chain"** — with the one orange accent. For "Messages on-chain," if you show the message, it's English: **"Mommy, I sent you money."**
+
+**P7 — Where We Are · LIGHT (the peak).** "Where We Are." Three giant Barlow-300 stats (100% / 4/4 / 1) — the biggest type in the whole deck. Orange on the single most impressive stat. Live-demo + source links beneath, URLs verbatim. This slide should feel like a mic-drop of quiet facts.
+
+**P8 — Builder · LIGHT.** "Builder." Hieu Nguyen (0xhieu), Hanoi. Three credibility facts as a clean list; optional avatar in a brand-blue ring. Human, understated, real.
+
+**P9 — What's Next / CTA · GRADIENT (the close, mirrors P1).** "What's Next." Roadmap items (Mainnet launch · iOS & Android app · More languages in-app) clearly marked FUTURE — no dates, not "done." Big CTA **"Try EZwallet now → ezwallet.pages.dev"** as a gradient/orange pill. Secondary links (github · x · telegram) verbatim. Warm, open, inviting — the bookend to P1.
+
+---
+
+## 8. Accessibility (embody the thesis)
 
 - Large text, high contrast, few elements per slide.
-- Every text/background pair meets AA (see 1.1). Verify orange and yellow especially.
-- Don't rely on color alone to carry meaning (pair with glyph/label).
+- Every text/background pair meets AA (see 2.1) — verify orange and yellow.
+- Never rely on color alone; pair with glyph/label.
 
 ---
 
-## 5. Per-Slide Art Direction
+## 9. Hard Guardrails (never violate)
 
-Content is fixed by the content spec; below is only the visual intent.
-
-**P1 — Title · GRADIENT.** Hero moment. Centered EZwallet logo (white), tagline "A stablecoin wallet simple enough for your grandma to use." in Barlow 400 white. Small "DeFi Track — Build on Arc, 4-Week Hackathon" badge. Credit line small at bottom. One orange accent max (e.g., a dot or underline). Calm, confident, lots of space.
-
-**P2 — The Problem · GRADIENT (heavier/darker feel).** Header "The Problem" + subhead. Three pain points as a row/stack of glyph-circle + title + one-liner (12-Word Seed Phrase / Long 0x Addresses / Gas Tokens & Fees). Bottom callout ("Most people abandon wallet setup at step one." / "Ordinary users… never get past account creation.") set apart, slightly emphasized — this is the emotional gut-punch.
-
-**P3 — Meet EZwallet · LIGHT.** Header "Meet EZwallet" (brand blue), subhead "could my mom use this?". 2×2 grid of the four feature cards (Email + PIN, Gas in USDC, Familiar Amounts, Accessible by Design), each with a glyph circle. This is the "relief after the problem" slide — bright, friendly.
-
-**P4 — Core Flows · LIGHT.** Header + subhead. Four flow cards (Send / Receive / Swap / Contacts) using the product-semantic icon colors (Send blue, Receive green, Swap blue, Contacts blue). Leave clear space for REAL screenshots/GIF (device-framed) — this is the demo slide; screenshots > icons once available.
-
-**P5 — Built on Arc + Circle · LIGHT.** Header + subhead ("not a wrapper"). Four stack items (Circle User-Controlled Wallets / Arc / Stablecoin Kit + LiFi / Cloudflare). More technical but keep it clean and readable; small logos of Arc/Circle/Cloudflare if available, otherwise glyph circles. Convey "real, end-to-end integration."
-
-**P6 — What Makes It Different · LIGHT.** Header. Five short title + one-liner items, scannable stack/rows. Highlight the one or two most distinctive ("Swap without typing", "Messages on-chain") — orange accent on the single strongest differentiator.
-
-**P7 — Where We Are · LIGHT.** Header "Where We Are". Three big stat callouts (100% / 4/4 / 1) in Barlow 300 Light at large size — the visual peak of the deck. Orange on the hero stat. Live-demo + source links beneath, URLs verbatim.
-
-**P8 — Builder · LIGHT.** Header "Builder". Hieu Nguyen (0xhieu), Hanoi. Three credibility facts as clean list. Optional avatar/photo in a brand-blue ring. Human, credible, understated.
-
-**P9 — What's Next / CTA · GRADIENT.** Header "What's Next". Roadmap items (Mainnet launch · iOS & Android app · More languages in-app) shown as clearly FUTURE/aspirational (see guardrails — no dates, not "done"). Big CTA "Try EZwallet now → ezwallet.pages.dev" as a gradient/orange pill. Secondary links (github · x · telegram) verbatim. Strong closing, mirrors P1.
+- **Arc Testnet only** — never imply mainnet or real money. Any status/badge says **"Arc Testnet."**
+- **Roadmap (P9) reads as FUTURE** — no dates, no "launched," visually separate from the present-tense status on P7.
+- **Never** a bank; no "deposit insurance," "guaranteed," "yield," or "interest."
+- **Real UI only** — no invented screens, features, or numbers; screenshots are of the real app.
+- **No new claims/features/logos** beyond the content spec. Empty space > filler.
+- **All visible text is English** (see Section 3).
 
 ---
 
-## 6. Hard Guardrails (design rules from the content spec — do not violate)
+## 10. The Bar — "excellent" means
 
-- **Arc Testnet only.** Nowhere imply mainnet, "real money," or production launch as current. If a status/badge appears, it says **"Arc Testnet."**
-- **Roadmap items (P9) must read as FUTURE/aspirational** — no dates, no "launched," no promise. Visually separate them from the "Where We Are" status (P7), which is present-tense fact.
-- **Never** present it as a bank; never use "deposit insurance," "guaranteed," "yield," or "interest."
-- **No invented UI:** don't mock up screens, features, or numbers that aren't in the content spec. Product screenshots must be of the REAL app.
-- **No new claims/features/logos** beyond the content spec. If a slide feels empty, use whitespace — don't add content.
-- Keep it honest and calm: this deck's credibility comes from restraint, not hype.
+Before calling a slide done, check:
+- [ ] One idea, graspable in under 3 seconds.
+- [ ] Exactly one orange accent (or none) — nothing else competes for first attention.
+- [ ] Correct mode (gradient beat vs light product) with correct text colors.
+- [ ] Barlow only; hero numbers are Light 300; no weight above 600.
+- [ ] All colors are the exact hex tokens; no approximations.
+- [ ] Generous margins; the slide could lose an element and improve.
+- [ ] Every string English; example note = "Mommy, I sent you money."
+- [ ] Footer, title position, and card style identical to the other 8.
+- [ ] Nothing implies mainnet, a bank, or a promise.
 
----
-
-## 7. Asset Checklist (gather before/while designing)
-
-- EZwallet logo: white/knockout + full-color (`design/logo.svg`).
-- Real app screenshots/GIFs for P4 (Send, Receive, Swap, Contacts flows) and optionally P3.
-- Arc / Circle / Cloudflare / LiFi logos for P5 (if used, official marks only).
-- Builder avatar for P8 (optional).
-- Barlow webfont (300/400/500/600).
-- This palette + type scale, applied as reusable styles/master so all 9 slides stay in sync.
+**Assets to gather:** EZwallet logo (white + full-color), real app screenshots/GIFs (P4, maybe P3), Arc/Circle/Cloudflare/LiFi marks (P5, optional), builder avatar (P8, optional), Barlow webfont (300/400/500/600), and this palette + type scale saved as reusable master styles.
