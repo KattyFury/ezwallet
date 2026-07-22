@@ -5,7 +5,8 @@ import PctSlider from '../components/PctSlider'
 import Numpad from '../components/Numpad'
 import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress } from '../circle'
 import { getTokenBalances, getDisplayRates, cachedRates, estimateFeeUsd } from '../chain'
-import { spendableOf, floorTo, getDisplayCurrency, displaySymbol, amountFontSize } from '../data'
+import { spendableOf, floorTo, getDisplayCurrency, displaySymbol } from '../data'
+import { useFitFontSize } from '../useFitFontSize'
 import { roundHints, fmtHint } from '../roundHint'
 import { addNotif } from '../notif'
 import { t } from '../i18n'
@@ -265,8 +266,9 @@ export default function Swap() {
   //   nhãn You pay/receive
   //   [chip token ▼]  ————————  SỐ TO (bỏ tên token sau số — chip nói rồi)
   //   Available: xx TOKEN  ————  ~ $quy đổi
-  // Chữ phụ lên --fs-item 17 (trước --fs-label 15). Số to = 44px co giãn theo độ dài
-  // (amountFontSize — Barlow light, 8 ký tự vừa khít; dài hơn tự co, không tràn card).
+  // Chữ phụ lên --fs-item 17. Số to = base 52, co theo BỀ RỘNG THẬT (useFitFontSize — user chốt
+  // 07-22c: đoán theo số ký tự (amountFontSize cũ) sai vì card share hàng với chip, gõ 7 ký tự
+  // ("1000000") đã tràn thành "100000…" mà không co xuống — giờ đo canvas nên co ĐÚNG luôn vừa khít).
   // onAmount (chỉ card You pay): bấm vào VÙNG SỐ (cả khoảng trống bên phải chip) → mở numpad.
   // typing: chuỗi đang gõ trên numpad (null = numpad đóng).
   function SideCard({ label, sym, onPick, amount, disp, onAmount, typing }) {
@@ -277,6 +279,12 @@ export default function Swap() {
     const amtColor = overBalance ? 'var(--color-error)'
       : isTyping ? (typing ? 'var(--color-content)' : 'var(--color-faint)')
       : known && amount > 0 ? 'var(--color-content)' : 'var(--color-faint)'
+    // Card CÓ onAmount (You pay) mà CHƯA có số (chưa gõ hoặc số = 0) → ẩn "0.00", chỉ chừa chỗ
+    // cho caret (user chốt 07-22b: "0.00" đứng CẠNH caret nhấp nháy nhìn thừa/rối, chọn 1 trong 2).
+    // Card "You receive" không onAmount → luôn hiện amtStr as-is (0.00 / … / số thật), không đổi.
+    const hasValue = isTyping ? !!typing : known && amount > 0
+    const showZero = onAmount && !hasValue
+    const [fitRef, fitSize] = useFitFontSize((showZero ? '' : amtStr) + (onAmount ? '_' : ''), { max: 52, min: 18 })
     return (
       <div style={{ ...CARD, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
         {/* Phân cấp đậm nhạt (user chốt 07-17e "quan trọng nhớ bold"): label vai trò card = medium.
@@ -284,19 +292,23 @@ export default function Swap() {
         <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>{label}</span>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
           <TokenRow sym={sym} onClick={onPick} />
-          {/* Ô SỐ TIỀN. BỎ box trắng viền xám bọc số (user chốt 07-22: box viền nhìn cứng, số dài
-              dễ tràn ra ngoài khung = xấu). Thay tín hiệu "bấm được" bằng CARET NHẤP NHÁY đứng sau
-              số NGAY CẢ KHI CHƯA gõ (card "You pay" có onAmount) — không cần khung vẫn biết đây là
-              vùng nhập liệu. Card "You receive" không có onAmount → không caret, không khung, trần
-              hoàn toàn. overflow:hidden ở wrapper là lưới an toàn: số dù dài cỡ nào cũng bị CẮT GỌN
-              trong card, không tràn ra ngoài (trước đây thiếu dòng này nên số bể layout). */}
-          <div onClick={onAmount} style={{
+          {/* Ô SỐ TIỀN. BỎ MÀU/VIỀN box trắng bọc số (user chốt 07-22: box viền nhìn cứng, số dài
+              dễ tràn ra ngoài khung = xấu) — NHƯNG GIỮ NGUYÊN kích thước box (minHeight 56 + padding
+              2/12) để card KHÔNG THẤP LẠI (bug 07-22d: xoá luôn minHeight/padding làm cả cụm You
+              pay/You receive tụt từ 2 hàng xuống ~1.5 hàng — user chốt lại: 2 hàng/2 hàng/Rate 0.5
+              hàng phải giữ nguyên như cũ, chỉ ẩn màu nền/viền, không đụng kích thước). Thay tín hiệu
+              "bấm được" bằng CARET NHẤP NHÁY đứng sau số (card "You pay" có onAmount). Card "You
+              receive" không có onAmount → không caret, không box, trần hoàn toàn (giữ như cũ).
+              ref={fitRef} đo đúng bề rộng còn lại sau chip để co chữ vừa khít; overflow:hidden là
+              lưới an toàn cuối (chỉ kích hoạt khi số dài hơn cả mức co tối thiểu). */}
+          <div ref={fitRef} onClick={onAmount} style={{
             flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
             cursor: onAmount ? 'pointer' : 'default',
+            ...(onAmount ? { padding: '2px 12px', minHeight: 56 } : null),
           }}>
-            <span className="num" style={{ fontSize: amountFontSize(amtStr, 52, 8), fontWeight: 'var(--fw-light)', lineHeight: 1.05, color: amtColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {/* Đang gõ mà CHƯA có số → CHỈ caret "_" xám nhấp nháy, KHÔNG vẽ số 0 mờ (user chốt 07-20) */}
-              {isTyping ? <>{typing}<span className="caret">_</span></> : <>{amtStr}{onAmount ? <span className="caret">_</span> : null}</>}
+            <span className="num" style={{ fontSize: fitSize, fontWeight: 'var(--fw-light)', lineHeight: 1.05, color: amtColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              {showZero ? null : amtStr}
+              {onAmount && <span className="caret">_</span>}
             </span>
           </div>
         </div>
