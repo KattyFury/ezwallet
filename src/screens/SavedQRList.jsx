@@ -60,7 +60,11 @@ export default function SavedQRList() {
           (trước 3 cột QR bé quá) → QR + chữ to lên cho bà già dễ đọc. Mỗi QR = box TRẮNG nổi trên
           nền xám: viền xám 1.5 (luật "bấm được trong box xám") + DROP SHADOW như button (07-22d,
           trắng = alpha .25). X xóa góc trên-phải. Nhiều thì scroll trong box. */}
-      <div className="scroll-thin" style={{ gridRow: '2 / 9', background: 'var(--color-surface)', borderRadius: 20, padding: 14 }}>
+      {/* Box xám NGOÀI + scroll TRONG (mẫu TxHistory) — ĐỪNG tô nền lên .scroll-thin: class đó có
+          margin-right -20px (đưa scrollbar vào dải lề phải) → nền tràn sát mép phải, lệch lề (user
+          báo 07-23). */}
+      <div style={{ gridRow: '2 / 9', background: 'var(--color-surface)', borderRadius: 20, padding: 14, overflow: 'hidden' }}>
+      <div className="scroll-thin" style={{ height: '100%' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, alignContent: 'start' }}>
           {list.map(q => {
             const c = q.currency || 'USD'
@@ -82,6 +86,7 @@ export default function SavedQRList() {
             <Icon name="add" size={40} color="var(--color-muted)" />
           </button>
         </div>
+      </div>
       </div>
 
       {/* Back = xanh (primary), căn GIỮA màn hình theo chuẩn .row10-single (user chốt 2026-07-15) */}
