@@ -35,9 +35,29 @@ export default function CreateQR() {
         {t('Tạo QR nhận tiền')}
       </div>
 
-      {/* Từ Kho QR: ô ĐẶT TÊN (thiết kế đồng bộ ô memo lúc gửi) — để tiểu thương tạo cả menu.
-          Từ màn Nhận: chỉ phụ đề "Số tiền muốn nhận". Ô nhập neo trên cùng (bàn phím che nửa dưới). */}
-      <div className="row-2 center" style={{ padding: '0 4px' }}>
+      {/* ĐỒNG BỘ HÌNH HỌC VỚI SendAmount (user chốt 07-23 "2 màn cùng chức năng phải giống nhau"):
+          cụm nhãn/số tiền = 1 flex column gridRow 2/6 gap 4dvh y hệt bên Gửi. Dòng 1 = "Amount to
+          receive" (chỗ của "Send to: X", CHỮ ĐEN medium cùng cỡ fs-md-lg); dòng 2 = số + chip [USD]
+          copy nguyên style bên Gửi (chip fs-md-lg + mũi tên BRAND — trước đây fs-label + muted là
+          lệch chuẩn 07-22c); dòng 3 = ô tên QR (chỉ khi từ Kho QR — đứng đúng chỗ ô note bên Gửi). */}
+      <div style={{ gridRow: '2 / 6', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4dvh', minWidth: 0 }}>
+        <div className="center" style={{ gap: 6 }}>
+          <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>{t('Số tiền muốn nhận')}</span>
+        </div>
+
+        <div className="center col" style={{ gap: 6 }}>
+          {/* Số to LUÔN căn giữa; chip tiền tệ neo BÌA PHẢI — copy nguyên khối bên SendAmount */}
+          <div style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="num" style={{ fontSize: amountFontSize((cur === 'USD' ? '$' : '') + digits, 52, 9), fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
+              {cur === 'USD' ? displaySymbol('USDC') : ''}{digits}<span className="caret">_</span>
+            </span>
+            <button onClick={() => setShowCur(true)}
+              style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', borderRadius: 10, padding: '6px 10px', background: 'var(--color-surface)', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
+              {cur}<Icon name="down2" size="var(--is-md-lg)" color="var(--color-brand)" />
+            </button>
+          </div>
+        </div>
+
         {fromLibrary ? (
           <div className="memo-row" style={{ width: '100%' }}>
             <Icon name="pencil" size="var(--is-md-lg)" color="var(--color-muted)" />
@@ -45,21 +65,10 @@ export default function CreateQR() {
               onFocus={() => setTypingText(true)} onBlur={() => setTypingText(false)} />
           </div>
         ) : (
-          <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{t('Số tiền muốn nhận')}</span>
+          /* Placeholder CAO BẰNG ô note bên Gửi (52) — cụm bên Gửi 3 hàng, thiếu hàng này thì
+             justify-center kéo nhãn/số tụt xuống 43px, 2 màn hết trùng vị trí (đo 07-23). */
+          <div style={{ height: 52 }} />
         )}
-      </div>
-
-      {/* Số căn giữa MỘT STYLE (USD hiện tiền tố $ liền khối); chip tiền tệ neo BÌA PHẢI (đồng bộ SendAmount) */}
-      <div className="row-3-4 center col">
-        <div style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <span className="num" style={{ fontSize: amountFontSize((cur === 'USD' ? '$' : '') + digits, 52, 9), fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
-            {cur === 'USD' ? displaySymbol('USDC') : ''}{digits}<span className="caret">_</span>
-          </span>
-          <button onClick={() => setShowCur(true)}
-            style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', borderRadius: 10, padding: '6px 10px', background: 'var(--color-surface)', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
-            {cur}<Icon name="down2" size="var(--is-md-lg)" color="var(--color-muted)" />
-          </button>
-        </div>
       </div>
 
       {/* Numpad panel XÁM phím TRẮNG (user chốt 07-20 đồng bộ sheet Swap + SendAmount): nửa hàng 6
