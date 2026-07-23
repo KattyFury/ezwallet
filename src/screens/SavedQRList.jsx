@@ -56,27 +56,30 @@ export default function SavedQRList() {
         {t('Kho QR')}
       </div>
 
-      {/* Lưới 3 cột (hàng 2-7), ô cuối là "+" để thêm QR; nhiều thì scroll */}
-      <div className="scroll-thin" style={{ gridRow: '2 / 8' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, alignContent: 'start' }}>
+      {/* Vùng QR = BOX XÁM lớn hàng 2-8 (user chốt 07-23, đồng bộ kiểu box History) · lưới 2 CỘT
+          (trước 3 cột QR bé quá) → QR + chữ to lên cho bà già dễ đọc. Mỗi QR = box TRẮNG nổi trên
+          nền xám: viền xám 1.5 (luật "bấm được trong box xám") + DROP SHADOW như button (07-22d,
+          trắng = alpha .25). X xóa góc trên-phải. Nhiều thì scroll trong box. */}
+      <div className="scroll-thin" style={{ gridRow: '2 / 9', background: 'var(--color-surface)', borderRadius: 20, padding: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, alignContent: 'start' }}>
           {list.map(q => {
             const c = q.currency || 'USD'
             const label = fmtMoney(q.amount, c)
             return (
               // Xem QR đã lưu (không lưu lại), Back về Kho QR. Hiển thị: QR · Tên (đen) · số tiền (xám).
               <button key={q.id} onClick={() => navigate('ShowQR', { amount: q.amount, currency: c, name: q.name, fromStorage: true, saveToLibrary: false, back: 'SavedQRList' })}
-                style={{ position: 'relative', border: 'none', borderRadius: 20, background: 'var(--color-surface)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 4, padding: '12px 8px 10px', fontFamily: 'inherit' }}>
-                <span onClick={e => askDelete(q, e)} style={{ position: 'absolute', top: 6, right: 6, display: 'flex' }}><Icon name="x" size={14} color="var(--color-muted)" /></span>
-                <QRCodeSVG value={`ezwallet:${walletAddr}?amount=${q.amount}&cur=${c}`} size={58} level="M" />
-                {q.name && <span style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.name}</span>}
-                <span className="num" style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)' }}>{label}</span>
+                style={{ position: 'relative', border: '1.5px solid var(--color-gray)', borderRadius: 16, background: 'var(--color-white)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '16px 10px 12px', fontFamily: 'inherit' }}>
+                <span onClick={e => askDelete(q, e)} style={{ position: 'absolute', top: 8, right: 8, display: 'flex' }}><Icon name="x" size={16} color="var(--color-muted)" /></span>
+                <QRCodeSVG value={`ezwallet:${walletAddr}?amount=${q.amount}&cur=${c}`} size={104} level="M" />
+                {q.name && <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.name}</span>}
+                <span className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{label}</span>
               </button>
             )
           })}
           {/* ô + → mở POPUP thêm QR (không sang màn mới) */}
           <button onClick={() => setAdding(true)}
-            style={{ aspectRatio: '1', border: '1.5px dashed var(--color-muted)', borderRadius: 12, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="add" size={32} color="var(--color-muted)" />
+            style={{ aspectRatio: '1', border: '1.5px dashed var(--color-muted)', borderRadius: 16, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="add" size={40} color="var(--color-muted)" />
           </button>
         </div>
       </div>
