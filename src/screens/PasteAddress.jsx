@@ -51,7 +51,9 @@ export default function PasteAddress() {
 
       <div className="row-10 row10-dual">
         <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>{t('Quay lại')}</button>
-        <button className="btn btn-primary" onClick={handleDan}>{t('Dán')}</button>
+        {/* Ô đã có địa chỉ EVM hợp lệ → nhãn đổi "Paste" → "Confirm" (user chốt 07-23: bấm sẽ đi
+            thẳng không đọc clipboard, để nhãn Paste gây lú). handleDan xử lý đúng cả 2 nhánh. */}
+        <button className="btn btn-primary" onClick={handleDan}>{valid ? 'Confirm' : t('Dán')}</button>
       </div>
     </div>
   )
