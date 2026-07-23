@@ -35,6 +35,9 @@ export default function SendAmount() {
   const [showNote, setShowNote] = useState(false)      // popup set default note
   const [draftNote, setDraftNote] = useState('')       // giá trị đang gõ trong popup
   const [showCur, setShowCur] = useState(false)
+  // LUẬT BÀN PHÍM (user chốt 07-23 hướng A): TIỀN = numpad app, CHỮ = bàn phím iPhone, KHÔNG BAO
+  // GIỜ 2 cái cùng hiện. Đang gõ ô note (bàn phím iPhone trồi lên) → ẨN numpad; blur → hiện lại.
+  const [typingText, setTypingText] = useState(false)
 
   function openNotePopup() { setDraftNote(defaultNote); setShowNote(true) }
   function saveDefaultNote() {
@@ -132,7 +135,8 @@ export default function SendAmount() {
             className="address-input"
             placeholder={t('Nội dung chuyển khoản (không bắt buộc)')}
             value={memo}
-            onFocus={onNoteFocus}
+            onFocus={() => { onNoteFocus(); setTypingText(true) }}
+            onBlur={() => setTypingText(false)}
             onChange={e => { setMemo(e.target.value); setNoteTouched(true) }}
             maxLength={100}
             style={{ flex: 1, minWidth: 0, height: 52, fontSize: 'var(--fs-md-lg)' }}
@@ -146,7 +150,10 @@ export default function SendAmount() {
 
       {/* Numpad panel XÁM phím TRẮNG (user chốt 07-20 đồng bộ sheet Swap): nửa hàng 6 → đáy màn,
           full-bleed (margin âm bù lề .screen), bo góc trên. Numpad flex 6 + vùng nút/đệm flex 3
-          (nút [Quay lại][Tiếp tục] là .row10-dual absolute, nổi trên nền xám đúng hàng 9-10). */}
+          (nút [Quay lại][Tiếp tục] là .row10-dual absolute, nổi trên nền xám đúng hàng 9-10).
+          ẨN khi đang gõ CHỮ (ô note focus / popup note mở) — bàn phím iPhone trồi lên chồng lấn
+          numpad rất kì (user báo 07-23); blur/đóng popup → numpad hiện lại. */}
+      {!typingText && !showNote && (
       <div className="numpad-gray" style={{ gridRow: '6 / 11', margin: '5dvh -20px 0', padding: '24px 20px 0', background: 'var(--color-surface-2)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column' }}>
         {/* Numpad 5.5 phần (07-20c: phím thấp lại một tẹo), nút .row10-dual vẫn neo biên hàng 9-10 */}
         <div style={{ flex: 5.5, minHeight: 0 }}>
@@ -154,6 +161,7 @@ export default function SendAmount() {
         </div>
         <div style={{ flex: 3.5 }} />
       </div>
+      )}
 
       {/* Nút [Quay lại][Tiếp tục] = vị trí CHUẨN row10-dual (hàng 9-10, canh giữa quanh ranh giới 9/10) */}
       <div className="row10-dual">

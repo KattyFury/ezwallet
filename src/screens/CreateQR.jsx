@@ -14,6 +14,8 @@ export default function CreateQR() {
   const [cur, setCur] = useState('USD')
   const [showCur, setShowCur] = useState(false)
   const [name, setName] = useState('')
+  // Luật bàn phím 07-23 (đồng bộ SendAmount): gõ CHỮ (ô tên QR) → ẩn numpad app, blur → hiện lại
+  const [typingText, setTypingText] = useState(false)
   // Từ Kho QR → tạo xong LƯU vào kho (kèm TÊN); từ màn Nhận → chỉ hiện để share, KHÔNG lưu.
   const fromLibrary = params?.from === 'SavedQRList'
 
@@ -39,7 +41,8 @@ export default function CreateQR() {
         {fromLibrary ? (
           <div className="memo-row" style={{ width: '100%' }}>
             <Icon name="pencil" size="var(--is-md-lg)" color="var(--color-muted)" />
-            <input className="memo-input" value={name} onChange={e => setName(e.target.value)} placeholder="Name your QR" maxLength={30} />
+            <input className="memo-input" value={name} onChange={e => setName(e.target.value)} placeholder="Name your QR" maxLength={30}
+              onFocus={() => setTypingText(true)} onBlur={() => setTypingText(false)} />
           </div>
         ) : (
           <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{t('Số tiền muốn nhận')}</span>
@@ -60,7 +63,9 @@ export default function CreateQR() {
       </div>
 
       {/* Numpad panel XÁM phím TRẮNG (user chốt 07-20 đồng bộ sheet Swap + SendAmount): nửa hàng 6
-          → đáy màn, full-bleed, bo góc trên; nút [Hủy][Tạo QR] .row10-dual nổi trên nền xám. */}
+          → đáy màn, full-bleed, bo góc trên; nút [Hủy][Tạo QR] .row10-dual nổi trên nền xám.
+          ẨN khi đang gõ tên QR (luật bàn phím 07-23 — không cho 2 bàn phím cùng hiện). */}
+      {!typingText && (
       <div className="numpad-gray" style={{ gridRow: '6 / 11', margin: '5dvh -20px 0', padding: '24px 20px 0', background: 'var(--color-surface-2)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column' }}>
         {/* Numpad 5.5 phần (07-20c: phím thấp lại một tẹo), nút .row10-dual vẫn neo biên hàng 9-10 */}
         <div style={{ flex: 5.5, minHeight: 0 }}>
@@ -68,6 +73,7 @@ export default function CreateQR() {
         </div>
         <div style={{ flex: 3.5 }} />
       </div>
+      )}
 
       {/* Nút [Hủy][Tạo QR] = vị trí chuẩn row10-dual (hàng 9-10) */}
       <div className="row10-dual">

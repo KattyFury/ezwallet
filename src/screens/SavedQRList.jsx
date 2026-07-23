@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useNav } from '../nav'
 import { QRCodeSVG } from 'qrcode.react'
 import Icon from '../components/Icon'
+import Numpad from '../components/Numpad'
 import { fmtMoney, getDisplayCurrency, displaySymbol } from '../data'
 import { t } from '../i18n'
 import { loadSavedQRs, saveSavedQRs } from '../store'
@@ -13,9 +14,24 @@ export default function SavedQRList() {
   const [name, setName] = useState('')
   const [amountStr, setAmountStr] = useState('')
   const [pendingDelete, setPendingDelete] = useState(null)   // QR đang chờ xác nhận xóa (user chốt 07-20e)
+  // LUẬT BÀN PHÍM (user chốt 07-23 hướng A): NHẬP TIỀN = numpad app, NHẬP CHỮ = bàn phím iPhone.
+  // Ô Amount trong popup KHÔNG còn là <input> (bàn phím iPhone numpad thiếu dấu , theo locale +
+  // lệch chuẩn app) → bấm vào mở SHEET numpad app (geometry y hệt sheet Swap). Back = hủy số vừa
+  // gõ, Done/bấm ra ngoài = giữ.
+  const [pad, setPad] = useState(false)
+  const padPrev = useRef('')
   const walletAddr = localStorage.getItem('ez_wallet_addr') || ''
 
   const amountNum = parseFloat(amountStr || '0')
+
+  function openPad() { padPrev.current = amountStr; setPad(true) }
+  function cancelPad() { setAmountStr(padPrev.current); setPad(false) }
+  // Phím numpad — logic giống SendAmount ('.' 1 lần, BACK xóa lùi, tối đa 12 ký tự)
+  function handlePadKey(key) {
+    if (key === 'BACK') { setAmountStr(d => d.slice(0, -1)); return }
+    if (key === '.') { setAmountStr(d => (d.includes('.') ? d : (d === '' ? '0.' : d + '.'))); return }
+    setAmountStr(d => (d.length >= 12 ? d : d === '0' ? key : d + key))
+  }
 
   // Bấm dấu × → MỞ POPUP xác nhận (không xóa ngay — chống bấm nhầm, như Delete contact)
   function askDelete(q, e) { e.stopPropagation(); setPendingDelete(q) }
@@ -24,7 +40,7 @@ export default function SavedQRList() {
     setList(updated); saveSavedQRs(updated); setPendingDelete(null)
   }
 
-  function resetForm() { setAdding(false); setName(''); setAmountStr('') }
+  function resetForm() { setAdding(false); setName(''); setAmountStr(''); setPad(false) }
 
   // Save = TẠO QR vào KHO (không show QR cho scan — đó là tính năng Create QR). currency mặc định USD.
   function handleSave() {
@@ -74,15 +90,45 @@ export default function SavedQRList() {
       {adding && (
         <div className="popup-overlay" onClick={resetForm}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
-            <div className="popup-title">Add to library</div>
+            <div className="popup-title">Add to QR Storage</div>
             <input className="address-input" placeholder="Name (optional)" value={name} onChange={e => setName(e.target.value)} maxLength={30} style={{ fontSize: 'var(--fs-body)' }} />
             {/* Label kèm ký hiệu tiền tệ MẶC ĐỊNH của user (user chốt 07-20: USDC→$, EURC→€…) */}
-            <input className="address-input" placeholder={`Amount (${displaySymbol(getDisplayCurrency())})`} inputMode="decimal" value={amountStr}
-              onChange={e => setAmountStr(e.target.value.replace(/[^\d.]/g, ''))} style={{ fontSize: 'var(--fs-body)' }} />
+            {/* Ô Amount = KHÔNG phải input (luật bàn phím 07-23) — bấm mở sheet numpad app; blur ô
+                Name trước để bàn phím iPhone hạ xuống rồi numpad mới trồi lên (không chồng nhau).
+                Caret _ nhấp nháy khi sheet đang mở (đồng bộ tín hiệu nhập tiền toàn app). */}
+            <div className="address-input" onClick={() => { document.activeElement?.blur?.(); openPad() }}
+              style={{ fontSize: 'var(--fs-body)', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              {amountStr ? (
+                <span className="num">{amountStr}{pad && <span className="caret">_</span>}</span>
+              ) : pad ? (
+                <span className="num"><span className="caret">_</span></span>   /* trống + đang nhập = CHỈ caret (chuẩn 07-20b) */
+              ) : (
+                <span style={{ color: 'var(--color-faint)' }}>{`Amount (${displaySymbol(getDisplayCurrency())})`}</span>
+              )}
+            </div>
             <div className="popup-actions">
               <button className="btn btn-secondary" onClick={resetForm}>{t('Hủy')}</button>
               <button className="btn btn-primary" disabled={!(amountNum > 0)} onClick={handleSave}>{t('Lưu')}</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Sheet numpad nhập Amount — geometry Y HỆT sheet Swap (.sheet-overlay/.sheet numpad-gray,
+          55→100dvh, overlay trong suốt). Render SAU popup → nổi trên popup (cùng z-index 100,
+          DOM sau thắng); popup neo nửa trên nên không che nhau. */}
+      {pad && (
+        <div className="sheet-overlay" onClick={() => setPad(false)}>
+          <div className="sheet numpad-gray" onClick={e => e.stopPropagation()}>
+            <div style={{ flex: 5.5, minHeight: 0, paddingTop: 24 }}>
+              <Numpad onKey={handlePadKey} showComma />
+            </div>
+            <div style={{ flex: 0.5 }} />
+            <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+              <button className="btn btn-secondary" style={{ width: '44%' }} onClick={cancelPad}>{t('Quay lại')}</button>
+              <button className="btn btn-primary" style={{ width: '44%' }} onClick={() => setPad(false)}>{t('Xong')}</button>
+            </div>
+            <div style={{ flex: 1 }} />
           </div>
         </div>
       )}
