@@ -271,11 +271,14 @@ export default function Swap() {
   // ("1000000") đã tràn thành "100000…" mà không co xuống — giờ đo canvas nên co ĐÚNG luôn vừa khít).
   // onAmount (chỉ card You pay): bấm vào VÙNG SỐ (cả khoảng trống bên phải chip) → mở numpad.
   // typing: chuỗi đang gõ trên numpad (null = numpad đóng).
-  function SideCard({ label, sym, onPick, amount, disp, onAmount, typing, balLabel }) {
+  function SideCard({ label, sym, onPick, amount, disp, onAmount, typing, balLabel, idle }) {
     const known = amount !== null
     const balKnown = balances[sym] !== undefined
     const isTyping = typing !== null && typing !== undefined
-    const amtStr = isTyping ? (typing || '0') : known ? amount.toFixed(decimalsFor(sym)) : '…'
+    // idle (You receive, user chốt 07-23): CHƯA nhập số → không có gì để ước tính → để TRỐNG hẳn.
+    // "…" chỉ dành cho "số chưa đọc được / đang tải" (đã nhập số, chờ estimate) — trước đây hiện
+    // "…" cả lúc idle nhìn như tải mãi không xong + lệch caret to bên You pay.
+    const amtStr = isTyping ? (typing || '0') : known ? amount.toFixed(decimalsFor(sym)) : idle ? '' : '…'
     const amtColor = overBalance ? 'var(--color-error)'
       : isTyping ? (typing ? 'var(--color-content)' : 'var(--color-faint)')
       : known && amount > 0 ? 'var(--color-content)' : 'var(--color-faint)'
@@ -396,7 +399,7 @@ export default function Swap() {
             </button>
           </div>
 
-          <SideCard label="You receive" sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} balLabel="Balance" />
+          <SideCard label="You receive" sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} balLabel="Balance" idle={!(amountNum > 0)} />
 
           {/* Fee + Rate — 1 dòng NHỎ fs-item 17: Rate căn TRÁI · Fee căn PHẢI, số liệu ĐEN cho bật */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 10, padding: '0 16px' }}>
