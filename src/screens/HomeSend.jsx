@@ -146,9 +146,9 @@ export default function HomeSend() {
           // Mỗi dòng = 1 CÂU đủ nghĩa, từ khoá gạch chân BẤM ĐƯỢC → đi đúng nơi nút cùng tên ở
           // hàng 9 dẫn tới (user chốt 07-21).
           hints={[
-            { label: 'Contacts', desc: 'Save people you send to often', onClick: () => navigate('Contacts') },
-            { label: 'Scan QR', desc: 'Scan a QR code to send', onClick: () => navigate('QRScanner') },
             { label: 'Paste', desc: 'Paste a wallet address to send', onClick: () => navigate('PasteAddress') },
+            { label: 'Scan QR', desc: 'Scan a QR code to send', onClick: () => navigate('QRScanner') },
+            { label: 'Contacts', desc: 'Save people you send to often', onClick: () => navigate('Contacts') },
           ]}
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
@@ -170,9 +170,11 @@ export default function HomeSend() {
       </div>
 
       <div className="row-9 action-grid">
-        <button className="action-card" onClick={() => navigate('Contacts')}><Icon name="human" size="var(--is-item)" /><span>{t('Danh bạ')}</span></button>
-        <button className="action-card primary" onClick={() => navigate('QRScanner')}><Icon name="scan" size="var(--is-item)" color="var(--color-white)" /><span>{t('Quét QR')}</span></button>
+        {/* Thứ tự trái→phải: Paste · Scan QR · Contacts (user chốt 07-23: Contacts dùng nhiều
+            hơn → bên PHẢI; hint NotifArea cùng thứ tự) */}
         <button className="action-card" onClick={() => navigate('PasteAddress')}><Icon name="copy" size="var(--is-item)" /><span>{t('Dán để gửi')}</span></button>
+        <button className="action-card primary" onClick={() => navigate('QRScanner')}><Icon name="scan" size="var(--is-item)" color="var(--color-white)" /><span>{t('Quét QR')}</span></button>
+        <button className="action-card" onClick={() => navigate('Contacts')}><Icon name="human" size="var(--is-item)" /><span>{t('Danh bạ')}</span></button>
       </div>
 
       <NavBar active="HomeSend" />

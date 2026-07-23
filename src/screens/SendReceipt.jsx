@@ -41,7 +41,9 @@ export default function SendReceipt() {
 
   // Vẽ biên lai ra canvas rồi tải về kho ảnh
   async function saveReceipt() {
-    const W = 620, H = memo ? 600 : 540   // +60 cho dòng Amount mới
+    // Cao = đáy dòng cuối + 50 khoảng thở + logo + 22 lề (user chốt 07-23: logo từng dính sát
+    // divider dòng cuối). Có thêm dòng Address (+60) so với bản cũ.
+    const W = 620, H = memo ? 710 : 650
     const cv = document.createElement('canvas')
     cv.width = W; cv.height = H
     const x = cv.getContext('2d')
@@ -55,17 +57,20 @@ export default function SendReceipt() {
     x.fillStyle = '#0B53BF'; x.font = '700 52px sans-serif'; x.fillText(amountText, W / 2, 245)
     // các dòng
     let yy = 320
-    const row = (label, val) => {
+    // valFont: địa chỉ ví 42 ký tự phải hạ font 18px mới vừa 1 dòng (các dòng khác giữ 22)
+    const row = (label, val, valFont = '500 22px sans-serif') => {
       x.textAlign = 'left'; x.fillStyle = '#AEAEB2'; x.font = '22px sans-serif'; x.fillText(label, 50, yy)
-      x.textAlign = 'right'; x.fillStyle = '#000000'; x.font = '500 22px sans-serif'; x.fillText(val, W - 50, yy)
+      x.textAlign = 'right'; x.fillStyle = '#000000'; x.font = valFont; x.fillText(val, W - 50, yy)
       x.strokeStyle = '#E5E5EA'; x.lineWidth = 1; x.beginPath(); x.moveTo(50, yy + 22); x.lineTo(W - 50, yy + 22); x.stroke()
       yy += 60
     }
     row(t('Gửi đến'), to)
+    if (address) row('Address', address, '500 18px sans-serif')   // full address để đối soát on-chain
     row('Amount', realAmountText)
     if (memo) row(t('Nội dung'), memo)
     row(t('Thời gian'), fmtTime(timestamp))
-    // Logo EZwallet (branding chuẩn — design/logo.svg, EZ xanh thương hiệu + wallet đen) ở đáy
+    // Logo EZwallet (branding chuẩn — design/logo.svg, EZ xanh thương hiệu + wallet đen) ở đáy —
+    // neo theo ĐÁY canvas, H đã chừa 50px khoảng thở sau dòng cuối (đừng để logo dính divider)
     const lw = 168, lh = lw * 380 / 1160   // tỉ lệ theo logo.svg mới (viewBox 1160×380)
     const img = new Image()
     img.src = logoLong
@@ -92,6 +97,13 @@ export default function SendReceipt() {
             <span className="confirm-label">{t('Gửi đến')}</span>
             <span className="confirm-value">{to}</span>
           </div>
+          {/* Địa chỉ ví FULL để đối soát on-chain (user chốt 07-23) — chữ mini, cho phép xuống dòng */}
+          {address ? (
+            <div className="confirm-row">
+              <span className="confirm-label">Address</span>
+              <span className="confirm-value num" style={{ fontSize: 'var(--fs-tiny)', wordBreak: 'break-all', textAlign: 'right' }}>{address}</span>
+            </div>
+          ) : null}
           <div className="confirm-row">
             <span className="confirm-label">Amount</span>
             <span className="confirm-value num">{realAmountText}</span>

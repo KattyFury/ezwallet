@@ -415,7 +415,8 @@ export default function Swap() {
             hiện/tắt (bug user báo 07-21). Chừa sẵn chỗ = vị trí slider ĐỨNG YÊN, chip chỉ mờ/hiện. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1dvh', minWidth: 0 }}>
           {/* Hàng height 40 CỐ ĐỊNH (slider không nhảy — xem note dưới): có số → chip gợi ý số chẵn;
-              CHƯA chọn số (slider 0) → text hướng dẫn (user chốt 07-22d) thay cho khoảng trống. */}
+              CHƯA chọn số → hàng để TRỐNG (user chốt 07-23: bỏ hint pill "Slide to adjust…", hướng
+              dẫn chuyển XUỐNG NÚT Swap = "Slide or tap here to enter" bấm mở numpad). */}
           <div style={{ height: 40, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0 }}>
             {hints.length ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
@@ -427,13 +428,6 @@ export default function Swap() {
                   </button>
                 ))}
               </div>
-            ) : (!loading && !(amountNum > 0)) ? (
-              // HINT = BUTTON viền xanh + chữ xanh (user chốt 07-22e: đồng bộ MỌI hint, KHÔNG chữ xám
-              // nhỏ) — bấm mở numpad nhập số.
-              <button onClick={openPad}
-                style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 16px', cursor: 'pointer', fontFamily: 'inherit', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-brand)', whiteSpace: 'nowrap', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }}>
-                Slide to adjust or tap here to enter
-              </button>
             ) : null}
           </div>
           <div style={{ minWidth: 0 }}>
@@ -447,20 +441,29 @@ export default function Swap() {
             (`height 8dvh` + `marginBottom 2dvh`, nằm cuối flex space-between của vùng 2/10) → band
             80→88dvh, nút 6dvh canh giữa band ⇒ TÂM 84dvh = đúng tâm action-card. ĐỪNG thêm
             paddingBottom cho vùng cha, marginBottom ở đây đã lo phần chừa 2dvh.
-            Nút vẫn là NƠI DUY NHẤT hiện trạng thái. Ưu tiên: lỗi > trạng thái > 'Swap'. */}
+            Nút vẫn là NƠI DUY NHẤT hiện trạng thái. Ưu tiên: lỗi > trạng thái > hint/'Swap'.
+            CHƯA nhập số (user chốt 07-23, thay hint pill cũ ở hàng chip): nút hiện
+            "Slide or tap here to enter" + bấm = mở numpad (openPad) thay vì swap. */}
         <div style={{ height: '8dvh', marginBottom: '2dvh', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {(() => {
+            const needAmount = !error && !status && !(amountNum > 0)   // chưa chọn số → nút = hint mở numpad
+            return (
           <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
             style={{
               width: '66.67%', overflow: 'hidden',
               ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
               ...(success ? { opacity: 1 } : null),
             }}
-            disabled={!canSwap && !error} onClick={handleSwap}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+            disabled={needAmount ? (!hasBal || loading) : (!canSwap && !error)}
+            onClick={needAmount ? openPad : handleSwap}>
+            {/* Chữ hint = fs-item 17 (luật CỠ CHỮ HINT toàn app — 21 mặc định của .btn bị cắt ellipsis) */}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', ...(needAmount ? { fontSize: 'var(--fs-item)' } : null) }}>
               {success && <Icon name="check" size="var(--is-md-lg)" color="var(--color-white)" />}
-              {error || status || 'Swap'}
+              {error || status || (needAmount ? 'Slide or tap here to enter' : 'Swap')}
             </span>
           </button>
+            )
+          })()}
         </div>
       </div>
 
