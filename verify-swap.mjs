@@ -30,6 +30,7 @@ console.log(`  ${out.tokenOut} trước:      ${out.before}`)
 console.log(`  ${out.tokenOut} sau:        ${out.after}`)
 console.log(`  Chênh (nhận về):  ${out.delta}   (Kit ước tính: ${out.expected ?? 'n/a'})`)
 console.log(`  Gas dùng:         ${out.gasUsed ? BigInt(out.gasUsed).toString() : 'n/a'}`)
+console.log(`  Phí app → ${out.feeRecipient?.slice(0, 8)}…: +${out.feeDeltaIn} ${tokenIn} / +${out.feeDeltaOut} ${tokenOut}`)
 console.log('─────────────────────────────────────────')
 
 if (out.ok) {

@@ -42,8 +42,8 @@ export default function SendReceipt() {
   // Vẽ biên lai ra canvas rồi tải về kho ảnh
   async function saveReceipt() {
     // Cao = đáy dòng cuối + 50 khoảng thở + logo + 22 lề (user chốt 07-23: logo từng dính sát
-    // divider dòng cuối). Có thêm dòng Address (+60) so với bản cũ.
-    const W = 620, H = memo ? 710 : 650
+    // divider dòng cuối). 3 dòng cố định = 590; dòng Address (chỉ khi có tên) / Note mỗi dòng +60.
+    const W = 620, H = 590 + (name && address ? 60 : 0) + (memo ? 60 : 0)
     const cv = document.createElement('canvas')
     cv.width = W; cv.height = H
     const x = cv.getContext('2d')
@@ -57,15 +57,14 @@ export default function SendReceipt() {
     x.fillStyle = '#0B53BF'; x.font = '700 52px sans-serif'; x.fillText(amountText, W / 2, 245)
     // các dòng
     let yy = 320
-    // valFont: địa chỉ ví 42 ký tự phải hạ font 18px mới vừa 1 dòng (các dòng khác giữ 22)
-    const row = (label, val, valFont = '500 22px sans-serif') => {
+    const row = (label, val) => {
       x.textAlign = 'left'; x.fillStyle = '#AEAEB2'; x.font = '22px sans-serif'; x.fillText(label, 50, yy)
-      x.textAlign = 'right'; x.fillStyle = '#000000'; x.font = valFont; x.fillText(val, W - 50, yy)
+      x.textAlign = 'right'; x.fillStyle = '#000000'; x.font = '500 22px sans-serif'; x.fillText(val, W - 50, yy)
       x.strokeStyle = '#E5E5EA'; x.lineWidth = 1; x.beginPath(); x.moveTo(50, yy + 22); x.lineTo(W - 50, yy + 22); x.stroke()
       yy += 60
     }
     row(t('Gửi đến'), to)
-    if (address) row('Address', address, '500 18px sans-serif')   // full address để đối soát on-chain
+    if (name && address) row('Address', shortenAddr(address))   // rút gọn; chỉ khi Send to = tên danh bạ
     row('Amount', realAmountText)
     if (memo) row(t('Nội dung'), memo)
     row(t('Thời gian'), fmtTime(timestamp))
@@ -97,11 +96,12 @@ export default function SendReceipt() {
             <span className="confirm-label">{t('Gửi đến')}</span>
             <span className="confirm-value">{to}</span>
           </div>
-          {/* Địa chỉ ví FULL để đối soát on-chain (user chốt 07-23) — chữ mini, cho phép xuống dòng */}
-          {address ? (
+          {/* Địa chỉ ví RÚT GỌN 0x1234…5678 (user chốt 07-23: không để full, dài xấu). CHỈ hiện khi
+              Send to là TÊN danh bạ — không tên thì Send to đã là địa chỉ rút gọn rồi, thêm = trùng. */}
+          {name && address ? (
             <div className="confirm-row">
               <span className="confirm-label">Address</span>
-              <span className="confirm-value num" style={{ fontSize: 'var(--fs-tiny)', wordBreak: 'break-all', textAlign: 'right' }}>{address}</span>
+              <span className="confirm-value num">{shortenAddr(address)}</span>
             </div>
           ) : null}
           <div className="confirm-row">

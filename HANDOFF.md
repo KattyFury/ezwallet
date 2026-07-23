@@ -68,7 +68,9 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 2. Nộp intent cho **Swap Adapter**: `execute(executionParams, tokenInputs, signature)` + `approve(tokenIn→adapter)` trước, batch `[approve, execute]` qua **Multicall3From = 1 PIN**. ABI copy nguyên từ source SDK; encode bằng **viem** (tuple lồng dynamic bytes — hand-roll dễ sai offset → mất tiền).
 3. Adapter kéo token vào, chạy route (provider bên thứ ba — thực đo `lifi`), **GOM output ghi có cho ví** (settlement).
 
-**⚠️ ĐỪNG LẶP sai lầm cũ:** KHÔNG bóc `instructions[]` chạy tay — bỏ qua settlement → output **KẸT Ở ADAPTER, MẤT TIỀN** (tx vẫn status=1). Mọi thay đổi swap PHẢI verify `node verify-swap.mjs <ví> EURC USDC 2` (eth_simulateV1, không tốn tiền) — chỉ ship khi số dư tokenOut TĂNG đúng.
+**⚠️ ĐỪNG LẶP sai lầm cũ:** KHÔNG bóc `instructions[]` chạy tay — bỏ qua settlement → output **KẸT Ở ADAPTER, MẤT TIỀN** (tx vẫn status=1). Mọi thay đổi swap PHẢI verify `node verify-swap.mjs <ví> EURC USDC 2` (eth_simulateV1, không tốn tiền) — chỉ ship khi số dư tokenOut TĂNG đúng. Mẹo: cần ví có số dư để mô phỏng → lấy holder bất kỳ từ ArcScan API `/api/v2/tokens/<addr>/holders` (sim không cần key).
+
+**PHÍ APP 0.1% (user chốt 07-23):** `_swapCore.js` gửi `config.customFee = { percentageBps: FEE_BPS=10, recipientAddress: FEE_RECIPIENT=0xEb2D222d28F35fE7BeB5387f8Bc4eBF65f2652F6 }` trong body `/v1/stablecoinKits/swap` (field chuẩn — mổ từ source `@circle-fin/provider-stablecoin-service-swap`, schema nhận `percentageBps` 1..10000 HOẶC `amount` base units, kèm `recipientAddress`; địa chỉ ví nhận là public, không phải secret). Cơ chế: phí trừ ở **TOKEN ĐẦU VÀO**, adapter contract của Circle tự chuyển về ví nhận ngay trong tx swap (KHÔNG deploy contract gì); `estimatedAmount` trả về **ĐÃ TRỪ PHÍ** → UI "You receive" không phải sửa. Verified sim 07-23: swap 2 EURC→USDC, ví fee +0.002 EURC (đúng 0.1%), user nhận khớp estimate. `simulateSwap` giờ đo cả số dư FEE_RECIPIENT (calls[1,2,5,6]), verify-swap.mjs in dòng "Phí app". ⚠️ Docs Circle: Circle giữ 10% custom fee (90% về ví) — sim testnet thấy về đủ 100%, LÊN MAINNET ĐO LẠI.
 
 ---
 
@@ -133,7 +135,7 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 - **Input text ở hàng 1-4 hoặc popup neo nửa trên** (`.popup-card` tâm 30dvh) — bàn phím iPhone che nửa dưới. Không autoFocus trong popup. **Khoá cuộn trang** (`App.jsx` listener) — ĐỪNG xoá.
 - **Vị trí 55dvh = "dòng phụ giữa màn"** dùng chung: nút Hold-to-show (Gửi) và dòng địa chỉ+copy (Nhận) neo absolute top 55% → qua lại tab không nhảy. QR màn Nhận = `min(30dvh, 78vw)` chiếm hàng 3-6.
 - **HomeSend:** h1-2 số dư · h3-5.5 box token · h7-8 NotifArea · h9 3 action-card (trái→phải **Paste · Scan QR · Contacts**, user chốt 07-23) · h10 NavBar. **QRScanner:** cụm ô quét + 2 dòng chú thích căn tâm hàng 1-6.
-- **SendReceipt (07-23):** confirm-box + canvas biên lai có dòng **Address = ĐỊA CHỈ VÍ FULL** (đối soát on-chain; màn hình fs-tiny break-all, canvas font 18 để vừa 1 dòng). Canvas H = 650 (memo 710) — đáy dòng cuối + **50px khoảng thở + logo + 22 lề** (trước logo dính sát divider dòng cuối — đừng để lại).
+- **SendReceipt (07-23):** confirm-box + canvas biên lai có dòng **Address = địa chỉ RÚT GỌN `0x1234…5678`** (user chốt: KHÔNG để full — dài xấu), và **CHỈ hiện khi Send to là TÊN danh bạ** (không tên thì Send to đã là địa chỉ rút gọn → thêm nữa là trùng). Canvas `H = 590 + 60·(có Address) + 60·(có Note)` — đáy dòng cuối + **50px khoảng thở + logo + 22 lề** (trước logo dính sát divider dòng cuối — đừng để lại).
 - **TxHistory row:** trái `[icon] Sent/Received` + giờ + [Add to Contacts] + Note; phải `±$` (đỏ/xanh lá) + token thật xám. **KHÔNG kẻ line xám ngăn cách** trong list/box (trừ NavBar + hàng Rate/Fee).
 - **`<button>/<input>` phải kế thừa font** — đã có rule global `font-family: inherit`, đừng xoá.
 
