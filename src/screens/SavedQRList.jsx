@@ -66,7 +66,10 @@ export default function SavedQRList() {
           bù nên nhìn ổn, iOS KHÔNG hỗ trợ → vỡ layout (bug mobile user báo 07-23b). */}
       <div style={{ gridRow: '2 / 9', background: 'var(--color-surface)', borderRadius: 20, padding: 10, overflow: 'hidden' }}>
       <div className="scroll-hidden" style={{ height: '100%' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, alignContent: 'start' }}>
+        {/* ⚠️ CỘT PHẢI minmax(0,1fr) — '1fr' trần cho content quyết min-width, box to kéo banh cột
+            (đúng bài học .screen mục 6). Bug user chụp 07-23c: 3 QR → hàng 2 = [Blend | nút +],
+            nút + aspectRatio 1 bị kéo cao bằng box Blend → PHÌNH NGANG theo → 2 cột lệch hẳn. */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, alignContent: 'start' }}>
           {list.map(q => {
             const c = q.currency || 'USD'
             const label = fmtMoney(q.amount, c)
@@ -87,9 +90,10 @@ export default function SavedQRList() {
               </button>
             )
           })}
-          {/* ô + → mở POPUP thêm QR (không sang màn mới) */}
+          {/* ô + → mở POPUP thêm QR (không sang màn mới). KHÔNG aspectRatio (xem note trên) —
+              đứng cùng hàng với QR thì stretch cao theo, đứng một mình thì minHeight 140. */}
           <button onClick={() => setAdding(true)}
-            style={{ aspectRatio: '1', border: '1.5px dashed var(--color-muted)', borderRadius: 16, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            style={{ minWidth: 0, minHeight: 140, border: '1.5px dashed var(--color-muted)', borderRadius: 16, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="add" size={40} color="var(--color-muted)" />
           </button>
         </div>
