@@ -60,24 +60,27 @@ export default function SavedQRList() {
           (trước 3 cột QR bé quá) → QR + chữ to lên cho bà già dễ đọc. Mỗi QR = box TRẮNG nổi trên
           nền xám: viền xám 1.5 (luật "bấm được trong box xám") + DROP SHADOW như button (07-22d,
           trắng = alpha .25). X xóa góc trên-phải. Nhiều thì scroll trong box. */}
-      {/* Box xám NGOÀI + scroll TRONG (mẫu TxHistory) — ĐỪNG tô nền lên .scroll-thin: class đó có
-          margin-right -20px (đưa scrollbar vào dải lề phải) → nền tràn sát mép phải, lệch lề (user
-          báo 07-23). */}
-      <div style={{ gridRow: '2 / 9', background: 'var(--color-surface)', borderRadius: 20, padding: 14, overflow: 'hidden' }}>
-      <div className="scroll-thin" style={{ height: '100%' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, alignContent: 'start' }}>
+      {/* Box xám NGOÀI (padding 10 = box trắng cách lề trái/phải/trên đúng 10px, user chốt 07-23b)
+          + scroll TRONG bằng .scroll-hidden. ⚠️ ĐỪNG dùng .scroll-thin Ở TRONG box xám: class đó có
+          margin-right -20px (mẹo cho list full-bleed) → nội dung tràn phải; PC có scrollbar-gutter
+          bù nên nhìn ổn, iOS KHÔNG hỗ trợ → vỡ layout (bug mobile user báo 07-23b). */}
+      <div style={{ gridRow: '2 / 9', background: 'var(--color-surface)', borderRadius: 20, padding: 10, overflow: 'hidden' }}>
+      <div className="scroll-hidden" style={{ height: '100%' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, alignContent: 'start' }}>
           {list.map(q => {
             const c = q.currency || 'USD'
             const label = fmtMoney(q.amount, c)
             return (
               // Xem QR đã lưu (không lưu lại), Back về Kho QR. Hiển thị: QR · Tên (đen) · số tiền (xám).
               <button key={q.id} onClick={() => navigate('ShowQR', { amount: q.amount, currency: c, name: q.name, fromStorage: true, saveToLibrary: false, back: 'SavedQRList' })}
-                style={{ position: 'relative', border: '1.5px solid var(--color-gray)', borderRadius: 16, background: 'var(--color-white)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '16px 10px 12px', fontFamily: 'inherit' }}>
+                style={{ position: 'relative', minWidth: 0, border: '1.5px solid var(--color-gray)', borderRadius: 16, background: 'var(--color-white)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '16px 10px 12px', fontFamily: 'inherit' }}>
                 <span onClick={e => askDelete(q, e)} style={{ position: 'absolute', top: 8, right: 8, display: 'flex' }}><Icon name="x" size={16} color="var(--color-muted)" /></span>
-                {/* QR bọc khung CỨNG 104×104 + flexShrink 0 — 2 box cùng hàng bị grid kéo bằng
-                    chiều cao, box nhiều chữ hơn làm flex ÉP DẸP svg → QR méo (user báo 07-23) */}
-                <div style={{ width: 104, height: 104, flexShrink: 0 }}>
-                  <QRCodeSVG value={`ezwallet:${walletAddr}?amount=${q.amount}&cur=${c}`} size={104} level="M" />
+                {/* QR CO GIÃN THEO BOX (user chốt 07-23b "đừng cố định, tùy theo xám"): khung vuông
+                    aspectRatio 1 ăn hết bề ngang box (trừ 24px chừa lề + chỗ nút X), svg fill 100%
+                    (viewBox tự scale, không méo); flexShrink 0 chống grid ép dẹp (bug méo cũ). */}
+                <div style={{ alignSelf: 'stretch', margin: '0 12px', flexShrink: 0 }}>
+                  {/* height auto = svg tự giữ vuông theo viewBox (ép height 100% từng lệch 3px) */}
+                  <QRCodeSVG value={`ezwallet:${walletAddr}?amount=${q.amount}&cur=${c}`} size={104} level="M" style={{ width: '100%', height: 'auto', display: 'block' }} />
                 </div>
                 {q.name && <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.name}</span>}
                 <span className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{label}</span>
