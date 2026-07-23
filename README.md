@@ -8,11 +8,33 @@
 
 [![Live demo](https://img.shields.io/badge/live%20demo-ezwallet.pages.dev-0B53BF?style=flat-square)](https://ezwallet.pages.dev)
 [![Network](https://img.shields.io/badge/network-Arc%20Testnet-16A34A?style=flat-square)](https://testnet.arcscan.app)
+[![Pitch deck](https://img.shields.io/badge/pitch%20deck-slides-F59E0B?style=flat-square)](https://docs.google.com/presentation/d/1-MuqJeSV1Riwg3Bx6IXZSuNumqbtM83dmzG48-vIRDQ/edit?usp=sharing)
 [![License](https://img.shields.io/badge/license-MIT-black?style=flat-square)](./LICENSE)
 
 </div>
 
 ---
+
+## Demo
+
+<div align="center">
+
+<table>
+<tr>
+<td align="center" width="50%"><img src="docs/flow-login.gif" width="240" alt="Sign in"><br><sub><b>1 · Sign in with email + PIN</b></sub></td>
+<td align="center" width="50%"><img src="docs/flow-send.gif" width="240" alt="Send"><br><sub><b>2 · Send, with a note</b></sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/flow-receive.gif" width="240" alt="Receive"><br><sub><b>3 · Receive by QR</b></sub></td>
+<td align="center"><img src="docs/flow-swap.gif" width="240" alt="Swap"><br><sub><b>4 · Swap by % slider</b></sub></td>
+</tr>
+</table>
+
+</div>
+
+---
+
+### Screens
 
 <div align="center">
 

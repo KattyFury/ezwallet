@@ -1,6 +1,6 @@
 # HANDOFF — EZwallet
 
-**Cập nhật:** 2026-07-18 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** https://ezwallet.pages.dev (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
+**Cập nhật:** 2026-07-24 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** https://ezwallet.pages.dev (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
 
 > **Ví stablecoin cho người dùng phổ thông / người già.** UX đơn giản, mobile-first. **Đã chạm mốc user hài lòng (07-18): toàn bộ luồng — login, PIN, gửi, swap tiền thật — user tự test trên deploy, chạy mượt.**
 > ĐẦU MỖI PHIÊN đọc CẢ `HANDOFF.md` (file này) + `CLAUDE.md` (cách làm việc với user).
