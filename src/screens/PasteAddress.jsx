@@ -13,10 +13,13 @@ export default function PasteAddress() {
   const valid = isValid(trimmed)
   const showError = dirty && address && !valid
 
-  // Nút "Dán": đọc clipboard → điền ô → nếu hợp lệ đi tiếp luôn. Nếu ô đã có sẵn địa chỉ
-  // hợp lệ (anh tự gõ) thì đi tiếp. Clipboard fail (chặn quyền) → dùng nội dung đang gõ.
+  // Nút "Dán": ô ĐÃ có địa chỉ hợp lệ → đi tiếp NGAY, KHÔNG đụng clipboard (user chốt 07-23:
+  // trước đây luôn readText → iOS bật popup xác nhận "Paste|Speak" của HỆ ĐIỀU HÀNH cả khi vô
+  // nghĩa — popup đó là bảo mật clipboard iOS 16+, web KHÔNG tắt được, chỉ né được bằng cách
+  // không đọc khi không cần). Ô trống → mới đọc clipboard (popup OS hiện 1 lần, chấp nhận).
   async function handleDan() {
     let a = trimmed
+    if (isValid(a)) { navigate('SendAmount', { address: a, name: null }); return }
     try {
       const txt = await navigator.clipboard.readText()
       if (txt && txt.trim()) { a = txt.trim(); setAddress(a); setDirty(true) }

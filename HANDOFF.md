@@ -162,7 +162,7 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 - iOS cache meta/manifest lúc "Add to Home Screen" → đổi manifest/meta không ăn cho tới khi **xoá app + Add lại** (đổi CSS như trên thì ăn ngay lần mở kế).
 
 **Khác:**
-- iOS Safari: không BarcodeDetector → jsQR; Web Share API lưu Photos; không dùng `clipboard.readText()` (dialog phiền).
+- iOS Safari: không BarcodeDetector → jsQR; Web Share API lưu Photos; không dùng `clipboard.readText()` (dialog phiền). **Ngoại lệ duy nhất: nút Dán ở PasteAddress** — và CHỈ đọc khi ô trống (07-23): popup "Paste|Speak" là XÁC NHẬN CỦA iOS 16+ (bảo mật clipboard, web không tắt được — "Speak" do máy bật Spoken Content); ô đã có địa chỉ hợp lệ thì đi tiếp thẳng, không đụng clipboard → không popup. User hỏi rồi, đừng tìm cách "tắt popup" nữa.
 - Màn không có NotifArea → lỗi hiện qua `ErrorToast` (truyền `sendError` qua navigate).
 - Sign-out chỉ xoá session keys, GIỮ `ez_contacts/ez_saved_qrs/ez_lang/ez_currency`.
 
