@@ -189,6 +189,17 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 6. **Tối ưu bundle:** chunk SDK ~1MB phần lớn là crypto-browserify (polyfill `crypto` trong `vite.config.js`) — thử bỏ `'crypto'` xem SDK còn chạy không, NHƯNG chỉ test được trên deploy → làm riêng phiên, đừng gộp việc khác.
    - **ĐÃ LÀM 07-22g (user "app chưa mượt"):** `App.jsx` PREFETCH lúc `requestIdleCallback` — nạp nền các màn hay dùng (HomeSend/Receive/Swap/Menu/SendAmount/Contacts/TxHistory) + Circle SDK 1MB (bỏ qua khi MOCK) → đổi tab không chớp trắng, bước PIN không khựng vì tải nguội. KHÔNG đổi logic (chỉ warm cache; import() động vẫn chạy khi điều hướng thật). Đo bundle thật: `index`(SDK) 1026KB/gz281 · `chain`(viem) 270KB/gz83 · `QRScanner`(jsqr) 134KB — 2 cái sau lazy đúng. Chưa verify độ mượt trên deploy (mock không nạp SDK) — cần đo trên máy thật.
 
+### Lộ trình / định hướng tương lai (brainstorm 07-24 — ⚠️ CHƯA chốt, CHƯA triển, chỉ ghi ý)
+
+> User nêu 4 hướng dưới đây là TẦM NHÌN, không phải cam kết. Đừng tự build. Điểm chặn CHUNG của phần lớn: **Circle User-Controlled Wallet hỗ trợ native/biometric/EIP-712 tới đâu — phải đọc docs Circle verify TRƯỚC khi triển.**
+
+1. **More Languages & Currencies (global users).** Hạ tầng i18n ĐÃ CÓ SẴN — hiện `LANG='en'` khoá cứng vì Circle SDK chỉ English; màn Language có VI/中文 + CNY/VND nhưng disabled (xem mục 2). Mở lại = cho `LANG` đọc localStorage + bỏ `locked`. Cần: bản dịch thật + tỷ giá cho CNY/VND (hiện base USD).
+2. **Privacy Features (bảo vệ số dư/riêng tư).** Ý tưởng: ẩn số dư (tap để hiện), chế độ riêng tư. MỚI, chưa thiết kế.
+3. **Native Mobile App.** Enable FaceID/vân tay (thay PIN), push notification thật, Keychain/Keystore (cất token an toàn hơn localStorage), lên App Store/Play Store. Hướng KHÔNG viết lại: bọc app React hiện tại bằng **Capacitor** + plugin native → tái dùng code. ⚠️ Verify: (a) màn PIN iframe Circle có chạy trong webview Capacitor không, (b) Circle native SDK (iOS/Android) gắn biometric với User-Controlled Wallet thế nào.
+4. **In-App selective services (cung cấp dịch vụ cho khách).** KHÔNG mở dApp browser cho mọi dApp (ngược triết lý "an toàn cho người già" + đầy approve/scam). Thay vào: gói 1-2 hành động DeFi/dịch vụ uy tín CÓ CHỌN LỌC vào UI đơn giản của EZwallet, ẩn phức tạp phía sau. ⚠️ Verify: Circle ký được **EIP-712** + tx tuỳ ý không (hiện mới dùng contractExecution + ký message); cần mainnet + thêm chain (đang Arc Testnet). *(Không hứa lãi suất/sản phẩm cụ thể — thiết kế riêng khi triển.)*
+
+> Đã cân nhắc & TẠM LOẠI: **Browser extension** — làm được nhưng desktop-only (ngược định vị mobile-first cho người già), + rủi ro Circle SDK/PIN iframe xung đột CSP của Manifest V3 + origin `chrome-extension://` chưa chắc Circle whitelist. PWA (đã có) hợp target hơn.
+
 ---
 
 ## 10. Bài học chính (đúc kết — chi tiết trong git log)
