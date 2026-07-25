@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNav } from '../nav'
-import { refreshSession, getSDK, executeChallenge, signMessageChallenge } from '../circle'
+import { refreshSession, forceFreshSession, isTokenExpiredError, getSDK, executeChallenge, signMessageChallenge } from '../circle'
 import { t } from '../i18n'
 import logoLong from '../../design/logo.svg'
 
@@ -14,17 +14,36 @@ export default function PinGate() {
   const [busy, setBusy] = useState(true)   // mặc định busy = đang bật PIN Circle → chưa hiện UI dự án
   const tried = useRef(false)
 
+  // 1 lượt mở khoá: lấy token → tạo challenge ký message rỗng → bật PIN Circle. forceFresh=true =
+  // BẮT mint token mới (dùng khi lượt trước dính 155104 "token hết hạn").
+  async function attemptUnlock(forceFresh) {
+    const { userToken, encryptionKey } = forceFresh ? await forceFreshSession() : await refreshSession()
+    const walletId = localStorage.getItem('ez_wallet_id')
+    const challengeId = await signMessageChallenge(userToken, walletId)
+    await executeChallenge(await getSDK(), userToken, encryptionKey, challengeId)
+    sessionStorage.setItem('ez_pin_ok', '1')
+    navigate(next)
+  }
+
   async function unlock() {
     setBusy(true); setError('')
     try {
-      const { userToken, encryptionKey } = await refreshSession()
-      const walletId = localStorage.getItem('ez_wallet_id')
-      const challengeId = await signMessageChallenge(userToken, walletId)
-      await executeChallenge(await getSDK(), userToken, encryptionKey, challengeId)
-      sessionStorage.setItem('ez_pin_ok', '1')
-      navigate(next)
+      await attemptUnlock(false)
     } catch (e) {
       if (e?.code === 155701) { setBusy(false); return }   // user tự hủy nhập PIN → hiện nút thử lại
+      // Token phiên hết hạn/không hợp lệ (155104…): refreshSession có thể đã âm thầm trả token cũ.
+      // Mint token MỚI rồi thử lại 1 lần — đúng khuyến nghị docs Circle. Vẫn hỏng (vd state phiên
+      // thiếu) → về Login SẠCH; đăng nhập lại luôn chạy được (đây là lý do "sign out vào lại hết lỗi").
+      if (isTokenExpiredError(e)) {
+        try {
+          await attemptUnlock(true)
+        } catch (e2) {
+          if (e2?.code === 155701) { setBusy(false); return }
+          if (isTokenExpiredError(e2) || e2?.message === 'no-session') { signOut(); return }
+          setError(e2?.message || 'Unlock failed'); setBusy(false)
+        }
+        return
+      }
       setError(e?.message || e?.error?.message || (typeof e === 'string' ? e : 'Unlock failed'))
       setBusy(false)
     }

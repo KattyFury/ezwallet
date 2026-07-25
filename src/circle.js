@@ -182,6 +182,37 @@ export async function refreshSession() {
   return fallback
 }
 
+// Mint token MỚI có ĐẢM BẢO — KHÁC refreshSession (hàm kia im lặng trả token cũ khi createSession
+// lỗi → gốc lỗi 155104). Dùng để THỬ LẠI khi Circle báo token hết hạn. Mint hỏng → throw ra ngoài
+// (để caller cho đăng nhập lại), KHÔNG nuốt lỗi.
+export async function forceFreshSession() {
+  if (MOCK) return { userToken: 'mock-token', encryptionKey: 'mock-key' }
+  const email = localStorage.getItem('ez_email')
+  let s
+  if (email) {
+    s = await createSession(email)   // { userToken, encryptionKey } — throw nếu lỗi
+  } else {
+    const refreshToken = localStorage.getItem('ez_refresh_token')
+    const deviceId = localStorage.getItem('ez_google_deviceId')
+    if (!refreshToken || !deviceId) throw new Error('no-session')   // thiếu dữ liệu mint → đăng nhập lại
+    const r = await refreshSocialToken(localStorage.getItem('ez_user_token'), refreshToken, deviceId)
+    if (r.refreshToken) localStorage.setItem('ez_refresh_token', r.refreshToken)
+    s = { userToken: r.userToken, encryptionKey: r.encryptionKey }
+  }
+  localStorage.setItem('ez_user_token', s.userToken)
+  localStorage.setItem('ez_encryption_key', s.encryptionKey)
+  return s
+}
+
+// Circle báo token phiên hết hạn/không hợp lệ: 155103 (không thấy token), 155104 (hết hạn),
+// 155105 (không hợp lệ). Lỗi từ SDK có .code (số); lỗi từ /api/* ném new Error(message) → dò chữ.
+export function isTokenExpiredError(e) {
+  const code = e?.code ?? e?.error?.code
+  if ([155103, 155104, 155105].includes(code)) return true
+  const msg = (e?.message || e?.error?.message || (typeof e === 'string' ? e : '')).toLowerCase()
+  return /155103|155104|155105|token had expired|usertoken is invalid/.test(msg)
+}
+
 // KIT_KEY di chuyển lên server-side (Cloudflare Worker env var)
 // Browser chỉ gọi /api/swap, Worker xử lý Circle Stablecoin Kit API
 
