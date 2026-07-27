@@ -278,7 +278,10 @@ export default function Swap() {
     // idle (You receive, user chốt 07-23): CHƯA nhập số → không có gì để ước tính → để TRỐNG hẳn.
     // "…" chỉ dành cho "số chưa đọc được / đang tải" (đã nhập số, chờ estimate) — trước đây hiện
     // "…" cả lúc idle nhìn như tải mãi không xong + lệch caret to bên You pay.
-    const amtStr = isTyping ? (typing || '0') : known ? amount.toFixed(decimalsFor(sym)) : idle ? '' : '…'
+    // Bỏ số 0 thập phân thừa (user chốt 07-28: "10.00" vô lý khi số nguyên) — chỉ giữ thập phân KHI CÓ
+    // ("10"→10, "10.50"→10.5, "10.25"→10.25). Chỉ cắt phần sau dấu chấm, KHÔNG đụng số nguyên.
+    const trimZeros = s => (s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s)
+    const amtStr = isTyping ? (typing || '0') : known ? trimZeros(amount.toFixed(decimalsFor(sym))) : idle ? '' : '…'
     const amtColor = overBalance ? 'var(--color-error)'
       : isTyping ? (typing ? 'var(--color-content)' : 'var(--color-faint)')
       : known && amount > 0 ? 'var(--color-content)' : 'var(--color-faint)'
@@ -287,7 +290,10 @@ export default function Swap() {
     // Card "You receive" không onAmount → luôn hiện amtStr as-is (0.00 / … / số thật), không đổi.
     const hasValue = isTyping ? !!typing : known && amount > 0
     const showZero = onAmount && !hasValue
-    const [fitRef, fitSize] = useFitFontSize((showZero ? '' : amtStr) + (onAmount ? '_' : ''), { max: 52, min: 18 })
+    // Caret _ CHỈ hiện khi ĐANG GÕ (numpad mở) hoặc ô TRỐNG (tap-hint) — có số rồi thì TẮT
+    // (user chốt 07-28: "10.00_" caret nhấp nháy sau số đã nhập xong nhìn vô lý).
+    const showCaret = onAmount && (isTyping || !hasValue)
+    const [fitRef, fitSize] = useFitFontSize((showZero ? '' : amtStr) + (showCaret ? '_' : ''), { max: 52, min: 18 })
     return (
       <div style={{ ...CARD, minWidth: 0, height: 'calc(20dvh - 5px)', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
         {/* Phân cấp đậm nhạt (user chốt 07-17e "quan trọng nhớ bold"): label vai trò card = medium.
@@ -311,7 +317,7 @@ export default function Swap() {
           }}>
             <span className="num" style={{ fontSize: fitSize, fontWeight: 'var(--fw-light)', lineHeight: 1.05, color: amtColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {showZero ? null : amtStr}
-              {onAmount && <span className="caret">_</span>}
+              {showCaret && <span className="caret">_</span>}
             </span>
           </div>
         </div>
@@ -450,12 +456,15 @@ export default function Swap() {
         <div style={{ height: '8dvh', marginBottom: '2dvh', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {(() => {
             const needAmount = !error && !status && !(amountNum > 0)   // chưa chọn số → nút = hint mở numpad
+            // 'Swap submitted' (đã gửi, chờ xác nhận) = xanh lá MỜ · 'Swap successful' (token nhận đã
+            // tăng) = xanh lá ĐẦY → phân biệt 2 bước cho khỏi hoang mang (user chốt 07-28, trước cùng màu).
+            const confirmed = status === 'Swap successful'
             return (
           <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
             style={{
               width: '66.67%', overflow: 'hidden',
               ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
-              ...(success ? { opacity: 1 } : null),
+              ...(success ? { opacity: confirmed ? 1 : 0.6 } : null),
             }}
             disabled={needAmount ? (!hasBal || loading) : (!canSwap && !error)}
             onClick={needAmount ? openPad : handleSwap}>
