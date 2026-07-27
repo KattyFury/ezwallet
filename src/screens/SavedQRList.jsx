@@ -74,7 +74,8 @@ export default function SavedQRList() {
             const c = q.currency || 'USD'
             const label = fmtMoney(q.amount, c)
             return (
-              // Xem QR đã lưu (không lưu lại), Back về Kho QR. Hiển thị: QR · Tên (đen) · số tiền (xám).
+              // Xem QR đã lưu (không lưu lại), Back về Kho QR. Hiển thị: QR · Tên + số tiền (XANH brand
+              // cho nổi trên nền QR đen, user chốt 07-28).
               <button key={q.id} onClick={() => navigate('ShowQR', { amount: q.amount, currency: c, name: q.name, fromStorage: true, saveToLibrary: false, back: 'SavedQRList' })}
                 style={{ position: 'relative', minWidth: 0, border: '1.5px solid var(--color-gray)', borderRadius: 16, background: 'var(--color-white)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '16px 10px 12px', fontFamily: 'inherit' }}>
                 <span onClick={e => askDelete(q, e)} style={{ position: 'absolute', top: 8, right: 8, display: 'flex' }}><Icon name="x" size={16} color="var(--color-muted)" /></span>
@@ -85,15 +86,17 @@ export default function SavedQRList() {
                   {/* height auto = svg tự giữ vuông theo viewBox (ép height 100% từng lệch 3px) */}
                   <QRCodeSVG value={`ezwallet:${walletAddr}?amount=${q.amount}&cur=${c}`} size={104} level="M" style={{ width: '100%', height: 'auto', display: 'block' }} />
                 </div>
-                {q.name && <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.name}</span>}
-                <span className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{label}</span>
+                {q.name && <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.name}</span>}
+                <span className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-brand)' }}>{label}</span>
               </button>
             )
           })}
-          {/* ô + → mở POPUP thêm QR (không sang màn mới). KHÔNG aspectRatio (xem note trên) —
-              đứng cùng hàng với QR thì stretch cao theo, đứng một mình thì minHeight 140. */}
+          {/* ô + → mở POPUP thêm QR (không sang màn mới). HÌNH DỌC đồng bộ ô QR (user chốt 07-28):
+              minHeight 190 ≈ chiều cao ô QR (đo Playwright: QR box 194@390 / 187@375) + LỚN HƠN bề
+              rộng cột (~160) → luôn là hình dọc khi đứng RIÊNG. Chung hàng với QR thì grid stretch tự
+              kéo cao bằng. KHÔNG dùng aspectRatio (bug 07-23c: aspectRatio bị stretch kéo phình ngang). */}
           <button onClick={() => setAdding(true)}
-            style={{ minWidth: 0, minHeight: 140, border: '1.5px dashed var(--color-muted)', borderRadius: 16, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            style={{ minWidth: 0, minHeight: 190, border: '1.5px dashed var(--color-muted)', borderRadius: 16, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="add" size={40} color="var(--color-muted)" />
           </button>
         </div>
@@ -122,7 +125,7 @@ export default function SavedQRList() {
               ) : pad ? (
                 <span className="num"><span className="caret">_</span></span>   /* trống + đang nhập = CHỈ caret (chuẩn 07-20b) */
               ) : (
-                <span style={{ color: 'var(--color-faint)' }}>{`Amount (${displaySymbol(getDisplayCurrency())})`}</span>
+                <span style={{ color: 'var(--color-muted)' }}>{`Amount (${displaySymbol(getDisplayCurrency())})`}</span>
               )}
             </div>
             <div className="popup-actions">
