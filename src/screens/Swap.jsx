@@ -394,14 +394,14 @@ export default function Swap() {
           <SideCard label="You pay" sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
             onAmount={openPad} typing={pad ? typed : null} balLabel="Available" />
 
-          {/* Nút đảo chiều — ĐÈ lên khe giữa 2 card, xoay 180° mỗi lần bấm. BỎ vòng trắng (user chốt
-              07-22h): nút = nền XANH NHẠT info-soft + icon XANH ĐẬM brand + DROP SHADOW (tín hiệu
-              bấm được, như mọi nút). margin -17/-17 trên nút 44px → chiếm 10px trong flow = KHE 10px
-              giữa 2 card; nút bắc cầu qua khe (đè 17px vào mỗi card). */}
+          {/* Nút đảo chiều — ĐÈ lên khe giữa 2 card, xoay 180° mỗi lần bấm. Vòng tròn GRADIENT BRAND +
+              icon TRẮNG (user chốt 07-29, đảo bản 07-22h nền xanh nhạt/icon xanh đậm) → cùng hệ với
+              .btn-primary/.action-card.primary; shadow .35 theo luật nút gradient. margin -17/-17 trên
+              nút 44px → chiếm 10px trong flow = KHE 10px giữa 2 card; nút bắc cầu qua khe (đè 17px mỗi bên). */}
           <div style={{ display: 'flex', justifyContent: 'center', margin: '-17px 0', position: 'relative', zIndex: 3 }}>
             <button onClick={swapDir} aria-label="Reverse direction"
-              style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'var(--color-info-soft)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transform: `rotate(${flip}deg)`, transition: 'transform .3s ease' }}>
-              <Icon name="trade" size="var(--is-num)" color="var(--color-brand)" />
+              style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'var(--grad-brand)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transform: `rotate(${flip}deg)`, transition: 'transform .3s ease' }}>
+              <Icon name="trade" size="var(--is-num)" color="var(--color-white)" />
             </button>
           </div>
 
@@ -462,7 +462,10 @@ export default function Swap() {
             return (
           <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
             style={{
-              width: '66.67%', overflow: 'hidden',
+              // Rộng = 3/4 bề ngang MÀN (user chốt 07-29: mọi nút ĐỨNG ĐƠN ĐỘC cùng 1 cỡ cho đồng bộ —
+              // giống "Hold to show tokens" HomeSend + "Tap to copy" HomeReceive). min(75vw, ...) neo
+              // thẳng vào .screen, không phải % của khung cha đang thụt lề 20px.
+              width: 'min(75vw, calc(var(--screen-max) * 0.75))', overflow: 'hidden',
               ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
               ...(success ? { opacity: confirmed ? 1 : 0.6 } : null),
             }}

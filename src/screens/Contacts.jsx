@@ -183,9 +183,9 @@ export default function Contacts() {
 
       <div className="row-10 row10-dual">
         <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>{t('Quay lại')}</button>
-        <button className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }} onClick={openAdd}>
-          <Icon name="add" size="var(--is-md-lg)" color="var(--color-white)" />{t('Thêm')}
-        </button>
+        {/* CHỈ CHỮ, không icon (user chốt 07-29): mọi nút cặp Back/<hành động> trong app đều chữ trần —
+            riêng nút này có icon nhìn lạc. */}
+        <button className="btn btn-primary" onClick={openAdd}>{t('Thêm')}</button>
       </div>
 
       <input ref={fileRef} type="file" accept="image/*" onChange={pickFile} style={{ display: 'none' }} />
