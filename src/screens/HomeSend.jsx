@@ -41,9 +41,10 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
         width: 'min(75vw, calc(var(--screen-max) * 0.75))',
         // Nút NẰM TRONG box xám (vùng token 07-17f) → TRẮNG + VIỀN XÁM để nổi trên nền surface
         // (luật user 07-17f: "button nằm trong vùng box xám thì thành trắng viền xám", giống chip
-        // token màn Swap). Chữ GIỮ muted — user dặn "vẫn dùng màu xám đen chứ không cho màu đen".
+        // token màn Swap). Chữ ĐEN + drop shadow (user chốt 07-22f: nút này phải nổi/bấm được rõ).
         padding: '0 22px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
-        color: 'var(--color-muted)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
+        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
+        color: 'var(--color-content)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
         fontWeight: 'var(--fw-medium)', cursor: 'pointer', whiteSpace: 'nowrap',
         WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
       }}
@@ -149,9 +150,9 @@ export default function HomeSend() {
           // Mỗi dòng = 1 CÂU đủ nghĩa, từ khoá gạch chân BẤM ĐƯỢC → đi đúng nơi nút cùng tên ở
           // hàng 9 dẫn tới (user chốt 07-21).
           hints={[
-            { label: 'Contacts', desc: 'Save people you send to often', onClick: () => navigate('Contacts') },
-            { label: 'Scan QR', desc: 'Scan a QR code to send', onClick: () => navigate('QRScanner') },
             { label: 'Paste', desc: 'Paste a wallet address to send', onClick: () => navigate('PasteAddress') },
+            { label: 'Scan QR', desc: 'Scan a QR code to send', onClick: () => navigate('QRScanner') },
+            { label: 'Contacts', desc: 'Save people you send to often', onClick: () => navigate('Contacts') },
           ]}
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
@@ -173,9 +174,11 @@ export default function HomeSend() {
       </div>
 
       <div className="row-9 action-grid">
-        <button className="action-card" onClick={() => navigate('Contacts')}><Icon name="human" size="var(--is-item)" /><span>{t('Danh bạ')}</span></button>
-        <button className="action-card primary" onClick={() => navigate('QRScanner')}><Icon name="scan" size="var(--is-item)" color="var(--color-white)" /><span>{t('Quét QR')}</span></button>
+        {/* Thứ tự trái→phải: Paste · Scan QR · Contacts (user chốt 07-23: Contacts dùng nhiều
+            hơn → bên PHẢI; hint NotifArea cùng thứ tự) */}
         <button className="action-card" onClick={() => navigate('PasteAddress')}><Icon name="copy" size="var(--is-item)" /><span>{t('Dán để gửi')}</span></button>
+        <button className="action-card primary" onClick={() => navigate('QRScanner')}><Icon name="scan" size="var(--is-item)" color="var(--color-white)" /><span>{t('Quét QR')}</span></button>
+        <button className="action-card" onClick={() => navigate('Contacts')}><Icon name="human" size="var(--is-item)" /><span>{t('Danh bạ')}</span></button>
       </div>
 
       <NavBar active="HomeSend" />

@@ -20,6 +20,13 @@ export const ARC_RPC    = 'https://rpc.testnet.arc.network'
 export const ADAPTER        = '0xBBD70b01a1CAbc96d5b7b129Ae1AAabdf50dd40b'
 export const MULTICALL3FROM = '0x522fAf9A91c41c443c66765030741e4AaCe147D0'
 
+// Phí swap của app (user chốt 07-23): 0.1% mỗi swap về ví chủ app. Đây là customFee CHUẨN của
+// Stablecoin Kit (body `config.customFee`, mổ từ source @circle-fin/provider-stablecoin-service-swap
+// — schema createSwapParamsSchema nhận percentageBps 1..10000 + recipientAddress). Circle giữ 10%
+// của phí này, 90% về recipient. Địa chỉ ví nhận là PUBLIC (không phải secret) → hardcode như ADAPTER.
+export const FEE_RECIPIENT = '0xEb2D222d28F35fE7BeB5387f8Bc4eBF65f2652F6'
+export const FEE_BPS       = 10   // 10 bps = 0.1%
+
 export const TOKEN_ADDR = {
   USDC:   '0x3600000000000000000000000000000000000000',
   EURC:   '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a',
@@ -72,6 +79,7 @@ export async function fetchSwapIntent(kitKey, fromAddr, toAddr, walletAddress, a
       tokenOutAddress: toAddr,  tokenOutChain: 'Arc_Testnet',
       fromAddress: walletAddress, toAddress: walletAddress,
       amount: amountBase.toString(), slippageBps: 300,
+      config: { customFee: { percentageBps: FEE_BPS, recipientAddress: FEE_RECIPIENT } },
     }),
   })
   const data = await res.json()
@@ -122,13 +130,19 @@ export async function simulateSwap({ kitKey, tokenIn, tokenOut, walletAddress, a
   if (built.error) return { error: built.error, detail: built.swapData }
 
   const balOf = (addr) => encodeFunctionData({ abi: BALANCE_OF_ABI, functionName: 'balanceOf', args: [addr] })
+  // Theo dõi thêm ví nhận FEE (07-23): đo cả tokenIn + tokenOut của FEE_RECIPIENT trước/sau
+  // để chứng minh phí 0.1% THẬT SỰ về ví — không tin "đã cấu hình là có".
   const simBody = {
     jsonrpc: '2.0', id: 1, method: 'eth_simulateV1',
     params: [{
       blockStateCalls: [{ calls: [
-        { to: toAddr, data: balOf(walletAddress) },
-        { from: walletAddress, to: MULTICALL3FROM, data: built.batchData, value: '0x0' },
-        { to: toAddr, data: balOf(walletAddress) },
+        { to: toAddr,   data: balOf(walletAddress) },   // [0] tokenOut ví user trước
+        { to: fromAddr, data: balOf(FEE_RECIPIENT) },   // [1] tokenIn ví fee trước
+        { to: toAddr,   data: balOf(FEE_RECIPIENT) },   // [2] tokenOut ví fee trước
+        { from: walletAddress, to: MULTICALL3FROM, data: built.batchData, value: '0x0' },  // [3] swap
+        { to: toAddr,   data: balOf(walletAddress) },   // [4] tokenOut ví user sau
+        { to: fromAddr, data: balOf(FEE_RECIPIENT) },   // [5] tokenIn ví fee sau
+        { to: toAddr,   data: balOf(FEE_RECIPIENT) },   // [6] tokenOut ví fee sau
       ] }],
       validation: false, traceTransfers: true, returnFullTransactions: false,
     }, 'latest'],
@@ -139,12 +153,18 @@ export async function simulateSwap({ kitKey, tokenIn, tokenOut, walletAddress, a
   const sim = await simRes.json()
   if (sim.error) return { error: `eth_simulateV1 error: ${sim.error?.message}`, detail: sim.error }
   const calls = sim?.result?.[0]?.calls
-  if (!calls || calls.length < 3) return { error: 'sim: thiếu kết quả calls', detail: sim }
+  if (!calls || calls.length < 7) return { error: 'sim: thiếu kết quả calls', detail: sim }
   const hexToBig = (r) => (r && r !== '0x') ? BigInt(r) : 0n // returnData rỗng khi call revert
   const before = hexToBig(calls[0].returnData)
-  const swapCall = calls[1]
-  const after = hexToBig(calls[2].returnData)
+  const feeInBefore  = hexToBig(calls[1].returnData)
+  const feeOutBefore = hexToBig(calls[2].returnData)
+  const swapCall = calls[3]
+  const after = hexToBig(calls[4].returnData)
+  const feeInAfter  = hexToBig(calls[5].returnData)
+  const feeOutAfter = hexToBig(calls[6].returnData)
   const delta = after - before
+  const feeInDelta  = feeInAfter - feeInBefore
+  const feeOutDelta = feeOutAfter - feeOutBefore
   const expected = built.estOut ? BigInt(built.estOut) : null
   return {
     ok: swapCall.status === '0x1' && delta > 0n,
@@ -156,5 +176,9 @@ export async function simulateSwap({ kitKey, tokenIn, tokenOut, walletAddress, a
     delta:    fromBase(delta.toString(), tokenOut),
     expected: expected ? fromBase(expected.toString(), tokenOut) : null,
     gasUsed:  swapCall.gasUsed || null,
+    // Phí app về ví FEE_RECIPIENT (tokenIn hoặc tokenOut tuỳ route trừ ở đâu — đo cả 2)
+    feeRecipient: FEE_RECIPIENT,
+    feeDeltaIn:  fromBase(feeInDelta.toString(),  tokenIn),
+    feeDeltaOut: fromBase(feeOutDelta.toString(), tokenOut),
   }
 }

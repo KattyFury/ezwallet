@@ -34,10 +34,10 @@ function TokenRow({ sym, onClick }) {
   // Chip to lên cho người già (user chốt 07-20 "cho các yếu tố to lên"): logo 32, chữ 19 (--fs-body)
   return (
     <button onClick={onClick}
-      style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid var(--color-gray)', borderRadius: 999, background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'inherit', padding: '5px 12px 5px 6px' }}>
+      style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid var(--color-gray)', borderRadius: 999, background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'inherit', padding: '5px 12px 5px 6px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)' }}>
       <img src={`/tokens/${sym.toLowerCase()}.png`} alt={sym} style={{ width: 32, height: 32, borderRadius: '50%' }} />
       <span className="num" style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
-      <Icon name="down2" size="var(--is-body)" color="var(--color-muted)" />
+      <Icon name="down2" size="var(--is-body)" color="var(--color-brand)" />
     </button>
   )
 }
@@ -271,11 +271,17 @@ export default function Swap() {
   // ("1000000") đã tràn thành "100000…" mà không co xuống — giờ đo canvas nên co ĐÚNG luôn vừa khít).
   // onAmount (chỉ card You pay): bấm vào VÙNG SỐ (cả khoảng trống bên phải chip) → mở numpad.
   // typing: chuỗi đang gõ trên numpad (null = numpad đóng).
-  function SideCard({ label, sym, onPick, amount, disp, onAmount, typing }) {
+  function SideCard({ label, sym, onPick, amount, disp, onAmount, typing, balLabel, idle }) {
     const known = amount !== null
     const balKnown = balances[sym] !== undefined
     const isTyping = typing !== null && typing !== undefined
-    const amtStr = isTyping ? (typing || '0') : known ? amount.toFixed(decimalsFor(sym)) : '…'
+    // idle (You receive, user chốt 07-23): CHƯA nhập số → không có gì để ước tính → để TRỐNG hẳn.
+    // "…" chỉ dành cho "số chưa đọc được / đang tải" (đã nhập số, chờ estimate) — trước đây hiện
+    // "…" cả lúc idle nhìn như tải mãi không xong + lệch caret to bên You pay.
+    // Bỏ số 0 thập phân thừa (user chốt 07-28: "10.00" vô lý khi số nguyên) — chỉ giữ thập phân KHI CÓ
+    // ("10"→10, "10.50"→10.5, "10.25"→10.25). Chỉ cắt phần sau dấu chấm, KHÔNG đụng số nguyên.
+    const trimZeros = s => (s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s)
+    const amtStr = isTyping ? (typing || '0') : known ? trimZeros(amount.toFixed(decimalsFor(sym))) : idle ? '' : '…'
     const amtColor = overBalance ? 'var(--color-error)'
       : isTyping ? (typing ? 'var(--color-content)' : 'var(--color-faint)')
       : known && amount > 0 ? 'var(--color-content)' : 'var(--color-faint)'
@@ -284,9 +290,12 @@ export default function Swap() {
     // Card "You receive" không onAmount → luôn hiện amtStr as-is (0.00 / … / số thật), không đổi.
     const hasValue = isTyping ? !!typing : known && amount > 0
     const showZero = onAmount && !hasValue
-    const [fitRef, fitSize] = useFitFontSize((showZero ? '' : amtStr) + (onAmount ? '_' : ''), { max: 52, min: 18 })
+    // Caret _ CHỈ hiện khi ĐANG GÕ (numpad mở) hoặc ô TRỐNG (tap-hint) — có số rồi thì TẮT
+    // (user chốt 07-28: "10.00_" caret nhấp nháy sau số đã nhập xong nhìn vô lý).
+    const showCaret = onAmount && (isTyping || !hasValue)
+    const [fitRef, fitSize] = useFitFontSize((showZero ? '' : amtStr) + (showCaret ? '_' : ''), { max: 52, min: 18 })
     return (
-      <div style={{ ...CARD, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ ...CARD, minWidth: 0, height: 'calc(20dvh - 5px)', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
         {/* Phân cấp đậm nhạt (user chốt 07-17e "quan trọng nhớ bold"): label vai trò card = medium.
             Card cao 2 HÀNG nên chữ phụ lên --fs-body 19, số to base 52 (user chốt 07-20 to cho người già) */}
         <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>{label}</span>
@@ -308,7 +317,7 @@ export default function Swap() {
           }}>
             <span className="num" style={{ fontSize: fitSize, fontWeight: 'var(--fw-light)', lineHeight: 1.05, color: amtColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {showZero ? null : amtStr}
-              {onAmount && <span className="caret">_</span>}
+              {showCaret && <span className="caret">_</span>}
             </span>
           </div>
         </div>
@@ -316,10 +325,11 @@ export default function Swap() {
             07-21: để 2 cái bằng nhau làm mất phân cấp nặng–nhẹ. Available và ~$ đồng bộ cùng cỡ. */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
           <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {/* Số dư chưa đọc được → "…", KHÔNG vẽ 0 (bug 07-17) */}
-            Available: <span className="num" style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-medium)' }}>
+            {/* balLabel: You receive = "Balance", You pay = null (ẩn — user chốt 07-22f: bỏ dòng
+                Available bên You pay). Số dư chưa đọc được → "…", KHÔNG vẽ 0 (bug 07-17). */}
+            {balLabel ? <>{balLabel}: <span className="num" style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-medium)' }}>
               {balKnown ? `${spendableOf(sym, balances[sym]).toFixed(decimalsFor(sym))} ${sym}` : '…'}
-            </span>
+            </span></> : null}
           </span>
           <span className="num" style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>{disp !== null ? `~ ${fmtDisp(disp)}` : ''}</span>
         </div>
@@ -382,18 +392,20 @@ export default function Swap() {
         {/* KHỐI 1: You pay ⇅ You receive + Fee/Rate */}
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <SideCard label="You pay" sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
-            onAmount={openPad} typing={pad ? typed : null} />
+            onAmount={openPad} typing={pad ? typed : null} balLabel="Available" />
 
-          {/* Nút đảo chiều — ĐÈ lên ranh giới 2 card (viền trắng như "đục lỗ"), xoay 180° mỗi lần bấm.
-              margin -18/-18 trên nút 44px → chiếm đúng 8px trong flow = khe giữa 2 card. */}
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '-18px 0', position: 'relative', zIndex: 3 }}>
+          {/* Nút đảo chiều — ĐÈ lên khe giữa 2 card, xoay 180° mỗi lần bấm. BỎ vòng trắng (user chốt
+              07-22h): nút = nền XANH NHẠT info-soft + icon XANH ĐẬM brand + DROP SHADOW (tín hiệu
+              bấm được, như mọi nút). margin -17/-17 trên nút 44px → chiếm 10px trong flow = KHE 10px
+              giữa 2 card; nút bắc cầu qua khe (đè 17px vào mỗi card). */}
+          <div style={{ display: 'flex', justifyContent: 'center', margin: '-17px 0', position: 'relative', zIndex: 3 }}>
             <button onClick={swapDir} aria-label="Reverse direction"
-              style={{ width: 44, height: 44, borderRadius: '50%', border: '3px solid var(--color-white)', background: 'var(--color-info-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transform: `rotate(${flip}deg)`, transition: 'transform .3s ease' }}>
+              style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'var(--color-info-soft)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transform: `rotate(${flip}deg)`, transition: 'transform .3s ease' }}>
               <Icon name="trade" size="var(--is-num)" color="var(--color-brand)" />
             </button>
           </div>
 
-          <SideCard label="You receive" sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} />
+          <SideCard label="You receive" sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} balLabel="Balance" idle={!(amountNum > 0)} />
 
           {/* Fee + Rate — 1 dòng NHỎ fs-item 17: Rate căn TRÁI · Fee căn PHẢI, số liệu ĐEN cho bật */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 10, padding: '0 16px' }}>
@@ -411,16 +423,21 @@ export default function Swap() {
             rỗng thì hàng cao 0 → khối 2 thấp đi → space-between đẩy cả cụm trượt xuống mỗi lần hint
             hiện/tắt (bug user báo 07-21). Chừa sẵn chỗ = vị trí slider ĐỨNG YÊN, chip chỉ mờ/hiện. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1dvh', minWidth: 0 }}>
+          {/* Hàng height 40 CỐ ĐỊNH (slider không nhảy — xem note dưới): có số → chip gợi ý số chẵn;
+              CHƯA chọn số → hàng để TRỐNG (user chốt 07-23: bỏ hint pill "Slide to adjust…", hướng
+              dẫn chuyển XUỐNG NÚT Swap = "Slide or tap here to enter" bấm mở numpad). */}
           <div style={{ height: 40, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, opacity: hints.length ? 1 : 0, transition: 'opacity .18s ease', pointerEvents: hints.length ? 'auto' : 'none', minWidth: 0 }}>
-              {hints.map(v => (
-                <button key={v} onClick={() => pickHint(v)}
-                  style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}>
-                  <span className="num" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
-                  <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-brand)' }}> {fromSym}</span>
-                </button>
-              ))}
-            </div>
+            {hints.length ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                {hints.map(v => (
+                  <button key={v} onClick={() => pickHint(v)}
+                    style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}>
+                    <span className="num" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
+                    <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-brand)' }}> {fromSym}</span>
+                  </button>
+                ))}
+              </div>
+            ) : null}
           </div>
           <div style={{ minWidth: 0 }}>
             <PctSlider pct={Math.round(pct)} onChange={onPct} disabled={!hasBal || loading} />
@@ -433,20 +450,32 @@ export default function Swap() {
             (`height 8dvh` + `marginBottom 2dvh`, nằm cuối flex space-between của vùng 2/10) → band
             80→88dvh, nút 6dvh canh giữa band ⇒ TÂM 84dvh = đúng tâm action-card. ĐỪNG thêm
             paddingBottom cho vùng cha, marginBottom ở đây đã lo phần chừa 2dvh.
-            Nút vẫn là NƠI DUY NHẤT hiện trạng thái. Ưu tiên: lỗi > trạng thái > 'Swap'. */}
+            Nút vẫn là NƠI DUY NHẤT hiện trạng thái. Ưu tiên: lỗi > trạng thái > hint/'Swap'.
+            CHƯA nhập số (user chốt 07-23, thay hint pill cũ ở hàng chip): nút hiện
+            "Slide or tap here to enter" + bấm = mở numpad (openPad) thay vì swap. */}
         <div style={{ height: '8dvh', marginBottom: '2dvh', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {(() => {
+            const needAmount = !error && !status && !(amountNum > 0)   // chưa chọn số → nút = hint mở numpad
+            // 'Swap submitted' (đã gửi, chờ xác nhận) = xanh lá MỜ · 'Swap successful' (token nhận đã
+            // tăng) = xanh lá ĐẦY → phân biệt 2 bước cho khỏi hoang mang (user chốt 07-28, trước cùng màu).
+            const confirmed = status === 'Swap successful'
+            return (
           <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
             style={{
               width: '66.67%', overflow: 'hidden',
               ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
-              ...(success ? { opacity: 1 } : null),
+              ...(success ? { opacity: confirmed ? 1 : 0.6 } : null),
             }}
-            disabled={!canSwap && !error} onClick={handleSwap}>
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>
+            disabled={needAmount ? (!hasBal || loading) : (!canSwap && !error)}
+            onClick={needAmount ? openPad : handleSwap}>
+            {/* Chữ hint = fs-item 17 (luật CỠ CHỮ HINT toàn app — 21 mặc định của .btn bị cắt ellipsis) */}
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', ...(needAmount ? { fontSize: 'var(--fs-item)' } : null) }}>
               {success && <Icon name="check" size="var(--is-md-lg)" color="var(--color-white)" />}
-              {error || status || 'Swap'}
+              {error || status || (needAmount ? 'Slide or tap here to enter' : 'Swap')}
             </span>
           </button>
+            )
+          })()}
         </div>
       </div>
 

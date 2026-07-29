@@ -41,7 +41,9 @@ export default function SendReceipt() {
 
   // Vẽ biên lai ra canvas rồi tải về kho ảnh
   async function saveReceipt() {
-    const W = 620, H = memo ? 600 : 540   // +60 cho dòng Amount mới
+    // Cao = đáy dòng cuối + 50 khoảng thở + logo + 22 lề (user chốt 07-23: logo từng dính sát
+    // divider dòng cuối). 3 dòng cố định = 590; dòng Address (chỉ khi có tên) / Note mỗi dòng +60.
+    const W = 620, H = 590 + (name && address ? 60 : 0) + (memo ? 60 : 0)
     const cv = document.createElement('canvas')
     cv.width = W; cv.height = H
     const x = cv.getContext('2d')
@@ -62,10 +64,12 @@ export default function SendReceipt() {
       yy += 60
     }
     row(t('Gửi đến'), to)
+    if (name && address) row('Address', shortenAddr(address))   // rút gọn; chỉ khi Send to = tên danh bạ
     row('Amount', realAmountText)
     if (memo) row(t('Nội dung'), memo)
     row(t('Thời gian'), fmtTime(timestamp))
-    // Logo EZwallet (branding chuẩn — design/logo.svg, EZ xanh thương hiệu + wallet đen) ở đáy
+    // Logo EZwallet (branding chuẩn — design/logo.svg, EZ xanh thương hiệu + wallet đen) ở đáy —
+    // neo theo ĐÁY canvas, H đã chừa 50px khoảng thở sau dòng cuối (đừng để logo dính divider)
     const lw = 168, lh = lw * 380 / 1160   // tỉ lệ theo logo.svg mới (viewBox 1160×380)
     const img = new Image()
     img.src = logoLong
@@ -92,6 +96,14 @@ export default function SendReceipt() {
             <span className="confirm-label">{t('Gửi đến')}</span>
             <span className="confirm-value">{to}</span>
           </div>
+          {/* Địa chỉ ví RÚT GỌN 0x1234…5678 (user chốt 07-23: không để full, dài xấu). CHỈ hiện khi
+              Send to là TÊN danh bạ — không tên thì Send to đã là địa chỉ rút gọn rồi, thêm = trùng. */}
+          {name && address ? (
+            <div className="confirm-row">
+              <span className="confirm-label">Address</span>
+              <span className="confirm-value num">{shortenAddr(address)}</span>
+            </div>
+          ) : null}
           <div className="confirm-row">
             <span className="confirm-label">Amount</span>
             <span className="confirm-value num">{realAmountText}</span>
