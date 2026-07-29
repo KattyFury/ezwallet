@@ -35,12 +35,16 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
       style={{
         position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
+        // Rộng CỐ ĐỊNH = 3/4 bề ngang MÀN (user chốt 07-29, sửa lỗi chữ "Hold to show tokens" rớt
+        // xuống dòng trên iPhone đời cũ do rộng trước đây tự co theo padding 22px, không đủ chỗ).
+        // min(75vw, ...) neo thẳng vào .screen giống công thức logo Login (index.css dòng 83-86).
+        width: 'min(75vw, calc(var(--screen-max) * 0.75))',
         // Nút NẰM TRONG box xám (vùng token 07-17f) → TRẮNG + VIỀN XÁM để nổi trên nền surface
         // (luật user 07-17f: "button nằm trong vùng box xám thì thành trắng viền xám", giống chip
         // token màn Swap). Chữ GIỮ muted — user dặn "vẫn dùng màu xám đen chứ không cho màu đen".
         padding: '0 22px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
         color: 'var(--color-muted)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
-        fontWeight: 'var(--fw-medium)', cursor: 'pointer',
+        fontWeight: 'var(--fw-medium)', cursor: 'pointer', whiteSpace: 'nowrap',
         WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
       }}
       aria-label="hold to show token amounts instead of $"
