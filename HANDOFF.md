@@ -7,6 +7,8 @@
 > Nguyên tắc: **chạy tech chuẩn Circle/Arc, đọc docs + verify bằng API/eth_call thật trước khi làm, KHÔNG đoán.**
 > Lịch sử chi tiết từng phiên: `git log` (mô tả commit ghi đủ) — file này chỉ giữ TRẠNG THÁI CUỐI + luật + bài học.
 
+**Tài liệu ĐỐI NGOẠI (đừng nhét nội dung marketing vào file này):** `README.md` = giới thiệu kỹ thuật EN cho GitHub · **`PITCH.md` (07-29) = spec dự án + BỘ SHILL** (một dòng chốt, fact sheet "chỉ được nói gì", 5 điểm khác biệt, guardrails 6 câu cấm, copy sẵn cho X/LinkedIn/tiếng Việt, FAQ khó, lịch phát) · `DECK-DESIGN-SPEC.md` = hệ thiết kế deck 9 trang. ⚠️ Đổi tính năng/trạng thái sản phẩm → **sửa mục 2 và 6 của `PITCH.md`** kẻo copy đăng ra ngoài bị sai sự thật.
+
 Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mcp](https://developers.circle.com/ai/mcp) — Arc [skills](https://docs.arc.io/ai/skills) · [mcp](https://docs.arc.io/ai/mcp). Local đã có: Circle Skill (`circle:*`), Circle MCP (`mcp__circle__*`), Arc MCP (`mcp__arc-docs__*`).
 
 ---
