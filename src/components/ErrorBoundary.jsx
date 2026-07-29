@@ -15,7 +15,9 @@ export default class ErrorBoundary extends Component {
         <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', maxWidth: 300 }}>
           The app hit an unexpected error. Your wallet and funds are safe. Please reload.
         </div>
-        <button className="btn btn-primary" style={{ width: '66.67%' }} onClick={() => window.location.reload()}>Reload</button>
+        {/* Nút đứng một mình → 3/4 màn như .row10-single (user chốt 07-29). Màn này KHÔNG dùng
+            .screen (không có --screen-max qua padding) nên viết thẳng công thức. */}
+        <button className="btn btn-primary" style={{ width: 'min(75vw, calc(var(--screen-max) * 0.75))' }} onClick={() => window.location.reload()}>Reload</button>
       </div>
     )
   }

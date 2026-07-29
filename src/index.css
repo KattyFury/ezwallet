@@ -276,7 +276,11 @@ body {
   align-items: center;
   justify-content: center;
 }
-.row10-single .btn { width: 66.67%; }
+/* Nút ĐỨNG MỘT MÌNH = 3/4 BỀ NGANG MÀN (user chốt 07-29 — trước 66.67%): đồng bộ với "Hold to show
+   tokens" (HomeSend), "Tap to copy" (HomeReceive), nút Swap. Tính theo MÀN chứ không phải % của
+   khung cha (cha đang thụt lề 20px → 75% của cha ≠ 75% của màn, mỗi màn ra một cỡ). Ăn: About,
+   Language, Security. Cặp nút .row10-dual bên dưới GIỮ 44% — luật này chỉ cho nút đơn độc. */
+.row10-single .btn { width: min(75vw, calc(var(--screen-max) * 0.75)); }
 
 .row10-dual { gap: 12px; }
 .row10-dual .btn { width: 44%; }
