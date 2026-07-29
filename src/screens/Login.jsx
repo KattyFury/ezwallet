@@ -1,7 +1,7 @@
 import logoLong from '../../design/logo.svg'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { getCookie, setCookie, deleteCookie } from 'cookies-next'
 import { createSocialToken, initializeWallet, executeChallenge, getWalletAddress, GOOGLE_CLIENT_ID } from '../circle'
 import { t } from '../i18n'

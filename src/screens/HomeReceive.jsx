@@ -10,10 +10,6 @@ import { getTokenBalances, cachedBalances } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import { t } from '../i18n'
 
-function shortenAddr(addr) {
-  return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
-}
-
 export default function HomeReceive() {
   const { navigate } = useNav()
   const [copied, setCopied] = useState(false)

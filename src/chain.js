@@ -154,12 +154,6 @@ export async function getTokenBalances(walletAddress) {
   return out
 }
 
-export function fmtAmount(amount, decimals = 6) {
-  if (amount === 0) return '0'
-  if (amount < 0.000001) return amount.toExponential(2)
-  return amount.toFixed(Math.min(4, decimals))
-}
-
 // Giá USD của 1 token (USD mỗi 1 đơn vị). USDC = 1. Fallback usdRate offline.
 export async function getUsdRate(symbol = 'USDC') {
   if (MOCK) return MOCK_RATES[symbol] ?? 1

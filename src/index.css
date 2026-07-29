@@ -53,12 +53,10 @@
   /* ── FONT — 1 font duy nhất: BARLOW (mọi biến trỏ về Barlow, giữ tên cũ để không phải sửa JSX) ── */
   --font-base:      'Barlow', sans-serif;              /* NỘI DUNG: menu, mô tả, hint, thông báo, input, memo */
   --font-display:   'Barlow', sans-serif;              /* THƯƠNG HIỆU: logo, TIÊU ĐỀ chính màn */
-  --font-title:     'Barlow', sans-serif;              /* alias → display (tiêu đề) */
   --font-condensed: 'Barlow', sans-serif;              /* TÊN CŨ: số, ký hiệu tiền tệ, BUTTON */
 
   /* ── CỠ CHỮ (scale gợi ý — đã mở khóa, tùy chỉnh được) ── */
   --fs-amount:   52px;   /* Barlow display — số tiền lớn */
-  --fs-huge:     38px;   /* "size siêu to" — số chính màn Swap (bậc giữa 52 và 30) */
   --fs-title:    30px;   /* "size to" — TIÊU ĐỀ trang */
   --fs-num:      24px;   /* Barlow — số trong list (token amount, VND) */
   --fs-md-lg:    21px;   /* "font vừa-to" — BUTTON + slogan + chữ khi NHẬP text (to hơn nội dung 2px) */
@@ -67,15 +65,13 @@
   --fs-label:    15px;   /* "font nhỏ" — label, text phụ, placeholder */
   --fs-tiny:     13px;   /* "font mini" — badge / ghi chú rất nhỏ */
   --fs-content:  20px;   /* alias → --fs-body */
-  --fs-sub:      16px;   /* alias → --fs-label */
 
   /* ── CỠ ICON — LUÔN BÁM THEO CỠ CHỮ ĐI KÈM ──
      User chốt 2026-07-16: "icon phải tương đồng với chữ, chữ to icon nhỏ là sai".
      TOÀN BỘ icon có chữ đi kèm PHẢI lấy --is-* GHÉP CẶP với --fs-* của chữ đó (cùng số px).
      ĐỪNG đặt size={14}/{18}/{20} rời rạc nữa — tăng cỡ chữ là icon lệch ngay (bug 07-16).
      Chỉ icon ĐỨNG MỘT MÌNH (không có chữ nào bên cạnh để match) mới giữ số cứng: SendReceipt
-     check 76, ComingSoon shield 48, avatar Contacts, nút xoá QR, nút đảo chiều Swap, numpad erase. */
-  --is-title:   30px;   /* cặp --fs-title  30 */
+     check 76, avatar Contacts, nút xoá QR, nút đảo chiều Swap, numpad erase. */
   --is-num:     24px;   /* cặp --fs-num    24 */
   --is-md-lg:   21px;   /* cặp --fs-md-lg  21 — button */
   --is-body:    19px;   /* cặp --fs-body   19 — nội dung, thông báo, navbar (07-17e: hạ từ md-lg cho thoáng) */
@@ -195,7 +191,6 @@ body {
 .row-9      { grid-row: 9; }
 .row-10     { grid-row: 10; }
 .row-1-5    { grid-row: 1 / 6; }
-.row-3-4    { grid-row: 3 / 5; }
 .row-3-5    { grid-row: 3 / 6; }
 .row-1-9    { grid-row: 1 / 10; }
 
@@ -410,10 +405,8 @@ body {
 
 /* ── Additional row spans ── */
 .row-1-2  { grid-row: 1 / 3; }
-.row-3-6  { grid-row: 3 / 7; }
 .row-7-8  { grid-row: 7 / 9; }
 .row-2-8  { grid-row: 2 / 9; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-.row-2-3  { grid-row: 2 / 4; }
 
 /* ── NavBar ── */
 .navbar {
