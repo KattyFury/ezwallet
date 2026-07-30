@@ -29,7 +29,7 @@ Every slide answers one question in one breath. If a viewer has to hunt for the 
 
 ## 2. Brand Foundations — exact values, use verbatim
 
-All tokens are the REAL product design tokens (`src/index.css`), so the deck and the live app at `ewallet.cash` read as one brand. Do not approximate.
+All tokens are the REAL product design tokens (`src/index.css`), so the deck and the live app at `ezwallet.cash` read as one brand. Do not approximate.
 
 ### 2.1 Color palette
 
@@ -174,7 +174,7 @@ Content is fixed by the content spec; below is visual intent + a rough compositi
 
 **P8 — Builder · LIGHT.** "Builder." Hieu Nguyen (0xhieu), Hanoi. Three credibility facts as a clean list; optional avatar in a brand-blue ring. Human, understated, real.
 
-**P9 — What's Next / CTA · GRADIENT (the close, mirrors P1).** "What's Next." Roadmap items (Mainnet launch · iOS & Android app · More languages in-app) clearly marked FUTURE — no dates, not "done." Big CTA **"Try EZwallet now → ewallet.cash"** as a gradient/orange pill. Secondary links (github · x · telegram) verbatim. Warm, open, inviting — the bookend to P1.
+**P9 — What's Next / CTA · GRADIENT (the close, mirrors P1).** "What's Next." Roadmap items (Mainnet launch · iOS & Android app · More languages in-app) clearly marked FUTURE — no dates, not "done." Big CTA **"Try EZwallet now → ezwallet.cash"** as a gradient/orange pill. Secondary links (github · x · telegram) verbatim. Warm, open, inviting — the bookend to P1.
 
 ---
 

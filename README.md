@@ -6,7 +6,7 @@
 
 <sub>*Ví stablecoin đơn giản đến mức ông bà cũng dùng được.*</sub>
 
-[![Live demo](https://img.shields.io/badge/live%20demo-ewallet.cash-0B53BF?style=flat-square)](https://ewallet.cash)
+[![Live demo](https://img.shields.io/badge/live%20demo-ezwallet.cash-0B53BF?style=flat-square)](https://ezwallet.cash)
 [![Network](https://img.shields.io/badge/network-Arc%20Testnet-16A34A?style=flat-square)](https://testnet.arcscan.app)
 [![Pitch deck](https://img.shields.io/badge/pitch%20deck-slides-F59E0B?style=flat-square)](https://docs.google.com/presentation/d/1-MuqJeSV1Riwg3Bx6IXZSuNumqbtM83dmzG48-vIRDQ/edit?usp=sharing)
 [![License](https://img.shields.io/badge/license-MIT-black?style=flat-square)](./LICENSE)
@@ -100,7 +100,7 @@ on-chain through Arc's Memo precompile.
 
 ## Try it
 
-1. Open **[ewallet.cash](https://ewallet.cash)**.
+1. Open **[ezwallet.cash](https://ezwallet.cash)**.
 2. Create a wallet with your **email** — you'll receive a one-time code, then set
    a 6-digit PIN.
 3. Get test money: **Menu → Deposit**. This copies your wallet address and opens
