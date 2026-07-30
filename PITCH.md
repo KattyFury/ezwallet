@@ -29,7 +29,7 @@ Mọi con số dưới đây đều verify được (chạy thật / đọc on-c
 | Hạng mục | Sự thật |
 |---|---|
 | **Trạng thái** | Chạy được, public, **Arc Testnet** — tiền test, không có giá trị thật. Chưa lên mainnet. |
-| **Link sản phẩm** | https://ezwallet.pages.dev |
+| **Link sản phẩm** | https://ewallet.cash |
 | **Mã nguồn** | https://github.com/KattyFury/ezwallet — **MIT, mở hoàn toàn** |
 | **Pitch deck** | [Google Slides](https://docs.google.com/presentation/d/1-MuqJeSV1Riwg3Bx6IXZSuNumqbtM83dmzG48-vIRDQ/edit?usp=sharing) |
 | **Đăng nhập** | Email + **PIN 6 số**. KHÔNG seed phrase. Khoá do **Circle User-Controlled Wallets (MPC)** giữ; PIN ký từng giao dịch. |
@@ -112,7 +112,7 @@ Shill sai một câu là mất uy tín cả dự án. Đây là loại lỗi kh�
 > So I built a stablecoin wallet where she doesn't have to.
 > Email + a 6-digit PIN. No seed phrase. No gas token.
 > Live on Arc Testnet 👇
-> ezwallet.pages.dev
+> ewallet.cash
 >
 > **2/**
 > The thing everyone notices first: you don't type numbers to swap.
@@ -157,14 +157,14 @@ Shill sai một câu là mất uy tín cả dự án. Đây là loại lỗi kh�
 >
 > **9/**
 > Try it (2 minutes, free test money):
-> 🔗 ezwallet.pages.dev
+> 🔗 ewallet.cash
 > 💻 github.com/KattyFury/ezwallet (MIT)
 > Built on @Arc + @circle.
 > Tell me the first thing that confuses you — that's the bug I want.
 
 ### 8.2 · Tweet lẻ (xoay vòng, mỗi tuần 1-2 cái)
 
-- *"Type the exact amount" is the most user-hostile pattern in crypto. I replaced it with a slider that snaps to round numbers. Grandma-tested. → ezwallet.pages.dev* [GIF swap]
+- *"Type the exact amount" is the most user-hostile pattern in crypto. I replaced it with a slider that snaps to round numbers. Grandma-tested. → ewallet.cash* [GIF swap]
 - *Sent my mom $20 on-chain with the note "Mommy, I sent you money" attached. She didn't have to know what a wallet is. Arc Testnet, but the flow is real.* [GIF send]
 - *Wallet UX bar I'm holding myself to: if a 70-year-old needs one explanation to use a screen, the screen is wrong.*
 - *No seed phrase. No gas token. No hex address to paste. What's left is: a name, an amount, and a note. That's a wallet.*
@@ -188,7 +188,7 @@ Shill sai một câu là mất uy tín cả dự án. Đây là loại lỗi kh�
 >
 > One more thing: I'm not a developer. I built this end to end with Claude. The product thinking, the UX rules and the design calls are mine; the implementation came out of conversation and was verified by running every flow for real. If you've got an idea and no engineering background — the gap is smaller than it was a year ago.
 >
-> Try it (free test money, ~2 minutes): **ezwallet.pages.dev**
+> Try it (free test money, ~2 minutes): **ewallet.cash**
 > Source, MIT: **github.com/KattyFury/ezwallet**
 >
 > Tell me the first thing that confuses you. That's the bug I actually want.
@@ -210,7 +210,7 @@ Shill sai một câu là mất uy tín cả dự án. Đây là loại lỗi kh�
 >
 > Và điều mình muốn kể nhất: **mình không phải dev**. Toàn bộ app này mình làm cùng AI (Claude) — ý tưởng sản phẩm, luật UX, hướng thiết kế là của mình; code viết qua hội thoại rồi chạy thật để kiểm chứng từng luồng. Ai đang có ý tưởng mà không biết code: làm được, thật.
 >
-> Vào bấm thử 2 phút (có sẵn tiền test): **ezwallet.pages.dev**
+> Vào bấm thử 2 phút (có sẵn tiền test): **ewallet.cash**
 > Code mở MIT: **github.com/KattyFury/ezwallet**
 >
 > Ai thử xong nhắn mình chỗ đầu tiên thấy khó hiểu nhé — đấy mới là bug mình cần.
@@ -219,11 +219,11 @@ Shill sai một câu là mất uy tín cả dự án. Đây là loại lỗi kh�
 
 > **EZwallet** — a stablecoin wallet simple enough for your grandma.
 > Email + PIN (no seed phrase) · USDC pays its own gas on Arc · swap by dragging a slider · notes ride on-chain with the money.
-> Live on Arc Testnet: ezwallet.pages.dev · MIT: github.com/KattyFury/ezwallet
+> Live on Arc Testnet: ewallet.cash · MIT: github.com/KattyFury/ezwallet
 
 ### 8.6 · Một dòng cho bio / chữ ký
 
-> Building EZwallet — a stablecoin wallet simple enough for your grandma. Arc Testnet, MIT, ezwallet.pages.dev
+> Building EZwallet — a stablecoin wallet simple enough for your grandma. Arc Testnet, MIT, ewallet.cash
 
 ---
 
