@@ -8,8 +8,8 @@ function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
 function parseQR(text) {
   const raw = text.trim()
   if (isValid(raw)) return { address: raw, amount: null, currency: 'VND' }
-  const m = raw.match(/ezwallet:(0x[0-9a-fA-F]{40})(?:\?amount=(\d+))?(?:&cur=(\w+))?/)
-  if (m) return { address: m[1], amount: m[2] ? parseInt(m[2]) : null, currency: m[3] || 'VND' }
+  const m = raw.match(/ezwallet:(0x[0-9a-fA-F]{40})(?:\?amount=([\d.]+))?(?:&cur=(\w+))?/)
+  if (m) return { address: m[1], amount: m[2] ? parseFloat(m[2]) : null, currency: m[3] || 'VND' }
   return null
 }
 
