@@ -10,10 +10,6 @@ import { getTokenBalances, cachedBalances } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import { t } from '../i18n'
 
-function shortenAddr(addr) {
-  return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
-}
-
 export default function HomeReceive() {
   const { navigate } = useNav()
   const [copied, setCopied] = useState(false)
@@ -75,6 +71,9 @@ export default function HomeReceive() {
       <button onClick={handleCopyAddr} style={{
         position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
+        // Rộng CỐ ĐỊNH = 3/4 bề ngang MÀN — KHỚP "Hold to show tokens" bên HomeSend (user chốt 07-29:
+        // 2 nút này là 1 CẶP ở cùng toạ độ 55%, phải cùng cỡ; mọi nút đứng đơn độc trong app = 3/4).
+        width: 'min(75vw, calc(var(--screen-max) * 0.75))',
         padding: '0 22px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
         color: addrCopied ? 'var(--color-primary)' : 'var(--color-content)', fontFamily: 'var(--font-condensed)',

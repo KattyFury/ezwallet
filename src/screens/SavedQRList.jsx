@@ -103,9 +103,12 @@ export default function SavedQRList() {
       </div>
       </div>
 
-      {/* Back = xanh (primary), căn GIỮA màn hình theo chuẩn .row10-single (user chốt 2026-07-15) */}
-      <div className="row10-single">
-        <button className="btn btn-primary" onClick={() => navigate('HomeReceive')}>{t('Quay lại')}</button>
+      {/* Cặp Back TRẮNG (trái) + Add XANH (phải) theo chuẩn .row10-dual (user chốt 07-29, thay
+          .row10-single Back xanh cũ): Add mở đúng popup thêm QR như ô "+" trong lưới — thêm QR là
+          hành động chính của màn nên phải có nút ở hàng 9, không bắt cuộn xuống tìm ô "+". */}
+      <div className="row10-dual">
+        <button className="btn btn-secondary" onClick={() => navigate('HomeReceive')}>{t('Quay lại')}</button>
+        <button className="btn btn-primary" onClick={() => setAdding(true)}>{t('Thêm')}</button>
       </div>
 
       {/* Popup thêm QR — chuẩn .popup-card (tâm vùng hàng 2-5, chừa bàn phím nửa dưới) */}

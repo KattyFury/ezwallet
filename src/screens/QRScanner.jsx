@@ -101,8 +101,15 @@ export default function QRScanner() {
 
   return (
     <div className="screen">
-      {/* CỤM (ô vuông quét + 2 dòng chú thích) căn tâm HÀNG 1-6 (user chốt 07-17f — trước 1-5). */}
-      <div style={{ gridRow: '1 / 7', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, minWidth: 0 }}>
+      {/* Hàng 1 = TIÊU ĐỀ màn, đồng bộ mọi sub-screen khác (user chốt 07-29 — trước màn này không có
+          tiêu đề, ô quét chiếm luôn hàng 1). */}
+      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
+        {t('Quét QR')}
+      </div>
+
+      {/* CỤM (ô vuông quét + 2 dòng chú thích) căn tâm HÀNG 2-7 (user chốt 07-29 — dời xuống nhường
+          hàng 1 cho tiêu đề; trước là 1-6). */}
+      <div style={{ gridRow: '2 / 8', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, minWidth: 0 }}>
         {error ? (
           <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center', padding: '0 20px' }}>{error}</span>
         ) : (
@@ -126,7 +133,9 @@ export default function QRScanner() {
 
       <div className="row-10 row10-dual">
         <button className="btn btn-secondary" onClick={() => fileRef.current?.click()}>{t('Ảnh QR')}</button>
-        <button className="btn btn-primary" onClick={() => navigate('HomeSend')}>{t('Quay lại')}</button>
+        {/* "Done" chứ KHÔNG phải "Back" (user chốt 07-29): nút XANH = hành động chính/kết thúc,
+            gắn chữ Back vào nút xanh nhìn sai vai trò (Back luôn là nút trắng phụ). */}
+        <button className="btn btn-primary" onClick={() => navigate('HomeSend')}>{t('Xong')}</button>
       </div>
     </div>
   )
