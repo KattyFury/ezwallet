@@ -191,6 +191,29 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 
 ## 9. Việc tiếp theo
 
+### 🔴 CHỜ USER BẤM TAY — chốt phiên 2026-07-29 (đọc mục này TRƯỚC)
+
+> Code xong hết và đã push. Còn **2 việc chỉ làm được trên Cloudflare Dashboard** (Claude không đăng nhập được: `wrangler login` cần OAuth qua browser, và **wrangler v4 KHÔNG có lệnh gắn custom domain cho Pages** — đã kiểm tra `wrangler pages --help`, chỉ có project/deployment/deploy/secret/download).
+
+**1. Gắn domain `ezwallet.cash` vào Pages project** — CHƯA LÀM. Đo lúc 07-29: `ezwallet.cash` **không phân giải được** (chỉ có SOA, chưa có A/CNAME); NS đã trỏ Cloudflare (`gail`/`jihoon.ns.cloudflare.com`) nên zone OK, chỉ thiếu bước nối. `ezwallet.pages.dev` vẫn **HTTP 200** (app không sao).
+→ Dashboard → **Compute (Workers & Pages) → ezwallet → Custom domains → Set up a custom domain** → `ezwallet.cash` → Activate. Cloudflare tự tạo DNS (apex = CNAME flattening). **Chờ SSL 1–15' ("Initializing certificate" → "Active"); trong lúc chờ lỗi SSL là BÌNH THƯỜNG.** Muốn www thì làm lại với `www.ezwallet.cash`.
+
+**2. Tạo KV binding cho sao lưu danh bạ** — CHƯA LÀM. → **ezwallet → Settings → Bindings → Add → KV namespace**, namespace tên gì cũng được, **Variable name PHẢI đúng `EZ_SYNC`**. Chưa làm thì `/api/sync` trả 503 và client im lặng bỏ qua → app chạy y như cũ, không lỗi.
+
+*(Muốn Claude tự làm 2 việc trên: tạo API token Cloudflare quyền **Account → Cloudflare Pages → Edit**, ghi vào `.env.txt` dạng `CF_API_TOKEN=` + `CF_ACCOUNT_ID=` — file đã gitignore, token không cần dán vào chat — rồi bảo Claude gọi REST API.)*
+
+**3. Checklist test TRÊN DEPLOY** (những thứ localhost không test được vì Circle SDK không chạy trên localhost):
+- [ ] Mở `https://ezwallet.cash` → login email + **PIN** chạy bình thường trên domain mới
+- [ ] Gửi tiền 1 lệnh + swap 1 lệnh (chắc chắn đổi domain không phá đường tiền)
+- [ ] **Sao lưu KV:** thêm 1 danh bạ → xoá dữ liệu website (hoặc mở máy khác) → đăng nhập lại → danh bạ **quay về** (đúng là **KHÔNG có ảnh avatar** — cố ý, xem mục 3)
+- [ ] 6 sửa UI 07-29: nút 3/4 màn (Swap · Tap-to-copy · Hold-to-show · Back ở About/Language/Security) · nút ⇅ gradient + icon trắng · Scan QR có tiêu đề hàng 1 + nút **Done** · Contacts nút Add không icon · QR Storage có cặp **Back | Add**
+- [ ] ⚠️ Nhắc lại: user cũ trên `ezwallet.pages.dev` sang domain mới sẽ thấy **chưa đăng nhập + trống danh bạ** (localStorage theo origin). Ví/tiền không mất. Xem gotcha mục 7.
+
+**Đã làm xong phiên 07-29** (`git log` có mô tả đủ): `81ee602` 6 sửa UI user báo · `c240911` `.row10-single` = 3/4 · `b181309` **PITCH.md** (spec + bộ shill, copy sẵn để đăng) · `9b183b2` kiểm toán + dọn code chết vòng 2 · `7f61888` sửa domain `ewallet`→`ezwallet` · `16dd010` sao lưu KV. (Máy kia: `b8d5978` fix QR mất số thập phân.)
+
+---
+
+
 > ✅ **07-18 user XÁC NHẬN TRÊN DEPLOY: mọi thứ chạy mượt — PIN (sau đổi `getSDK` async) + swap tiền thật OK.** Không còn việc chặn.
 
 1. **Icon warning `!` nhìn nhỏ hơn icon khác cùng ô** — nguyên nhân: dấu `!` chỉ chiếm ~45/100 viewBox trong vòng tròn. CHỜ USER CHỌN: (a) phóng riêng, (b) user vẽ lại. Icon là bộ user vẽ — hỏi trước.
