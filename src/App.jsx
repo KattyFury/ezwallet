@@ -65,6 +65,15 @@ export default function App() {
     return () => window.removeEventListener('scroll', lock)
   }, [])
 
+  // KÉO BẢN SAO LƯU danh bạ/kho QR về 1 lần lúc mở app (2026-07-29). Chạy nền, im lặng:
+  // không có KV binding / mạng lỗi / MOCK → bỏ qua, app không hề biết. Đặt ở đây (mở app) chứ
+  // KHÔNG đặt trong màn Contacts: lúc này user chắc chắn chưa mở màn nào đọc danh bạ nên ghi đè
+  // local không giật UI. Chi tiết luật gộp: src/sync.js.
+  useEffect(() => {
+    if (!localStorage.getItem('ez_user_token') || !localStorage.getItem('ez_wallet_addr')) return
+    import('./sync').then(s => s.pullOnce()).catch(() => {})
+  }, [])
+
   // PREFETCH lúc trình duyệt RẢNH (2026-07-22g — user: "app chưa mượt") → chuyển tab + bước PIN
   // MƯỢT hơn. KHÔNG đổi logic: chỉ "làm nóng" cache các chunk (import() động vẫn chạy y hệt khi
   // điều hướng thật). Các màn hay dùng nạp trước → đổi tab KHÔNG chớp trắng (Suspense fallback);

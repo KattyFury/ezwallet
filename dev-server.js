@@ -8,8 +8,19 @@ import * as session from './functions/api/session.js'
 import * as wallet from './functions/api/wallet.js'
 import * as send from './functions/api/send.js'
 import * as swap from './functions/api/swap.js'
+import * as sync from './functions/api/sync.js'
 
 const PORT = 8787
+
+// KV GIẢ cho local (Cloudflare KV chỉ có trên deploy): đủ API `get`/`put` mà sync.js dùng.
+// Dữ liệu nằm trong RAM → restart dev-server là mất, đúng ý: local chỉ để thử luồng.
+const fakeKV = (() => {
+  const m = new Map()
+  return {
+    get: async k => (m.has(k) ? m.get(k) : null),
+    put: async (k, v) => { m.set(k, v); console.log(`[dev-server] KV put ${k} (${v.length} bytes)`) },
+  }
+})()
 
 function loadEnv() {
   const env = {}
@@ -32,6 +43,7 @@ const ROUTES = {
   '/api/wallet': wallet,
   '/api/send': send,
   '/api/swap': swap,
+  '/api/sync': sync,
 }
 
 const server = createServer(async (req, res) => {
@@ -56,7 +68,7 @@ const server = createServer(async (req, res) => {
       body: body || undefined,
     })
 
-    const r = await mod.onRequestPost({ request, env })
+    const r = await mod.onRequestPost({ request, env: { ...env, EZ_SYNC: fakeKV } })
     const text = await r.text()
     res.writeHead(r.status, Object.fromEntries(r.headers))
     res.end(text)
