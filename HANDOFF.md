@@ -117,6 +117,8 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 - Toggle/lọc BẬT = nền trắng + viền brand + chữ brand. Nút chính 2/3 bề ngang, phụ 1/2.
 - KHÔNG em-dash (dùng `–`), KHÔNG emoji. Scrollbar: `.scroll-thin`/`.scroll-hidden`.
 
+**Thẻ xem trước khi CHIA SẺ LINK (07-29):** `public/og.png` **1200×630** + đủ thẻ `og:*` / `twitter:*` / `description` / `canonical` trong `index.html`. Trước đó trang không có meta nào → dán link lên X/Telegram/Facebook ra **ô trống trơn**. Ảnh nền gradient brand (#0088FF→#0B53BF), logo knockout trắng, **ảnh app THẬT** (`docs/app-home.jpg`) — dựng bằng Playwright chụp 1 file HTML (script mẫu ở `C:\tmp\ezw-verify\og-card.html` + `make-og.mjs`). **Đây là BẢN NHÁP, user thay bằng bản tự thiết kế lúc nào cũng được** — chỉ cần giữ đúng **1200×630** và tên `og.png`. ⚠️ `og:image` PHẢI là URL tuyệt đối; X/Facebook **cache thẻ** → đổi ảnh xong phải dùng công cụ debug của họ ép quét lại, hoặc đổi tên file.
+
 **Brand assets:** `design/logo.svg` (Login + biên lai, viewBox 1160×380) · `design/logo-icon.svg` (để dành) · favicon `/fav_icon.png` · app icon `/icon.png` 512×512.
 
 > 🎨 **Design: user tự làm UI, icon user tự vẽ (viewBox 100, stroke 10).** Đừng tự redesign; chờ user đưa hướng rồi port. Mốc thẩm mỹ: Coinbase Wallet — số to nhạt, tile nền nhạt, nhiều khoảng thở.
@@ -195,10 +197,12 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 
 > Code xong hết và đã push. Còn **2 việc chỉ làm được trên Cloudflare Dashboard** (Claude không đăng nhập được: `wrangler login` cần OAuth qua browser, và **wrangler v4 KHÔNG có lệnh gắn custom domain cho Pages** — đã kiểm tra `wrangler pages --help`, chỉ có project/deployment/deploy/secret/download).
 
-**1. Gắn domain `ezwallet.cash` vào Pages project** — CHƯA LÀM. Đo lúc 07-29: `ezwallet.cash` **không phân giải được** (chỉ có SOA, chưa có A/CNAME); NS đã trỏ Cloudflare (`gail`/`jihoon.ns.cloudflare.com`) nên zone OK, chỉ thiếu bước nối. `ezwallet.pages.dev` vẫn **HTTP 200** (app không sao).
-→ Dashboard → **Compute (Workers & Pages) → ezwallet → Custom domains → Set up a custom domain** → `ezwallet.cash` → Activate. Cloudflare tự tạo DNS (apex = CNAME flattening). **Chờ SSL 1–15' ("Initializing certificate" → "Active"); trong lúc chờ lỗi SSL là BÌNH THƯỜNG.** Muốn www thì làm lại với `www.ezwallet.cash`.
+**1. Gắn domain `ezwallet.cash`** — ✅ **XONG** (đo 07-29 tối: A `172.67.168.76`/`104.21.94.133` + AAAA, HTTPS **200**, SSL hợp lệ, server Cloudflare). ⚠️ **`www.ezwallet.cash` CHƯA gắn** (không phân giải) — muốn www chạy thì Custom domains → thêm `www.ezwallet.cash`.
 
-**2. Tạo KV binding cho sao lưu danh bạ** — CHƯA LÀM. → **ezwallet → Settings → Bindings → Add → KV namespace**, namespace tên gì cũng được, **Variable name PHẢI đúng `EZ_SYNC`**. Chưa làm thì `/api/sync` trả 503 và client im lặng bỏ qua → app chạy y như cũ, không lỗi.
+**2. Tạo KV binding cho sao lưu danh bạ** — ❌ **CHƯA** (probe `POST https://ezwallet.cash/api/sync` trả **503** = `sync-disabled`). → **ezwallet → Settings → Bindings → Add → KV namespace**, namespace tên gì cũng được, **Variable name PHẢI đúng `EZ_SYNC`**, **rồi DEPLOY LẠI** (Pages chỉ áp binding cho deployment MỚI — tạo binding xong mà không deploy lại thì vẫn 503).
+  💡 **Cân nhắc trước khi bật:** tính năng đang TẮT nghĩa là **nợ kỹ thuật ở mục 3 hiện KHÔNG sống trên production** (không có gì để lộ). Nếu chưa gấp, để tắt cho tới khi làm xong auth chữ ký PIN (mục 9 việc 7) là an toàn nhất — nhất là khi sắp shill rộng, repo public, và `SECURITY.md`/`HANDOFF` đã mô tả rõ điểm yếu.
+
+**2b. CI chưa lên được** — `.github/workflows/ci.yml` **đã viết sẵn, nằm LOCAL, chưa commit**: GitHub từ chối push vì token `gh` thiếu scope `workflow`. Sửa: chạy `gh auth refresh -h github.com -s workflow` (mở browser) rồi `git add .github && git commit && git push`. Badge CI trong README cũng đã tạm bỏ, thêm lại khi workflow lên.
 
 *(Muốn Claude tự làm 2 việc trên: tạo API token Cloudflare quyền **Account → Cloudflare Pages → Edit**, ghi vào `.env.txt` dạng `CF_API_TOKEN=` + `CF_ACCOUNT_ID=` — file đã gitignore, token không cần dán vào chat — rồi bảo Claude gọi REST API.)*
 
