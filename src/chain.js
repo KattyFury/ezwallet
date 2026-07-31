@@ -182,7 +182,54 @@ export async function getTokenInfo(addr, symbol = 'USDC') {
 // Đọc memo (Arc Transaction Memos) của 1 giao dịch từ Memo event on-chain → text
 const MEMO_CONTRACT = '0x5294E9927c3306DcBaDb03fe70b92e01cCede505'
 const memoEventAbi = parseAbiItem('event Memo(address indexed sender, address indexed target, bytes32 callDataHash, bytes32 indexed memoId, bytes memo, uint256 memoIndex)')
+// ── LỜI NHẮN: NHỚ LUÔN + XẾP HÀNG, ĐỪNG BẮN DỒN (user chốt 07-31 "đừng spam") ──
+// Mỗi lời nhắn = 1 lệnh đọc receipt riêng. Màn Lịch sử trước đây bắn 30 lệnh CÙNG LÚC mỗi lần mở
+// → RPC công cộng chặn (429), kéo theo cả lệnh đọc số dư/phí bị chặn theo → app khựng.
+// Hai chốt chặn:
+//  1. NHỚ VĨNH VIỄN vào localStorage — giao dịch đã lên chain thì lời nhắn KHÔNG BAO GIỜ đổi.
+//     Nhớ cả trường hợp "không có lời nhắn" (null) — đa số giao dịch rơi vào đây, không nhớ thì
+//     lần nào mở cũng hỏi lại y hệt. Lần mở thứ 2 trở đi = 0 lệnh mạng.
+//  2. TỐI ĐA 3 LỆNH CHẠY CÙNG LÚC, phần còn lại xếp hàng. Vẫn lấy đủ lời nhắn, chỉ là rải ra.
+const MEMO_KEY = 'ez_memos'
+const MEMO_MAX = 800          // ~1 dòng/giao dịch; quá ngưỡng thì xoá sạch làm lại (rẻ hơn LRU)
+const MEMO_CONCURRENCY = 3
+let _memos = null
+function memoStore() {
+  if (!_memos) { try { _memos = JSON.parse(localStorage.getItem(MEMO_KEY) || '{}') } catch { _memos = {} } }
+  return _memos
+}
+function rememberMemo(hash, memo) {
+  const s = memoStore()
+  if (Object.keys(s).length >= MEMO_MAX) { _memos = {} }
+  _memos[hash] = memo
+  try { localStorage.setItem(MEMO_KEY, JSON.stringify(_memos)) } catch {}
+}
+let _memoRunning = 0
+const _memoQueue = []
+function queued(job) {
+  return new Promise(resolve => {
+    const start = () => {
+      _memoRunning++
+      job().then(resolve).catch(() => resolve(null)).finally(() => {
+        _memoRunning--
+        const next = _memoQueue.shift()
+        if (next) next()
+      })
+    }
+    if (_memoRunning < MEMO_CONCURRENCY) start()
+    else _memoQueue.push(start)
+  })
+}
+
 export async function getTxMemo(hash) {
+  const s = memoStore()
+  if (hash in s) return s[hash]              // đã hỏi rồi (kể cả "không có") → KHÔNG hỏi lại
+  const memo = await queued(() => readMemoOnChain(hash))
+  rememberMemo(hash, memo)
+  return memo
+}
+
+async function readMemoOnChain(hash) {
   try {
     const r = await publicClient.getTransactionReceipt({ hash })
     for (const log of r.logs) {
