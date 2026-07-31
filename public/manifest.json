@@ -1,8 +1,15 @@
 {
+  "id": "/",
   "name": "EZwallet",
   "short_name": "EZwallet",
+  "description": "Send and receive stablecoins with just an email and a 6-digit PIN. No seed phrase, no separate gas token.",
+  "lang": "en",
+  "dir": "ltr",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["finance", "utilities"],
   "background_color": "#FFFFFF",
   "theme_color": "#0B53BF",
   "icons": [

@@ -171,6 +171,8 @@ Being upfront about what this is not, yet:
 - **Google sign-in is not supported.** Email + PIN only.
 - **QR scanning is limited to crypto wallet QR codes.** Real-world QR codes
   (product barcodes, bank QRs, etc.) are not handled.
+- **Not audited.** See [SECURITY.md](./SECURITY.md) for the custody model, the known
+  limitations, and how to report a vulnerability privately.
 
 ## How this was built
 
