@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import jsQR from 'jsqr'
 import { useNav } from '../nav'
 import { t } from '../i18n'
+import { isOwnAddress } from '../data'
 
 function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
 
@@ -52,7 +53,11 @@ export default function QRScanner() {
         const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' })
         if (code) {
           const parsed = parseQR(code.data)
-          if (parsed) {
+          if (parsed && isOwnAddress(parsed.address)) {
+            // Quét trúng QR NHẬN TIỀN của chính mình (rất dễ xảy ra: QR của mình đang mở ở màn Nhận
+            // hoặc trong kho QR). KHÔNG đi tiếp — báo rồi quét tiếp, đừng đưa vào màn nhập tiền.
+            setHint(t('Đây là QR của bạn – quét QR người nhận'))
+          } else if (parsed) {
             active = false
             navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount, currency: parsed.currency })
             return
@@ -89,7 +94,8 @@ export default function QRScanner() {
         URL.revokeObjectURL(url)
         const code = jsQR(data.data, data.width, data.height)
         const parsed = code ? parseQR(code.data) : null
-        if (parsed) navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount, currency: parsed.currency })
+        if (parsed && isOwnAddress(parsed.address)) setHint(t('Đây là QR của bạn – quét QR người nhận'))
+        else if (parsed) navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount, currency: parsed.currency })
         else setHint(t('Không tìm thấy mã QR hợp lệ trong ảnh'))
       }
       img.onerror = () => setHint(t('Không đọc được ảnh'))

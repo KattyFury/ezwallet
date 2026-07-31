@@ -4,7 +4,7 @@ import Icon from '../components/Icon'
 import PctSlider from '../components/PctSlider'
 import Numpad from '../components/Numpad'
 import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress } from '../circle'
-import { getTokenBalances, getDisplayRates, cachedRates, estimateFeeUsd } from '../chain'
+import { getTokenBalances, getDisplayRates, cachedRates, cachedBalances, estimateFeeUsd } from '../chain'
 import { spendableOf, floorTo, getDisplayCurrency, displaySymbol } from '../data'
 import { useFitFontSize } from '../useFitFontSize'
 import { roundHints, fmtHint } from '../roundHint'
@@ -68,7 +68,14 @@ export default function Swap() {
   const [pct, setPct] = useState(0)              // % SỐ DƯ đang chọn (0-100) — nguồn sự thật duy nhất của số tiền
   const [snapAmt, setSnapAmt] = useState(null)   // số tiền CHẴN user bấm chọn ở hàng 7 (đơn vị token) — ghi đè pct
   const [estAmt, setEstAmt] = useState(null)
-  const [balances, setBalances] = useState({})
+  // SEED TỪ CACHE (07-31 — user báo "swap load chậm"): đo thật RPC Arc lần gọi NGUỘI mất ~3,3s
+  // (các lần sau 130–360ms). Trước đây màn Swap luôn bắt đầu từ {} nên "Available: …" đứng im
+  // vài giây mỗi lần mở, dù màn Gửi vừa đọc xong số dư y hệt. Giờ dùng lại cache tầng module
+  // (_balCache) như HomeSend/HomeReceive: hiện số cũ NGAY, fetch nền cập nhật sau.
+  const [balances, setBalances] = useState(() => {
+    const c = cachedBalances(localStorage.getItem('ez_wallet_addr'))
+    return c ? Object.fromEntries(c.map(tk => [tk.symbol, tk.amount])) : {}
+  })
   const [rates, setRates] = useState(() => cachedRates())
   const [feeUsd, setFeeUsd] = useState(null)
   const [loading, setLoading] = useState(false)

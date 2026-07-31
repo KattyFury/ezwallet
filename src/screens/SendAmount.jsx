@@ -78,9 +78,14 @@ export default function SendAmount() {
 
   const amount = parseFloat(digits || '0')
   const overBalance = availableAmt !== null && amount > availableAmt
+  // CHỐT CHẶN CUỐI cho việc gửi cho chính mình (user chốt 07-31). PasteAddress/QRScanner đã chặn
+  // ở cửa vào, nhưng còn đường qua Danh bạ (user tự lưu ví mình thành 1 contact) nên phải chặn
+  // ở đây nữa. Dùng `walletAddr` (lấy từ Circle qua ensureWalletAddress) chứ KHÔNG dùng
+  // localStorage: trên PWA mobile localStorage có thể vắng → chặn hụt.
+  const selfSend = !!walletAddr && address?.trim().toLowerCase() === walletAddr.toLowerCase()
   // Nút sáng ngay khi có số tiền hợp lệ; CHỈ chặn khi biết CHẮC vượt số dư. Không khoá nút chỉ vì số
   // dư chưa tải xong (trước đây đòi availableAmt!==null làm nút "chết" khi số dư/địa chỉ chưa về kịp).
-  const canContinue = amount > 0 && !overBalance
+  const canContinue = amount > 0 && !overBalance && !selfSend
   const decimalsFor = c => (effectiveToken(c) === 'cirBTC' ? 8 : 2)
   const availableStr = `${availableAmt !== null ? availableAmt.toFixed(decimalsFor(cur)) : '…'} ${cur}`
 
@@ -122,7 +127,13 @@ export default function SendAmount() {
               {cur}<Icon name="down2" size="var(--is-md-lg)" color="var(--color-brand)" />
             </button>
           </div>
-          {overBalance && (
+          {selfSend ? (
+            /* Vào được màn này với ví của chính mình chỉ còn đường Danh bạ — báo NGAY, đừng
+               để user gõ xong số tiền mới biết không gửi được. */
+            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>
+              {t('Đây là ví của bạn – không gửi cho chính mình được')}
+            </span>
+          ) : overBalance && (
             <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>
               {t('Số dư không đủ (khả dụng:')} {availableStr})
             </span>

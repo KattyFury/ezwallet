@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
 import { t } from '../i18n'
+import { isOwnAddress } from '../data'
 
 function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
 
@@ -10,22 +11,27 @@ export default function PasteAddress() {
   const [dirty, setDirty] = useState(false)
 
   const trimmed = address.trim()
-  const valid = isValid(trimmed)
+  // CHẶN GỬI CHO CHÍNH MÌNH (user chốt 07-31). Địa chỉ đúng chuẩn nhưng là ví của user →
+  // KHÔNG cho đi tiếp: gửi cho mình chỉ mất phí, số dư không đổi, lịch sử thêm dòng khó hiểu.
+  const self = isOwnAddress(trimmed)
+  const valid = isValid(trimmed) && !self
   const showError = dirty && address && !valid
 
   // Nút "Dán": ô ĐÃ có địa chỉ hợp lệ → đi tiếp NGAY, KHÔNG đụng clipboard (user chốt 07-23:
   // trước đây luôn readText → iOS bật popup xác nhận "Paste|Speak" của HỆ ĐIỀU HÀNH cả khi vô
   // nghĩa — popup đó là bảo mật clipboard iOS 16+, web KHÔNG tắt được, chỉ né được bằng cách
   // không đọc khi không cần). Ô trống → mới đọc clipboard (popup OS hiện 1 lần, chấp nhận).
+  const goNext = a => { if (isValid(a) && !isOwnAddress(a)) { navigate('SendAmount', { address: a, name: null }); return true } return false }
+
   async function handleDan() {
     let a = trimmed
-    if (isValid(a)) { navigate('SendAmount', { address: a, name: null }); return }
+    if (goNext(a)) return
+    if (isOwnAddress(a)) { setDirty(true); return }   // ví mình → dừng, KHÔNG đọc clipboard đè lên
     try {
       const txt = await navigator.clipboard.readText()
       if (txt && txt.trim()) { a = txt.trim(); setAddress(a); setDirty(true) }
     } catch {}
-    if (isValid(a)) navigate('SendAmount', { address: a, name: null })
-    else setDirty(true)
+    if (!goNext(a)) setDirty(true)
   }
 
   return (
@@ -44,7 +50,7 @@ export default function PasteAddress() {
         />
         {showError && (
           <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>
-            {t('Địa chỉ không hợp lệ – bắt đầu bằng 0x, 42 ký tự')}
+            {self ? t('Đây là ví của bạn – không gửi cho chính mình được') : t('Địa chỉ không hợp lệ – bắt đầu bằng 0x, 42 ký tự')}
           </span>
         )}
       </div>

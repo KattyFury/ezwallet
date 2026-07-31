@@ -26,6 +26,10 @@ export const MOCK_TX = [
   { hash: '0xmockrcv1', from: OTHER_ADDR, to: MOCK_ADDR, value: '25000000', tokenSymbol: 'USDC', tokenDecimal: '6', contractAddress: '0x3600000000000000000000000000000000000000', timeStamp: String(_now - 3600) },
   // Gửi 10 EURC (hôm qua)
   { hash: '0xmocksnd1', from: MOCK_ADDR, to: OTHER_ADDR, value: '10000000', tokenSymbol: 'EURC', tokenDecimal: '6', contractAddress: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', timeStamp: String(_now - 90000) },
+  // TỰ GỬI CHO CHÍNH MÌNH: 1 DÒNG DUY NHẤT có from == to (bug user báo 07-31 — trước đây bị gán
+  // nhãn "Swapped 5 USDC to USDC" nên tưởng mất tích khỏi lịch sử). Giữ ca này trong mock để lần
+  // sau đụng vào TxHistory là test lại được ngay: phải hiện "Sent to yourself", KHÔNG phải Swapped.
+  { hash: '0xmockself1', from: MOCK_ADDR, to: MOCK_ADDR, value: '5000000', tokenSymbol: 'USDC', tokenDecimal: '6', contractAddress: '0x3600000000000000000000000000000000000000', timeStamp: String(_now - 7200) },
   // Swap 20 USDC → ~18.5 EURC (2 ngày trước, cùng hash)
   { hash: '0xmockswp1', from: MOCK_ADDR, to: ADAPTER, value: '20000000', tokenSymbol: 'USDC', tokenDecimal: '6', contractAddress: '0x3600000000000000000000000000000000000000', timeStamp: String(_now - 180000) },
   { hash: '0xmockswp1', from: ADAPTER, to: MOCK_ADDR, value: '18500000', tokenSymbol: 'EURC', tokenDecimal: '6', contractAddress: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', timeStamp: String(_now - 180000) },

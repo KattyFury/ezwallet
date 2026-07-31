@@ -6,6 +6,16 @@ export function fmtVND(n) {
 // kẻo khách bấm "gửi hết"/"swap hết" xong không còn phí giao dịch, kẹt ví (user chốt 2026-07-03).
 // Chỉ áp cho USDC (token gas); EURC/cirBTC tiêu hết được. Dùng ở MỌI chỗ tính "khả dụng".
 export const GAS_RESERVE_USDC = 1
+
+// Địa chỉ này CÓ PHẢI ví của chính user không? (user chốt 07-31: "phải không cho phép tao gửi
+// tiền vào ví mình chứ"). Gửi cho chính mình chỉ tốn phí mạng, số dư không đổi, và còn làm rối
+// lịch sử — chặn ngay ở chỗ NHẬP địa chỉ thay vì để user phát hiện sau khi mất tiền phí.
+// Thiếu địa chỉ trong localStorage → trả false (KHÔNG chặn nhầm); màn SendAmount có chốt chặn
+// cuối bằng địa chỉ lấy từ Circle nên vẫn an toàn.
+export function isOwnAddress(addr) {
+  const me = (localStorage.getItem('ez_wallet_addr') || '').trim().toLowerCase()
+  return !!me && !!addr && addr.trim().toLowerCase() === me
+}
 export function spendableOf(symbol, balance) {
   const b = balance || 0
   return symbol === 'USDC' ? Math.max(0, b - GAS_RESERVE_USDC) : b

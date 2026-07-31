@@ -61,6 +61,7 @@ const EN = {
   // PasteAddress
   'Dán địa chỉ để gửi': 'Paste address to send',
   'Địa chỉ không hợp lệ – bắt đầu bằng 0x, 42 ký tự': 'Invalid address – must start with 0x, 42 chars',
+  'Đây là ví của bạn – không gửi cho chính mình được': "That's your own wallet – you can't send to yourself",
   'Dán': 'Paste',
   // Contacts
   'Chưa có danh bạ': 'No contacts yet',
@@ -73,6 +74,7 @@ const EN = {
   // QRScanner
   'Hướng camera vào mã QR': 'Point the camera at a QR code',
   'QR không hợp lệ, thử lại': 'Invalid QR, try again',
+  'Đây là QR của bạn – quét QR người nhận': "That's your own QR – scan the recipient's QR",
   'Không truy cập được camera – chọn ảnh QR hoặc dán địa chỉ.': 'Cannot access camera – pick a QR image or paste an address.',
   'Không tìm thấy mã QR hợp lệ trong ảnh': 'No valid QR found in the image',
   'Không đọc được ảnh': 'Could not read the image',

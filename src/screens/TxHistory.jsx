@@ -73,7 +73,10 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, sw
   // Tiền từ faucet → hiện "Faucet" thay vì địa chỉ 0x lạ (user chốt 07-17). Ưu tiên tên danh bạ
   // nếu user tự đặt. Danh sách faucet tra từ ArcScan — xem chain.js.
   const isFaucet = !isSend && isFaucetAddress(counter)
-  const who = name || (isFaucet ? 'Faucet' : shortAddr(counter))
+  // Tự gửi cho chính mình → nói thẳng "yourself", đừng bắt người già đối chiếu 0x1234…5678 với
+  // địa chỉ ví của chính họ (07-31, cùng bug với swapHashes ở trên).
+  const isSelf = counter && walletAddr && counter.toLowerCase() === walletAddr.toLowerCase()
+  const who = isSelf ? 'yourself' : name || (isFaucet ? 'Faucet' : shortAddr(counter))
   // Cỡ chữ GIẢM để full thông tin fit màn điện thoại (user chốt 07-20): icon 40→34, tiền phải
   // fs-num 24→fs-md-lg 21, token phụ fs-label→fs-tiny, padding dọc 14→11, gap 12→10.
   return (
@@ -185,8 +188,15 @@ export default function TxHistory() {
     const dir = {}, lower = walletAddr?.toLowerCase()
     txs.forEach(tx => {
       const h = tx.hash; if (!dir[h]) dir[h] = { in: false, out: false }
-      if (tx.from?.toLowerCase() === lower) dir[h].out = true
-      if (tx.to?.toLowerCase() === lower) dir[h].in = true
+      const out = tx.from?.toLowerCase() === lower
+      const inc = tx.to?.toLowerCase() === lower
+      // ⚠️ TỰ GỬI CHO CHÍNH MÌNH (from == to trên CÙNG 1 DÒNG) KHÔNG PHẢI SWAP — bug user báo 07-31:
+      // lỡ gửi vào chính ví mình, dòng đó bị gán nhãn "Swapped 5.00 USDC to USDC" nên user tìm chữ
+      // "Sent" không thấy → tưởng giao dịch BIẾN MẤT khỏi lịch sử. Swap THẬT luôn có 2 DÒNG RIÊNG
+      // (1 leg ra + 1 leg vào); dòng tự gửi thì bỏ qua, để nó chạy nhánh "Sent to" bình thường.
+      if (out && inc) return
+      if (out) dir[h].out = true
+      if (inc) dir[h].in = true
     })
     const s = new Set(); for (const h in dir) if (dir[h].in && dir[h].out) s.add(h)
     return s
@@ -210,9 +220,20 @@ export default function TxHistory() {
 
   useEffect(() => {
     if (!walletAddr) { setLoading(false); return }
-    fetch(`${ARCSCAN}/api?module=account&action=tokentx&address=${walletAddr}&sort=desc&limit=50`)
+    // ⚠️ PHÂN TRANG: ArcScan (Blockscout) **BỎ QUA `limit`** — dùng `page` + `offset` mới ăn.
+    // Đo thật 07-31 trên ví nhiều giao dịch: `limit=50` → trả về **10.000 dòng / 11,7s** (tức là
+    // tải TOÀN BỘ lịch sử ví về rồi mới vẽ); `page=1&offset=1000` → 1.000 dòng / 1,7s.
+    // Chọn 1000 (không phải 50) để GIỮ luật "lịch sử là sổ đối soát, không cắt" (mục 6 HANDOFF):
+    // ví người dùng thật không tới 1000 giao dịch nên vẫn thấy đủ, mà không còn kéo 10k dòng.
+    // `sort=desc` thì ArcScan CÓ tôn trọng (đã đo) — list render thẳng theo thứ tự API, không sort lại.
+    fetch(`${ARCSCAN}/api?module=account&action=tokentx&address=${walletAddr}&sort=desc&page=1&offset=1000`)
       .then(r => r.json())
-      .then(d => setTxs(d?.result || []))
+      // TỰ SORT, ĐỪNG TIN THỨ TỰ API (07-31). ArcScan hiện có tôn trọng `sort=desc` (đã đo), nhưng
+      // list render THẲNG theo thứ tự mảng: chỉ cần API đổi hành vi/ trả lệch là (a) giao dịch mới
+      // nằm lẫn ở giữa, (b) nhãn NGÀY lặp lại → 2 DateHeader trùng key → React cảnh báo
+      // "duplicated and/or omitted" và có thể BỎ MẤT dòng. Sort ở client là chốt chặn rẻ nhất.
+      .then(d => (d?.result || []).slice().sort((a, b) => Number(b.timeStamp) - Number(a.timeStamp)))
+      .then(setTxs)
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [walletAddr])
@@ -255,7 +276,9 @@ export default function TxHistory() {
           const nodes = []
           filtered.forEach((tx, i) => {
             const dl = dateLabel(tx.timeStamp)
-            if (dl !== last) { nodes.push(<DateHeader key={`h-${dl}`} date={dl} first={i === 0} />); last = dl }
+            // key kèm CHỈ SỐ: cùng 1 ngày có thể xuất hiện nhiều nhóm (dữ liệu lệch thứ tự) →
+            // `h-<ngày>` trần bị TRÙNG KEY, React có thể bỏ mất nhóm sau (đã thấy cảnh báo thật 07-31).
+            if (dl !== last) { nodes.push(<DateHeader key={`h-${dl}-${i}`} date={dl} first={i === 0} />); last = dl }
             nodes.push(<TxRow key={`${tx.hash}-${tx.from}-${tx.to}-${i}`} tx={tx} walletAddr={walletAddr} contacts={contacts} onClick={() => setSelected(tx)} cur={cur} rates={rates} memo={memos[tx.hash]} isSwap={swapHashes.has(tx.hash)} swapInfo={swapPairs[tx.hash]} onAdd={a => navigate('Contacts', { addAddress: a })} />)
           })
           return nodes
