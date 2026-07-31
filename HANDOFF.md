@@ -1,6 +1,6 @@
 # HANDOFF — EZwallet
 
-**Cập nhật:** 2026-07-29 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** **https://ezwallet.cash** (domain user mua trên Cloudflare 07-29) · `ezwallet.pages.dev` vẫn chạy song song (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
+**Cập nhật:** 2026-07-31 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** **https://ezwallet.cash** (domain user mua trên Cloudflare 07-29) · `ezwallet.pages.dev` vẫn chạy song song (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
 
 > **Ví stablecoin cho người dùng phổ thông / người già.** UX đơn giản, mobile-first. **Đã chạm mốc user hài lòng (07-18): toàn bộ luồng — login, PIN, gửi, swap tiền thật — user tự test trên deploy, chạy mượt.**
 > ĐẦU MỖI PHIÊN đọc CẢ `HANDOFF.md` (file này) + `CLAUDE.md` (cách làm việc với user).
@@ -200,7 +200,7 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 
 ## 9. Việc tiếp theo
 
-### 🔴 CHỜ USER BẤM TAY — chốt phiên 2026-07-29 (đọc mục này TRƯỚC)
+### 🔴 CHỜ USER BẤM TAY — chốt phiên 2026-07-31 (đọc mục này TRƯỚC)
 
 > Code xong hết và đã push. Còn **2 việc chỉ làm được trên Cloudflare Dashboard** (Claude không đăng nhập được: `wrangler login` cần OAuth qua browser, và **wrangler v4 KHÔNG có lệnh gắn custom domain cho Pages** — đã kiểm tra `wrangler pages --help`, chỉ có project/deployment/deploy/secret/download).
 
@@ -216,11 +216,15 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 **3. Checklist test TRÊN DEPLOY** (những thứ localhost không test được vì Circle SDK không chạy trên localhost):
 - [ ] Mở `https://ezwallet.cash` → login email + **PIN** chạy bình thường trên domain mới
 - [ ] Gửi tiền 1 lệnh + swap 1 lệnh (chắc chắn đổi domain không phá đường tiền)
-- [ ] **Sao lưu KV:** thêm 1 danh bạ → xoá dữ liệu website (hoặc mở máy khác) → đăng nhập lại → danh bạ **quay về** (đúng là **KHÔNG có ảnh avatar** — cố ý, xem mục 3)
+- [ ] **Fix 07-31 — lịch sử:** giao dịch user lỡ tự gửi cho chính mình phải hiện **"Sent to yourself"** (KHÔNG còn "Swapped … USDC to USDC"), thứ tự mới→cũ đúng, mở nhanh hơn hẳn
+- [ ] **Fix 07-31 — chặn tự gửi:** dán địa chỉ ví mình → báo đỏ, không đi tiếp · quét QR nhận tiền của chính mình → báo, không đi tiếp
+- [ ] **Fix 07-31 — mượt:** mở màn Swap thấy số dư **ngay** (không đứng `…`) · mở Lịch sử lần 2 phải tức thì (lời nhắn đã nhớ)
+- [ ] Thẻ chia sẻ link: dán `ezwallet.cash` vào Telegram cho chính mình → phải ra ảnh + tiêu đề (X/Facebook cache thẻ, xem mục 5)
 - [ ] 6 sửa UI 07-29: nút 3/4 màn (Swap · Tap-to-copy · Hold-to-show · Back ở About/Language/Security) · nút ⇅ gradient + icon trắng · Scan QR có tiêu đề hàng 1 + nút **Done** · Contacts nút Add không icon · QR Storage có cặp **Back | Add**
 - [ ] ⚠️ Nhắc lại: user cũ trên `ezwallet.pages.dev` sang domain mới sẽ thấy **chưa đăng nhập + trống danh bạ** (localStorage theo origin). Ví/tiền không mất. Xem gotcha mục 7.
 
-**Đã làm xong phiên 07-29** (`git log` có mô tả đủ): `81ee602` 6 sửa UI user báo · `c240911` `.row10-single` = 3/4 · `b181309` **PITCH.md** (spec + bộ shill, copy sẵn để đăng) · `9b183b2` kiểm toán + dọn code chết vòng 2 · `7f61888` sửa domain `ewallet`→`ezwallet` · `16dd010` sao lưu KV. (Máy kia: `b8d5978` fix QR mất số thập phân.)
+**Đã làm xong phiên 07-29 → 07-31** (`git log` mô tả đủ từng cái):
+`81ee602` 6 sửa UI user báo · `c240911` `.row10-single` = 3/4 · `b181309` **PITCH.md** (spec + bộ shill) · `9b183b2` kiểm toán + dọn code chết vòng 2 · `7f61888` domain `ezwallet.cash` · `16dd010` sao lưu KV (đang TẮT trên production) · `039faea` **chuyên nghiệp hoá repo**: meta/OG + `public/og.png` + `SECURITY.md` + metadata `package.json` + homepage GitHub · `ef7f7cc` **4 bug thật**: tự-gửi bị gán nhãn Swap · phân trang ArcScan sai (10.000 dòng/11,7s) · không sort + trùng key React (có thể bỏ mất dòng) · Swap không dùng cache số dư; **+ chặn gửi cho chính mình** ở 3 đường vào · `b9a645e` lời nhắn: nhớ vĩnh viễn + tối đa 3 lệnh cùng lúc (bỏ kiểu bắn 30 lệnh/lần mở). (Máy kia: `b8d5978` fix QR mất số thập phân.)
 
 ---
 
