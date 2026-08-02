@@ -2,9 +2,9 @@
 
 # EZwallet
 
-**A stablecoin wallet simple enough for your grandparents to use.**
+**A crypto wallet simple enough for my mom to use.**
 
-<sub>*Ví stablecoin đơn giản đến mức ông bà cũng dùng được.*</sub>
+<sub>*Ví crypto đơn giản đến mức mẹ mình cũng dùng được.*</sub>
 
 [![Live demo](https://img.shields.io/badge/live%20demo-ezwallet.cash-0B53BF?style=flat-square)](https://ezwallet.cash)
 [![Network](https://img.shields.io/badge/network-Arc%20Testnet-16A34A?style=flat-square)](https://testnet.arcscan.app)
@@ -58,7 +58,7 @@
 ## The problem
 
 Most crypto wallets are built for people who already understand crypto. Seed
-phrases, gas tokens, hex addresses, network switching — every one of those is a
+phrases, gas tokens, hex addresses, network switching – every one of those is a
 wall for a first-time user, and an outright dealbreaker for someone older who
 just wants to send money to their family.
 
@@ -89,11 +89,11 @@ EZwallet removes the crypto vocabulary from the surface:
 
 | Layer | What it uses |
 |---|---|
-| **Wallet** | [Circle User-Controlled Wallets](https://developers.circle.com/w3s/programmable-wallets) — MPC key management, PIN-based signing (`@circle-fin/w3s-pw-web-sdk`) |
-| **Chain** | [Arc](https://docs.arc.io) L1 testnet (`chainId 5042002`) — **USDC is the native gas token** |
+| **Wallet** | [Circle User-Controlled Wallets](https://developers.circle.com/w3s/programmable-wallets) – MPC key management, PIN-based signing (`@circle-fin/w3s-pw-web-sdk`) |
+| **Chain** | [Arc](https://docs.arc.io) L1 testnet (`chainId 5042002`) – **USDC is the native gas token** |
 | **Swap** | Circle Stablecoin Kit, routed through LiFi |
 | **Frontend** | React 18 + Vite 5, `viem` for on-chain reads, `qrcode.react` / `jsqr` for QR |
-| **Backend** | Cloudflare Pages + Pages Functions (`functions/api/*`) — keeps the Circle API key server-side |
+| **Backend** | Cloudflare Pages + Pages Functions (`functions/api/*`) – keeps the Circle API key server-side |
 
 Tokens on Arc Testnet: **USDC**, **EURC**, **cirBTC**. Transfer notes are written
 on-chain through Arc's Memo precompile.
@@ -101,10 +101,10 @@ on-chain through Arc's Memo precompile.
 ## Try it
 
 1. Open **[ezwallet.cash](https://ezwallet.cash)**.
-2. Create a wallet with your **email** — you'll receive a one-time code, then set
+2. Create a wallet with your **email** – you'll receive a one-time code, then set
    a 6-digit PIN.
 3. Get test money: **Menu → Deposit**. This copies your wallet address and opens
-   the [Circle faucet](https://faucet.circle.com/) — paste the address there.
+   the [Circle faucet](https://faucet.circle.com/) – paste the address there.
 4. Send some to a friend, or have them show you their QR.
 
 > Everything runs on **Arc Testnet**. The money is test money and is worth nothing.
@@ -129,7 +129,7 @@ cp .env.example .env.txt      # .env.txt is gitignored
 | Variable | Needed for |
 |---|---|
 | `API_KEY` | Circle Programmable Wallets (login, PIN, send). `CIRCLE_API_KEY` also accepted. |
-| `KIT_KEY` | Circle Stablecoin Kit — only needed for Swap. |
+| `KIT_KEY` | Circle Stablecoin Kit – only needed for Swap. |
 
 Then run the two processes in **separate terminals**:
 
@@ -145,7 +145,7 @@ Functions do in production.
 > swap can only be exercised on a deployed build. For local UI work use mock
 > mode instead.
 
-**Mock mode** — full UI with a fake wallet and fake balances, no Circle account
+**Mock mode** – full UI with a fake wallet and fake balances, no Circle account
 required:
 
 ```bash
@@ -176,7 +176,7 @@ Being upfront about what this is not, yet:
 
 ## How this was built
 
-EZwallet was built end to end in collaboration with AI — mostly Claude — by
+EZwallet was built end to end in collaboration with AI – mostly Claude – by
 someone with no professional programming background. The product decisions, the
 UX rules and the design direction are human; the implementation was written
 through conversation, then verified by actually running the flows and reading

@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "A stablecoin wallet simple enough for your grandma to use — email + PIN, no seed phrase, USDC pays its own gas on Arc.",
+  "description": "A crypto wallet simple enough for my mom to use – email + PIN, no seed phrase, USDC pays its own gas on Arc.",
   "keywords": ["stablecoin", "wallet", "usdc", "arc", "circle", "programmable-wallets", "pwa", "web3"],
   "homepage": "https://ezwallet.cash",
   "repository": { "type": "git", "url": "https://github.com/KattyFury/ezwallet.git" },

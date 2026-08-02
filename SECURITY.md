@@ -9,7 +9,7 @@ value. The app is **not audited**, and there is no mainnet deployment.
 [Circle User-Controlled Wallets](https://developers.circle.com/wallets/user-controlled)
 using 2-of-2 MPC, and every signature is authorised by the user's PIN, entered in
 Circle's own cross-origin iframe. This project never sees the PIN. This is
-*user-controlled* custody, not seed-phrase self-custody — an intentional trade-off
+*user-controlled* custody, not seed-phrase self-custody – an intentional trade-off
 to remove the seed phrase from the onboarding path.
 
 **Secrets:** the Circle API keys (`API_KEY`, `KIT_KEY`) live only in Cloudflare Pages
@@ -35,7 +35,7 @@ Being explicit about what is *not* hardened yet:
   Adapter) and the app itself have not been reviewed by a third party.
 - **Account identity is an email address.** A session token is issued for a given
   email without an ownership check (email OTP is deliberately disabled, because
-  Circle only supports PIN authentication on the plain email flow — OTP/SSO accounts
+  Circle only supports PIN authentication on the plain email flow – OTP/SSO accounts
   cannot have a PIN). Funds are still protected: every transfer requires the PIN.
 - **Contact backup is opt-in infrastructure and currently disabled in production.**
   The optional Cloudflare KV backup of contacts and saved QR codes inherits the
