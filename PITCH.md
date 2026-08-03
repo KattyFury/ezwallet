@@ -25,6 +25,26 @@
 
 ---
 
+## 1.5. Core belief (mọi thứ trong file này phải bám theo đây)
+
+> EZwallet was built on a simple belief: everyone should be able to own their
+> own money, without needing to become a crypto expert.
+>
+> Self-custody shouldn't mean memorizing seed phrases, copying long wallet
+> addresses, or worrying about gas tokens. Those are technical barriers, not
+> the value of crypto.
+>
+> We believe people shouldn't have to adapt to crypto. Crypto should adapt to
+> people, making it simple enough for anyone to use while preserving full
+> ownership of their money.
+
+VN: Con người không cần thích nghi với crypto – crypto phải thích nghi với con
+người, đơn giản đến mức ai cũng dùng được mà vẫn giữ trọn quyền sở hữu tiền của
+họ. Mọi bài đăng/copy trong file này nên quy về niềm tin này, không chỉ liệt kê
+tính năng.
+
+---
+
 ## 2. Fact sheet – CHỈ được nói những gì trong bảng này
 
 Mọi con số dưới đây đều verify được (chạy thật / đọc on-chain / có trong code). **Ngoài bảng này thì đừng chế.**

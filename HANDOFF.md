@@ -13,6 +13,32 @@ Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mc
 
 ---
 
+## 0. Core value – MỌI quyết định của dự án đều xoay quanh đây
+
+> EZwallet was built on a simple belief: everyone should be able to own their
+> own money, without needing to become a crypto expert.
+>
+> Self-custody shouldn't mean memorizing seed phrases, copying long wallet
+> addresses, or worrying about gas tokens. Those are technical barriers, not
+> the value of crypto.
+>
+> We believe people shouldn't have to adapt to crypto. Crypto should adapt to
+> people, making it simple enough for anyone to use while preserving full
+> ownership of their money.
+
+Dịch: EZwallet được xây trên một niềm tin đơn giản – ai cũng nên được tự giữ
+tiền của mình, mà không cần trở thành chuyên gia crypto. Tự quản lý tài sản
+không nên có nghĩa là phải nhớ seed phrase, chép tay địa chỉ ví dài ngoằng, hay
+lo token trả phí gas – đó là rào cản kỹ thuật, không phải giá trị cốt lõi của
+crypto. Con người không cần thích nghi với crypto; crypto phải thích nghi với
+con người, đơn giản đến mức ai cũng dùng được mà vẫn giữ trọn quyền sở hữu.
+
+**Áp dụng:** mọi tính năng/quyết định UX/kiến trúc trong file này đều phải trả
+lời được câu hỏi "cái này có làm crypto đơn giản hơn cho người dùng phổ thông,
+hay đang bắt họ thích nghi với crypto?". Lệch khỏi đây thì dừng lại hỏi user.
+
+---
+
 ## 1. Stack & hạ tầng
 
 - **Frontend:** React + Vite → Cloudflare Pages. **Backend:** Cloudflare Functions (`functions/api/*.js`) proxy Circle API (key server-side).

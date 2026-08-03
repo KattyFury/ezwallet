@@ -4,6 +4,27 @@
 
 ---
 
+## Core Value – mọi thứ xoay quanh cái này
+
+> EZwallet was built on a simple belief: everyone should be able to own their
+> own money, without needing to become a crypto expert.
+>
+> Self-custody shouldn't mean memorizing seed phrases, copying long wallet
+> addresses, or worrying about gas tokens. Those are technical barriers, not
+> the value of crypto.
+>
+> We believe people shouldn't have to adapt to crypto. Crypto should adapt to
+> people, making it simple enough for anyone to use while preserving full
+> ownership of their money.
+
+Mọi tính năng, quyết định UX, và trade-off kỹ thuật đều phải phục vụ niềm tin
+này: người dùng phổ thông (không phải dân crypto) tự giữ tiền của họ, không
+phải học crypto để dùng được. Đề xuất nào bắt user "thích nghi với crypto"
+(seed phrase, địa chỉ hex, gas token riêng...) thì mặc định SAI hướng – nêu ra
+và hỏi lại, đừng tự làm.
+
+---
+
 ## Who I Am
 
 I'm a **Vietnamese vibecoder** – I have ideas, not a programming background. I build products by handing off to AI, not by writing every line myself.

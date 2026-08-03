@@ -55,6 +55,21 @@
 
 ---
 
+## Core belief
+
+> EZwallet was built on a simple belief: everyone should be able to own their
+> own money, without needing to become a crypto expert.
+>
+> Self-custody shouldn't mean memorizing seed phrases, copying long wallet
+> addresses, or worrying about gas tokens. Those are technical barriers, not
+> the value of crypto.
+>
+> We believe people shouldn't have to adapt to crypto. Crypto should adapt to
+> people, making it simple enough for anyone to use while preserving full
+> ownership of their money.
+
+Every product decision in this repo traces back to this belief.
+
 ## The problem
 
 Most crypto wallets are built for people who already understand crypto. Seed
