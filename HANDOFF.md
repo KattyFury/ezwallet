@@ -1,6 +1,6 @@
 # HANDOFF – EZwallet
 
-**Cập nhật:** 2026-07-31 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** **https://ezwallet.cash** (domain user mua trên Cloudflare 07-29) · `ezwallet.pages.dev` vẫn chạy song song (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
+**Cập nhật:** 2026-08-03 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** **https://ezwallet.cash** (domain user mua trên Cloudflare 07-29) · `ezwallet.pages.dev` vẫn chạy song song (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
 
 > **Ví stablecoin cho người dùng phổ thông / người già.** UX đơn giản, mobile-first. **Đã chạm mốc user hài lòng (07-18): toàn bộ luồng – login, PIN, gửi, swap tiền thật – user tự test trên deploy, chạy mượt.**
 > ĐẦU MỖI PHIÊN đọc CẢ `HANDOFF.md` (file này) + `CLAUDE.md` (cách làm việc với user).
@@ -256,6 +256,8 @@ hay đang bắt họ thích nghi với crypto?". Lệch khỏi đây thì dừng
 - [ ] Thẻ chia sẻ link: dán `ezwallet.cash` vào Telegram cho chính mình → phải ra ảnh + tiêu đề (X/Facebook cache thẻ, xem mục 5)
 - [ ] 6 sửa UI 07-29: nút 3/4 màn (Swap · Tap-to-copy · Hold-to-show · Back ở About/Language/Security) · nút ⇅ gradient + icon trắng · Scan QR có tiêu đề hàng 1 + nút **Done** · Contacts nút Add không icon · QR Storage có cặp **Back | Add**
 - [ ] ⚠️ Nhắc lại: user cũ trên `ezwallet.pages.dev` sang domain mới sẽ thấy **chưa đăng nhập + trống danh bạ** (localStorage theo origin). Ví/tiền không mất. Xem gotcha mục 7.
+
+**Đã làm xong phiên 08-03:** `6f6b2cb` **core value** – thêm mục "0. Core value" vào file này + mục riêng vào `CLAUDE.md`/`README.md`/`PITCH.md` (nguyên văn 3 đoạn tiếng Anh user chốt + bản dịch), mọi tính năng/quyết định từ nay phải trả lời được câu "có làm crypto đơn giản hơn cho user phổ thông không". Nhân tiện phát hiện + sửa **GitHub repo description** đang lỡ dùng "your grandma" (vi phạm luật Brand Voice khoá trong `CLAUDE.md`) → đổi đúng slogan "my mom" + khớp core value. Đã grep xác nhận slogan ngắn đã nhất quán sẵn ở `package.json`/`index.html`/`SECURITY.md`/`DECK-DESIGN-SPEC.md`, không cần sửa thêm.
 
 **Đã làm xong phiên 07-29 → 07-31** (`git log` mô tả đủ từng cái):
 `81ee602` 6 sửa UI user báo · `c240911` `.row10-single` = 3/4 · `b181309` **PITCH.md** (spec + bộ shill) · `9b183b2` kiểm toán + dọn code chết vòng 2 · `7f61888` domain `ezwallet.cash` · `16dd010` sao lưu KV (đang TẮT trên production) · `039faea` **chuyên nghiệp hoá repo**: meta/OG + `public/og.png` + `SECURITY.md` + metadata `package.json` + homepage GitHub · `ef7f7cc` **4 bug thật**: tự-gửi bị gán nhãn Swap · phân trang ArcScan sai (10.000 dòng/11,7s) · không sort + trùng key React (có thể bỏ mất dòng) · Swap không dùng cache số dư; **+ chặn gửi cho chính mình** ở 3 đường vào · `b9a645e` lời nhắn: nhớ vĩnh viễn + tối đa 3 lệnh cùng lúc (bỏ kiểu bắn 30 lệnh/lần mở). (Máy kia: `b8d5978` fix QR mất số thập phân.)
