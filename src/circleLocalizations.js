@@ -84,18 +84,23 @@ export const CIRCLE_LOCALIZATIONS = {
       description: 'Trả lời vài câu hỏi bảo mật để có thể khôi phục ví nếu bạn quên PIN.',
       link: 'Tìm hiểu thêm',
     },
-    securityQuestions: {
-      title: 'Câu hỏi bảo mật',
-      questionHeader: 'Câu hỏi',
-      questionPlaceholder: 'Chọn một câu hỏi',
-      // SDK ghép thẳng questionHeader/answerHeader + requiredMark, KHÔNG tự chèn dấu cách
-      // (đo thật 08-04: "Câu hỏiBắt buộc" dính liền) — phải tự đệm khoảng trắng + ngoặc.
-      requiredMark: ' (bắt buộc)',
-      answerHeader: 'Câu trả lời',
-      answerPlaceholder: 'Nhập câu trả lời của bạn',
-      answerHintHeader: 'Gợi ý (không bắt buộc)',
-      answerHintPlaceholder: 'Thêm gợi ý giúp bạn nhớ câu trả lời',
-    },
+    // ⚠️⚠️ TẮT HẲN 08-04g: đã tắt setCustomSecurityQuestions() (gotcha mục 7) mà màn Câu hỏi bảo
+    // mật VẪN RỖNG y hệt — nghĩa là thủ phạm không phải method đó. Biến còn lại DUY NHẤT giữa mọi
+    // lần test là chính khối `securityQuestions` này (title render đúng "Câu hỏi bảo mật" nên khối
+    // này CÓ được đọc, không bị từ chối toàn bộ — nhưng phần form bên dưới thì rỗng). Comment out
+    // toàn bộ để cô lập biến cuối cùng — nếu màn vẫn rỗng sau lần này thì lỗi không nằm ở phía
+    // mình, cần báo Circle support kèm ảnh chụp exact steps. ĐỪNG bật lại field nào trong này (kể
+    // cả chỉ title) cho tới khi xác nhận màn không rỗng khi tắt hẳn khối này.
+    // securityQuestions: {
+    //   title: 'Câu hỏi bảo mật',
+    //   questionHeader: 'Câu hỏi',
+    //   questionPlaceholder: 'Chọn một câu hỏi',
+    //   requiredMark: ' (bắt buộc)',
+    //   answerHeader: 'Câu trả lời',
+    //   answerPlaceholder: 'Nhập câu trả lời của bạn',
+    //   answerHintHeader: 'Gợi ý (không bắt buộc)',
+    //   answerHintPlaceholder: 'Thêm gợi ý giúp bạn nhớ câu trả lời',
+    // },
     securitySummary: {
       title: 'Tóm tắt câu hỏi bảo mật',
       question: 'Câu hỏi {{ordinal}}',
