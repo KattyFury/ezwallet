@@ -3,7 +3,7 @@ import NavBar from '../components/NavBar'
 import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
-import { getDisplayCurrency, displayNum, displaySymbol } from '../data'
+import { getDisplayCurrency, fmtDisplay } from '../data'
 import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import NotifArea, { NOTIF_FS } from '../components/NotifArea'
@@ -131,7 +131,7 @@ export default function HomeSend() {
                 <span style={{ ...TOKEN_TEXT_STYLE, marginLeft: 'auto' }}>
                   {showToken
                     ? tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)
-                    : (rates ? `${displaySymbol(cur)}${displayNum(tk.usd, cur, rates)}` : '…')}
+                    : (rates ? fmtDisplay(tk.usd, cur, rates) : '…')}
                 </span>
               </div>
             ))}

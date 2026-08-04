@@ -21,7 +21,9 @@ const currencyList = () => [
   { code: 'USDC', short: 'USD', label: `USD – ${t('Đô la Mỹ')}`, locked: false },
   { code: 'EURC', short: 'EUR', label: `EUR – ${t('Euro')}`, locked: false },
   { code: 'CNY',  short: 'CNY', label: `CNY – ${t('Nhân dân tệ')}`, locked: true },
-  { code: 'VND',  short: 'VND', label: `VND – ${t('Việt Nam Đồng')}`, locked: true },
+  // ✅ MỞ 08-04: VND đã wire đủ (tỷ giá CoinGecko ở chain.js, cách viết số ở data.js
+  // CURRENCY_CFG, gõ VND khi gửi ở SendAmount). CNY còn khoá vì chưa làm 3 thứ đó.
+  { code: 'VND',  short: 'VND', label: `VND – ${t('Việt Nam Đồng')}`, locked: false },
 ]
 const CUR_SHORT = { USDC: 'USD', EURC: 'EUR', CNY: 'CNY', VND: 'VND' }
 

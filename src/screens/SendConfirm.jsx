@@ -3,8 +3,8 @@ import Icon from '../components/Icon'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
 import { t } from '../i18n'
-import { getDisplayCurrency, displaySymbol } from '../data'
-import { getUsdRate, estimateFeeUsd } from '../chain'
+import { getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency } from '../data'
+import { getDisplayRates, estimateFeeUsd } from '../chain'
 import { getSDK, executeChallenge, refreshSession, circleErrorMessage } from '../circle'
 
 function shortenAddr(addr) {
@@ -22,30 +22,43 @@ export default function SendConfirm() {
   const { address, name, amount, memo, currency = 'USD' } = params
   const [feeUsd, setFeeUsd] = useState(null)      // phí gas thật (USD, null = đang tính)
   // Tỷ giá riêng cho PHÍ (USD mỗi 1 đơn vị tiền hiển thị — USDC:1, EURC:~1.08)
-  const [feeRates, setFeeRates] = useState({ USDC: 1, EURC: 1.08 })
+  const [feeRates, setFeeRates] = useState({ USDC: 1, EURC: 1.08, VND: 1 / 26300 })
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)         // đã gửi thành công → khóa, không gửi lại
   const [error, setError] = useState('')          // lỗi terminal (hủy/mạng...) hiện tại chỗ
 
   useEffect(() => {
-    Promise.all([getUsdRate('USDC'), getUsdRate('EURC')])
-      .then(([u, e]) => setFeeRates({ USDC: u, EURC: e })).catch(() => {})
+    // getDisplayRates (không phải getUsdRate từng token) — nó gồm cả VND, mà VND không phải token
+    // nên getUsdRate tra TOKENS sẽ không có.
+    getDisplayRates().then(setFeeRates).catch(() => {})
     // memo đi qua Memo contract → tốn gas hơn (~110k) so với transfer thường (~65k)
     estimateFeeUsd(memo && memo.trim() ? 110000 : 65000).then(setFeeUsd).catch(() => setFeeUsd(0))
   }, [memo])
 
   // USD = USDC (1:1, chỉ khác nhãn hiển thị); USDC/EURC/cirBTC gửi đúng số đã nhập, KHÔNG quy đổi.
-  const token = currency === 'USD' ? 'USDC' : currency
-  const sendAmountStr = token === 'cirBTC' ? amount.toFixed(8) : amount.toFixed(2)
-  const mainEl = currency === 'USD' ? <>{displaySymbol('USDC')}{amount}</> : <>{amount} <Cur>{currency}</Cur></>
+  // VND = tiền pháp định, KHÔNG có trên chain → gửi USDC.
+  const token = currency === 'USD' || currency === 'VND' ? 'USDC' : currency
+  // ⚠️⚠️ VND: LẤY LẠI ĐÚNG số token SendAmount đã chốt (params.tokenAmount), TUYỆT ĐỐI KHÔNG quy
+  // đổi lại từ tỷ giá ở màn này. Tỷ giá nhích liên tục (CoinGecko làm mới mỗi 60s) — quy đổi lần
+  // hai thì con số user vừa nhìn thấy ("≈ 19.00 USDC") và con số THẬT SỰ rời ví sẽ khác nhau.
+  // Người dùng phải nhận đúng cái họ đã xác nhận.
+  const sendUnits = currency === 'VND' ? (params.tokenAmount ?? 0) : amount
+  const sendAmountStr = token === 'cirBTC' ? sendUnits.toFixed(8) : sendUnits.toFixed(2)
+  const mainEl = currency === 'USD' ? <>{displaySymbol('USDC')}{amount}</>
+    : currency === 'VND' ? <>{amount.toLocaleString('vi-VN')} <Cur>₫</Cur></>
+    : <>{amount} <Cur>{currency}</Cur></>
 
-  // Phí mạng theo TIỀN TỆ MẶC ĐỊNH ở Cài đặt (getDisplayCurrency() luôn trả USDC/EURC)
+  // Phí mạng theo TIỀN TỆ MẶC ĐỊNH ở Cài đặt (USDC/EURC/VND)
   const displayCur = getDisplayCurrency()
   function feeEl() {
     if (feeUsd === null) return t('Đang tính...')
     const v = feeUsd / (feeRates[displayCur] || 1)
-    const sign = displaySymbol(displayCur)
-    return v < 0.01 ? `< ${sign}0.01` : `${sign}${v.toFixed(2)}`
+    // Ngưỡng "quá nhỏ để hiện" phải theo SỐ LẺ của tiền tệ: $0.01 với USD, nhưng VND không có số
+    // lẻ nên ngưỡng là 1 ₫ — dùng chung 0.01 thì phí 500 ₫ vẫn bị hiện thành "< 0,01 ₫" (vô nghĩa).
+    const dec = decimalsOfCurrency(displayCur)
+    const min = 10 ** -dec
+    return v < min ? `< ${fmtDisplay(min * (feeRates[displayCur] || 1), displayCur, feeRates)}`
+                   : fmtDisplay(feeUsd, displayCur, feeRates)
   }
 
   async function handleConfirm() {
@@ -80,7 +93,7 @@ export default function SendConfirm() {
       await executeChallenge(await getSDK(), userToken, encryptionKey, data.challengeId)
 
       setDone(true)   // ký thành công → khóa màn, không cho gửi lại
-      navigate('SendReceipt', { address, name, amount, memo, currency, timestamp: Date.now() })
+      navigate('SendReceipt', { address, name, amount, memo, currency, tokenAmount: sendUnits, timestamp: Date.now() })
     } catch (e) {
       // Tới đây CHỈ còn lỗi TERMINAL (hủy PIN / token hết hạn / mạng...) — KHÔNG phải sai PIN
       // (sai PIN đã được iframe cho nhập lại, không reject). Ở LẠI màn xác nhận để bấm gửi lại.
@@ -118,6 +131,16 @@ export default function SendConfirm() {
               {mainEl}
             </span>
           </div>
+          {/* VND: nói RÕ số USDC thật sự rời ví — user gõ tiền Việt nhưng thứ chạy trên chain là
+              USDC, giấu đi là đánh lừa. Đây đúng con số đã chốt ở màn trước, không tính lại. */}
+          {currency === 'VND' && (
+            <div className="confirm-row">
+              <span className="confirm-label">{t('Thực gửi')}</span>
+              <span className="confirm-value num" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>
+                {sendAmountStr} USDC
+              </span>
+            </div>
+          )}
           {memo && (
             <div className="confirm-row">
               <span className="confirm-label">{t('Nội dung')}</span>

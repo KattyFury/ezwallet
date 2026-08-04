@@ -5,7 +5,7 @@ import PctSlider from '../components/PctSlider'
 import Numpad from '../components/Numpad'
 import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress, circleErrorMessage } from '../circle'
 import { getTokenBalances, getDisplayRates, cachedRates, cachedBalances, estimateFeeUsd } from '../chain'
-import { spendableOf, floorTo, getDisplayCurrency, displaySymbol } from '../data'
+import { spendableOf, floorTo, getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency } from '../data'
 import { useFitFontSize } from '../useFitFontSize'
 import { roundHints, fmtHint } from '../roundHint'
 import { addNotif } from '../notif'
@@ -112,7 +112,9 @@ export default function Swap() {
     const r = rateOf(sym), rc = rateOf(cur)
     return r && rc ? (tokenAmt * r) / rc : null
   }
-  const fmtDisp = v => (v === null ? null : `${curSym}${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
+  // v đang là SỐ ĐƠN VỊ tiền hiển thị (đã chia rate), còn fmtDisplay nhận giá trị USD → nhân
+  // ngược lại rate rồi để fmtDisplay lo ký hiệu/số lẻ/dấu phân cách theo từng tiền tệ (VND khác hẳn).
+  const fmtDisp = v => (v === null ? null : fmtDisplay(v * (rateOf(cur) || 1), cur, rates))
 
   const amountDisplay = toDisplay(amountNum, fromSym)
 
@@ -346,11 +348,16 @@ export default function Swap() {
 
   // Phí gas Arc THẬT thường < 1 cent → .toFixed(2) ra "$0.00" = nhìn như hỏng/không mất phí.
   // Phí > 0 mà làm tròn về 0 thì nói thẳng "< $0.01" (trung thực + không doạ người dùng).
+  // ⚠️ Ngưỡng "nhỏ quá để hiện" phải theo SỐ LẺ của từng tiền tệ, đừng ghim 0.01: VND không có
+  // số lẻ nên đơn vị nhỏ nhất là 1 ₫ — ghim 0.01 thì phí 13 ₫ vẫn bị coi là "hiện được" rồi in ra
+  // "13,00 ₫" (VND không ai viết số lẻ). Ký hiệu cũng để fmtDisplay đặt, vì ₫ đứng SAU số.
   const feeTxt = (() => {
     if (feeUsd === null) return '…'
-    const v = feeUsd / (rateOf(cur) || 1)
-    if (v <= 0) return `~${curSym}0.00`
-    return v < 0.005 ? `<${curSym}0.01` : `~${curSym}${v.toFixed(2)}`
+    const rc = rateOf(cur) || 1
+    const min = 10 ** -decimalsOfCurrency(cur)      // 0.01 với USD/EUR · 1 với VND
+    const v = feeUsd / rc                            // phí quy về đơn vị tiền đang hiển thị
+    if (v <= 0) return `~${fmtDisplay(0, cur, rates)}`
+    return v < min ? `<${fmtDisplay(min * rc, cur, rates)}` : `~${fmtDisplay(feeUsd, cur, rates)}`
   })()
 
   const estNum = estAmt !== null ? parseFloat(estAmt) : null

@@ -43,6 +43,8 @@ const EN = {
   'Quy đổi': 'Converted',
   'Nội dung': 'Note',
   'Phí mạng': 'Network fee',
+  'Thực gửi': 'Actually sent',
+  'Đang lấy tỷ giá...': 'Getting exchange rate...',
   'Đang tính...': 'Calculating...',
   'Giao dịch không thể hoàn tác sau khi xác nhận': 'This transaction cannot be undone once confirmed',
   'Đang mở xác nhận PIN...': 'Opening PIN confirmation...',

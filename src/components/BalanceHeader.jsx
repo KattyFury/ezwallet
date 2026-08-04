@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { getDisplayCurrency, displayNum, displaySymbol, amountFontSize } from '../data'
+import { getDisplayCurrency, fmtDisplay } from '../data'
 import { getDisplayRates, cachedRates } from '../chain'
+import { useFitFontSize } from '../useFitFontSize'
 
 // Cụm số dư dùng chung cho HomeSend / HomeReceive / MenuScreen — chiếm 2 hàng (row-1-2),
 // con số là phần to nổi bật. Hiển thị theo TIỀN TỆ MẶC ĐỊNH (ez_currency).
@@ -15,16 +16,16 @@ export default function BalanceHeader({ totalUsd, loading }) {
   // CHƯA BIẾT số dư → '…', KHÔNG BAO GIỜ vẽ "$0.00" (đó là bịa số dư — bug 07-16).
   // totalUsd == null = chưa tải xong / đọc hỏng; chỉ 0 THẬT mới được hiện "$0.00".
   const unknown = loading || !rates || totalUsd == null || Number.isNaN(totalUsd)
-  const num = unknown ? '…' : displayNum(totalUsd, cur, rates)
-  const sign = unknown ? '' : displaySymbol(cur)
+  // fmtDisplay tự đặt ký hiệu ĐÚNG BÊN: "$127.66" nhưng "1.250.000 ₫" (tiếng Việt để ₫ sau số).
+  const str = unknown ? '…' : fmtDisplay(totalUsd, cur, rates)
 
-  // Số dư TO chiếm ~1 hàng chiều cao (user chốt 07-20e: lấp chỗ trống): base 76px, tự CO NHỎ theo độ
-  // dài để số lớn vẫn vừa bề ngang (amountFontSize: 7 ký tự vừa khít ở 76, dài hơn co xuống, sàn 40).
-  const str = `${sign}${num}`
+  // Số dư TO chiếm ~1 hàng chiều cao (user chốt 07-20e: lấp chỗ trống): base 76px, tự CO theo
+  // BỀ RỘNG THẬT đo bằng canvas (useFitFontSize) — KHÔNG dùng amountFontSize (đếm ký tự) nữa:
+  // số VND dài gấp đôi số USD ("1.250.000 ₫" vs "$50.00") nên đoán theo số ký tự là tràn layout.
+  const [fitRef, fitSize] = useFitFontSize(str, { max: 76, min: 28, weight: 300 })
   return (
-    <div className="row-1-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0, padding: '0 12px' }}>
-      {/* Ký hiệu tiền tệ = TIỀN TỐ dính liền số (vd "$127.66") — cả cụm căn giữa như 1 khối, không tách suffix riêng */}
-      <span style={{ fontFamily: 'var(--font-condensed)', fontSize: amountFontSize(str, 76, 7, 40), fontWeight: 'var(--fw-light)', color: 'var(--color-content)', lineHeight: 1, whiteSpace: 'nowrap' }}>
+    <div ref={fitRef} className="row-1-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0, padding: '0 12px' }}>
+      <span style={{ fontFamily: 'var(--font-condensed)', fontSize: fitSize, fontWeight: 'var(--fw-light)', color: 'var(--color-content)', lineHeight: 1, whiteSpace: 'nowrap' }}>
         {str}
       </span>
     </div>

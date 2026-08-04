@@ -3,19 +3,24 @@ import { useNav } from '../nav'
 import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
 import ErrorToast from '../components/ErrorToast'
-import { getTokenInfo } from '../chain'
+import { getTokenInfo, getDisplayRates, cachedRates } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import { t } from '../i18n'
 import { findContactName } from '../store'
-import { displaySymbol, spendableOf, amountFontSize } from '../data'
+import { displaySymbol, spendableOf, floorTo } from '../data'
+import { useFitFontSize } from '../useFitFontSize'
+import { amountHints, fmtAmountHint } from '../amountHint'
 
 function shortenAddr(addr) {
   return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
 }
 
-// USD = nhãn thân thiện, gửi = USDC (1:1). 3 token còn lại gửi đúng token đó.
-const CURRENCIES = ['USD', 'USDC', 'EURC', 'cirBTC']
-const effectiveToken = c => (c === 'USD' ? 'USDC' : c)
+// USD = nhãn thân thiện, gửi = USDC (1:1). USDC/EURC/cirBTC gửi đúng token đó.
+// VND = TIỀN PHÁP ĐỊNH, không có trên chain → gõ bằng VND nhưng thứ rời ví là USDC (user chốt
+// 2026-08-04: "gõ thẳng VND, app tự quy ra USDC"). Người Việt nghĩ bằng tiền Việt thì cho họ gõ
+// tiền Việt — đúng core value "crypto thích nghi với người, không bắt người thích nghi crypto".
+const CURRENCIES = ['USD', 'VND', 'USDC', 'EURC', 'cirBTC']
+const effectiveToken = c => (c === 'USD' || c === 'VND' ? 'USDC' : c)
 
 export default function SendAmount() {
   const { navigate, params } = useNav()
@@ -53,6 +58,9 @@ export default function SendAmount() {
   }
   const [availableAmt, setAvailableAmt] = useState(null) // số dư của TOKEN đang chọn (đơn vị token thật)
   const [walletAddr, setWalletAddr] = useState(null)
+  // Tỷ giá (cần cho VND). Seed từ cache tầng module → không phải chờ mạng mới gõ được số.
+  const [rates, setRates] = useState(cachedRates)
+  useEffect(() => { getDisplayRates().then(setRates).catch(() => {}) }, [])
 
   // Địa chỉ ví AN TOÀN: ensureWalletAddress tự khôi phục từ Circle nếu localStorage thiếu — giống
   // HomeSend. TRƯỚC đây đọc thẳng localStorage: trên PWA mobile (lưu màn hình chính) ez_wallet_addr
@@ -76,8 +84,19 @@ export default function SendAmount() {
     return () => { alive = false; clearTimeout(retry) }
   }, [cur, walletAddr])
 
-  const amount = parseFloat(digits || '0')
-  const overBalance = availableAmt !== null && amount > availableAmt
+  // ── VND: gõ bằng tiền Việt, gửi bằng USDC ──────────────────────────────────────────────
+  // rates[cur] = USD cho 1 đơn vị. rates.VND ≈ 0.000038 (1 đồng ≈ 0,000038 đô).
+  const isVnd = cur === 'VND'
+  const vndRate = rates?.VND || null                       // null = chưa có tỷ giá → chưa gửi được
+  const amount = isVnd ? parseInt(digits || '0', 10) : parseFloat(digits || '0')
+  // Số USDC THẬT SỰ rời ví. floorTo (không toFixed): toFixed làm tròn LÊN → có thể vượt số dư
+  // đúng 1 xu rồi bị Circle từ chối, đúng cái bẫy đã dính ở nút Max màn Swap.
+  const tokenAmount = isVnd && vndRate ? floorTo(amount * vndRate, 2) : amount
+  // Số dư quy về ĐƠN VỊ ĐANG GÕ để so sánh: đang gõ VND thì phải so với số dư tính bằng VND,
+  // không thì "50.000" luôn luôn > "19.5 USDC" và nút Tiếp tục không bao giờ sáng.
+  const availableInCur = availableAmt === null ? null
+    : isVnd ? (vndRate ? availableAmt / vndRate : null) : availableAmt
+  const overBalance = availableInCur !== null && amount > availableInCur
   // CHỐT CHẶN CUỐI cho việc gửi cho chính mình (user chốt 07-31). PasteAddress/QRScanner đã chặn
   // ở cửa vào, nhưng còn đường qua Danh bạ (user tự lưu ví mình thành 1 contact) nên phải chặn
   // ở đây nữa. Dùng `walletAddr` (lấy từ Circle qua ensureWalletAddress) chứ KHÔNG dùng
@@ -85,18 +104,34 @@ export default function SendAmount() {
   const selfSend = !!walletAddr && address?.trim().toLowerCase() === walletAddr.toLowerCase()
   // Nút sáng ngay khi có số tiền hợp lệ; CHỈ chặn khi biết CHẮC vượt số dư. Không khoá nút chỉ vì số
   // dư chưa tải xong (trước đây đòi availableAmt!==null làm nút "chết" khi số dư/địa chỉ chưa về kịp).
-  const canContinue = amount > 0 && !overBalance && !selfSend
+  // VND chưa có tỷ giá → chưa cho đi tiếp (không thể tính số USDC phải gửi).
+  const canContinue = amount > 0 && !overBalance && !selfSend && (!isVnd || !!vndRate)
   const decimalsFor = c => (effectiveToken(c) === 'cirBTC' ? 8 : 2)
-  const availableStr = `${availableAmt !== null ? availableAmt.toFixed(decimalsFor(cur)) : '…'} ${cur}`
+  const availableStr = isVnd
+    ? `${availableInCur !== null ? Math.floor(availableInCur).toLocaleString('vi-VN') : '…'} ₫`
+    : `${availableAmt !== null ? availableAmt.toFixed(decimalsFor(cur)) : '…'} ${cur}`
+
+  // GỢI Ý SỐ TIỀN (user chốt 08-04) — CHỈ cho VND: gõ "50" → [5.000] [50.000] [500.000].
+  // Không áp cho USD/EUR: gõ "50" đã là đúng 50 đô, gợi ý ×100 thành 5.000 đô là bẫy chết người.
+  const hints = isVnd && !showCur ? amountHints(digits, availableInCur) : []
 
   // Numpad: '.' = dấu thập phân (chỉ 1 lần); BACK xóa từng ký tự.
   function handleKey(key) {
     if (key === 'BACK') { setDigits(d => d.slice(0, -1)); return }
-    if (key === '.') { setDigits(d => (d.includes('.') ? d : (d === '' ? '0.' : d + '.'))); return }
+    // VND KHÔNG có số lẻ — chặn hẳn dấu chấm (nhập "50.5 đồng" là vô nghĩa).
+    if (key === '.') { if (isVnd) return; setDigits(d => (d.includes('.') ? d : (d === '' ? '0.' : d + '.'))); return }
     if (digits.length >= 12) return
     if (digits === '0') { setDigits(key); return }
     setDigits(d => d + key)
   }
+
+  // Số đang gõ, hiển thị cho DỄ ĐỌC: VND chèn dấu chấm ngăn nghìn ngay khi gõ (500000 → 500.000)
+  // — người lớn tuổi gõ 6 số liền không tự đếm nổi mình đang ở 50 nghìn hay 500 nghìn.
+  const shownDigits = isVnd && digits ? parseInt(digits, 10).toLocaleString('vi-VN') : digits
+  const amountStr = (cur === 'USD' ? displaySymbol('USDC') : '') + shownDigits + (isVnd && digits ? ' ₫' : '')
+  // Cỡ chữ co theo BỀ RỘNG THẬT (số VND dài gấp đôi USD nên đếm ký tự là tràn) — kèm cả caret "_"
+  // vào phép đo, nếu không sẽ hụt đúng bề ngang dấu nháy rồi tràn ở số dài nhất.
+  const [fitRef, fitSize] = useFitFontSize(amountStr + '_', { max: 52, min: 18, weight: 600 })
 
   return (
     <div className="screen">
@@ -118,15 +153,23 @@ export default function SendAmount() {
 
         <div className="center col" style={{ gap: 6 }}>
           {/* Số to, LUÔN căn giữa; chip tiền tệ neo BÌA PHẢI (không bám theo bề rộng số nữa) */}
-          <div style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span className="num" style={{ fontSize: amountFontSize((cur === 'USD' ? '$' : '') + digits, 52, 9), fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: overBalance ? 'var(--color-error)' : digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
-              {cur === 'USD' ? displaySymbol('USDC') : ''}{digits}<span className="caret">_</span>
+          <div ref={fitRef} style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span className="num" style={{ fontSize: fitSize, fontWeight: 'var(--fw-semibold)', lineHeight: 1, whiteSpace: 'nowrap', color: overBalance ? 'var(--color-error)' : digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
+              {amountStr}<span className="caret">_</span>
             </span>
             <button onClick={() => setShowCur(true)}
               style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', borderRadius: 10, padding: '6px 10px', background: 'var(--color-surface)', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
               {cur}<Icon name="down2" size="var(--is-md-lg)" color="var(--color-brand)" />
             </button>
           </div>
+          {/* VND: nói THẲNG số USDC sẽ rời ví. Người dùng gõ tiền Việt nhưng thứ chạy trên chain
+              là USDC — giấu đi là đánh lừa, mà hiện mờ nhạt thì họ không nhận ra mình đang tiêu
+              stablecoin. Chưa có tỷ giá → báo rõ thay vì để nút Tiếp tục chết câm không lý do. */}
+          {isVnd && digits && (
+            <span className="num" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)', textAlign: 'center' }}>
+              {vndRate ? `≈ ${tokenAmount.toFixed(2)} USDC` : t('Đang lấy tỷ giá...')}
+            </span>
+          )}
           {selfSend ? (
             /* Vào được màn này với ví của chính mình chỉ còn đường Danh bạ — báo NGAY, đừng
                để user gõ xong số tiền mới biết không gửi được. */
@@ -166,9 +209,21 @@ export default function SendAmount() {
           numpad rất kì (user báo 07-23); blur/đóng popup → numpad hiện lại. */}
       {!typingText && !showNote && (
       <div className="numpad-gray" style={{ gridRow: '6 / 11', margin: '5dvh -20px 0', padding: '24px 20px 0', background: 'var(--color-surface-2)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column' }}>
+        {/* GỢI Ý SỐ TIỀN (chỉ VND) — nằm NGAY TRÊN numpad để ngón tay đang gõ với tới liền, bấm 1
+            phát là xong thay vì đếm số 0. Chiều cao cố định (không có gợi ý vẫn chừa chỗ) để
+            numpad KHÔNG nhảy lên nhảy xuống mỗi lần gõ thêm số — layout giật là ác mộng với người
+            lớn tuổi đang nhắm ngón vào phím. */}
+        <div style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 0 }}>
+          {hints.map(v => (
+            <button key={v} onClick={() => setDigits(String(v))}
+              style={{ border: '1.5px solid var(--color-gray)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
+              {fmtAmountHint(v)}
+            </button>
+          ))}
+        </div>
         {/* Numpad 5.5 phần (07-20c: phím thấp lại một tẹo), nút .row10-dual vẫn neo biên hàng 9-10 */}
         <div style={{ flex: 5.5, minHeight: 0 }}>
-          <Numpad onKey={handleKey} showComma />
+          <Numpad onKey={handleKey} showComma={!isVnd} />
         </div>
         <div style={{ flex: 3.5 }} />
       </div>
@@ -178,7 +233,7 @@ export default function SendAmount() {
       <div className="row10-dual">
         <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>{t('Quay lại')}</button>
         <button className="btn btn-primary" disabled={!canContinue}
-          onClick={() => navigate('SendConfirm', { address, name, amount, memo, currency: cur })}>
+          onClick={() => navigate('SendConfirm', { address, name, amount, memo, currency: cur, tokenAmount })}>
           {t('Tiếp tục')}
         </button>
       </div>
@@ -206,7 +261,9 @@ export default function SendAmount() {
           <div className="popup-card" onClick={e => e.stopPropagation()}>
             <div className="popup-title">{t('Chọn tiền tệ')}</div>
             {CURRENCIES.map(c => (
-              <button key={c} onClick={() => { setCur(c); setShowCur(false) }}
+              // Đổi tiền tệ → XOÁ số đang gõ. "50" nghĩa là 50 đô hay 50 đồng là hai chuyện khác
+              // hẳn nhau; giữ nguyên số cũ là mời user gửi nhầm gấp hai vạn lần.
+              <button key={c} onClick={() => { if (c !== cur) setDigits(''); setCur(c); setShowCur(false) }}
                 className={`btn ${c === cur ? 'btn-primary' : 'btn-secondary'}`} style={{ width: '100%' }}>
                 {c}
               </button>
