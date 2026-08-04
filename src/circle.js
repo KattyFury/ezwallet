@@ -1,5 +1,5 @@
 import { MOCK, MOCK_RATES } from './mock'
-import { CIRCLE_LOCALIZATIONS, CIRCLE_SECURITY_CONFIRM_ITEMS } from './circleLocalizations'
+import { CIRCLE_LOCALIZATIONS, CIRCLE_SECURITY_QUESTIONS, CIRCLE_SECURITY_CONFIRM_ITEMS } from './circleLocalizations'
 
 let sdk = null
 
@@ -30,9 +30,9 @@ export async function getSDK() {
     const W3SSdk = await loadW3SSdk()
     sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
     sdk.setLocalizations(CIRCLE_LOCALIZATIONS.vi)
-    // 3 dòng cảnh báo ở màn Xác nhận bảo mật — method RIÊNG, không nằm trong setLocalizations
-    // (xem comment ở CIRCLE_SECURITY_CONFIRM_ITEMS, circleLocalizations.js).
-    sdk.setCustomSecurityQuestions({ securityConfirmItems: CIRCLE_SECURITY_CONFIRM_ITEMS.vi })
+    // Bộ câu hỏi bảo mật + 3 dòng cảnh báo — method RIÊNG, không nằm trong setLocalizations
+    // (xem comment ở CIRCLE_SECURITY_QUESTIONS/CIRCLE_SECURITY_CONFIRM_ITEMS, circleLocalizations.js).
+    sdk.setCustomSecurityQuestions({ questions: CIRCLE_SECURITY_QUESTIONS.vi, securityConfirmItems: CIRCLE_SECURITY_CONFIRM_ITEMS.vi })
   }
   return sdk
 }

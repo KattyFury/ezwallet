@@ -110,6 +110,25 @@ export const CIRCLE_LOCALIZATIONS = {
   },
 }
 
+// Bộ câu hỏi bảo mật tiếng Việt (setCustomSecurityQuestions({ questions })) — thay bộ mặc định
+// của Circle (toàn tiếng Anh, kiểu "What is your father's middle name?" — không hợp văn hoá VN).
+// Chọn câu quen thuộc, dễ nhớ, KHÔNG đổi theo thời gian (né "món ăn/màu sắc yêu thích hiện tại" —
+// dễ đổi ý theo năm tháng, khó nhớ lại chính xác). type: 'TEXT' (string enum của SDK, để nguyên
+// chuỗi cho khỏi phải import cả package SDK tĩnh vào file này — xem lý do nạp lười ở circle.js).
+// requiredCount KHÔNG set = mặc định 2 (đúng như Circle vốn có, user chưa yêu cầu đổi số lượng).
+export const CIRCLE_SECURITY_QUESTIONS = {
+  vi: [
+    { question: 'Tên con vật nuôi đầu tiên của bạn là gì?', type: 'TEXT' },
+    { question: 'Bạn sinh ra ở tỉnh/thành nào?', type: 'TEXT' },
+    { question: 'Tên trường tiểu học của bạn là gì?', type: 'TEXT' },
+    { question: 'Tên người bạn thân nhất thời đi học là gì?', type: 'TEXT' },
+    { question: 'Biệt danh hồi nhỏ của bạn là gì?', type: 'TEXT' },
+    { question: 'Tên con đường bạn sống lúc nhỏ là gì?', type: 'TEXT' },
+    { question: 'Tên giáo viên bạn yêu thích nhất là gì?', type: 'TEXT' },
+    { question: 'Tên người anh/chị/em lớn tuổi nhất trong nhà là gì?', type: 'TEXT' },
+  ],
+}
+
 // 3 dòng cảnh báo ở màn Xác nhận bảo mật (setCustomSecurityQuestions({ securityConfirmItems })) —
 // KHÁC METHOD với setLocalizations, không nằm trong Localizations object nên phải gọi riêng.
 // Bản gốc English (đo thật 08-04, chưa gọi method này nên SDK tự rơi về mặc định):
