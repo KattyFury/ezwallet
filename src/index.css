@@ -111,7 +111,7 @@ body {
   font-family: var(--font-base);
   font-size: var(--fs-content);
   color: var(--color-content);
-  background: var(--color-white);   /* nền TRẮNG — dải status bar (PWA iOS) hoà trắng, không lộ xám */
+  background: #D6EAFB;   /* TẠM đổi để quay clip (status bar đồng màu xanh nhạt) — ĐỔI LẠI var(--color-white) sau khi quay xong, xem index.css:114 */
   -webkit-font-smoothing: antialiased;
 }
 
