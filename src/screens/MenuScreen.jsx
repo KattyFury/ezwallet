@@ -7,10 +7,10 @@ import { useNav } from '../nav'
 import { t } from '../i18n'
 
 const ITEMS = [
-  { id: 'TxHistory', icon: 'clock',  label: 'Lịch sử giao dịch' },
-  { id: 'Language',  icon: 'globe',  label: 'Language & Currency' },  // đổi ngôn ngữ + tiền tệ mặc định
-  { id: 'Security',  icon: 'shield', label: 'Bảo mật' },
-  { id: 'About',     icon: 'info',   label: 'About' },
+  { id: 'ServiceHub', icon: 'menu',   label: 'Service Hub', disabled: true },   // nơi gom dịch vụ (của mình + thêm từ người khác) — chưa có nội dung, chưa bấm được
+  { id: 'TxHistory',  icon: 'clock',  label: 'Lịch sử giao dịch' },
+  { id: 'Security',   icon: 'shield', label: 'Security, Language & Currency' },   // gộp Ngôn ngữ + Tiền tệ vào màn Bảo mật
+  { id: 'About',      icon: 'info',   label: 'About' },
 ]
 
 // Nạp tiền: copy địa chỉ ví vào clipboard rồi mở Faucet → user chỉ việc dán vào Faucet.
