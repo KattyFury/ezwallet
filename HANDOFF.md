@@ -276,6 +276,40 @@ hay đang bắt họ thích nghi với crypto?". Lệch khỏi đây thì dừng
 Test thật xong, user báo 2 lỗi (ảnh chụp): "Câu hỏiBắt buộc" dính liền + màn Xác nhận bảo mật vẫn 3 dòng English. Đã fix cả 2 (xem gotcha mục 7) + gọi thêm `setCustomSecurityQuestions` (method riêng, tách khỏi `setLocalizations`). Đổi luôn hướng dẫn màn Xác nhận bảo mật sang gõ "Tôi đồng ý" nhưng CHƯA CHẮC field `inputMatch` đổi được cụm từ SDK thật sự validate – cần test lại.
 Soạn thêm 8 câu hỏi bảo mật tiếng Việt (`CIRCLE_SECURITY_QUESTIONS`), wire qua `setCustomSecurityQuestions({ questions })`. Test lại: `inputMatch`="Tôi đồng ý" CHẠY THẬT (nút sáng) ✅ — nhưng `questions` làm RỖNG TOÀN BỘ màn Câu hỏi bảo mật ❌ (chặn tạo ví) + kéo `securityConfirmItems` rơi lại English. Bỏ `questions`, giữ `securityConfirmItems` + fix nốt `securityIntros` dính chữ, deploy lại → **VẪN RỖNG Y HỆT** (user báo "vẫn ko thấy câu hỏi bảo mật để nhập"). Kết luận: KHÔNG phải do `questions`, mà do BẢN THÂN việc gọi `setCustomSecurityQuestions()` (xem gotcha mục 7). **Đã TẮT HẲN method này ở cả 3 chỗ gọi** — màn Câu hỏi bảo mật về lại English mặc định của Circle (chưa test lại). 3 dòng cảnh báo + bộ câu hỏi tiếng Việt tạm gác. Build pass, đã push. **Cần test lại:** màn Câu hỏi bảo mật có hết rỗng, dùng được để tạo ví không (ƯU TIÊN CAO NHẤT — nếu vẫn rỗng thì lỗi nằm ở chỗ khác, có thể là `Localizations.securityQuestions`, cần báo ngay).
 
+Sau đó tìm ra ROOT CAUSE THẬT: **gọi SAI CHỮ KÝ `setCustomSecurityQuestions`** (tham số vị trí, không phải object) — xem gotcha mục 7. Sửa xong thì cả bộ câu hỏi tiếng Việt lẫn 3 dòng cảnh báo đều chạy. Từ đó làm tiếp: mở khoá đa ngôn ngữ, việt hoá triệt để, và tiền tệ VND.
+
+---
+
+### 🌏 ĐA NGÔN NGỮ + TIỀN TỆ VND — phiên 08-04 (nhánh `wip/circle-vi-localization`, CHƯA merge vào `main`)
+
+> **`main` vẫn là bản English-thuần ổn định** (`ezwallet.cash` không bị đụng). Toàn bộ việc dưới đây nằm trên nhánh riêng, preview: **https://wip-circle-vi-localization.ezwallet.pages.dev** (Cloudflare tự deploy mỗi lần push nhánh này; env var preview đã set API_KEY/KIT_KEY, xem mục 9).
+
+**LUẬT USER CHỐT 08-04 — áp vĩnh viễn:**
+> **"ĐÃ VIỆT THÌ VIỆT ALL, ĐÃ ANH THÌ ANH ALL"** — không bao giờ để user thấy màn nửa ngôn ngữ này nửa kia.
+> **"MỘT NGÔN NGỮ = MỘT LƯỢT BUILD KỸ"** — dịch xong hẳn 1 ngôn ngữ rồi mới mở, không mở dở dang.
+
+- **`READY_LANGS` (`src/i18n.js`) = nguồn sự thật DUY NHẤT** cho cả `detect()` lẫn khoá/mở option ở màn Language. Hiện `['vi','en']`; `zh` nằm ngoài vì từ điển mới phủ 35% + chưa có bản dịch Circle. **ĐỪNG sửa cờ `locked` bằng tay ở `Language.jsx`** — nó tự tính từ `READY_LANGS`.
+- **Gác cổng: `npm run check-lang`** (`scripts/check-lang.cjs`). Đo độ phủ từ điển + kiểm có bản dịch Circle chưa. **Bắt buộc chạy tới 100% trước khi thêm 1 mã vào `READY_LANGS`.** `en` được miễn yêu cầu Circle (English là mặc định sẵn của Circle). Soát mắt đã LỌT 2 lần (thẻ hành động 2 màn Trang chủ, nhãn "You pay/You receive") → dùng script, đừng tin mắt.
+- **Lỗi Circle chia 2 loại** (ghi rõ trong `circle.js`): lỗi vẽ TRONG iframe (sai PIN…) = tiếng Anh, KHÔNG đổi được; lỗi terminal bắn ra ngoài = dịch được qua `circleErrorMessage()` map theo MÃ SỐ (đừng dò chữ tiếng Anh — Circle đổi câu là câm).
+- **Bug Circle chưa fix:** `common.showPin`/`hidePin` bị iframe bỏ qua dù `common.continue` ăn (SDK 1.1.11, bản mới nhất). Đã báo support, giữ nguyên giá trị để khi họ fix là tự chạy.
+
+**TIỀN TỆ VND (user chốt: gõ thẳng VND, app tự quy ra USDC):**
+- Tỷ giá: thêm `vnd` vào ĐÚNG lệnh CoinGecko sẵn có (`chain.js fetchPrices`), **không thêm request** — free tier rate-limit chặt. Có `VND_PER_USD_FALLBACK` khi API chết. Lưu dạng **"USD mỗi 1 VND"** cho đồng bộ với mọi rate khác.
+- **`CURRENCY_CFG` (`data.js`) = nguồn sự thật duy nhất** cho ký hiệu / vị trí ký hiệu / số lẻ / dấu phân cách. **₫ đứng SAU số** (`1.250.000 ₫`) còn $ đứng trước → phải dùng `fmtDisplay()`, ĐỪNG tự nối `${symbol}${số}` (đó là lý do phải sửa 4 màn).
+- **⚠️ KHÔNG quy đổi tỷ giá LẦN HAI:** `SendAmount` chốt `tokenAmount` rồi truyền qua `SendConfirm` → `SendReceipt`. Tính lại ở màn sau = số user vừa xác nhận ≠ số thật sự rời ví (tỷ giá làm mới mỗi 60s).
+- Đổi tiền tệ giữa chừng ở màn Gửi → **XOÁ số đang gõ** ("50" là 50 đô hay 50 đồng cách nhau 2 vạn lần).
+- Ngưỡng "phí quá nhỏ" phải theo **số lẻ từng tiền tệ** (`decimalsOfCurrency`), đừng ghim `0.01`: phí 13 ₫ bị in thành "13,00 ₫" mà tiền Việt không có số lẻ.
+- **2 hệ gợi ý KHÁC NHAU, đừng gộp** (user nhấn mạnh 08-04):
+  - **Nhập tay** (`amountHint.js`, màn Gửi): thêm số 0 vào số vừa gõ — "50" → `5.000 · 50.000 · 500.000`. CHỈ cho VND (gõ "50" ở USD đã là 50 đô, gợi ý ×100 là bẫy chết người).
+  - **Thanh trượt** (`roundHint.js`, màn Swap): làm tròn quanh giá trị đang trượt — 39.000 → `35.000 · 40.000 · 45.000`. Đơn vị làm tròn **co giãn theo độ lớn** (bản cũ ghim u=1 nên trượt tới 39.000 gợi ý "39.000,5" — hỏng). Đánh đổi user đã chốt (phương án A): 24,4 giờ ra `20 · 25 · 30` chứ không còn `24 · 24,5 · 25` như spec 07-17e.
+- **Tự co cỡ chữ:** `BalanceHeader` + `SendAmount` chuyển từ `amountFontSize` (đếm ký tự) sang **`useFitFontSize`** (đo bề rộng thật bằng canvas) — số VND dài gấp đôi số USD nên đếm ký tự là tràn layout.
+
+**CHƯA TEST TRÊN MÁY THẬT** (Circle SDK không chạy localhost): cần bấm thử trên link preview — đổi ngôn ngữ, chọn VND, gõ số ở màn Gửi, xem dòng "Thực gửi ... USDC" ở màn Xác nhận + Biên lai.
+
+**Còn treo:** (1) tin nhắn gửi Circle support đã soạn xong, chưa gửi; (2) merge nhánh này vào `main` sau khi test xong; (3) tiếng Trung — chạy `npm run check-lang zh` tới 100% + thêm bản dịch Circle rồi mới thêm `'zh'` vào `READY_LANGS`.
+
+---
+
 **Đã làm xong phiên 08-03:** `6f6b2cb` **core value** – thêm mục "0. Core value" vào file này + mục riêng vào `CLAUDE.md`/`README.md`/`PITCH.md` (nguyên văn 3 đoạn tiếng Anh user chốt + bản dịch), mọi tính năng/quyết định từ nay phải trả lời được câu "có làm crypto đơn giản hơn cho user phổ thông không". Nhân tiện phát hiện + sửa **GitHub repo description** đang lỡ dùng "your grandma" (vi phạm luật Brand Voice khoá trong `CLAUDE.md`) → đổi đúng slogan "my mom" + khớp core value. Đã grep xác nhận slogan ngắn đã nhất quán sẵn ở `package.json`/`index.html`/`SECURITY.md`/`DECK-DESIGN-SPEC.md`, không cần sửa thêm.
 
 **Đã làm xong phiên 07-29 → 07-31** (`git log` mô tả đủ từng cái):
