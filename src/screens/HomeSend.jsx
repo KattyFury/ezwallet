@@ -48,7 +48,7 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
         fontWeight: 'var(--fw-medium)', cursor: 'pointer', whiteSpace: 'nowrap',
         WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
       }}
-      aria-label="hold to show token amounts instead of $"
+      aria-label={t('Giữ để xem số lượng token')}
     >
       Hold to show tokens
     </button>
@@ -150,9 +150,9 @@ export default function HomeSend() {
           // Mỗi dòng = 1 CÂU đủ nghĩa, từ khoá gạch chân BẤM ĐƯỢC → đi đúng nơi nút cùng tên ở
           // hàng 9 dẫn tới (user chốt 07-21).
           hints={[
-            { label: 'Paste', desc: 'Paste a wallet address to send', onClick: () => navigate('PasteAddress') },
-            { label: 'Scan QR', desc: 'Scan a QR code to send', onClick: () => navigate('QRScanner') },
-            { label: 'Contacts', desc: 'Save people you send to often', onClick: () => navigate('Contacts') },
+            { label: t('Dán để gửi'), desc: t('Dán địa chỉ ví của người nhận'), onClick: () => navigate('PasteAddress') },
+            { label: t('Quét QR'), desc: t('Quét mã QR của người nhận'), onClick: () => navigate('QRScanner') },
+            { label: t('Danh bạ'), desc: t('Lưu người bạn hay gửi tiền'), onClick: () => navigate('Contacts') },
           ]}
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (

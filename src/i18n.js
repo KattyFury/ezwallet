@@ -147,6 +147,23 @@ const EN = {
   'Ngôn ngữ & Tiền tệ': 'Language & Currency',
   'Ngôn ngữ': 'Language',
   'Tiền tệ mặc định': 'Default currency',
+  'Đô la Mỹ': 'US Dollar',
+  'Euro': 'Euro',
+  'Nhân dân tệ': 'Chinese Yuan',
+  'Việt Nam Đồng': 'Vietnamese Dong',
+  // Thẻ gợi ý ở 2 màn Trang chủ (NotifArea hints) — TRƯỚC ĐÂY viết cứng tiếng Anh, sót tới 08-04
+  'Dán địa chỉ ví của người nhận': 'Paste a wallet address to send',
+  'Quét mã QR của người nhận': 'Scan a QR code to send',
+  'Lưu người bạn hay gửi tiền': 'Save people you send to often',
+  'Lưu những QR bạn hay dùng': 'Save your favorite QR codes',
+  'Tạo QR để nhận đúng số tiền': 'Create a QR to receive money',
+  'Chia sẻ địa chỉ ví của bạn': 'Share your wallet address',
+  'Giữ để xem số lượng token': 'Hold to show token amounts',
+  // Swap
+  'Bạn trả': 'You pay',
+  'Bạn nhận': 'You receive',
+  'Đảo chiều': 'Reverse direction',
+  'Đã gửi lệnh đổi tiền': 'Swap submitted',
   // ErrorBoundary
   'Tải lại': 'Reload',
   'Ứng dụng gặp lỗi ngoài dự kiến. Ví và tiền của bạn vẫn an toàn. Vui lòng tải lại.': 'The app hit an unexpected error. Your wallet and funds are safe. Please reload.',
@@ -224,13 +241,29 @@ const ZH = {
 
 const DICTS = { en: EN, zh: ZH }
 
+// ⚠️⚠️ LUẬT (user chốt 2026-08-04): "ĐÃ VIỆT THÌ VIỆT ALL, ĐÃ ANH THÌ ANH ALL" — tuyệt đối không
+// để user thấy màn nửa ngôn ngữ này nửa ngôn ngữ kia. Kèm luật làm việc: MỘT NGÔN NGỮ = MỘT LƯỢT
+// BUILD KỸ (dịch xong hẳn rồi mới mở, không mở dở dang).
+//
+// → READY_LANGS = danh sách ngôn ngữ ĐÃ HOÀN THIỆN, là NGUỒN SỰ THẬT DUY NHẤT cho cả detect()
+// lẫn màn Language (khoá/mở option). Ngôn ngữ ngoài danh sách này KHÔNG được auto-detect và
+// KHÔNG chọn được, dù từ điển đã có một phần.
+//
+// ⚠️ ĐIỀU KIỆN để thêm 1 mã vào đây — phải đủ CẢ HAI, kiểm bằng script chứ đừng soát mắt:
+//   1. Từ điển app phủ 100% key `t()` đang dùng  → `node scripts/check-lang.js <mã>`
+//   2. Có bản dịch Circle trong circleLocalizations.js (CIRCLE_LOCALIZATIONS + SECURITY_QUESTIONS
+//      + SECURITY_CONFIRM_ITEMS), không thì màn PIN sẽ rơi về English trong khi app đã dịch.
+// 'zh' đang ở 35% từ điển + KHÔNG có bản Circle → chưa đủ điều kiện, giữ ngoài danh sách.
+export const READY_LANGS = ['vi', 'en']
+
 // Ưu tiên lựa chọn user đã lưu; chưa chọn thì đoán theo ngôn ngữ trình duyệt.
+// Mọi kết quả đều lọc qua READY_LANGS → không bao giờ rơi vào ngôn ngữ dịch dở.
 function detect() {
   const stored = localStorage.getItem('ez_lang')
-  if (stored) return stored
+  if (stored && READY_LANGS.includes(stored)) return stored
   const b = (navigator.language || '').toLowerCase()
-  if (b.startsWith('vi')) return 'vi'
-  if (b.startsWith('zh')) return 'zh'
+  if (b.startsWith('vi') && READY_LANGS.includes('vi')) return 'vi'
+  if (b.startsWith('zh') && READY_LANGS.includes('zh')) return 'zh'
   return 'en'
 }
 

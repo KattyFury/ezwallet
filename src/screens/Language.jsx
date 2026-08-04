@@ -1,26 +1,27 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
-import { t, getLang, setLang } from '../i18n'
+import { t, getLang, setLang, READY_LANGS } from '../i18n'
 import { getDisplayCurrency } from '../data'
 
-// ✅ MỞ KHOÁ 2026-08-04 (user chốt): cả 3 ngôn ngữ chọn được thật. Trước đây khoá vi/zh vì
-// "Circle SDK chỉ English" — lý do đó hết đúng (xem circleLocalizations.js). Đổi ngôn ngữ =
-// setLang() → lưu localStorage + reload (màn Circle tự bám theo ở lần dựng SDK kế tiếp).
+// Khoá/mở LẤY THEO READY_LANGS (i18n.js) — ĐỪNG sửa cờ locked bằng tay ở đây. Ngôn ngữ chỉ được
+// mở khi dịch xong 100% app + Circle; xem điều kiện đầy đủ ở chỗ khai báo READY_LANGS.
+// Hiện: vi + en mở, zh khoá (từ điển mới 35%, chưa có bản Circle).
 const LANGUAGES = [
-  { code: 'en', label: 'English', locked: false },
-  { code: 'vi', label: 'Tiếng Việt', locked: false },
-  { code: 'zh', label: '中文', locked: false },
-]
+  { code: 'en', label: 'English' },
+  { code: 'vi', label: 'Tiếng Việt' },
+  { code: 'zh', label: '中文' },
+].map(l => ({ ...l, locked: !READY_LANGS.includes(l.code) }))
 const LANG_LABEL = { en: 'English', vi: 'Tiếng Việt', zh: '中文' }
 
 // Tiền hiển thị: USD/EUR chọn được (ứng token USDC/EURC). CNY/VND hiện option nhưng KHOÁ (chưa
 // wire tỷ giá — mở lại: bỏ locked + thêm rate ở chain.js getDisplayRates + SUPPORTED_CURRENCIES).
-const CURRENCIES = [
-  { code: 'USDC', short: 'USD', label: 'USD – US Dollar', locked: false },
-  { code: 'EURC', short: 'EUR', label: 'EUR – Euro', locked: false },
-  { code: 'CNY',  short: 'CNY', label: 'CNY – Chinese Yuan', locked: true },
-  { code: 'VND',  short: 'VND', label: 'VND – Vietnamese Dong', locked: true },
+// Nhãn dựng trong component (không phải hằng module) để đổi ngôn ngữ là đổi theo.
+const currencyList = () => [
+  { code: 'USDC', short: 'USD', label: `USD – ${t('Đô la Mỹ')}`, locked: false },
+  { code: 'EURC', short: 'EUR', label: `EUR – ${t('Euro')}`, locked: false },
+  { code: 'CNY',  short: 'CNY', label: `CNY – ${t('Nhân dân tệ')}`, locked: true },
+  { code: 'VND',  short: 'VND', label: `VND – ${t('Việt Nam Đồng')}`, locked: true },
 ]
 const CUR_SHORT = { USDC: 'USD', EURC: 'EUR', CNY: 'CNY', VND: 'VND' }
 
@@ -78,11 +79,11 @@ export default function Language() {
       </div>
 
       {langPicker && (
-        <Picker title="Language" options={LANGUAGES} active={getLang()}
+        <Picker title={t('Ngôn ngữ')} options={LANGUAGES} active={getLang()}
           onPick={setLang} onClose={() => setLangPicker(false)} />
       )}
       {curPicker && (
-        <Picker title={t('Chọn tiền tệ')} options={CURRENCIES} active={currency}
+        <Picker title={t('Chọn tiền tệ')} options={currencyList()} active={currency}
           onPick={pickCur} onClose={() => setCurPicker(false)} />
       )}
     </div>

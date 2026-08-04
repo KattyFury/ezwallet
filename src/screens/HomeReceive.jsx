@@ -87,9 +87,9 @@ export default function HomeReceive() {
         {/* Mỗi dòng = 1 CÂU đủ nghĩa, từ khoá gạch chân BẤM ĐƯỢC → đi đúng nơi nút cùng tên ở
             hàng 9 dẫn tới (user chốt 07-21). Thứ tự khớp layout nút: QR Storage · Create QR · Share. */}
         <NotifArea hints={[
-          { label: 'QR Storage', desc: 'Save your favorite QR codes', onClick: () => navigate('SavedQRList') },
-          { label: 'Create QR', desc: 'Create a QR to receive money', onClick: () => navigate('CreateQR') },
-          { label: 'Share', desc: 'Share your wallet address', onClick: handleShare },
+          { label: t('Kho QR'), desc: t('Lưu những QR bạn hay dùng'), onClick: () => navigate('SavedQRList') },
+          { label: t('Tạo QR'), desc: t('Tạo QR để nhận đúng số tiền'), onClick: () => navigate('CreateQR') },
+          { label: t('Chia sẻ'), desc: t('Chia sẻ địa chỉ ví của bạn'), onClick: handleShare },
         ]} />
       </div>
 

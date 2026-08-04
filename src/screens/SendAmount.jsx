@@ -152,7 +152,7 @@ export default function SendAmount() {
             maxLength={100}
             style={{ flex: 1, minWidth: 0, height: 52, fontSize: 'var(--fs-md-lg)' }}
           />
-          <button onClick={openNotePopup} aria-label="Set default note"
+          <button onClick={openNotePopup} aria-label={t('Đặt lời nhắn mặc định')}
             style={{ flexShrink: 0, width: 52, height: 52, borderRadius: 10, border: 'none', background: 'var(--color-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="option" size="var(--is-md-lg)" color="var(--color-muted)" />
           </button>
