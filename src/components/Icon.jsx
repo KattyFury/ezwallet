@@ -12,6 +12,7 @@ import down2 from '../../icon/down2.svg?raw'
 import download from '../../icon/download.svg?raw'
 import erase from '../../icon/erase.svg?raw'
 import globe from '../../icon/globe.svg?raw'
+import hub from '../../icon/hub.svg?raw'
 import human from '../../icon/human.svg?raw'
 import info from '../../icon/info.svg?raw'
 import mail from '../../icon/mail.svg?raw'
@@ -30,7 +31,7 @@ import warning from '../../icon/warning.svg?raw'
 import x from '../../icon/x.svg?raw'
 
 const ICONS = {
-  add, check, clock, copy, down, down2, download, erase, globe,
+  add, check, clock, copy, down, down2, download, erase, globe, hub,
   human, info, mail, menu, option, out, pencil, qr, right2, scan, share, shield, trade, up, warning, x,
 }
 

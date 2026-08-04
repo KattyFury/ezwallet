@@ -7,10 +7,11 @@ import { useNav } from '../nav'
 import { t } from '../i18n'
 
 const ITEMS = [
-  { id: 'ServiceHub', icon: 'menu',   label: 'Service Hub', disabled: true },   // nơi gom dịch vụ (của mình + thêm từ người khác) — chưa có nội dung, chưa bấm được
-  { id: 'TxHistory',  icon: 'clock',  label: 'Lịch sử giao dịch' },
-  { id: 'Security',   icon: 'shield', label: 'Security, Language & Currency' },   // gộp Ngôn ngữ + Tiền tệ vào màn Bảo mật
-  { id: 'About',      icon: 'info',   label: 'About' },
+  { id: 'ServiceHub', icon: 'hub',   label: 'Service Hub', disabled: true },   // nơi gom dịch vụ (của mình + thêm từ người khác) — chưa có nội dung, chưa bấm được
+  { id: 'TxHistory',  icon: 'clock', label: 'Lịch sử giao dịch' },
+  { id: 'Security',   icon: 'shield', label: 'Bảo mật' },
+  { id: 'Language',   icon: 'globe', label: 'Language & Currency' },   // tách lại khỏi Security (08-04, user chốt)
+  { id: 'About',      icon: 'info',  label: 'About' },
 ]
 
 // Nạp tiền: copy địa chỉ ví vào clipboard rồi mở Faucet → user chỉ việc dán vào Faucet.
@@ -48,7 +49,7 @@ export default function MenuScreen() {
         </button>
       </div>
 
-      {/* Rows 4-7: menu items. Mục disabled (Tiền tệ) làm mờ + không bấm được. */}
+      {/* Rows 4-8: menu items (5 mục). Mục disabled (Service Hub) làm mờ + không bấm được. */}
       {ITEMS.map(({ id, icon, label, disabled }, i) => (
         <div key={id} className={`row-${i + 4}`} style={{ display: 'flex', alignItems: 'center' }}>
           <button className="menu-item" style={{ width: '100%', opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
@@ -61,8 +62,8 @@ export default function MenuScreen() {
         </div>
       ))}
 
-      {/* Row 8: Đăng xuất */}
-      <div className="row-8" style={{ display: 'flex', alignItems: 'center' }}>
+      {/* Row 9: Đăng xuất (5 mục ITEMS chiếm row 4-8 từ khi thêm Service Hub + tách lại Language) */}
+      <div className="row-9" style={{ display: 'flex', alignItems: 'center' }}>
         <button className="menu-item" style={{ width: '100%' }} onClick={() => {
           // GIỮ ez_email_history (gợi ý email lúc đăng nhập lại — user báo mất hint). Xóa cả
           // session Google (refreshToken/email/method) để đăng xuất sạch, deviceId giữ (định danh máy).
