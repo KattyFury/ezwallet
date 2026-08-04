@@ -128,7 +128,7 @@ export default function QRScanner() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '0 10px', textAlign: 'center' }}>
               <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>{hint}</span>
               <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>
-                Real-life QR codes are not supported yet<br />Scan crypto wallet QRs only
+                {t('Chưa hỗ trợ QR ngoài đời thật')}<br />{t('Chỉ quét QR ví crypto')}
               </span>
             </div>
           </>

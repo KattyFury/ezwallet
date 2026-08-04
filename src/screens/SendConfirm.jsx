@@ -5,7 +5,7 @@ import { useNav } from '../nav'
 import { t } from '../i18n'
 import { getDisplayCurrency, displaySymbol } from '../data'
 import { getUsdRate, estimateFeeUsd } from '../chain'
-import { getSDK, executeChallenge, refreshSession } from '../circle'
+import { getSDK, executeChallenge, refreshSession, circleErrorMessage } from '../circle'
 
 function shortenAddr(addr) {
   return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
@@ -87,7 +87,7 @@ export default function SendConfirm() {
       setLoading(false)
       if (e?.code === 155701) return   // user tự bấm hủy nhập PIN → im lặng, về màn xác nhận
       console.error('[SendConfirm] gửi thất bại:', e)
-      const reason = e?.message || e?.error?.message || (typeof e === 'string' ? e : null) || (e?.code ? `code ${e.code}` : null) || t('có lỗi xảy ra')
+      const reason = circleErrorMessage(e)
       const msg = `${t('Gửi thất bại:')} ${reason}`
       setError(msg)
       addNotif(msg, 'error')

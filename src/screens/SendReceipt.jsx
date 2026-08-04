@@ -100,12 +100,12 @@ export default function SendReceipt() {
               Send to là TÊN danh bạ — không tên thì Send to đã là địa chỉ rút gọn rồi, thêm = trùng. */}
           {name && address ? (
             <div className="confirm-row">
-              <span className="confirm-label">Address</span>
+              <span className="confirm-label">{t('Địa chỉ')}</span>
               <span className="confirm-value num">{shortenAddr(address)}</span>
             </div>
           ) : null}
           <div className="confirm-row">
-            <span className="confirm-label">Amount</span>
+            <span className="confirm-label">{t('Số tiền')}</span>
             <span className="confirm-value num">{realAmountText}</span>
           </div>
           {memo ? (

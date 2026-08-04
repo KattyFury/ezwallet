@@ -1,5 +1,6 @@
 import { MOCK, MOCK_RATES } from './mock'
-import { CIRCLE_LOCALIZATIONS, CIRCLE_SECURITY_QUESTIONS, CIRCLE_SECURITY_CONFIRM_ITEMS } from './circleLocalizations'
+import { applyCircleLocale } from './circleLocalizations'
+import { t } from './i18n'
 
 let sdk = null
 
@@ -14,13 +15,11 @@ async function loadW3SSdk() {
   return m.W3SSdk
 }
 
-// ⚠️⚠️ QUYẾT ĐỊNH (2026-08-04, user chốt — ĐẢO quyết định 2026-07-01 cũ): BẬT setLocalizations
-// tiếng Việt cho màn PIN + câu hỏi bảo mật. Quyết định cũ (English thuần, xem git log) dựa trên
-// giả định SAI: đọc kỹ docs (customization.md + web-sdk-ui-customizations, tra 2026-08-04) thì
-// Recovery Method + câu hỏi bảo mật ĐỀU localize được — không hardcode như tưởng. Cái ĐÚNG là
-// giả định gốc: CHỮ LỖI runtime ("The PIN you entered is incorrect...", PIN bị khoá...) không có
-// field nào trong Localizations → vẫn tiếng Anh, chấp nhận được vì hiếm khi hiện.
-// Bản dịch nằm ở circleLocalizations.js (tách riêng để thêm ngôn ngữ khác sau — "êm rồi thêm").
+// ⚠️⚠️ QUYẾT ĐỊNH (2026-08-04, user chốt — ĐẢO quyết định 2026-07-01 cũ): BẬT setLocalizations cho
+// màn PIN + câu hỏi bảo mật, BÁM THEO ngôn ngữ app (applyCircleLocale đọc getLang()). Quyết định cũ
+// (English thuần) dựa trên giả định SAI là Circle chỉ localize được nửa vời — thực tế localize được
+// gần hết. Cái ĐÚNG của giả định cũ: CHỮ LỖI runtime trong iframe ("The PIN you entered is
+// incorrect...", PIN bị khoá) KHÔNG có field nào trong Localizations → vẫn tiếng Anh, chấp nhận.
 // ⚠️ ASYNC (đổi 2026-07-17 khi nạp lười SDK) — MỌI chỗ gọi PHẢI `await getSDK()`.
 // Quên await → truyền Promise vào chỗ chờ SDK thật → PIN chết câm. Đã sửa cả 6 chỗ gọi:
 // EnterEmail(×3), PinGate, Security, SendConfirm, Swap.
@@ -29,13 +28,7 @@ export async function getSDK() {
   if (!sdk) {
     const W3SSdk = await loadW3SSdk()
     sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
-    sdk.setLocalizations(CIRCLE_LOCALIZATIONS.vi)
-    // ⚠️ THAM SỐ VỊ TRÍ — (questions, requiredCount, securityConfirmItems). KHÔNG được gọi kiểu
-    // object `{ questions, securityConfirmItems }`: đó chính là root cause bug "màn Câu hỏi bảo
-    // mật RỖNG" 08-04 (object rơi vào chỗ mảng questions → danh sách hỏng; securityConfirmItems
-    // không bao giờ tới nơi → 3 dòng cảnh báo giữ English). Xem chú thích đầy đủ ở
-    // circleLocalizations.js:CIRCLE_SECURITY_QUESTIONS. requiredCount = 2 (mặc định của Circle).
-    sdk.setCustomSecurityQuestions(CIRCLE_SECURITY_QUESTIONS.vi, 2, CIRCLE_SECURITY_CONFIRM_ITEMS.vi)
+    applyCircleLocale(sdk)
   }
   return sdk
 }
@@ -279,6 +272,47 @@ const RETRYABLE_CODES = new Set([
   155705, // hintsMatchAnswers — gợi ý trùng câu trả lời
 ])
 
+// ⚠️⚠️ RANH GIỚI LỖI CIRCLE — ĐỌC TRƯỚC KHI SỬA (xác định 2026-08-04, đọc source SDK):
+// Lỗi Circle chia LÀM 2 LOẠI, chỉ 1 loại mình dịch được:
+//
+//   (a) Lỗi VẼ TRONG IFRAME (RETRYABLE_CODES bên trên: sai PIN, sai câu trả lời...) — iframe
+//       `pw-auth.circle.com` tự hiện chữ đỏ rồi cho nhập lại, KHÔNG đóng, KHÔNG bắn ra ngoài.
+//       Chữ đó là của Circle, TIẾNG ANH, KHÔNG ĐỔI ĐƯỢC: interface `Localizations` có ĐÚNG 16
+//       field (đọc `node_modules/@circle-fin/w3s-pw-web-sdk/dist/src/types.d.ts:498`), không
+//       field nào cho chữ lỗi; thứ duy nhất tên "error" là `errorInfo` trong `Resources` và nó
+//       là ICON ảnh. Đây là giới hạn THẬT của Circle — đừng đi tìm cách dịch nữa.
+//
+//   (b) Lỗi TERMINAL (PIN khoá, token hết hạn...) — iframe ĐÓNG, lỗi bắn về đây, MÌNH TỰ VẼ ra
+//       màn hình. Loại này DỊCH ĐƯỢC → map theo `err.code` bên dưới.
+//
+// Map theo MÃ SỐ, KHÔNG dò chữ tiếng Anh (`/lock/i` như bản cũ): nếu Circle localize message
+// hoặc đổi câu chữ thì dò chữ sẽ câm, còn mã số thì ổn định.
+const ERROR_BY_CODE = {
+  155119: 'Bạn nhập sai PIN quá nhiều lần. Ví tạm khoá, vui lòng thử lại sau ít phút.',
+  155120: 'Bạn trả lời sai quá nhiều lần. Tạm khoá, vui lòng thử lại sau ít phút.',
+  155109: 'Tài khoản đã bị vô hiệu hoá.',
+  155102: 'Không tìm thấy tài khoản này.',
+  155110: 'Tài khoản chưa đặt mã PIN.',
+  155111: 'Tài khoản chưa đặt câu hỏi bảo mật.',
+  155103: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+  155104: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+  155105: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+  155130: 'Mã OTP đã hết hạn. Vui lòng lấy mã mới.',
+  155131: 'Mã OTP không hợp lệ.',
+  155133: 'Mã OTP không đúng.',
+  155134: 'Mã OTP không khớp.',
+  155706: 'Lỗi mạng. Kiểm tra kết nối rồi thử lại.',
+}
+
+// Lỗi Circle → câu hiển thị cho user, theo ngôn ngữ app. Mã lạ (ngoài bảng) → đành lấy message
+// gốc của Circle (tiếng Anh) còn hơn nuốt mất thông tin; hết cách thì câu chung chung.
+// DÙNG HÀM NÀY ở mọi chỗ catch lỗi Circle, đừng đọc thẳng `e.message` nữa.
+export function circleErrorMessage(e) {
+  const known = ERROR_BY_CODE[e?.code ?? e?.error?.code]
+  if (known) return t(known)
+  return e?.message || e?.error?.message || (typeof e === 'string' ? e : '') || t('Có lỗi xảy ra')
+}
+
 export function executeChallenge(sdk, userToken, encryptionKey, challengeId) {
   if (MOCK) return Promise.resolve()   // mock: bỏ qua bước ký PIN, coi như thành công
   return new Promise((resolve, reject) => {
@@ -286,13 +320,12 @@ export function executeChallenge(sdk, userToken, encryptionKey, challengeId) {
     sdk.execute(challengeId, (err, result) => {
       if (err) {
         if (RETRYABLE_CODES.has(err.code)) return   // để iframe cho user thử lại, đừng settle
-        // PIN bị KHOÁ (sai quá số lần cho phép) → Circle trả message tiếng Anh dài, đáng sợ.
-        // Thay bằng 1 câu ngắn gọn thân thiện; app vẫn về trạng thái ổn (caller setLoading(false)).
-        const raw = err?.message || err?.error?.message || ''
-        if (/lock/i.test(raw)) {
-          return reject(Object.assign(new Error('Wrong PIN too many times. It is locked for a while — please try again later.'), { code: err.code, locked: true }))
-        }
-        return reject(err)
+        // Lỗi terminal → gắn sẵn câu tiếng Việt vào .message (caller cứ hiện .message như cũ).
+        // 155119 = PIN bị khoá: giữ cờ .locked cho caller nào cần phân biệt.
+        return reject(Object.assign(new Error(circleErrorMessage(err)), {
+          code: err.code,
+          locked: err.code === 155119 || err.code === 155120,
+        }))
       }
       resolve(result)
     })

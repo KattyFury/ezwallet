@@ -233,11 +233,11 @@ export default function Contacts() {
       {confirmDelete && (
         <div className="popup-overlay" style={{ zIndex: 110 }} onClick={() => setConfirmDelete(false)}>
           <div className="popup-card" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-            <div className="popup-title">Delete contact?</div>
-            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>This can't be undone.</div>
+            <div className="popup-title">{t('Xoá danh bạ?')}</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{t('Không thể hoàn tác.')}</div>
             <div className="popup-actions" style={{ marginTop: 4 }}>
               <button className="btn btn-secondary" onClick={() => setConfirmDelete(false)}>{t('Quay lại')}</button>
-              <button className="btn btn-error" onClick={handleDelete}>Delete</button>
+              <button className="btn btn-error" onClick={handleDelete}>{t('Xoá')}</button>
             </div>
           </div>
         </div>

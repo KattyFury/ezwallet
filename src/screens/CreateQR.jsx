@@ -61,7 +61,7 @@ export default function CreateQR() {
         {fromLibrary ? (
           <div className="memo-row" style={{ width: '100%' }}>
             <Icon name="pencil" size="var(--is-md-lg)" color="var(--color-muted)" />
-            <input className="memo-input" value={name} onChange={e => setName(e.target.value)} placeholder="Name your QR" maxLength={30}
+            <input className="memo-input" value={name} onChange={e => setName(e.target.value)} placeholder={t('Đặt tên cho QR')} maxLength={30}
               onFocus={() => setTypingText(true)} onBlur={() => setTypingText(false)} />
           </div>
         ) : (

@@ -188,8 +188,8 @@ export default function SendAmount() {
       {showNote && (
         <div className="popup-overlay" onClick={() => setShowNote(false)}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
-            <div className="popup-title">Set your default note</div>
-            <input className="address-input" placeholder="Type here" value={draftNote}
+            <div className="popup-title">{t('Đặt lời nhắn mặc định')}</div>
+            <input className="address-input" placeholder={t('Nhập tại đây')} value={draftNote}
               onChange={e => setDraftNote(e.target.value)} maxLength={100} autoFocus
               style={{ width: '100%', height: 52, fontSize: 'var(--fs-md-lg)' }} />
             <div className="popup-actions">

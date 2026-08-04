@@ -112,6 +112,44 @@ const EN = {
   'Đổi PIN thành công!': 'PIN changed!',
   'Lỗi:': 'Error:',
   'thử lại': 'try again',
+  // Lỗi Circle dịch theo mã (circle.js ERROR_BY_CODE) — chỉ áp cho lỗi TERMINAL bắn ra ngoài
+  // iframe. Lỗi vẽ TRONG iframe (sai PIN, sai câu trả lời) là của Circle, không đổi được.
+  'Bạn nhập sai PIN quá nhiều lần. Ví tạm khoá, vui lòng thử lại sau ít phút.': 'Too many incorrect PIN attempts. Your wallet is temporarily locked – please try again in a few minutes.',
+  'Bạn trả lời sai quá nhiều lần. Tạm khoá, vui lòng thử lại sau ít phút.': 'Too many incorrect answers. Temporarily locked – please try again in a few minutes.',
+  'Tài khoản đã bị vô hiệu hoá.': 'This account has been disabled.',
+  'Không tìm thấy tài khoản này.': 'Account not found.',
+  'Tài khoản chưa đặt mã PIN.': 'This account has no PIN set.',
+  'Tài khoản chưa đặt câu hỏi bảo mật.': 'This account has no security questions set.',
+  'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.': 'Your session has expired. Please sign in again.',
+  'Mã OTP đã hết hạn. Vui lòng lấy mã mới.': 'The code has expired. Please request a new one.',
+  'Mã OTP không hợp lệ.': 'Invalid code.',
+  'Mã OTP không đúng.': 'Incorrect code.',
+  'Mã OTP không khớp.': 'The code does not match.',
+  'Lỗi mạng. Kiểm tra kết nối rồi thử lại.': 'Network error. Check your connection and try again.',
+  // PinGate / Security
+  'Mở khoá': 'Unlock',
+  'Không dùng được với tài khoản Google': 'Not available for Google accounts',
+  // Contacts / SavedQRList / SendAmount / CreateQR / Swap / QRScanner
+  'Xoá danh bạ?': 'Delete contact?',
+  'Không thể hoàn tác.': "This can't be undone.",
+  'Xoá': 'Delete',
+  'Lưu vào kho QR': 'Add to QR Storage',
+  'Tên (không bắt buộc)': 'Name (optional)',
+  'Xoá QR:': 'Delete QR:',
+  'Xác nhận': 'Confirm',
+  'Đặt lời nhắn mặc định': 'Set your default note',
+  'Nhập tại đây': 'Type here',
+  'Đặt tên cho QR': 'Name your QR',
+  'Chọn token': 'Select token',
+  'Chưa hỗ trợ QR ngoài đời thật': 'Real-life QR codes are not supported yet',
+  'Chỉ quét QR ví crypto': 'Scan crypto wallet QRs only',
+  // Language & Currency
+  'Ngôn ngữ & Tiền tệ': 'Language & Currency',
+  'Ngôn ngữ': 'Language',
+  'Tiền tệ mặc định': 'Default currency',
+  // ErrorBoundary
+  'Tải lại': 'Reload',
+  'Ứng dụng gặp lỗi ngoài dự kiến. Ví và tiền của bạn vẫn an toàn. Vui lòng tải lại.': 'The app hit an unexpected error. Your wallet and funds are safe. Please reload.',
   // About
   'About': 'About',
   'Ứng dụng': 'App',
@@ -186,10 +224,7 @@ const ZH = {
 
 const DICTS = { en: EN, zh: ZH }
 
-// KHÓA English: Circle Wallet hiện chỉ hỗ trợ tiếng Anh nên toàn app dùng 'en',
-// bất kể quốc gia / trình duyệt / lựa chọn cũ trong localStorage.
-// Hạ tầng đa ngôn ngữ (từ điển VN/ZH, detect() bên dưới) được giữ nguyên;
-// khi Circle hỗ trợ thêm ngôn ngữ, chỉ cần cho LANG = detect() trở lại.
+// Ưu tiên lựa chọn user đã lưu; chưa chọn thì đoán theo ngôn ngữ trình duyệt.
 function detect() {
   const stored = localStorage.getItem('ez_lang')
   if (stored) return stored
@@ -199,10 +234,12 @@ function detect() {
   return 'en'
 }
 
-// KHÓA English (user chốt): Circle SDK chỉ tiếng Anh + nhiều chuỗi mới hardcode English → giữ 'en'
-// cho đồng nhất. Language screen có hiện option Việt/Trung nhưng KHOÁ (không click). Hạ tầng VI/ZH
-// + setLang() còn nguyên — mở lại chỉ cần cho LANG đọc localStorage + bỏ khoá 2 option đó.
-let LANG = 'en'
+// ✅ ĐÃ MỞ KHOÁ 2026-08-04 (user chốt) — trước đây ghim cứng 'en' vì "Circle SDK chỉ tiếng Anh".
+// Lý do đó KHÔNG CÒN ĐÚNG: Circle CÓ localize được qua setLocalizations (xem circleLocalizations.js).
+// ⚠️ Màn Circle bám theo ĐÚNG biến LANG này (circle.js/Login.jsx đọc getLang()) — ngôn ngữ nào chưa
+// có bản dịch Circle thì tự rơi về English mặc định của Circle. ĐỪNG hardcode `.vi` cho Circle nữa,
+// sẽ thành app tiếng Anh + màn PIN tiếng Việt.
+let LANG = detect()
 
 export function getLang() { return LANG }
 export function setLang(l) { localStorage.setItem('ez_lang', l); window.location.reload() }

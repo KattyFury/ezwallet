@@ -1,33 +1,37 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
-import { getSDK, executeChallenge, resetPinChallenge, refreshSession } from '../circle'
+import { getSDK, executeChallenge, resetPinChallenge, refreshSession, circleErrorMessage } from '../circle'
 import { t } from '../i18n'
 
 export default function Security() {
   const { navigate } = useNav()
   const [copied, setCopied] = useState(false)
+  // ⚠️ pinErr là CỜ RIÊNG, đừng quay lại dò chữ đầu câu (`/^(Error|Lỗi)/`) như bản cũ: chữ đổi
+  // theo ngôn ngữ nên dò chữ là hỏng tô màu ngay khi dịch sang tiếng khác (bug suýt dính 08-04).
   const [pinStatus, setPinStatus] = useState('')
+  const [pinErr, setPinErr] = useState(false)
+  function showStatus(msg, isErr = false) { setPinStatus(msg); setPinErr(isErr) }
 
   async function handleResetPin() {
     // User Google (SSO, không có ez_email): Circle chặn PUT /user/pin ở tầng platform
     // (403 code 3 dù token tươi + PIN tồn tại — verify session 10). Không gọi cho đỡ tốn 1 vòng lỗi.
     if (!localStorage.getItem('ez_email')) {
-      setPinStatus('Not available for Google accounts')
-      setTimeout(() => setPinStatus(''), 3000)
+      showStatus(t('Không dùng được với tài khoản Google'), true)
+      setTimeout(() => showStatus(''), 3000)
       return
     }
-    setPinStatus(t('Đang chuẩn bị...'))
+    showStatus(t('Đang chuẩn bị...'))
     try {
       // Làm mới userToken trước — tránh "userToken had expired" (Circle token ~1h).
       const { userToken, encryptionKey } = await refreshSession()
       const challengeId = await resetPinChallenge(userToken)
-      setPinStatus(t('Nhập PIN...'))
+      showStatus(t('Nhập PIN...'))
       await executeChallenge(await getSDK(), userToken, encryptionKey, challengeId)
-      setPinStatus(t('Đổi PIN thành công!'))
-      setTimeout(() => setPinStatus(''), 2000)
+      showStatus(t('Đổi PIN thành công!'))
+      setTimeout(() => showStatus(''), 2000)
     } catch (e) {
-      setPinStatus(t('Lỗi:') + ' ' + (e.message || t('thử lại')))
+      showStatus(circleErrorMessage(e), true)
     }
   }
 
@@ -43,8 +47,7 @@ export default function Security() {
   // VALUE lên fs-item 17 (user 07-17f: "nội dung hơi nhỏ" — trước fs-label 15)
   const LABEL = { flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }
   const VALUE = { fontSize: 'var(--fs-item)', color: 'var(--color-muted)', maxWidth: '55%', textAlign: 'right', wordBreak: 'break-all' }
-  // Trạng thái đổi PIN: LỖI phải ĐỎ cho bật (user 07-17f — "Error: User canceled" đen/xanh không bật)
-  const pinErr = /^(Error|Lỗi|Not available)/.test(pinStatus)
+  // (Trạng thái đổi PIN: LỖI phải ĐỎ cho bật — user 07-17f. Cờ pinErr khai ở trên.)
 
   return (
     <div className="screen">

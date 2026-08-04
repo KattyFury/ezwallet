@@ -1,16 +1,18 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
-import { t } from '../i18n'
+import { t, getLang, setLang } from '../i18n'
 import { getDisplayCurrency } from '../data'
 
-// Ngôn ngữ KHOÁ English (Circle SDK chỉ English + chuỗi mới hardcode English). Hiện thêm option
-// Việt/Trung cho popup đỡ trống nhưng KHOÁ (thấy được, không bấm) — user chốt.
+// ✅ MỞ KHOÁ 2026-08-04 (user chốt): cả 3 ngôn ngữ chọn được thật. Trước đây khoá vi/zh vì
+// "Circle SDK chỉ English" — lý do đó hết đúng (xem circleLocalizations.js). Đổi ngôn ngữ =
+// setLang() → lưu localStorage + reload (màn Circle tự bám theo ở lần dựng SDK kế tiếp).
 const LANGUAGES = [
   { code: 'en', label: 'English', locked: false },
-  { code: 'vi', label: 'Tiếng Việt', locked: true },
-  { code: 'zh', label: '中文', locked: true },
+  { code: 'vi', label: 'Tiếng Việt', locked: false },
+  { code: 'zh', label: '中文', locked: false },
 ]
+const LANG_LABEL = { en: 'English', vi: 'Tiếng Việt', zh: '中文' }
 
 // Tiền hiển thị: USD/EUR chọn được (ứng token USDC/EURC). CNY/VND hiện option nhưng KHOÁ (chưa
 // wire tỷ giá — mở lại: bỏ locked + thêm rate ở chain.js getDisplayRates + SUPPORTED_CURRENCIES).
@@ -55,18 +57,18 @@ export default function Language() {
   return (
     <div className="screen">
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        Language &amp; Currency
+        {t('Ngôn ngữ & Tiền tệ')}
       </div>
 
-      {/* BOX XÁM chứa nội dung hàng 2-3 (user chốt 07-17f) — 2 hàng: Ngôn ngữ (English khoá) +
-          Tiền tệ (USD/EUR chọn được). Bấm cả hàng mở popup. */}
+      {/* BOX XÁM chứa nội dung hàng 2-3 (user chốt 07-17f) — 2 hàng: Ngôn ngữ + Tiền tệ
+          (USD/EUR chọn được). Bấm cả hàng mở popup. */}
       <div style={{ gridRow: '2 / 4', background: 'var(--color-surface)', borderRadius: 20, padding: '0 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', minWidth: 0 }}>
         <button className="menu-item" onClick={() => setLangPicker(true)}>
-          <span style={LABEL}>Language</span>
-          <span style={CHIP}>English<Icon name="down2" size="var(--is-item)" color="var(--color-brand)" /></span>
+          <span style={LABEL}>{t('Ngôn ngữ')}</span>
+          <span style={CHIP}>{LANG_LABEL[getLang()] || 'English'}<Icon name="down2" size="var(--is-item)" color="var(--color-brand)" /></span>
         </button>
         <button className="menu-item" onClick={() => setCurPicker(true)}>
-          <span style={LABEL}>Default currency</span>
+          <span style={LABEL}>{t('Tiền tệ mặc định')}</span>
           <span style={CHIP}>{CUR_SHORT[currency] || 'USD'}<Icon name="down2" size="var(--is-item)" color="var(--color-brand)" /></span>
         </button>
       </div>
@@ -76,8 +78,8 @@ export default function Language() {
       </div>
 
       {langPicker && (
-        <Picker title="Language" options={LANGUAGES} active="en"
-          onPick={() => setLangPicker(false)} onClose={() => setLangPicker(false)} />
+        <Picker title="Language" options={LANGUAGES} active={getLang()}
+          onPick={setLang} onClose={() => setLangPicker(false)} />
       )}
       {curPicker && (
         <Picker title={t('Chọn tiền tệ')} options={CURRENCIES} active={currency}

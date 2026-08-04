@@ -1,6 +1,8 @@
-// Bản dịch cho Circle W3S SDK (setLocalizations) — TÁCH RIÊNG file này để dễ thêm ngôn ngữ mới
-// (user chốt 2026-08-04: bật tiếng Việt trước, êm rồi thêm ngôn ngữ khác — chỉ cần thêm 1 key
-// nữa vào CIRCLE_LOCALIZATIONS, vd `zh: {...}`, rồi đổi getSDK()/Login.jsx dùng đúng key đó).
+import { getLang } from './i18n'
+
+// Bản dịch cho Circle W3S SDK (setLocalizations) — TÁCH RIÊNG file này để dễ thêm ngôn ngữ mới.
+// THÊM NGÔN NGỮ: chỉ cần thêm 1 key vào CIRCLE_LOCALIZATIONS (vd `zh: {...}`) — applyCircleLocale()
+// ở cuối file TỰ bám theo getLang(), KHÔNG phải sửa circle.js/Login.jsx nữa.
 //
 // PHẠM VI: chỉ các field Circle liệt kê trong docs Localizations (KHÔNG đoán bừa field không có
 // trong docs). Đã tra 2 nguồn (2026-08-04):
@@ -154,4 +156,25 @@ export const CIRCLE_SECURITY_CONFIRM_ITEMS = {
     'Circle không lưu trữ câu trả lời của tôi, nên tôi phải tự ghi nhớ.',
     'Tôi sẽ mất quyền truy cập vào ví và tài sản số nếu quên câu trả lời.',
   ],
+}
+
+// Áp bản dịch cho 1 instance SDK, BÁM THEO NGÔN NGỮ APP (getLang()) — dùng chung cho cả 3 chỗ
+// dựng SDK (circle.js:getSDK + Login.jsx ×2) để 3 chỗ không bao giờ lệch nhau.
+// Ngôn ngữ CHƯA có bản dịch (vd 'zh', 'en') → KHÔNG gọi gì cả → Circle tự dùng English mặc định.
+// Đó là hành vi ĐÚNG: app tiếng Anh thì màn PIN cũng tiếng Anh, không lệch nửa nọ nửa kia.
+export function applyCircleLocale(sdk) {
+  const lang = getLang()
+  const loc = CIRCLE_LOCALIZATIONS[lang]
+  if (loc) sdk.setLocalizations(loc)
+
+  // ⚠️ THAM SỐ VỊ TRÍ — (questions, requiredCount, securityConfirmItems). TUYỆT ĐỐI KHÔNG gọi kiểu
+  // object `{ questions, securityConfirmItems }`: đó là root cause bug "màn Câu hỏi bảo mật RỖNG"
+  // 08-04 (object rơi vào chỗ mảng questions → danh sách hỏng, chặn cả luồng tạo ví; đồng thời
+  // securityConfirmItems không bao giờ tới nơi → 3 dòng cảnh báo giữ English).
+  // Chữ ký thật: node_modules/@circle-fin/w3s-pw-web-sdk/dist/src/index.d.ts:91
+  const questions = CIRCLE_SECURITY_QUESTIONS[lang]
+  const confirmItems = CIRCLE_SECURITY_CONFIRM_ITEMS[lang]
+  if (questions || confirmItems) {
+    sdk.setCustomSecurityQuestions(questions, 2, confirmItems)   // requiredCount 2 = mặc định Circle
+  }
 }

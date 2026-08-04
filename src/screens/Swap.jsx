@@ -3,7 +3,7 @@ import NavBar from '../components/NavBar'
 import Icon from '../components/Icon'
 import PctSlider from '../components/PctSlider'
 import Numpad from '../components/Numpad'
-import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress } from '../circle'
+import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress, circleErrorMessage } from '../circle'
 import { getTokenBalances, getDisplayRates, cachedRates, cachedBalances, estimateFeeUsd } from '../chain'
 import { spendableOf, floorTo, getDisplayCurrency, displaySymbol } from '../data'
 import { useFitFontSize } from '../useFitFontSize'
@@ -49,7 +49,7 @@ function TokenPicker({ current, onSelect, onClose }) {
   return (
     <div className="popup-overlay" onClick={onClose}>
       <div className="popup-card" onClick={e => e.stopPropagation()}>
-        <div className="popup-title">Select token</div>
+        <div className="popup-title">{t('Chọn token')}</div>
         {SWAP_TOKENS.map(sym => (
           <button key={sym} onClick={() => { onSelect(sym); onClose() }} className={`btn ${sym === current ? 'btn-primary' : 'btn-secondary'}`}
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
@@ -259,7 +259,7 @@ export default function Swap() {
       if (e?.code === 155701) { setStatus(''); return }  // user tự hủy PIN → im lặng
       // Swap thất bại → thông báo cùng dạng gộp, đuôi "(failed)" (user chốt 07-20)
       addNotif(`Swapped ${amountNum} ${fromSym} to ${toSym} (failed)`, 'error', null, `swap-fail-${Date.now()}`)
-      const msg = e?.message || e?.error?.message || (typeof e === 'string' ? e : 'Swap failed')
+      const msg = circleErrorMessage(e)
       setError(msg); setStatus('')
     }
   }
