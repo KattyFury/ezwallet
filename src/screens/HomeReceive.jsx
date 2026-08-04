@@ -85,28 +85,27 @@ export default function HomeReceive() {
 
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
         {/* Mỗi dòng = 1 CÂU đủ nghĩa, từ khoá gạch chân BẤM ĐƯỢC → đi đúng nơi nút cùng tên ở
-            hàng 9 dẫn tới (user chốt 07-21). Thứ tự khớp layout nút: QR Storage · Create QR · Share. */}
+            hàng 9 dẫn tới (user chốt 07-21). Thứ tự khớp layout nút: Share · Create QR · QR Storage. */}
         <NotifArea hints={[
-          { label: 'QR Storage', desc: 'Save your favorite QR codes', onClick: () => navigate('SavedQRList') },
-          { label: 'Create QR', desc: 'Create a QR to receive money', onClick: () => navigate('CreateQR') },
           { label: 'Share', desc: 'Share your wallet address', onClick: handleShare },
+          { label: 'Create QR', desc: 'Create a QR to receive money', onClick: () => navigate('CreateQR') },
+          { label: 'QR Storage', desc: 'Save your favorite QR codes', onClick: () => navigate('SavedQRList') },
         ]} />
       </div>
 
-      {/* Thứ tự nút 07-19 (user chốt): QR Storage trái · Create QR giữa · Share PHẢI — đa số thuận
-          tay phải, nút bấm nhiều nhất (Share) nên nằm bên phải dễ với. */}
+      {/* Thứ tự nút (user đổi lại): Share trái · Create QR giữa · QR Storage PHẢI. */}
       <div className="row-9 action-grid">
-        <button className="action-card" onClick={() => navigate('SavedQRList')}>
-          <Icon name="download" size="var(--is-item)" />
-          <span>{t('Kho QR')}</span>
+        <button className="action-card" onClick={handleShare}>
+          <Icon name="share" size="var(--is-item)" />
+          <span>{copied ? t('Đã copy!') : t('Chia sẻ')}</span>
         </button>
         <button className="action-card primary" onClick={() => navigate('CreateQR')}>
           <Icon name="qr" size="var(--is-item)" color="var(--color-white)" />
           <span>{t('Tạo QR')}</span>
         </button>
-        <button className="action-card" onClick={handleShare}>
-          <Icon name="share" size="var(--is-item)" />
-          <span>{copied ? t('Đã copy!') : t('Chia sẻ')}</span>
+        <button className="action-card" onClick={() => navigate('SavedQRList')}>
+          <Icon name="download" size="var(--is-item)" />
+          <span>{t('Kho QR')}</span>
         </button>
       </div>
 
