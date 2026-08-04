@@ -84,23 +84,22 @@ export const CIRCLE_LOCALIZATIONS = {
       description: 'Trả lời vài câu hỏi bảo mật để có thể khôi phục ví nếu bạn quên PIN.',
       link: 'Tìm hiểu thêm',
     },
-    // ⚠️⚠️ TẮT HẲN 08-04g: đã tắt setCustomSecurityQuestions() (gotcha mục 7) mà màn Câu hỏi bảo
-    // mật VẪN RỖNG y hệt — nghĩa là thủ phạm không phải method đó. Biến còn lại DUY NHẤT giữa mọi
-    // lần test là chính khối `securityQuestions` này (title render đúng "Câu hỏi bảo mật" nên khối
-    // này CÓ được đọc, không bị từ chối toàn bộ — nhưng phần form bên dưới thì rỗng). Comment out
-    // toàn bộ để cô lập biến cuối cùng — nếu màn vẫn rỗng sau lần này thì lỗi không nằm ở phía
-    // mình, cần báo Circle support kèm ảnh chụp exact steps. ĐỪNG bật lại field nào trong này (kể
-    // cả chỉ title) cho tới khi xác nhận màn không rỗng khi tắt hẳn khối này.
-    // securityQuestions: {
-    //   title: 'Câu hỏi bảo mật',
-    //   questionHeader: 'Câu hỏi',
-    //   questionPlaceholder: 'Chọn một câu hỏi',
-    //   requiredMark: ' (bắt buộc)',
-    //   answerHeader: 'Câu trả lời',
-    //   answerPlaceholder: 'Nhập câu trả lời của bạn',
-    //   answerHintHeader: 'Gợi ý (không bắt buộc)',
-    //   answerHintPlaceholder: 'Thêm gợi ý giúp bạn nhớ câu trả lời',
-    // },
+    // ✅ BẬT LẠI 08-04h: khối này CHƯA BAO GIỜ là thủ phạm làm rỗng màn (ảnh user chụp ở bản
+    // f02cd86 — lúc chỉ có setLocalizations, chưa gọi setCustomSecurityQuestions — cho thấy màn
+    // hiện ĐẦY ĐỦ dropdown + ô nhập, chỉ dính lỗi chữ "Câu hỏiBắt buộc"). Thủ phạm thật là gọi
+    // SAI CHỮ KÝ setCustomSecurityQuestions (xem circle.js).
+    securityQuestions: {
+      title: 'Câu hỏi bảo mật',
+      questionHeader: 'Câu hỏi',
+      questionPlaceholder: 'Chọn một câu hỏi',
+      // SDK ghép thẳng questionHeader/answerHeader + requiredMark, KHÔNG tự chèn dấu cách
+      // (đo thật 08-04: "Câu hỏiBắt buộc" dính liền) — phải tự đệm khoảng trắng + ngoặc.
+      requiredMark: ' (bắt buộc)',
+      answerHeader: 'Câu trả lời',
+      answerPlaceholder: 'Nhập câu trả lời của bạn',
+      answerHintHeader: 'Gợi ý (không bắt buộc)',
+      answerHintPlaceholder: 'Thêm gợi ý giúp bạn nhớ câu trả lời',
+    },
     securitySummary: {
       title: 'Tóm tắt câu hỏi bảo mật',
       question: 'Câu hỏi {{ordinal}}',
@@ -114,20 +113,21 @@ export const CIRCLE_LOCALIZATIONS = {
   },
 }
 
-// ⚠️⚠️ TẠM DỪNG 08-04 (đo thật): truyền `questions` này vào setCustomSecurityQuestions() làm
-// CẢ MÀN Câu hỏi bảo mật RỖNG TOÀN BỘ (không dropdown, không ô nhập gì — chặn luôn cả đường
-// tạo ví). Đồng thời `securityConfirmItems` (cùng 1 lệnh gọi) CŨNG rơi lại English — tức nhiều
-// khả năng CẢ LỆNH gọi bị SDK từ chối khi có `questions`, kéo theo phần securityConfirmItems chết
-// theo (chưa test riêng lẻ để chắc chắn). ĐANG KHÔNG dùng `questions` (xem circle.js/Login.jsx —
-// chỉ còn truyền `securityConfirmItems`) cho tới khi tìm ra nguyên nhân thật (nghi ngờ: thiếu tối
-// thiểu bao nhiêu câu, sai field, hoặc timing gọi trước khi challenge mở). ĐỪNG bật lại `questions`
-// mà chưa hiểu vì sao gãy — màn này chặn cả luồng tạo ví, vỡ là user không tạo được ví mới.
+// Bộ câu hỏi bảo mật tiếng Việt — thay bộ mặc định của Circle (English, kiểu "What is your
+// father's middle name?" — không hợp văn hoá VN). Chọn câu quen thuộc, KHÔNG đổi theo thời gian
+// (né "món ăn/màu yêu thích hiện tại" — dễ đổi ý, khó nhớ lại đúng).
+// type: 'TEXT' — enum QuestionType của SDK là string enum ('TEXT'/'DATE'), để nguyên chuỗi cho
+// khỏi phải import package SDK tĩnh vào file này (xem lý do nạp lười ở circle.js).
 //
-// Bộ câu hỏi bảo mật tiếng Việt soạn sẵn (giữ lại để dùng khi tìm ra fix) — thay bộ mặc định của
-// Circle (English, kiểu "What is your father's middle name?" — không hợp văn hoá VN). Chọn câu
-// quen thuộc, KHÔNG đổi theo thời gian (né "món ăn/màu yêu thích hiện tại" — dễ đổi ý, khó nhớ
-// lại đúng). type: 'TEXT' (string enum của SDK, để nguyên chuỗi cho khỏi phải import cả package
-// SDK tĩnh vào file này — xem lý do nạp lười ở circle.js).
+// ⚠️ CÁCH TRUYỀN — ĐỌC KỸ, ĐÂY LÀ ROOT CAUSE CỦA BUG "MÀN RỖNG" 08-04:
+// setCustomSecurityQuestions nhận THAM SỐ VỊ TRÍ, KHÔNG phải object:
+//   setCustomSecurityQuestions(questions?, requiredCount = 2, securityConfirmItems?)
+// (verify bằng đọc `node_modules/@circle-fin/w3s-pw-web-sdk/dist/src/index.d.ts:91` + phần thân
+// hàm ở `index.js:254` — nó gán thẳng `this.securityQuestions = questions`, không destructure.)
+// Gọi kiểu object `setCustomSecurityQuestions({ questions, securityConfirmItems })` → SDK nhận
+// nguyên object vào chỗ MẢNG questions → danh sách câu hỏi hỏng → MÀN RỖNG, chặn cả luồng tạo ví;
+// đồng thời securityConfirmItems (tham số thứ 3) KHÔNG BAO GIỜ tới nơi → 3 dòng cảnh báo giữ
+// nguyên English. Cả 2 triệu chứng từng gặp đều từ đúng 1 lỗi này. ĐỪNG gọi kiểu object nữa.
 export const CIRCLE_SECURITY_QUESTIONS = {
   vi: [
     { question: 'Tên con vật nuôi đầu tiên của bạn là gì?', type: 'TEXT' },
@@ -141,9 +141,10 @@ export const CIRCLE_SECURITY_QUESTIONS = {
   ],
 }
 
-// 3 dòng cảnh báo ở màn Xác nhận bảo mật (setCustomSecurityQuestions({ securityConfirmItems })) —
-// KHÁC METHOD với setLocalizations, không nằm trong Localizations object nên phải gọi riêng.
-// Bản gốc English (đo thật 08-04, chưa gọi method này nên SDK tự rơi về mặc định):
+// 3 dòng cảnh báo ở màn Xác nhận bảo mật — là THAM SỐ THỨ 3 của setCustomSecurityQuestions
+// (KHÁC METHOD với setLocalizations, không nằm trong Localizations object). Xem cảnh báo cách
+// truyền tham số vị trí ở CIRCLE_SECURITY_QUESTIONS bên trên.
+// Bản gốc English (đo thật 08-04, lúc tham số này chưa tới nơi được vì gọi sai chữ ký):
 // 1. "This is the only way to recover my account access."
 // 2. "Circle won't store my answers so it's my responsibility to remember them."
 // 3. "I will lose access to my wallet and my digital assets if I forget my answers."

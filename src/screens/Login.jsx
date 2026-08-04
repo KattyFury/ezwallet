@@ -4,7 +4,7 @@ import { useNav } from '../nav'
 import { useState, useEffect, useRef } from 'react'
 import { getCookie, setCookie, deleteCookie } from 'cookies-next'
 import { createSocialToken, initializeWallet, executeChallenge, getWalletAddress, GOOGLE_CLIENT_ID } from '../circle'
-import { CIRCLE_LOCALIZATIONS } from '../circleLocalizations'
+import { CIRCLE_LOCALIZATIONS, CIRCLE_SECURITY_QUESTIONS, CIRCLE_SECURITY_CONFIRM_ITEMS } from '../circleLocalizations'
 import { t } from '../i18n'
 
 const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
@@ -114,7 +114,8 @@ export default function Login() {
         },
       }, onLoginComplete)
       sdk.setLocalizations(CIRCLE_LOCALIZATIONS.vi)
-      // setCustomSecurityQuestions() TẮT — xem comment dài ở circle.js:getSDK()
+      // ⚠️ THAM SỐ VỊ TRÍ, đừng gọi kiểu object — xem circle.js:getSDK()
+      sdk.setCustomSecurityQuestions(CIRCLE_SECURITY_QUESTIONS.vi, 2, CIRCLE_SECURITY_CONFIRM_ITEMS.vi)
       sdkRef.current = sdk
       // xin trước cho đỡ trễ lúc bấm nút (không phải lúc restore)
       if (!restoringNow) ensureDeviceId(sdk).catch(() => {})
@@ -132,7 +133,8 @@ export default function Login() {
         const { W3SSdk } = await import('@circle-fin/w3s-pw-web-sdk')
         sdkRef.current = new W3SSdk({ appSettings: { appId: APP_ID } })
         sdkRef.current.setLocalizations(CIRCLE_LOCALIZATIONS.vi)
-        // setCustomSecurityQuestions() TẮT — xem comment dài ở circle.js:getSDK()
+        // ⚠️ THAM SỐ VỊ TRÍ, đừng gọi kiểu object — xem circle.js:getSDK()
+        sdkRef.current.setCustomSecurityQuestions(CIRCLE_SECURITY_QUESTIONS.vi, 2, CIRCLE_SECURITY_CONFIRM_ITEMS.vi)
       }
       const sdk = sdkRef.current
       const deviceId = await ensureDeviceId(sdk)

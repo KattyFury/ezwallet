@@ -1,5 +1,5 @@
 import { MOCK, MOCK_RATES } from './mock'
-import { CIRCLE_LOCALIZATIONS } from './circleLocalizations'
+import { CIRCLE_LOCALIZATIONS, CIRCLE_SECURITY_QUESTIONS, CIRCLE_SECURITY_CONFIRM_ITEMS } from './circleLocalizations'
 
 let sdk = null
 
@@ -30,16 +30,12 @@ export async function getSDK() {
     const W3SSdk = await loadW3SSdk()
     sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
     sdk.setLocalizations(CIRCLE_LOCALIZATIONS.vi)
-    // ⚠️⚠️ TẮT HẲN 08-04 (đo thật 2 lần): gọi setCustomSecurityQuestions() — DÙ CHỈ truyền
-    // securityConfirmItems, KHÔNG truyền questions — VẪN làm RỖNG màn Câu hỏi bảo mật (chặn tạo
-    // ví). Nghi ngờ: gọi method này (bất kể tham số gì) khiến SDK coi là "dev tự cung cấp bộ câu
-    // hỏi riêng" và THAY THẾ HẲN bộ câu hỏi mặc định — không truyền `questions` hợp lệ (đủ số
-    // lượng?) thì danh sách rỗng luôn, không tự rơi về bộ mặc định của Circle. CHƯA XÁC NHẬN được
-    // giả thuyết này (không đọc được source iframe) — ĐỪNG gọi lại method này (dù chỉ để đổi
-    // securityConfirmItems) cho tới khi test được với `questions` ĐẦY ĐỦ + số lượng lớn hơn (thử
-    // 12-15 câu, nghi ngờ có ngưỡng tối thiểu) VÀ xác nhận màn Câu hỏi bảo mật không bị rỗng.
-    // → 3 dòng cảnh báo ở màn Xác nhận bảo mật ĐÀNH chịu tiếng Anh cho tới khi fix được.
-    // sdk.setCustomSecurityQuestions({ securityConfirmItems: CIRCLE_SECURITY_CONFIRM_ITEMS.vi })
+    // ⚠️ THAM SỐ VỊ TRÍ — (questions, requiredCount, securityConfirmItems). KHÔNG được gọi kiểu
+    // object `{ questions, securityConfirmItems }`: đó chính là root cause bug "màn Câu hỏi bảo
+    // mật RỖNG" 08-04 (object rơi vào chỗ mảng questions → danh sách hỏng; securityConfirmItems
+    // không bao giờ tới nơi → 3 dòng cảnh báo giữ English). Xem chú thích đầy đủ ở
+    // circleLocalizations.js:CIRCLE_SECURITY_QUESTIONS. requiredCount = 2 (mặc định của Circle).
+    sdk.setCustomSecurityQuestions(CIRCLE_SECURITY_QUESTIONS.vi, 2, CIRCLE_SECURITY_CONFIRM_ITEMS.vi)
   }
   return sdk
 }
