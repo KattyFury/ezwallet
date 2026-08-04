@@ -20,6 +20,13 @@ import { getLang } from './i18n'
 // cách nào đổi qua SDK (xem circle.js).
 export const CIRCLE_LOCALIZATIONS = {
   vi: {
+    // ⚠️ BUG CỦA CIRCLE (đo thật 2026-08-04, SDK 1.1.11 = bản mới nhất): trong CÙNG khối `common`,
+    // `continue` ĂN (nút hiện "Tiếp tục") nhưng `showPin`/`hidePin` KHÔNG ĂN (nút vẫn "Show PIN").
+    // KHÔNG PHẢI lỗi mình: `showPin` có trong interface `Common` (types.d.ts:363), mình truyền đúng,
+    // và SDK gửi NGUYÊN khối `localizations` sang iframe không lọc gì (index.js:66) — chứng cứ là
+    // các khối khác (enterPincode headline/subhead/forgotPin) ăn hết trong cùng lần gọi đó.
+    // → iframe pw-auth.circle.com nhận được nhưng bỏ qua. ĐỪNG sửa lại giá trị bên dưới, đã đúng rồi.
+    // Đã báo Circle support. Giữ nguyên để khi Circle fix là tự chạy.
     common: {
       continue: 'Tiếp tục',
       showPin: 'Hiện mã PIN',
