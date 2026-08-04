@@ -4,6 +4,7 @@ import { useNav } from '../nav'
 import { useState, useEffect, useRef } from 'react'
 import { getCookie, setCookie, deleteCookie } from 'cookies-next'
 import { createSocialToken, initializeWallet, executeChallenge, getWalletAddress, GOOGLE_CLIENT_ID } from '../circle'
+import { CIRCLE_LOCALIZATIONS } from '../circleLocalizations'
 import { t } from '../i18n'
 
 const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
@@ -112,6 +113,7 @@ export default function Login() {
           },
         },
       }, onLoginComplete)
+      sdk.setLocalizations(CIRCLE_LOCALIZATIONS.vi)
       sdkRef.current = sdk
       // xin trước cho đỡ trễ lúc bấm nút (không phải lúc restore)
       if (!restoringNow) ensureDeviceId(sdk).catch(() => {})
@@ -128,6 +130,7 @@ export default function Login() {
       if (!sdkRef.current) {
         const { W3SSdk } = await import('@circle-fin/w3s-pw-web-sdk')
         sdkRef.current = new W3SSdk({ appSettings: { appId: APP_ID } })
+        sdkRef.current.setLocalizations(CIRCLE_LOCALIZATIONS.vi)
       }
       const sdk = sdkRef.current
       const deviceId = await ensureDeviceId(sdk)

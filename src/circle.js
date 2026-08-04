@@ -1,4 +1,5 @@
 import { MOCK, MOCK_RATES } from './mock'
+import { CIRCLE_LOCALIZATIONS } from './circleLocalizations'
 
 let sdk = null
 
@@ -13,13 +14,13 @@ async function loadW3SSdk() {
   return m.W3SSdk
 }
 
-// ⚠️⚠️ QUYẾT ĐỊNH (2026-07-01, user chốt): TOÀN BỘ màn Circle (PIN + tạo ví + câu hỏi bảo mật)
-// = ENGLISH THUẦN, KHÔNG setLocalizations. Lý do: Circle chỉ cho localize MỘT PHẦN (vài headline),
-// còn CHỮ LỖI runtime ("The PIN you entered is incorrect..."), nút "Show PIN", màn "Recovery Method",
-// nội dung câu hỏi bảo mật đều HARDCODE trong iframe cross-origin → không đổi được. Việt hóa nửa vời
-// (headline Việt + phần còn lại Anh + lỗi "Tạo mã PINPIN") XẤU HƠN là để English nhất quán.
-// → Chấp nhận English toàn bộ khâu PIN cho tới khi Circle hỗ trợ localization đầy đủ (hoặc đổi tech).
-// ĐỪNG thêm setLocalizations lại nếu chưa xác nhận Circle localize được HẾT (gồm cả chữ lỗi runtime).
+// ⚠️⚠️ QUYẾT ĐỊNH (2026-08-04, user chốt — ĐẢO quyết định 2026-07-01 cũ): BẬT setLocalizations
+// tiếng Việt cho màn PIN + câu hỏi bảo mật. Quyết định cũ (English thuần, xem git log) dựa trên
+// giả định SAI: đọc kỹ docs (customization.md + web-sdk-ui-customizations, tra 2026-08-04) thì
+// Recovery Method + câu hỏi bảo mật ĐỀU localize được — không hardcode như tưởng. Cái ĐÚNG là
+// giả định gốc: CHỮ LỖI runtime ("The PIN you entered is incorrect...", PIN bị khoá...) không có
+// field nào trong Localizations → vẫn tiếng Anh, chấp nhận được vì hiếm khi hiện.
+// Bản dịch nằm ở circleLocalizations.js (tách riêng để thêm ngôn ngữ khác sau — "êm rồi thêm").
 // ⚠️ ASYNC (đổi 2026-07-17 khi nạp lười SDK) — MỌI chỗ gọi PHẢI `await getSDK()`.
 // Quên await → truyền Promise vào chỗ chờ SDK thật → PIN chết câm. Đã sửa cả 6 chỗ gọi:
 // EnterEmail(×3), PinGate, Security, SendConfirm, Swap.
@@ -28,6 +29,7 @@ export async function getSDK() {
   if (!sdk) {
     const W3SSdk = await loadW3SSdk()
     sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
+    sdk.setLocalizations(CIRCLE_LOCALIZATIONS.vi)
   }
   return sdk
 }
