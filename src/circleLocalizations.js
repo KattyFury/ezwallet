@@ -64,14 +64,10 @@ export const CIRCLE_LOCALIZATIONS = {
       answerInputHeader: 'Câu trả lời',
       answerInputPlaceholder: 'Nhập câu trả lời của bạn',
     },
-    // ⚠️ Màn này KHÔNG phải nhập lại câu trả lời bảo mật — nó bắt gõ ĐÚNG 1 cụm từ xác nhận đã
-    // đọc hiểu rủi ro (kiểu "gõ DELETE để xác nhận"), tách biệt hoàn toàn với câu hỏi/trả lời đã
-    // đặt. Bản gốc English bắt gõ "I agree" — CHƯA XÁC NHẬN được field `inputMatch` có thật sự
-    // đổi được cụm từ phải gõ hay không (docs Circle không ghi rõ, SDK là iframe cross-origin
-    // không đọc được source để kiểm chứng). Set thử 'Tôi đồng ý' ở đây — NẾU sau khi deploy gõ
-    // "Tôi đồng ý" mà nút Tiếp tục KHÔNG sáng lên, tức field này chỉ là chữ hiển thị chứ không
-    // đổi được cụm từ thật (vẫn phải gõ "I agree" tiếng Anh) → quay lại đổi headline/inputPlaceholder
-    // bên dưới thành hướng dẫn gõ "I agree" (giữ inputMatch không đổi được gì thì thôi kệ nó).
+    // ✅ ĐÃ XÁC NHẬN 08-04 (test thật trên deploy): field `inputMatch` THẬT SỰ đổi được cụm từ SDK
+    // validate — gõ "Tôi đồng ý" thì nút Tiếp tục sáng lên. Màn này KHÔNG phải nhập lại câu trả lời
+    // bảo mật — nó bắt gõ ĐÚNG 1 cụm từ xác nhận đã đọc hiểu rủi ro (kiểu "gõ DELETE để xác nhận"),
+    // tách biệt hoàn toàn với câu hỏi/trả lời đã đặt.
     securityConfirm: {
       title: 'Xác nhận bảo mật',
       headline: 'Gõ đúng cụm từ "Tôi đồng ý" bên dưới để xác nhận bạn đã hiểu rủi ro trên',
@@ -79,9 +75,12 @@ export const CIRCLE_LOCALIZATIONS = {
       inputPlaceholder: 'Tôi đồng ý',
       inputMatch: 'Tôi đồng ý',
     },
+    // ⚠️ SDK ghép thẳng headline + headline2 KHÔNG chèn dấu cách (đo thật 08-04:
+    // "Thiết lậpkhôi phục tài khoản" dính liền — cùng bệnh với requiredMark bên dưới).
+    // Đệm khoảng trắng vào đầu headline2 để tách ra.
     securityIntros: {
       headline: 'Thiết lập',
-      headline2: 'khôi phục tài khoản',
+      headline2: ' khôi phục tài khoản',
       description: 'Trả lời vài câu hỏi bảo mật để có thể khôi phục ví nếu bạn quên PIN.',
       link: 'Tìm hiểu thêm',
     },
@@ -110,12 +109,20 @@ export const CIRCLE_LOCALIZATIONS = {
   },
 }
 
-// Bộ câu hỏi bảo mật tiếng Việt (setCustomSecurityQuestions({ questions })) — thay bộ mặc định
-// của Circle (toàn tiếng Anh, kiểu "What is your father's middle name?" — không hợp văn hoá VN).
-// Chọn câu quen thuộc, dễ nhớ, KHÔNG đổi theo thời gian (né "món ăn/màu sắc yêu thích hiện tại" —
-// dễ đổi ý theo năm tháng, khó nhớ lại chính xác). type: 'TEXT' (string enum của SDK, để nguyên
-// chuỗi cho khỏi phải import cả package SDK tĩnh vào file này — xem lý do nạp lười ở circle.js).
-// requiredCount KHÔNG set = mặc định 2 (đúng như Circle vốn có, user chưa yêu cầu đổi số lượng).
+// ⚠️⚠️ TẠM DỪNG 08-04 (đo thật): truyền `questions` này vào setCustomSecurityQuestions() làm
+// CẢ MÀN Câu hỏi bảo mật RỖNG TOÀN BỘ (không dropdown, không ô nhập gì — chặn luôn cả đường
+// tạo ví). Đồng thời `securityConfirmItems` (cùng 1 lệnh gọi) CŨNG rơi lại English — tức nhiều
+// khả năng CẢ LỆNH gọi bị SDK từ chối khi có `questions`, kéo theo phần securityConfirmItems chết
+// theo (chưa test riêng lẻ để chắc chắn). ĐANG KHÔNG dùng `questions` (xem circle.js/Login.jsx —
+// chỉ còn truyền `securityConfirmItems`) cho tới khi tìm ra nguyên nhân thật (nghi ngờ: thiếu tối
+// thiểu bao nhiêu câu, sai field, hoặc timing gọi trước khi challenge mở). ĐỪNG bật lại `questions`
+// mà chưa hiểu vì sao gãy — màn này chặn cả luồng tạo ví, vỡ là user không tạo được ví mới.
+//
+// Bộ câu hỏi bảo mật tiếng Việt soạn sẵn (giữ lại để dùng khi tìm ra fix) — thay bộ mặc định của
+// Circle (English, kiểu "What is your father's middle name?" — không hợp văn hoá VN). Chọn câu
+// quen thuộc, KHÔNG đổi theo thời gian (né "món ăn/màu yêu thích hiện tại" — dễ đổi ý, khó nhớ
+// lại đúng). type: 'TEXT' (string enum của SDK, để nguyên chuỗi cho khỏi phải import cả package
+// SDK tĩnh vào file này — xem lý do nạp lười ở circle.js).
 export const CIRCLE_SECURITY_QUESTIONS = {
   vi: [
     { question: 'Tên con vật nuôi đầu tiên của bạn là gì?', type: 'TEXT' },
