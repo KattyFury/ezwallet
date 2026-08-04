@@ -64,12 +64,20 @@ export const CIRCLE_LOCALIZATIONS = {
       answerInputHeader: 'Câu trả lời',
       answerInputPlaceholder: 'Nhập câu trả lời của bạn',
     },
+    // ⚠️ Màn này KHÔNG phải nhập lại câu trả lời bảo mật — nó bắt gõ ĐÚNG 1 cụm từ xác nhận đã
+    // đọc hiểu rủi ro (kiểu "gõ DELETE để xác nhận"), tách biệt hoàn toàn với câu hỏi/trả lời đã
+    // đặt. Bản gốc English bắt gõ "I agree" — CHƯA XÁC NHẬN được field `inputMatch` có thật sự
+    // đổi được cụm từ phải gõ hay không (docs Circle không ghi rõ, SDK là iframe cross-origin
+    // không đọc được source để kiểm chứng). Set thử 'Tôi đồng ý' ở đây — NẾU sau khi deploy gõ
+    // "Tôi đồng ý" mà nút Tiếp tục KHÔNG sáng lên, tức field này chỉ là chữ hiển thị chứ không
+    // đổi được cụm từ thật (vẫn phải gõ "I agree" tiếng Anh) → quay lại đổi headline/inputPlaceholder
+    // bên dưới thành hướng dẫn gõ "I agree" (giữ inputMatch không đổi được gì thì thôi kệ nó).
     securityConfirm: {
       title: 'Xác nhận bảo mật',
-      headline: 'Nhập lại câu trả lời để xác nhận',
-      inputHeadline: 'Câu trả lời',
-      inputPlaceholder: 'Nhập lại câu trả lời',
-      inputMatch: 'Câu trả lời khớp',
+      headline: 'Gõ đúng cụm từ "Tôi đồng ý" bên dưới để xác nhận bạn đã hiểu rủi ro trên',
+      inputHeadline: 'Gõ "Tôi đồng ý"',
+      inputPlaceholder: 'Tôi đồng ý',
+      inputMatch: 'Tôi đồng ý',
     },
     securityIntros: {
       headline: 'Thiết lập',
@@ -81,7 +89,9 @@ export const CIRCLE_LOCALIZATIONS = {
       title: 'Câu hỏi bảo mật',
       questionHeader: 'Câu hỏi',
       questionPlaceholder: 'Chọn một câu hỏi',
-      requiredMark: 'Bắt buộc',
+      // SDK ghép thẳng questionHeader/answerHeader + requiredMark, KHÔNG tự chèn dấu cách
+      // (đo thật 08-04: "Câu hỏiBắt buộc" dính liền) — phải tự đệm khoảng trắng + ngoặc.
+      requiredMark: ' (bắt buộc)',
       answerHeader: 'Câu trả lời',
       answerPlaceholder: 'Nhập câu trả lời của bạn',
       answerHintHeader: 'Gợi ý (không bắt buộc)',
@@ -98,4 +108,18 @@ export const CIRCLE_LOCALIZATIONS = {
       headline: 'Kiểm tra email của bạn',
     },
   },
+}
+
+// 3 dòng cảnh báo ở màn Xác nhận bảo mật (setCustomSecurityQuestions({ securityConfirmItems })) —
+// KHÁC METHOD với setLocalizations, không nằm trong Localizations object nên phải gọi riêng.
+// Bản gốc English (đo thật 08-04, chưa gọi method này nên SDK tự rơi về mặc định):
+// 1. "This is the only way to recover my account access."
+// 2. "Circle won't store my answers so it's my responsibility to remember them."
+// 3. "I will lose access to my wallet and my digital assets if I forget my answers."
+export const CIRCLE_SECURITY_CONFIRM_ITEMS = {
+  vi: [
+    'Đây là cách DUY NHẤT để khôi phục quyền truy cập vào tài khoản của tôi.',
+    'Circle không lưu trữ câu trả lời của tôi, nên tôi phải tự ghi nhớ.',
+    'Tôi sẽ mất quyền truy cập vào ví và tài sản số nếu quên câu trả lời.',
+  ],
 }
