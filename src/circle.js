@@ -1,5 +1,4 @@
 import { MOCK, MOCK_RATES } from './mock'
-import { CIRCLE_LOCALIZATIONS } from './circleLocalizations'
 
 let sdk = null
 
@@ -14,13 +13,13 @@ async function loadW3SSdk() {
   return m.W3SSdk
 }
 
-// ⚠️⚠️ QUYẾT ĐỊNH (2026-08-04, user chốt — ĐẢO quyết định 2026-07-01 cũ): BẬT setLocalizations
-// tiếng Việt cho màn PIN + câu hỏi bảo mật. Quyết định cũ (English thuần, xem git log) dựa trên
-// giả định SAI: đọc kỹ docs (customization.md + web-sdk-ui-customizations, tra 2026-08-04) thì
-// Recovery Method + câu hỏi bảo mật ĐỀU localize được — không hardcode như tưởng. Cái ĐÚNG là
-// giả định gốc: CHỮ LỖI runtime ("The PIN you entered is incorrect...", PIN bị khoá...) không có
-// field nào trong Localizations → vẫn tiếng Anh, chấp nhận được vì hiếm khi hiện.
-// Bản dịch nằm ở circleLocalizations.js (tách riêng để thêm ngôn ngữ khác sau — "êm rồi thêm").
+// ⚠️⚠️ QUYẾT ĐỊNH (2026-07-01, user chốt): TOÀN BỘ màn Circle (PIN + tạo ví + câu hỏi bảo mật)
+// = ENGLISH THUẦN, KHÔNG setLocalizations. Lý do: Circle chỉ cho localize MỘT PHẦN (vài headline),
+// còn CHỮ LỖI runtime ("The PIN you entered is incorrect..."), nút "Show PIN", màn "Recovery Method",
+// nội dung câu hỏi bảo mật đều HARDCODE trong iframe cross-origin → không đổi được. Việt hóa nửa vời
+// (headline Việt + phần còn lại Anh + lỗi "Tạo mã PINPIN") XẤU HƠN là để English nhất quán.
+// → Chấp nhận English toàn bộ khâu PIN cho tới khi Circle hỗ trợ localization đầy đủ (hoặc đổi tech).
+// ĐỪNG thêm setLocalizations lại nếu chưa xác nhận Circle localize được HẾT (gồm cả chữ lỗi runtime).
 // ⚠️ ASYNC (đổi 2026-07-17 khi nạp lười SDK) — MỌI chỗ gọi PHẢI `await getSDK()`.
 // Quên await → truyền Promise vào chỗ chờ SDK thật → PIN chết câm. Đã sửa cả 6 chỗ gọi:
 // EnterEmail(×3), PinGate, Security, SendConfirm, Swap.
@@ -29,17 +28,6 @@ export async function getSDK() {
   if (!sdk) {
     const W3SSdk = await loadW3SSdk()
     sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
-    sdk.setLocalizations(CIRCLE_LOCALIZATIONS.vi)
-    // ⚠️⚠️ TẮT HẲN 08-04 (đo thật 2 lần): gọi setCustomSecurityQuestions() — DÙ CHỈ truyền
-    // securityConfirmItems, KHÔNG truyền questions — VẪN làm RỖNG màn Câu hỏi bảo mật (chặn tạo
-    // ví). Nghi ngờ: gọi method này (bất kể tham số gì) khiến SDK coi là "dev tự cung cấp bộ câu
-    // hỏi riêng" và THAY THẾ HẲN bộ câu hỏi mặc định — không truyền `questions` hợp lệ (đủ số
-    // lượng?) thì danh sách rỗng luôn, không tự rơi về bộ mặc định của Circle. CHƯA XÁC NHẬN được
-    // giả thuyết này (không đọc được source iframe) — ĐỪNG gọi lại method này (dù chỉ để đổi
-    // securityConfirmItems) cho tới khi test được với `questions` ĐẦY ĐỦ + số lượng lớn hơn (thử
-    // 12-15 câu, nghi ngờ có ngưỡng tối thiểu) VÀ xác nhận màn Câu hỏi bảo mật không bị rỗng.
-    // → 3 dòng cảnh báo ở màn Xác nhận bảo mật ĐÀNH chịu tiếng Anh cho tới khi fix được.
-    // sdk.setCustomSecurityQuestions({ securityConfirmItems: CIRCLE_SECURITY_CONFIRM_ITEMS.vi })
   }
   return sdk
 }
