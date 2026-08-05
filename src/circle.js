@@ -319,6 +319,11 @@ export function executeChallenge(sdk, userToken, encryptionKey, challengeId) {
     sdk.setAuthentication({ userToken, encryptionKey })
     sdk.execute(challengeId, (err, result) => {
       if (err) {
+        // Log MỌI lỗi Circle kèm MÃ SỐ. Không có dòng này thì lỗi retryable (sai PIN) bị nuốt
+        // im lặng ở dưới → không có cách nào biết Circle thật sự gửi mã gì, phải đoán mò
+        // (đã mất 3 vòng deploy vì đoán, 08-04). Giữ lại vĩnh viễn: rẻ, và là thứ duy nhất
+        // nhìn được vào iframe cross-origin.
+        console.error('[Circle challenge]', 'code=', err?.code, '| retryable=', RETRYABLE_CODES.has(err?.code), '|', err?.message || err?.error?.message, err)
         if (RETRYABLE_CODES.has(err.code)) return   // để iframe cho user thử lại, đừng settle
         // Lỗi terminal → gắn sẵn câu tiếng Việt vào .message (caller cứ hiện .message như cũ).
         // 155119 = PIN bị khoá: giữ cờ .locked cho caller nào cần phân biệt.
