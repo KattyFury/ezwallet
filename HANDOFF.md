@@ -1,6 +1,6 @@
 # HANDOFF – EZwallet
 
-**Cập nhật:** 2026-08-04 · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
+**Cập nhật:** 2026-08-05 · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
 
 ### 🔗 4 LINK CHÍNH THỨC — dùng bộ này khi giới thiệu dự án (user chốt 08-04)
 | | |
@@ -9,6 +9,15 @@
 | **GitHub** | https://github.com/KattyFury/ezwallet |
 | **Video** | https://youtu.be/UIR4Ee3Wp_Y |
 | **Deck** | https://canva.link/zr3ik84radd39vc |
+
+### 📍 ĐANG Ở ĐÂU (cuối phiên 08-04)
+
+- **Chỉ còn 1 nhánh: `main`.** Mọi nhánh WIP đã merge và xoá. Ai làm gì cũng trên `main`.
+- **Production đang chạy:** tiếng Anh mặc định + hạ tầng đa ngôn ngữ + tiền tệ VND (đều đã merge, đều chọn được nhưng không tự bật).
+- **Chia việc:**
+  - **LongDC** → thêm ngôn ngữ mới + sửa sạn bản tiếng Việt (xem mục bàn giao ở dưới).
+  - **User + Claude** → tinh chỉnh **UX/UI bản tiếng Anh**. Đây là việc đang làm dở khi phiên kết thúc, chưa bắt đầu sửa gì.
+- **Việc còn treo cần bấm tay:** gửi tin nhắn cho Circle support (4 câu hỏi đã soạn xong trong lịch sử chat, chưa gửi) · CI workflow cần `gh auth refresh -h github.com -s workflow`.
 
 > ⚠️ **`PITCH.md` và `DECK-DESIGN-SPEC.md` trong repo ĐÃ LỖI THỜI** (user xác nhận 08-04) — bài giới thiệu và slide thật giờ nằm ở **video YouTube + deck Canva** phía trên, không phải 2 file .md đó. **Đừng dùng chúng làm nguồn khi viết nội dung giới thiệu, và đừng tốn công cập nhật chúng** cho tới khi user quyết định giữ lại hay bỏ. Vẫn để trong repo (không xoá) vì còn chứa vài chốt về Brand Voice.
 
@@ -319,7 +328,10 @@ Sau đó tìm ra ROOT CAUSE THẬT: **gọi SAI CHỮ KÝ `setCustomSecurityQues
 
 ### 🌏 ĐA NGÔN NGỮ + TIỀN TỆ VND — phiên 08-04 (ĐÃ MERGE vào `main`)
 
-> **`main` vẫn là bản English-thuần ổn định** (`ezwallet.cash` không bị đụng). Toàn bộ việc dưới đây nằm trên nhánh riêng, preview: **https://wip-circle-vi-localization.ezwallet.pages.dev** (Cloudflare tự deploy mỗi lần push nhánh này; env var preview đã set API_KEY/KIT_KEY, xem mục 9).
+> **ĐÃ MERGE vào `main` 08-04** (commit `1c3a6c0`), nhánh WIP đã xoá, đang chạy trên `ezwallet.cash`.
+> **Mặc định là ENGLISH** — `detect()` KHÔNG đoán theo `navigator.language` nữa, máy cài tiếng Việt vẫn mở ra tiếng Anh. Tiếng Việt + VND nằm sẵn trong màn Language & Currency cho ai TỰ CHỌN. Lý do: video demo + deck giới thiệu đều tiếng Anh, app phải khớp thứ người ta xem.
+> ⚠️ **Phần tiếng Việt + VND CHƯA ai bấm thử trên máy thật** (Circle SDK không chạy localhost). Rủi ro thấp vì đường đi mặc định không đổi, nhưng ai bật tiếng Việt mà gặp lỗi thì đó là lỗi trên PRODUCTION.
+> 💡 Env var cho preview deployment (nhánh bất kỳ) đã set sẵn `API_KEY`/`KIT_KEY` qua Cloudflare API — nhánh mới push lên là có preview chạy được ngay, không cần cấu hình lại.
 
 **LUẬT USER CHỐT 08-04 — áp vĩnh viễn:**
 > **"ĐÃ VIỆT THÌ VIỆT ALL, ĐÃ ANH THÌ ANH ALL"** — không bao giờ để user thấy màn nửa ngôn ngữ này nửa kia.
