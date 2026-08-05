@@ -290,6 +290,31 @@ Sau đó tìm ra ROOT CAUSE THẬT: **gọi SAI CHỮ KÝ `setCustomSecurityQues
 
 ---
 
+### 👤 CHỦ SỞ HỮU: việc THÊM NGÔN NGỮ giao cho **LongDC** (user chốt 08-04)
+
+> Từ 08-04, phần **thêm ngôn ngữ mới** do **LongDC** phụ trách. Hạ tầng đã dựng xong và có script gác cổng — đọc hết mục 🌏 bên dưới trước khi bắt tay. Tóm tắt cho người mới vào:
+>
+> **Đang có gì:** `vi` (tiếng Việt, ngôn ngữ gốc) và `en` đã xong 100%, đang mở. `zh` mới phủ **35%** từ điển và **chưa có** bản dịch Circle → đang khoá.
+>
+> **Luật bắt buộc (user chốt, không thương lượng):**
+> - **"Đã Việt thì Việt all, đã Anh thì Anh all"** — không để user thấy màn nửa ngôn ngữ này nửa kia.
+> - **"Một ngôn ngữ = một lượt build kỹ"** — dịch xong HẲN rồi mới mở, không mở dở dang.
+>
+> **Quy trình thêm 1 ngôn ngữ (vd `zh`):**
+> 1. Bổ sung từ điển trong `src/i18n.js` (`const ZH = {...}`). Key = chuỗi tiếng Việt gốc.
+> 2. Thêm bản dịch Circle trong `src/circleLocalizations.js`: cả 3 hằng `CIRCLE_LOCALIZATIONS`, `CIRCLE_SECURITY_QUESTIONS`, `CIRCLE_SECURITY_CONFIRM_ITEMS`. Bỏ bước này thì app dịch xong mà màn PIN vẫn tiếng Anh = vi phạm luật trên.
+> 3. Chạy **`npm run check-lang zh`** cho tới khi báo "ĐỦ ĐIỀU KIỆN".
+> 4. CHỈ KHI ĐÓ mới thêm `'zh'` vào `READY_LANGS` (`src/i18n.js`). **Đừng sửa cờ `locked` ở `Language.jsx`** — nó tự suy từ `READY_LANGS`.
+> 5. Test trên **deploy thật**, không phải localhost (Circle SDK không chạy localhost).
+>
+> **4 cái bẫy đã dính, đừng dính lại** (chi tiết ở mục 7):
+> - `setCustomSecurityQuestions` nhận **tham số vị trí** `(questions, requiredCount, securityConfirmItems)` — gọi kiểu object thì màn Câu hỏi bảo mật RỖNG TRẮNG, chặn tạo ví, **không báo lỗi gì**.
+> - SDK **ghép thẳng** `questionHeader` + `requiredMark` và `headline` + `headline2`, KHÔNG tự chèn dấu cách → phải tự đệm khoảng trắng (tiếng Trung thì không cần, chữ Hán không dùng dấu cách giữa từ).
+> - `common.showPin`/`hidePin` bị Circle bỏ qua (bug của họ, đã báo) — dịch cũng không ăn, đừng mất công đào.
+> - Chữ lỗi runtime trong iframe **không localize được** (16 field, không field nào cho lỗi). Đây là giới hạn thật.
+>
+> **⚠️ Làm trên nhánh nào:** toàn bộ hạ tầng này đang ở nhánh `wip/circle-vi-localization`, **chưa merge vào `main`**. LongDC phải nhánh ra từ đó, hoặc đợi merge xong. Nhánh ra từ `main` là không có gì cả.
+
 ### 🌏 ĐA NGÔN NGỮ + TIỀN TỆ VND — phiên 08-04 (nhánh `wip/circle-vi-localization`, CHƯA merge vào `main`)
 
 > **`main` vẫn là bản English-thuần ổn định** (`ezwallet.cash` không bị đụng). Toàn bộ việc dưới đây nằm trên nhánh riêng, preview: **https://wip-circle-vi-localization.ezwallet.pages.dev** (Cloudflare tự deploy mỗi lần push nhánh này; env var preview đã set API_KEY/KIT_KEY, xem mục 9).
