@@ -1,6 +1,16 @@
 # HANDOFF – EZwallet
 
-**Cập nhật:** 2026-08-03 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** **https://ezwallet.cash** (domain user mua trên Cloudflare 07-29) · `ezwallet.pages.dev` vẫn chạy song song (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
+**Cập nhật:** 2026-08-04 · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
+
+### 🔗 4 LINK CHÍNH THỨC — dùng bộ này khi giới thiệu dự án (user chốt 08-04)
+| | |
+|---|---|
+| **Demo** | https://ezwallet.cash (domain mua trên Cloudflare 07-29; `ezwallet.pages.dev` chạy song song, auto-deploy từ `main`) |
+| **GitHub** | https://github.com/KattyFury/ezwallet |
+| **Video** | https://youtu.be/UIR4Ee3Wp_Y |
+| **Deck** | https://canva.link/zr3ik84radd39vc |
+
+> ⚠️ **`PITCH.md` và `DECK-DESIGN-SPEC.md` trong repo ĐÃ LỖI THỜI** (user xác nhận 08-04) — bài giới thiệu và slide thật giờ nằm ở **video YouTube + deck Canva** phía trên, không phải 2 file .md đó. **Đừng dùng chúng làm nguồn khi viết nội dung giới thiệu, và đừng tốn công cập nhật chúng** cho tới khi user quyết định giữ lại hay bỏ. Vẫn để trong repo (không xoá) vì còn chứa vài chốt về Brand Voice.
 
 > **Ví stablecoin cho người dùng phổ thông / người già.** UX đơn giản, mobile-first. **Đã chạm mốc user hài lòng (07-18): toàn bộ luồng – login, PIN, gửi, swap tiền thật – user tự test trên deploy, chạy mượt.**
 > ĐẦU MỖI PHIÊN đọc CẢ `HANDOFF.md` (file này) + `CLAUDE.md` (cách làm việc với user).
@@ -311,11 +321,8 @@ Sau đó tìm ra ROOT CAUSE THẬT: **gọi SAI CHỮ KÝ `setCustomSecurityQues
 **⚠️ CHECKLIST KHI MERGE nhánh này vào `main`** — README/PITCH hiện mô tả ĐÚNG cho `main` (English-only) nhưng sẽ thành SAI ngay khi merge. Phải sửa CÙNG LÚC merge, đừng sửa trước (README public sẽ quảng cáo thứ chưa live):
 - `README.md:183-184` — *"**English-only UI.** The Circle PIN screen is a cross-origin iframe that only renders in English, so the rest of the app is kept in English to match."* → **XOÁ HẲN**. Đây chính là niềm tin SAI đã bị chứng minh ngược (Circle localize được, xem mục 7); để lại là tự mâu thuẫn với chính tài liệu của mình.
 - `README.md:101` — "Show balances in USDC or EURC" → thêm VND.
-- `PITCH.md:108` — "UI chỉ tiếng Anh (màn PIN của Circle là iframe chỉ có tiếng Anh)" → xoá khỏi mục "chưa có".
-- `PITCH.md:110` — "thêm ngôn ngữ & tiền tệ" đang nằm ở mục ĐỊNH HƯỚNG TƯƠNG LAI → chuyển sang mục đã làm (còn lại: thêm ngôn ngữ khác).
-- `PITCH.md:62` — "Hiển thị số dư theo USDC hoặc EURC" → thêm VND.
-- `PITCH.md:173` và `PITCH.md:211` — "English-only UI (for now)" trong 2 kịch bản nói → bỏ.
-- Cân nhắc thêm dòng "Tiếng Việt đầy đủ + hiển thị/nhập bằng VND" vào bảng tính năng của cả 2 file — đây là điểm bán hàng mạnh nhất với người dùng Việt, đừng để lọt.
+- Thêm dòng "Tiếng Việt đầy đủ + hiển thị/nhập bằng VND" vào bảng tính năng `README.md` — điểm bán hàng mạnh nhất với người dùng Việt, đừng để lọt.
+- **BỎ QUA `PITCH.md`** (nó cũng có 4-5 câu "English-only" ở dòng 62/108/110/173/211): file này đã lỗi thời, bài giới thiệu thật nằm ở video + deck Canva (xem đầu file). Sửa nó là công cốc. **Thứ CẦN cập nhật khi merge là VIDEO và DECK** — hai thứ người ta thật sự xem.
 
 ---
 
