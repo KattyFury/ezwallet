@@ -43,6 +43,8 @@ const EN = {
   'Quy đổi': 'Converted',
   'Nội dung': 'Note',
   'Phí mạng': 'Network fee',
+  'Thực gửi': 'Actually sent',
+  'Đang lấy tỷ giá...': 'Getting exchange rate...',
   'Đang tính...': 'Calculating...',
   'Giao dịch không thể hoàn tác sau khi xác nhận': 'This transaction cannot be undone once confirmed',
   'Đang mở xác nhận PIN...': 'Opening PIN confirmation...',
@@ -112,6 +114,61 @@ const EN = {
   'Đổi PIN thành công!': 'PIN changed!',
   'Lỗi:': 'Error:',
   'thử lại': 'try again',
+  // Lỗi Circle dịch theo mã (circle.js ERROR_BY_CODE) — chỉ áp cho lỗi TERMINAL bắn ra ngoài
+  // iframe. Lỗi vẽ TRONG iframe (sai PIN, sai câu trả lời) là của Circle, không đổi được.
+  'Bạn nhập sai PIN quá nhiều lần. Ví tạm khoá, vui lòng thử lại sau ít phút.': 'Too many incorrect PIN attempts. Your wallet is temporarily locked – please try again in a few minutes.',
+  'Bạn trả lời sai quá nhiều lần. Tạm khoá, vui lòng thử lại sau ít phút.': 'Too many incorrect answers. Temporarily locked – please try again in a few minutes.',
+  'Tài khoản đã bị vô hiệu hoá.': 'This account has been disabled.',
+  'Không tìm thấy tài khoản này.': 'Account not found.',
+  'Tài khoản chưa đặt mã PIN.': 'This account has no PIN set.',
+  'Tài khoản chưa đặt câu hỏi bảo mật.': 'This account has no security questions set.',
+  'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.': 'Your session has expired. Please sign in again.',
+  'Mã OTP đã hết hạn. Vui lòng lấy mã mới.': 'The code has expired. Please request a new one.',
+  'Mã OTP không hợp lệ.': 'Invalid code.',
+  'Mã OTP không đúng.': 'Incorrect code.',
+  'Mã OTP không khớp.': 'The code does not match.',
+  'Lỗi mạng. Kiểm tra kết nối rồi thử lại.': 'Network error. Check your connection and try again.',
+  // PinGate / Security
+  'Mở khoá': 'Unlock',
+  'Không dùng được với tài khoản Google': 'Not available for Google accounts',
+  // Contacts / SavedQRList / SendAmount / CreateQR / Swap / QRScanner
+  'Xoá danh bạ?': 'Delete contact?',
+  'Không thể hoàn tác.': "This can't be undone.",
+  'Xoá': 'Delete',
+  'Lưu vào kho QR': 'Add to QR Storage',
+  'Tên (không bắt buộc)': 'Name (optional)',
+  'Xoá QR:': 'Delete QR:',
+  'Xác nhận': 'Confirm',
+  'Đặt lời nhắn mặc định': 'Set your default note',
+  'Nhập tại đây': 'Type here',
+  'Đặt tên cho QR': 'Name your QR',
+  'Chọn token': 'Select token',
+  'Chưa hỗ trợ QR ngoài đời thật': 'Real-life QR codes are not supported yet',
+  'Chỉ quét QR ví crypto': 'Scan crypto wallet QRs only',
+  // Language & Currency
+  'Ngôn ngữ & Tiền tệ': 'Language & Currency',
+  'Ngôn ngữ': 'Language',
+  'Tiền tệ mặc định': 'Default currency',
+  'Đô la Mỹ': 'US Dollar',
+  'Euro': 'Euro',
+  'Nhân dân tệ': 'Chinese Yuan',
+  'Việt Nam Đồng': 'Vietnamese Dong',
+  // Thẻ gợi ý ở 2 màn Trang chủ (NotifArea hints) — TRƯỚC ĐÂY viết cứng tiếng Anh, sót tới 08-04
+  'Dán địa chỉ ví của người nhận': 'Paste a wallet address to send',
+  'Quét mã QR của người nhận': 'Scan a QR code to send',
+  'Lưu người bạn hay gửi tiền': 'Save people you send to often',
+  'Lưu những QR bạn hay dùng': 'Save your favorite QR codes',
+  'Tạo QR để nhận đúng số tiền': 'Create a QR to receive money',
+  'Chia sẻ địa chỉ ví của bạn': 'Share your wallet address',
+  'Giữ để xem số lượng token': 'Hold to show token amounts',
+  // Swap
+  'Bạn trả': 'You pay',
+  'Bạn nhận': 'You receive',
+  'Đảo chiều': 'Reverse direction',
+  'Đã gửi lệnh đổi tiền': 'Swap submitted',
+  // ErrorBoundary
+  'Tải lại': 'Reload',
+  'Ứng dụng gặp lỗi ngoài dự kiến. Ví và tiền của bạn vẫn an toàn. Vui lòng tải lại.': 'The app hit an unexpected error. Your wallet and funds are safe. Please reload.',
   // About
   'About': 'About',
   'Ứng dụng': 'App',
@@ -186,23 +243,38 @@ const ZH = {
 
 const DICTS = { en: EN, zh: ZH }
 
-// KHÓA English: Circle Wallet hiện chỉ hỗ trợ tiếng Anh nên toàn app dùng 'en',
-// bất kể quốc gia / trình duyệt / lựa chọn cũ trong localStorage.
-// Hạ tầng đa ngôn ngữ (từ điển VN/ZH, detect() bên dưới) được giữ nguyên;
-// khi Circle hỗ trợ thêm ngôn ngữ, chỉ cần cho LANG = detect() trở lại.
+// ⚠️⚠️ LUẬT (user chốt 2026-08-04): "ĐÃ VIỆT THÌ VIỆT ALL, ĐÃ ANH THÌ ANH ALL" — tuyệt đối không
+// để user thấy màn nửa ngôn ngữ này nửa ngôn ngữ kia. Kèm luật làm việc: MỘT NGÔN NGỮ = MỘT LƯỢT
+// BUILD KỸ (dịch xong hẳn rồi mới mở, không mở dở dang).
+//
+// → READY_LANGS = danh sách ngôn ngữ ĐÃ HOÀN THIỆN, là NGUỒN SỰ THẬT DUY NHẤT cho cả detect()
+// lẫn màn Language (khoá/mở option). Ngôn ngữ ngoài danh sách này KHÔNG được auto-detect và
+// KHÔNG chọn được, dù từ điển đã có một phần.
+//
+// ⚠️ ĐIỀU KIỆN để thêm 1 mã vào đây — phải đủ CẢ HAI, kiểm bằng script chứ đừng soát mắt:
+//   1. Từ điển app phủ 100% key `t()` đang dùng  → `node scripts/check-lang.js <mã>`
+//   2. Có bản dịch Circle trong circleLocalizations.js (CIRCLE_LOCALIZATIONS + SECURITY_QUESTIONS
+//      + SECURITY_CONFIRM_ITEMS), không thì màn PIN sẽ rơi về English trong khi app đã dịch.
+// 'zh' đang ở 35% từ điển + KHÔNG có bản Circle → chưa đủ điều kiện, giữ ngoài danh sách.
+export const READY_LANGS = ['vi', 'en']
+
+// ⚠️ MẶC ĐỊNH LÀ ENGLISH (user chốt 08-04, lúc merge nhánh đa ngôn ngữ vào `main`).
+// KHÔNG tự đoán theo `navigator.language` nữa — máy cài tiếng Việt vẫn mở ra tiếng Anh.
+// Tiếng Việt là thứ user TỰ CHỌN trong màn Language & Currency, không tự bật.
+// Lý do: video demo + deck giới thiệu đều bằng tiếng Anh, app phải khớp với thứ người ta xem.
+// Muốn bật auto-detect lại: thêm lại 3 dòng đọc `navigator.language` (xem git log commit merge này).
 function detect() {
   const stored = localStorage.getItem('ez_lang')
-  if (stored) return stored
-  const b = (navigator.language || '').toLowerCase()
-  if (b.startsWith('vi')) return 'vi'
-  if (b.startsWith('zh')) return 'zh'
+  if (stored && READY_LANGS.includes(stored)) return stored
   return 'en'
 }
 
-// KHÓA English (user chốt): Circle SDK chỉ tiếng Anh + nhiều chuỗi mới hardcode English → giữ 'en'
-// cho đồng nhất. Language screen có hiện option Việt/Trung nhưng KHOÁ (không click). Hạ tầng VI/ZH
-// + setLang() còn nguyên — mở lại chỉ cần cho LANG đọc localStorage + bỏ khoá 2 option đó.
-let LANG = 'en'
+// ✅ ĐÃ MỞ KHOÁ 2026-08-04 (user chốt) — trước đây ghim cứng 'en' vì "Circle SDK chỉ tiếng Anh".
+// Lý do đó KHÔNG CÒN ĐÚNG: Circle CÓ localize được qua setLocalizations (xem circleLocalizations.js).
+// ⚠️ Màn Circle bám theo ĐÚNG biến LANG này (circle.js/Login.jsx đọc getLang()) — ngôn ngữ nào chưa
+// có bản dịch Circle thì tự rơi về English mặc định của Circle. ĐỪNG hardcode `.vi` cho Circle nữa,
+// sẽ thành app tiếng Anh + màn PIN tiếng Việt.
+let LANG = detect()
 
 export function getLang() { return LANG }
 export function setLang(l) { localStorage.setItem('ez_lang', l); window.location.reload() }

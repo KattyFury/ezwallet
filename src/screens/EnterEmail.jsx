@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
-import { createSession, createEmailToken, getSDK, initializeWallet, executeChallenge, getWalletAddress } from '../circle'
+import { createSession, createEmailToken, getSDK, initializeWallet, executeChallenge, getWalletAddress, circleErrorMessage } from '../circle'
 import { t } from '../i18n'
 
 const DOMAINS = ['@gmail.com', '@yahoo.com', '@icloud.com']
@@ -83,16 +83,16 @@ export default function EnterEmail() {
           async (error, result) => {
             if (error) {
               if (error?.code === 155701) { setLoading(false); return }   // user tự hủy → im lặng
-              setError(`${error?.message || 'OTP failed'}${error?.code ? ` (${error.code})` : ''}`); setLoading(false); return
+              setError(circleErrorMessage(error)); setLoading(false); return
             }
             if (!result?.userToken) { setLoading(false); return }
             try { await finishOtpLogin(result, em, deviceId) }
-            catch (e) { setError(e.message || t('Có lỗi xảy ra')); setLoading(false) }
+            catch (e) { setError(circleErrorMessage(e)); setLoading(false) }
           }
         )
         sdk.verifyOtp()   // giữ loading=true; callback ở trên sẽ điều hướng hoặc bật lỗi
       } catch (e) {
-        setError(e.message || t('Có lỗi xảy ra')); setLoading(false)
+        setError(circleErrorMessage(e)); setLoading(false)
       }
       return
     }
@@ -129,7 +129,7 @@ export default function EnterEmail() {
       if (challengeId) { sessionStorage.setItem('ez_pin_ok', '1'); navigate('HomeSend') }
       else navigate('PinGate', { next: 'HomeSend' })
     } catch (e) {
-      setError(e.message || t('Có lỗi xảy ra'))
+      setError(circleErrorMessage(e))
     } finally {
       setLoading(false)
     }

@@ -3,7 +3,8 @@ import Icon from '../components/Icon'
 import { useNav } from '../nav'
 import { useState, useEffect, useRef } from 'react'
 import { getCookie, setCookie, deleteCookie } from 'cookies-next'
-import { createSocialToken, initializeWallet, executeChallenge, getWalletAddress, GOOGLE_CLIENT_ID } from '../circle'
+import { createSocialToken, initializeWallet, executeChallenge, getWalletAddress, GOOGLE_CLIENT_ID, circleErrorMessage } from '../circle'
+import { applyCircleLocale } from '../circleLocalizations'
 import { t } from '../i18n'
 
 const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
@@ -17,7 +18,7 @@ function googleErrMsg(error) {
   const code = error?.code
   if (code === 155140) return `Google sign-in bị Circle từ chối (mã 155140). Nguyên nhân gần như chắc chắn: origin "${window.location.origin}" chưa được thêm vào allowlist redirect URI ở Circle Console và/hoặc Authorized origins ở Google Cloud Console (clientId).`
   if (code === 155706) return 'Lỗi mạng khi xác thực với Circle (mã 155706). Thử lại.'
-  return error?.message || 'Google sign-in failed'
+  return circleErrorMessage(error)
 }
 // Config cần cho SDK rehydrate sau redirect — lưu/xóa qua COOKIES (sống qua full page reload
 // của OAuth redirect; sessionStorage KHÔNG sống → đó là root cause lỗi 155140, theo Circle support).
@@ -89,7 +90,7 @@ export default function Login() {
         sessionStorage.setItem('ez_pin_ok', '1')   // user Google không có PIN → bỏ qua cổng PIN
         navigate('HomeSend')
       } catch (e) {
-        setGoogleErr(e.message || t('Có lỗi xảy ra')); setRestoring(false)
+        setGoogleErr(circleErrorMessage(e)); setRestoring(false)
       }
     }
 
@@ -112,6 +113,7 @@ export default function Login() {
           },
         },
       }, onLoginComplete)
+      applyCircleLocale(sdk)
       sdkRef.current = sdk
       // xin trước cho đỡ trễ lúc bấm nút (không phải lúc restore)
       if (!restoringNow) ensureDeviceId(sdk).catch(() => {})
@@ -128,6 +130,7 @@ export default function Login() {
       if (!sdkRef.current) {
         const { W3SSdk } = await import('@circle-fin/w3s-pw-web-sdk')
         sdkRef.current = new W3SSdk({ appSettings: { appId: APP_ID } })
+        applyCircleLocale(sdkRef.current)
       }
       const sdk = sdkRef.current
       const deviceId = await ensureDeviceId(sdk)

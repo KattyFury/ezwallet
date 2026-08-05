@@ -115,8 +115,8 @@ export default function SavedQRList() {
       {adding && (
         <div className="popup-overlay" onClick={resetForm}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
-            <div className="popup-title">Add to QR Storage</div>
-            <input className="address-input" placeholder="Name (optional)" value={name} onChange={e => setName(e.target.value)} maxLength={30} style={{ fontSize: 'var(--fs-body)' }} />
+            <div className="popup-title">{t('Lưu vào kho QR')}</div>
+            <input className="address-input" placeholder={t('Tên (không bắt buộc)')} value={name} onChange={e => setName(e.target.value)} maxLength={30} style={{ fontSize: 'var(--fs-body)' }} />
             {/* Label kèm ký hiệu tiền tệ MẶC ĐỊNH của user (user chốt 07-20: USDC→$, EURC→€…) */}
             {/* Ô Amount = KHÔNG phải input (luật bàn phím 07-23) — bấm mở sheet numpad app; blur ô
                 Name trước để bàn phím iPhone hạ xuống rồi numpad mới trồi lên (không chồng nhau).
@@ -162,10 +162,10 @@ export default function SavedQRList() {
       {pendingDelete && (
         <div className="popup-overlay" onClick={() => setPendingDelete(null)}>
           <div className="popup-card" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-            <div className="popup-title">Delete QR: {pendingDelete.name || fmtMoney(pendingDelete.amount, pendingDelete.currency || 'USD')}</div>
+            <div className="popup-title">{t('Xoá QR:')} {pendingDelete.name || fmtMoney(pendingDelete.amount, pendingDelete.currency || 'USD')}</div>
             <div className="popup-actions" style={{ marginTop: 4 }}>
               <button className="btn btn-secondary" onClick={() => setPendingDelete(null)}>{t('Quay lại')}</button>
-              <button className="btn btn-error" onClick={confirmDelete}>Confirm</button>
+              <button className="btn btn-error" onClick={confirmDelete}>{t('Xác nhận')}</button>
             </div>
           </div>
         </div>

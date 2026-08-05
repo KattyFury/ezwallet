@@ -75,16 +75,27 @@ export function cachedBalances(addr) {
 }
 export function cachedRates() { return MOCK ? MOCK_RATES : _ratesCache }
 
+// Tỷ giá dự phòng USD→VND khi CoinGecko không trả (mất mạng/rate limit). Thà lệch vài % còn hơn
+// KHÔNG hiện được số nào — nhưng ĐỪNG coi đây là nguồn chính, nó sẽ cũ dần theo năm tháng.
+const VND_PER_USD_FALLBACK = 26300
+
 async function fetchPrices() {
   if (Date.now() - lastFetch < 60000) return priceCache
   try {
     const ids = TOKENS.filter(t => t.cgId).map(t => t.cgId).join(',')
-    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`)
+    // +vnd: xin LUÔN giá quy ra VND trong CÙNG 1 request (đừng thêm request thứ 2 — CoinGecko
+    // free tier rate-limit chặt, mà app đã gọi hàm này mỗi 60s).
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,vnd`)
     const data = await res.json()
     TOKENS.forEach(t => {
       if (t.cgId && data[t.cgId]?.usd != null) priceCache[t.symbol] = data[t.cgId].usd
     })
     priceCache['USDC'] = 1  // ghim: USDC = $1 chính xác (đừng để CoinGecko ~0.9998 làm lệch)
+    // VND lưu dạng "USD mỗi 1 VND" cho ĐỒNG BỘ với mọi rate khác (rates[cur] = USD/1 đơn vị),
+    // nhờ vậy displayNum(usd, cur, rates) = usd / rates[cur] dùng chung được, không phải rẽ nhánh.
+    // usd-coin.vnd = số VND cho 1 USDC (~26.300) → nghịch đảo ra ~0.000038.
+    const vndPerUsd = data['usd-coin']?.vnd
+    priceCache['VND'] = 1 / (vndPerUsd > 0 ? vndPerUsd : VND_PER_USD_FALLBACK)
     lastFetch = Date.now()
   } catch {}
   return priceCache
@@ -168,7 +179,10 @@ export async function getUsdRate(symbol = 'USDC') {
 export async function getDisplayRates() {
   if (MOCK) { _ratesCache = MOCK_RATES; return MOCK_RATES }
   const [u, e, b] = await Promise.all([getUsdRate('USDC'), getUsdRate('EURC'), getUsdRate('cirBTC')])
-  _ratesCache = { USDC: u, EURC: e, cirBTC: b }   // cache cho lần mount sau
+  // VND: KHÔNG phải token nên không đi qua getUsdRate (hàm đó tra TOKENS) — lấy thẳng từ
+  // priceCache mà fetchPrices vừa nạp ở 3 lệnh trên. Chưa có (lần gọi đầu hỏng) → dùng dự phòng.
+  const prices = await fetchPrices()
+  _ratesCache = { USDC: u, EURC: e, cirBTC: b, VND: prices.VND || 1 / VND_PER_USD_FALLBACK }
   return _ratesCache
 }
 

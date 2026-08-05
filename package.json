@@ -4,10 +4,24 @@
   "version": "0.1.0",
   "type": "module",
   "description": "A crypto wallet simple enough for my mom to use – email + PIN, no seed phrase, USDC pays its own gas on Arc.",
-  "keywords": ["stablecoin", "wallet", "usdc", "arc", "circle", "programmable-wallets", "pwa", "web3"],
+  "keywords": [
+    "stablecoin",
+    "wallet",
+    "usdc",
+    "arc",
+    "circle",
+    "programmable-wallets",
+    "pwa",
+    "web3"
+  ],
   "homepage": "https://ezwallet.cash",
-  "repository": { "type": "git", "url": "https://github.com/KattyFury/ezwallet.git" },
-  "bugs": { "url": "https://github.com/KattyFury/ezwallet/issues" },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KattyFury/ezwallet.git"
+  },
+  "bugs": {
+    "url": "https://github.com/KattyFury/ezwallet/issues"
+  },
   "author": "Hieu Nguyen (0xhieu) <https://0xhieu.xyz>",
   "license": "MIT",
   "scripts": {
@@ -16,7 +30,8 @@
     "api": "node dev-server.js",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "node --test"
+    "test": "node --test",
+    "check-lang": "node scripts/check-lang.cjs"
   },
   "dependencies": {
     "@circle-fin/w3s-pw-web-sdk": "^1.1.11",

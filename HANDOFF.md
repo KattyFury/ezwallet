@@ -1,6 +1,16 @@
 # HANDOFF – EZwallet
 
-**Cập nhật:** 2026-08-03 · **Repo:** https://github.com/KattyFury/ezwallet · **Live:** **https://ezwallet.cash** (domain user mua trên Cloudflare 07-29) · `ezwallet.pages.dev` vẫn chạy song song (Cloudflare Pages, auto-deploy từ `main`) · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
+**Cập nhật:** 2026-08-04 · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
+
+### 🔗 4 LINK CHÍNH THỨC — dùng bộ này khi giới thiệu dự án (user chốt 08-04)
+| | |
+|---|---|
+| **Demo** | https://ezwallet.cash (domain mua trên Cloudflare 07-29; `ezwallet.pages.dev` chạy song song, auto-deploy từ `main`) |
+| **GitHub** | https://github.com/KattyFury/ezwallet |
+| **Video** | https://youtu.be/UIR4Ee3Wp_Y |
+| **Deck** | https://canva.link/zr3ik84radd39vc |
+
+> ⚠️ **`PITCH.md` và `DECK-DESIGN-SPEC.md` trong repo ĐÃ LỖI THỜI** (user xác nhận 08-04) — bài giới thiệu và slide thật giờ nằm ở **video YouTube + deck Canva** phía trên, không phải 2 file .md đó. **Đừng dùng chúng làm nguồn khi viết nội dung giới thiệu, và đừng tốn công cập nhật chúng** cho tới khi user quyết định giữ lại hay bỏ. Vẫn để trong repo (không xoá) vì còn chứa vài chốt về Brand Voice.
 
 > **Ví stablecoin cho người dùng phổ thông / người già.** UX đơn giản, mobile-first. **Đã chạm mốc user hài lòng (07-18): toàn bộ luồng – login, PIN, gửi, swap tiền thật – user tự test trên deploy, chạy mượt.**
 > ĐẦU MỖI PHIÊN đọc CẢ `HANDOFF.md` (file này) + `CLAUDE.md` (cách làm việc với user).
@@ -194,8 +204,20 @@ hay đang bắt họ thích nghi với crypto?". Lệch khỏi đây thì dừng
 ## 7. Gotchas Circle/Arc (xương máu – giữ vĩnh viễn)
 
 **Circle W3S:**
-- **🔴 08-04: đang thử BẬT tiếng Việt (setLocalizations/setCustomSecurityQuestions) trên nhánh riêng `wip/circle-vi-localization`, KHÔNG phải `main`.** Đã thử trên `main` trước, gặp bug nghiêm trọng (màn Câu hỏi bảo mật rỗng toàn bộ, chặn tạo ví) → revert sạch `main` về English-thuần (đúng bản dưới đây) để `ezwallet.cash`/`ezwallet.pages.dev` luôn ổn định. Tiếp tục debug ở nhánh riêng, có URL preview thật để test (Circle SDK không chạy được trên localhost) — xong xuôi mới merge lại `main`. Xem lịch sử debug đầy đủ trong log nhánh đó.
-- **Màn PIN = iframe `pw-auth.circle.com` (cross-origin):** không sửa được UI, English thuần, **KHÔNG auto-mở bàn phím số được** (browser cấm focus xuyên origin, iOS bắt chạm trực tiếp – user hỏi rồi, ĐỪNG đào lại). **Cũng KHÔNG đóng iframe sớm hơn được sau khi nhập xong PIN** (user hỏi 07-20): SDK đã tự gỡ iframe NGAY tại message `onComplete` (đọc source `messageHandler`); phần "đứng lại" 1-3s sau khi gõ số = spinner Circle xử lý challenge bên trong iframe. Tự gỡ iframe khi challenge chưa settle = mất kết quả ký (root cause bug PIN cũ) – ĐỪNG làm.
+- **Màn PIN = iframe `pw-auth.circle.com` (cross-origin):** không sửa được cấu trúc UI, **KHÔNG auto-mở bàn phím số được** (browser cấm focus xuyên origin, iOS bắt chạm trực tiếp – user hỏi rồi, ĐỪNG đào lại). **Cũng KHÔNG đóng iframe sớm hơn được sau khi nhập xong PIN** (user hỏi 07-20): SDK đã tự gỡ iframe NGAY tại message `onComplete` (đọc source `messageHandler`); phần "đứng lại" 1-3s sau khi gõ số = spinner Circle xử lý challenge bên trong iframe. Tự gỡ iframe khi challenge chưa settle = mất kết quả ký (root cause bug PIN cũ) – ĐỪNG làm.
+- **⚠️ ĐẢO 08-04: đã BẬT tiếng Việt cho màn PIN/bảo mật qua `setLocalizations`** (bản dịch ở `src/circleLocalizations.js`, gọi trong `circle.js:getSDK()` + 2 chỗ tạo SDK trong `Login.jsx`). Quyết định cũ "English thuần vì Circle chỉ localize được nửa vời" (07-01) SAI: đọc kỹ docs (customization.md + web-sdk-ui-customizations, tra 08-04) thì Recovery Method + câu hỏi bảo mật ĐỀU localize được, không hardcode như tưởng trước. **Đúng 1 phần:** không có field nào cho CHỮ LỖI runtime (PIN sai/khoá...) → phần đó vẫn tiếng Anh, chấp nhận được vì hiếm khi hiện. **CHƯA localize** `transactionRequest`/`contractInteraction`/`signatureRequest`/`emailOtp` (SDK có hỗ trợ nhưng field trộn nhãn tĩnh + giá trị động, cần test kỹ trước khi động vào – làm sau khi phần này chạy êm). Muốn thêm ngôn ngữ khác (ngoài `vi`): thêm key mới vào `CIRCLE_LOCALIZATIONS` trong `circleLocalizations.js`.
+- **2 bug phát hiện lúc test tiếng Việt thật (08-04), đã fix:**
+  1. `requiredMark` (chữ "Bắt buộc" cạnh Câu hỏi/Câu trả lời) bị SDK ghép DÍNH LIỀN vào label trước, không tự chèn khoảng trắng ("Câu hỏiBắt buộc") → sửa `requiredMark: ' (bắt buộc)'` (tự đệm khoảng trắng + ngoặc).
+  2. 3 dòng cảnh báo rủi ro ở màn "Xác nhận bảo mật" ra tiếng Anh dù đã set `setLocalizations` — vì nó thuộc field `securityConfirmItems` của method **KHÁC** (`setCustomSecurityQuestions`), không nằm trong `Localizations` object. Đã gọi thêm method này (3 chỗ, giống `setLocalizations`) với bản dịch ở `CIRCLE_SECURITY_CONFIRM_ITEMS` (`circleLocalizations.js`).
+- **✅ 08-04c – XÁC NHẬN THẬT: `inputMatch` (màn "Xác nhận bảo mật") ĐỔI ĐƯỢC cụm từ SDK validate.** Set `inputMatch: 'Tôi đồng ý'` → test trên deploy, gõ "Tôi đồng ý" thì nút Tiếp tục sáng lên thật. Không phải chữ hiển thị suông như lo ngại ban đầu.
+- **🔴🔴 08-04 – ROOT CAUSE bug "màn Câu hỏi bảo mật RỖNG": GỌI SAI CHỮ KÝ `setCustomSecurityQuestions`. Lỗi của mình, KHÔNG phải Circle.** Method này nhận **THAM SỐ VỊ TRÍ**, không phải object:
+  ```js
+  setCustomSecurityQuestions(questions?: SecurityQuestion[] | null, requiredCount = 2, securityConfirmItems?: string[])
+  ```
+  (verify: `node_modules/@circle-fin/w3s-pw-web-sdk/dist/src/index.d.ts:91`; thân hàm `index.js:254` gán thẳng `this.securityQuestions = questions`, KHÔNG destructure.) Gọi kiểu object `setCustomSecurityQuestions({ questions, securityConfirmItems })` → SDK nhận nguyên **object** vào chỗ đáng lẽ là **mảng** `questions` → danh sách câu hỏi hỏng → **màn rỗng, chặn cả luồng tạo ví**; đồng thời `securityConfirmItems` (tham số THỨ 3) không bao giờ tới nơi → 3 dòng cảnh báo giữ nguyên English. **Một lỗi giải thích cả 2 triệu chứng.** Đã sửa: `sdk.setCustomSecurityQuestions(CIRCLE_SECURITY_QUESTIONS.vi, 2, CIRCLE_SECURITY_CONFIRM_ITEMS.vi)` ở cả 3 chỗ. Check: `grep -rn "setCustomSecurityQuestions({" src/` phải RỖNG.
+  **Bài học:** 3 lần đo trước đó đều đổi SAI biến (bỏ `questions`, rồi tắt method, rồi tắt cả `Localizations.securityQuestions`) vì suy luận từ triệu chứng thay vì ĐỌC CHỮ KÝ HÀM trong `node_modules` — thứ có sẵn ngay từ đầu, đọc mất 30 giây. Gặp SDK cư xử lạ: đọc `.d.ts` + thân hàm TRƯỚC, đừng đoán mò rồi thử-sai trên production.
+- **`Localizations.securityQuestions` VÔ TỘI** — đã bật lại đầy đủ. Ảnh user chụp ở bản `f02cd86` (lúc chỉ có `setLocalizations`, chưa gọi `setCustomSecurityQuestions`) cho thấy màn hiện ĐẦY ĐỦ dropdown + ô nhập → khối này chưa bao giờ làm rỗng màn.
+- **✅ 08-04e – fix nốt `securityIntros` dính chữ:** "Thiết lậpkhôi phục tài khoản" cùng bệnh với `requiredMark` (SDK ghép `headline`+`headline2` không tự chèn dấu cách) → đệm khoảng trắng đầu `headline2`.
 - **`getSDK()` là ASYNC (nạp lười 740KB SDK+polyfill)** – mọi chỗ gọi PHẢI `await getSDK()`. Quên await → PIN chết câm. Check: `grep -rn "getSDK()" src/ | grep -v await` phải RỖNG.
 - **userToken sống 60'** → `refreshSession()` trước MỌI thao tác PIN.
 - **Sai PIN KHÔNG đóng iframe** – `executeChallenge` BỎ QUA `RETRYABLE_CODES` (155112/155703/155704/155115/155705), chỉ settle khi success/lỗi terminal. `155701` = user tự huỷ → im lặng.
@@ -257,6 +279,79 @@ hay đang bắt họ thích nghi với crypto?". Lệch khỏi đây thì dừng
 - [ ] Thẻ chia sẻ link: dán `ezwallet.cash` vào Telegram cho chính mình → phải ra ảnh + tiêu đề (X/Facebook cache thẻ, xem mục 5)
 - [ ] 6 sửa UI 07-29: nút 3/4 màn (Swap · Tap-to-copy · Hold-to-show · Back ở About/Language/Security) · nút ⇅ gradient + icon trắng · Scan QR có tiêu đề hàng 1 + nút **Done** · Contacts nút Add không icon · QR Storage có cặp **Back | Add**
 - [ ] ⚠️ Nhắc lại: user cũ trên `ezwallet.pages.dev` sang domain mới sẽ thấy **chưa đăng nhập + trống danh bạ** (localStorage theo origin). Ví/tiền không mất. Xem gotcha mục 7.
+- [ ] **Mới 08-04 – localize PIN tiếng Việt:** tạo ví mới (màn Tạo PIN + Xác nhận PIN) · Đổi PIN (Security) · Quên PIN (câu hỏi bảo mật) → chữ phải ra tiếng Việt như `circleLocalizations.js`, không vỡ layout/tràn chữ. Lỡ nhập sai PIN thì câu lỗi vẫn tiếng Anh – ĐÚNG như thiết kế, không phải bug.
+- [ ] **Mới 08-04b (fix sau lần test đầu):** màn "Câu hỏi bảo mật" – chữ "(bắt buộc)" phải tách rõ khỏi "Câu hỏi"/"Câu trả lời", không dính liền nữa. Màn "Xác nhận bảo mật" – 3 dòng cảnh báo phải ra tiếng Việt. **QUAN TRỌNG:** gõ đúng "Tôi đồng ý" vào ô xác nhận – nút Tiếp tục CÓ sáng lên không? Nếu KHÔNG sáng, báo lại ngay – nghĩa là phải đổi hướng dẫn sang "gõ I agree" (xem gotcha mục 7).
+
+**Đã làm xong phiên 08-04:** Bật `setLocalizations` tiếng Việt cho màn PIN/bảo mật của Circle SDK (`src/circleLocalizations.js` mới + wire vào `circle.js`/`Login.jsx`) – đảo quyết định English-thuần 07-01 sau khi tra lại docs xác nhận phạm vi localize được rộng hơn tưởng (xem gotcha mục 7). Build production `npm run build` pass. **Chưa test được trên iframe thật** (Circle SDK không chạy trên localhost, xem mục 3) – cần tự bấm thử trên deploy: tạo ví mới / đổi PIN / quên PIN để xác nhận chữ Việt hiện đúng, không vỡ layout.
+Test thật xong, user báo 2 lỗi (ảnh chụp): "Câu hỏiBắt buộc" dính liền + màn Xác nhận bảo mật vẫn 3 dòng English. Đã fix cả 2 (xem gotcha mục 7) + gọi thêm `setCustomSecurityQuestions` (method riêng, tách khỏi `setLocalizations`). Đổi luôn hướng dẫn màn Xác nhận bảo mật sang gõ "Tôi đồng ý" nhưng CHƯA CHẮC field `inputMatch` đổi được cụm từ SDK thật sự validate – cần test lại.
+Soạn thêm 8 câu hỏi bảo mật tiếng Việt (`CIRCLE_SECURITY_QUESTIONS`), wire qua `setCustomSecurityQuestions({ questions })`. Test lại: `inputMatch`="Tôi đồng ý" CHẠY THẬT (nút sáng) ✅ — nhưng `questions` làm RỖNG TOÀN BỘ màn Câu hỏi bảo mật ❌ (chặn tạo ví) + kéo `securityConfirmItems` rơi lại English. Bỏ `questions`, giữ `securityConfirmItems` + fix nốt `securityIntros` dính chữ, deploy lại → **VẪN RỖNG Y HỆT** (user báo "vẫn ko thấy câu hỏi bảo mật để nhập"). Kết luận: KHÔNG phải do `questions`, mà do BẢN THÂN việc gọi `setCustomSecurityQuestions()` (xem gotcha mục 7). **Đã TẮT HẲN method này ở cả 3 chỗ gọi** — màn Câu hỏi bảo mật về lại English mặc định của Circle (chưa test lại). 3 dòng cảnh báo + bộ câu hỏi tiếng Việt tạm gác. Build pass, đã push. **Cần test lại:** màn Câu hỏi bảo mật có hết rỗng, dùng được để tạo ví không (ƯU TIÊN CAO NHẤT — nếu vẫn rỗng thì lỗi nằm ở chỗ khác, có thể là `Localizations.securityQuestions`, cần báo ngay).
+
+Sau đó tìm ra ROOT CAUSE THẬT: **gọi SAI CHỮ KÝ `setCustomSecurityQuestions`** (tham số vị trí, không phải object) — xem gotcha mục 7. Sửa xong thì cả bộ câu hỏi tiếng Việt lẫn 3 dòng cảnh báo đều chạy. Từ đó làm tiếp: mở khoá đa ngôn ngữ, việt hoá triệt để, và tiền tệ VND.
+
+---
+
+### 👤 CHỦ SỞ HỮU: việc THÊM NGÔN NGỮ giao cho **LongDC** (user chốt 08-04)
+
+> Từ 08-04, phần **thêm ngôn ngữ mới** do **LongDC** phụ trách. Hạ tầng đã dựng xong và có script gác cổng — đọc hết mục 🌏 bên dưới trước khi bắt tay. Tóm tắt cho người mới vào:
+>
+> **Đang có gì:** `vi` (tiếng Việt, ngôn ngữ gốc) và `en` đã xong 100%, đang mở. `zh` mới phủ **35%** từ điển và **chưa có** bản dịch Circle → đang khoá.
+>
+> **Luật bắt buộc (user chốt, không thương lượng):**
+> - **"Đã Việt thì Việt all, đã Anh thì Anh all"** — không để user thấy màn nửa ngôn ngữ này nửa kia.
+> - **"Một ngôn ngữ = một lượt build kỹ"** — dịch xong HẲN rồi mới mở, không mở dở dang.
+>
+> **Quy trình thêm 1 ngôn ngữ (vd `zh`):**
+> 1. Bổ sung từ điển trong `src/i18n.js` (`const ZH = {...}`). Key = chuỗi tiếng Việt gốc.
+> 2. Thêm bản dịch Circle trong `src/circleLocalizations.js`: cả 3 hằng `CIRCLE_LOCALIZATIONS`, `CIRCLE_SECURITY_QUESTIONS`, `CIRCLE_SECURITY_CONFIRM_ITEMS`. Bỏ bước này thì app dịch xong mà màn PIN vẫn tiếng Anh = vi phạm luật trên.
+> 3. Chạy **`npm run check-lang zh`** cho tới khi báo "ĐỦ ĐIỀU KIỆN".
+> 4. CHỈ KHI ĐÓ mới thêm `'zh'` vào `READY_LANGS` (`src/i18n.js`). **Đừng sửa cờ `locked` ở `Language.jsx`** — nó tự suy từ `READY_LANGS`.
+> 5. Test trên **deploy thật**, không phải localhost (Circle SDK không chạy localhost).
+>
+> **4 cái bẫy đã dính, đừng dính lại** (chi tiết ở mục 7):
+> - `setCustomSecurityQuestions` nhận **tham số vị trí** `(questions, requiredCount, securityConfirmItems)` — gọi kiểu object thì màn Câu hỏi bảo mật RỖNG TRẮNG, chặn tạo ví, **không báo lỗi gì**.
+> - SDK **ghép thẳng** `questionHeader` + `requiredMark` và `headline` + `headline2`, KHÔNG tự chèn dấu cách → phải tự đệm khoảng trắng (tiếng Trung thì không cần, chữ Hán không dùng dấu cách giữa từ).
+> - `common.showPin`/`hidePin` bị Circle bỏ qua (bug của họ, đã báo) — dịch cũng không ăn, đừng mất công đào.
+> - Chữ lỗi runtime trong iframe **không localize được** (16 field, không field nào cho lỗi). Đây là giới hạn thật.
+>
+> **Làm trên nhánh nào:** đã merge hết vào `main` (08-04) và nhánh `wip/circle-vi-localization` đã xoá. LongDC làm thẳng trên `main`, hoặc nhánh ra từ `main`.
+>
+> **Sạn tiếng Việt:** user đã review bản tiếng Việt và báo "còn nhiều sạn" nhưng chấp nhận merge. Việc rà và sửa sạn đó thuộc phần LongDC — user KHÔNG liệt kê, tự tìm bằng cách dùng thử app ở chế độ tiếng Việt.
+
+### 🌏 ĐA NGÔN NGỮ + TIỀN TỆ VND — phiên 08-04 (ĐÃ MERGE vào `main`)
+
+> **`main` vẫn là bản English-thuần ổn định** (`ezwallet.cash` không bị đụng). Toàn bộ việc dưới đây nằm trên nhánh riêng, preview: **https://wip-circle-vi-localization.ezwallet.pages.dev** (Cloudflare tự deploy mỗi lần push nhánh này; env var preview đã set API_KEY/KIT_KEY, xem mục 9).
+
+**LUẬT USER CHỐT 08-04 — áp vĩnh viễn:**
+> **"ĐÃ VIỆT THÌ VIỆT ALL, ĐÃ ANH THÌ ANH ALL"** — không bao giờ để user thấy màn nửa ngôn ngữ này nửa kia.
+> **"MỘT NGÔN NGỮ = MỘT LƯỢT BUILD KỸ"** — dịch xong hẳn 1 ngôn ngữ rồi mới mở, không mở dở dang.
+
+- **`READY_LANGS` (`src/i18n.js`) = nguồn sự thật DUY NHẤT** cho cả `detect()` lẫn khoá/mở option ở màn Language. Hiện `['vi','en']`; `zh` nằm ngoài vì từ điển mới phủ 35% + chưa có bản dịch Circle. **ĐỪNG sửa cờ `locked` bằng tay ở `Language.jsx`** — nó tự tính từ `READY_LANGS`.
+- **Gác cổng: `npm run check-lang`** (`scripts/check-lang.cjs`). Đo độ phủ từ điển + kiểm có bản dịch Circle chưa. **Bắt buộc chạy tới 100% trước khi thêm 1 mã vào `READY_LANGS`.** `en` được miễn yêu cầu Circle (English là mặc định sẵn của Circle). Soát mắt đã LỌT 2 lần (thẻ hành động 2 màn Trang chủ, nhãn "You pay/You receive") → dùng script, đừng tin mắt.
+- **Lỗi Circle chia 2 loại** (ghi rõ trong `circle.js`): lỗi vẽ TRONG iframe (sai PIN…) = tiếng Anh, KHÔNG đổi được; lỗi terminal bắn ra ngoài = dịch được qua `circleErrorMessage()` map theo MÃ SỐ (đừng dò chữ tiếng Anh — Circle đổi câu là câm).
+- **Bug Circle chưa fix:** `common.showPin`/`hidePin` bị iframe bỏ qua dù `common.continue` ăn (SDK 1.1.11, bản mới nhất). Đã báo support, giữ nguyên giá trị để khi họ fix là tự chạy.
+
+**TIỀN TỆ VND (user chốt: gõ thẳng VND, app tự quy ra USDC):**
+- Tỷ giá: thêm `vnd` vào ĐÚNG lệnh CoinGecko sẵn có (`chain.js fetchPrices`), **không thêm request** — free tier rate-limit chặt. Có `VND_PER_USD_FALLBACK` khi API chết. Lưu dạng **"USD mỗi 1 VND"** cho đồng bộ với mọi rate khác.
+- **`CURRENCY_CFG` (`data.js`) = nguồn sự thật duy nhất** cho ký hiệu / vị trí ký hiệu / số lẻ / dấu phân cách. **₫ đứng SAU số** (`1.250.000 ₫`) còn $ đứng trước → phải dùng `fmtDisplay()`, ĐỪNG tự nối `${symbol}${số}` (đó là lý do phải sửa 4 màn).
+- **⚠️ KHÔNG quy đổi tỷ giá LẦN HAI:** `SendAmount` chốt `tokenAmount` rồi truyền qua `SendConfirm` → `SendReceipt`. Tính lại ở màn sau = số user vừa xác nhận ≠ số thật sự rời ví (tỷ giá làm mới mỗi 60s).
+- Đổi tiền tệ giữa chừng ở màn Gửi → **XOÁ số đang gõ** ("50" là 50 đô hay 50 đồng cách nhau 2 vạn lần).
+- Ngưỡng "phí quá nhỏ" phải theo **số lẻ từng tiền tệ** (`decimalsOfCurrency`), đừng ghim `0.01`: phí 13 ₫ bị in thành "13,00 ₫" mà tiền Việt không có số lẻ.
+- **2 hệ gợi ý KHÁC NHAU, đừng gộp** (user nhấn mạnh 08-04):
+  - **Nhập tay** (`amountHint.js`, màn Gửi): thêm số 0 vào số vừa gõ — "50" → `5.000 · 50.000 · 500.000`. CHỈ cho VND (gõ "50" ở USD đã là 50 đô, gợi ý ×100 là bẫy chết người).
+  - **Thanh trượt** (`roundHint.js`, màn Swap): làm tròn quanh giá trị đang trượt — 39.000 → `35.000 · 40.000 · 45.000`. Đơn vị làm tròn **co giãn theo độ lớn** (bản cũ ghim u=1 nên trượt tới 39.000 gợi ý "39.000,5" — hỏng). Đánh đổi user đã chốt (phương án A): 24,4 giờ ra `20 · 25 · 30` chứ không còn `24 · 24,5 · 25` như spec 07-17e.
+- **Tự co cỡ chữ:** `BalanceHeader` + `SendAmount` chuyển từ `amountFontSize` (đếm ký tự) sang **`useFitFontSize`** (đo bề rộng thật bằng canvas) — số VND dài gấp đôi số USD nên đếm ký tự là tràn layout.
+
+**CHƯA TEST TRÊN MÁY THẬT** (Circle SDK không chạy localhost): cần bấm thử trên link preview — đổi ngôn ngữ, chọn VND, gõ số ở màn Gửi, xem dòng "Thực gửi ... USDC" ở màn Xác nhận + Biên lai.
+
+**Còn treo:** (1) tin nhắn gửi Circle support đã soạn xong, chưa gửi; (2) merge nhánh này vào `main` sau khi test xong; (3) tiếng Trung — chạy `npm run check-lang zh` tới 100% + thêm bản dịch Circle rồi mới thêm `'zh'` vào `READY_LANGS`.
+
+**⚠️ CHECKLIST KHI MERGE nhánh này vào `main`** — README/PITCH hiện mô tả ĐÚNG cho `main` (English-only) nhưng sẽ thành SAI ngay khi merge. Phải sửa CÙNG LÚC merge, đừng sửa trước (README public sẽ quảng cáo thứ chưa live):
+- `README.md:183-184` — *"**English-only UI.** The Circle PIN screen is a cross-origin iframe that only renders in English, so the rest of the app is kept in English to match."* → **XOÁ HẲN**. Đây chính là niềm tin SAI đã bị chứng minh ngược (Circle localize được, xem mục 7); để lại là tự mâu thuẫn với chính tài liệu của mình.
+- `README.md:101` — "Show balances in USDC or EURC" → thêm VND.
+- Thêm dòng "Tiếng Việt đầy đủ + hiển thị/nhập bằng VND" vào bảng tính năng `README.md` — điểm bán hàng mạnh nhất với người dùng Việt, đừng để lọt.
+- **BỎ QUA `PITCH.md`** (nó cũng có 4-5 câu "English-only" ở dòng 62/108/110/173/211): file này đã lỗi thời, bài giới thiệu thật nằm ở video + deck Canva (xem đầu file). Sửa nó là công cốc. **Thứ CẦN cập nhật khi merge là VIDEO và DECK** — hai thứ người ta thật sự xem.
+
+---
 
 **Đã làm xong phiên 08-03:** `6f6b2cb` **core value** – thêm mục "0. Core value" vào file này + mục riêng vào `CLAUDE.md`/`README.md`/`PITCH.md` (nguyên văn 3 đoạn tiếng Anh user chốt + bản dịch), mọi tính năng/quyết định từ nay phải trả lời được câu "có làm crypto đơn giản hơn cho user phổ thông không". Nhân tiện phát hiện + sửa **GitHub repo description** đang lỡ dùng "your grandma" (vi phạm luật Brand Voice khoá trong `CLAUDE.md`) → đổi đúng slogan "my mom" + khớp core value. Đã grep xác nhận slogan ngắn đã nhất quán sẵn ở `package.json`/`index.html`/`SECURITY.md`/`DECK-DESIGN-SPEC.md`, không cần sửa thêm.
 

@@ -3,9 +3,9 @@ import NavBar from '../components/NavBar'
 import Icon from '../components/Icon'
 import PctSlider from '../components/PctSlider'
 import Numpad from '../components/Numpad'
-import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress } from '../circle'
+import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress, circleErrorMessage } from '../circle'
 import { getTokenBalances, getDisplayRates, cachedRates, cachedBalances, estimateFeeUsd } from '../chain'
-import { spendableOf, floorTo, getDisplayCurrency, displaySymbol } from '../data'
+import { spendableOf, floorTo, getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency } from '../data'
 import { useFitFontSize } from '../useFitFontSize'
 import { roundHints, fmtHint } from '../roundHint'
 import { addNotif } from '../notif'
@@ -49,7 +49,7 @@ function TokenPicker({ current, onSelect, onClose }) {
   return (
     <div className="popup-overlay" onClick={onClose}>
       <div className="popup-card" onClick={e => e.stopPropagation()}>
-        <div className="popup-title">Select token</div>
+        <div className="popup-title">{t('Chọn token')}</div>
         {SWAP_TOKENS.map(sym => (
           <button key={sym} onClick={() => { onSelect(sym); onClose() }} className={`btn ${sym === current ? 'btn-primary' : 'btn-secondary'}`}
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
@@ -112,7 +112,9 @@ export default function Swap() {
     const r = rateOf(sym), rc = rateOf(cur)
     return r && rc ? (tokenAmt * r) / rc : null
   }
-  const fmtDisp = v => (v === null ? null : `${curSym}${v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`)
+  // v đang là SỐ ĐƠN VỊ tiền hiển thị (đã chia rate), còn fmtDisplay nhận giá trị USD → nhân
+  // ngược lại rate rồi để fmtDisplay lo ký hiệu/số lẻ/dấu phân cách theo từng tiền tệ (VND khác hẳn).
+  const fmtDisp = v => (v === null ? null : fmtDisplay(v * (rateOf(cur) || 1), cur, rates))
 
   const amountDisplay = toDisplay(amountNum, fromSym)
 
@@ -228,7 +230,7 @@ export default function Swap() {
       const { userToken, encryptionKey } = await refreshSession()
       const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
       if (res.error) throw new Error(res.error)
-      setStatus('Enter PIN…')
+      setStatus(t('Nhập PIN...'))
       await executeChallenge(await getSDK(), userToken, encryptionKey, res.challengeId)
 
       // ✅ TRẠNG THÁI 1 — PIN đã ký, lệnh swap ĐÃ GỬI lên Arc ("đề nghị thành công")
@@ -238,7 +240,7 @@ export default function Swap() {
       const outTxt = res.amountOut ? ` to ~${parseFloat(res.amountOut).toFixed(decimalsFor(toSym))} ${toSym}` : ` to ${toSym}`
       addNotif(`Swapped ${amountNum} ${fromSym}${outTxt} (complete)`, 'sent', null, `swap-${Date.now()}`)   // NotifArea (Home)
       resetAmount()
-      setSuccess(true); setStatus('Swap submitted')
+      setSuccess(true); setStatus(t('Đã gửi lệnh đổi tiền'))
       setLoading(false)
 
       // ✅ TRẠNG THÁI 2 — xác nhận ON-CHAIN (Arc finality <1s, chừa độ trễ RPC): poll tới khi số dư
@@ -259,7 +261,7 @@ export default function Swap() {
       if (e?.code === 155701) { setStatus(''); return }  // user tự hủy PIN → im lặng
       // Swap thất bại → thông báo cùng dạng gộp, đuôi "(failed)" (user chốt 07-20)
       addNotif(`Swapped ${amountNum} ${fromSym} to ${toSym} (failed)`, 'error', null, `swap-fail-${Date.now()}`)
-      const msg = e?.message || e?.error?.message || (typeof e === 'string' ? e : 'Swap failed')
+      const msg = circleErrorMessage(e)
       setError(msg); setStatus('')
     }
   }
@@ -346,11 +348,16 @@ export default function Swap() {
 
   // Phí gas Arc THẬT thường < 1 cent → .toFixed(2) ra "$0.00" = nhìn như hỏng/không mất phí.
   // Phí > 0 mà làm tròn về 0 thì nói thẳng "< $0.01" (trung thực + không doạ người dùng).
+  // ⚠️ Ngưỡng "nhỏ quá để hiện" phải theo SỐ LẺ của từng tiền tệ, đừng ghim 0.01: VND không có
+  // số lẻ nên đơn vị nhỏ nhất là 1 ₫ — ghim 0.01 thì phí 13 ₫ vẫn bị coi là "hiện được" rồi in ra
+  // "13,00 ₫" (VND không ai viết số lẻ). Ký hiệu cũng để fmtDisplay đặt, vì ₫ đứng SAU số.
   const feeTxt = (() => {
     if (feeUsd === null) return '…'
-    const v = feeUsd / (rateOf(cur) || 1)
-    if (v <= 0) return `~${curSym}0.00`
-    return v < 0.005 ? `<${curSym}0.01` : `~${curSym}${v.toFixed(2)}`
+    const rc = rateOf(cur) || 1
+    const min = 10 ** -decimalsOfCurrency(cur)      // 0.01 với USD/EUR · 1 với VND
+    const v = feeUsd / rc                            // phí quy về đơn vị tiền đang hiển thị
+    if (v <= 0) return `~${fmtDisplay(0, cur, rates)}`
+    return v < min ? `<${fmtDisplay(min * rc, cur, rates)}` : `~${fmtDisplay(feeUsd, cur, rates)}`
   })()
 
   const estNum = estAmt !== null ? parseFloat(estAmt) : null
@@ -398,7 +405,7 @@ export default function Swap() {
 
         {/* KHỐI 1: You pay ⇅ You receive + Fee/Rate */}
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <SideCard label="You pay" sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
+          <SideCard label={t('Bạn trả')} sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
             onAmount={openPad} typing={pad ? typed : null} balLabel="Available" />
 
           {/* Nút đảo chiều — ĐÈ lên khe giữa 2 card, xoay 180° mỗi lần bấm. Vòng tròn GRADIENT BRAND +
@@ -406,13 +413,13 @@ export default function Swap() {
               .btn-primary/.action-card.primary; shadow .35 theo luật nút gradient. margin -17/-17 trên
               nút 44px → chiếm 10px trong flow = KHE 10px giữa 2 card; nút bắc cầu qua khe (đè 17px mỗi bên). */}
           <div style={{ display: 'flex', justifyContent: 'center', margin: '-17px 0', position: 'relative', zIndex: 3 }}>
-            <button onClick={swapDir} aria-label="Reverse direction"
+            <button onClick={swapDir} aria-label={t('Đảo chiều')}
               style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'var(--grad-brand)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transform: `rotate(${flip}deg)`, transition: 'transform .3s ease' }}>
               <Icon name="trade" size="var(--is-num)" color="var(--color-white)" />
             </button>
           </div>
 
-          <SideCard label="You receive" sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} balLabel="Balance" idle={!(amountNum > 0)} />
+          <SideCard label={t('Bạn nhận')} sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} balLabel="Balance" idle={!(amountNum > 0)} />
 
           {/* Fee + Rate — 1 dòng NHỎ fs-item 17: Rate căn TRÁI · Fee căn PHẢI, số liệu ĐEN cho bật */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 10, padding: '0 16px' }}>

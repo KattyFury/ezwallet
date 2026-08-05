@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNav } from '../nav'
-import { refreshSession, forceFreshSession, isTokenExpiredError, getSDK, executeChallenge, signMessageChallenge } from '../circle'
+import { refreshSession, forceFreshSession, isTokenExpiredError, getSDK, executeChallenge, signMessageChallenge, circleErrorMessage } from '../circle'
 import { t } from '../i18n'
 import logoLong from '../../design/logo.svg'
 
@@ -40,11 +40,11 @@ export default function PinGate() {
         } catch (e2) {
           if (e2?.code === 155701) { setBusy(false); return }
           if (isTokenExpiredError(e2) || e2?.message === 'no-session') { signOut(); return }
-          setError(e2?.message || 'Unlock failed'); setBusy(false)
+          setError(circleErrorMessage(e2)); setBusy(false)
         }
         return
       }
-      setError(e?.message || e?.error?.message || (typeof e === 'string' ? e : 'Unlock failed'))
+      setError(circleErrorMessage(e))
       setBusy(false)
     }
   }
@@ -76,7 +76,7 @@ export default function PinGate() {
       </div>
       <div className="row-10 row10-dual">
         <button className="btn btn-secondary" onClick={signOut}>{t('Đăng xuất')}</button>
-        <button className="btn btn-primary" style={{ flex: 1 }} onClick={unlock}>Unlock</button>
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={unlock}>{t('Mở khoá')}</button>
       </div>
     </div>
   )

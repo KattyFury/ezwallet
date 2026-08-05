@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
-import { fmtVND, fmtMoney } from '../data'
+import { fmtMoney } from '../data'
 import { addNotif } from '../notif'
 import { saveImageToPhotos } from '../saveImage'
 import logoLong from '../../design/logo.svg'
@@ -24,14 +24,19 @@ function fmtTime(ts) {
 
 export default function SendReceipt() {
   const { navigate, params } = useNav()
-  const { address, name, amount, memo, currency = 'VND', timestamp } = params
+  // Mặc định 'USD' (trước là 'VND' — sót từ thời app còn tính bằng VND). Từ 08-04 VND là tiền tệ
+  // THẬT nên mặc định sai sẽ khiến biên lai thiếu currency bị vẽ nhầm sang tiền Việt.
+  const { address, name, amount, memo, currency = 'USD', timestamp } = params
   const to = name || shortenAddr(address)
   // "$2" một chuỗi một style (KHÔNG tách "2" đậm + "USD" thường — user chốt)
-  const amountText = currency === 'VND' ? fmtVND(amount) : fmtMoney(amount, currency)
+  const amountText = currency === 'VND' ? `${Number(amount).toLocaleString('vi-VN')} ₫` : fmtMoney(amount, currency)
   // Token THẬT đã chuyển on-chain (USD = nhãn, thực chuyển USDC 1:1) — hiện rõ trong biên lai
   // để người nhận/gửi đối soát đúng tài sản (tránh "bị hố" nhìn nhãn tưởng token khác).
-  const realToken = currency === 'USD' ? 'USDC' : currency
-  const realAmountText = `${realToken === 'cirBTC' ? Number(amount).toFixed(8) : Number(amount).toFixed(2)} ${realToken}`
+  // ⚠️ VND KHÔNG phải token: thực chuyển là USDC, và số USDC ≠ số VND đã gõ → phải lấy
+  // params.tokenAmount (SendAmount chốt, SendConfirm chuyển tiếp), đừng lấy `amount`.
+  const realToken = currency === 'USD' || currency === 'VND' ? 'USDC' : currency
+  const realUnits = currency === 'VND' ? (params.tokenAmount ?? 0) : Number(amount)
+  const realAmountText = `${realToken === 'cirBTC' ? realUnits.toFixed(8) : realUnits.toFixed(2)} ${realToken}`
 
   // Lưu thông báo "đã gửi" để HomeSend hiện. dedupeKey theo timestamp (duy nhất mỗi lần gửi thật)
   // → chống nhân đôi do React.StrictMode gọi effect 2 lần ở dev mode.
@@ -100,12 +105,12 @@ export default function SendReceipt() {
               Send to là TÊN danh bạ — không tên thì Send to đã là địa chỉ rút gọn rồi, thêm = trùng. */}
           {name && address ? (
             <div className="confirm-row">
-              <span className="confirm-label">Address</span>
+              <span className="confirm-label">{t('Địa chỉ')}</span>
               <span className="confirm-value num">{shortenAddr(address)}</span>
             </div>
           ) : null}
           <div className="confirm-row">
-            <span className="confirm-label">Amount</span>
+            <span className="confirm-label">{t('Số tiền')}</span>
             <span className="confirm-value num">{realAmountText}</span>
           </div>
           {memo ? (

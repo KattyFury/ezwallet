@@ -98,7 +98,7 @@ EZwallet removes the crypto vocabulary from the surface:
 | 🔄 **Swap with a % slider** | Choose how much of your balance to convert by dragging a slider instead of typing decimals. Round-number shortcuts are offered as chips. |
 | 👥 **Contacts** | Save addresses under a name (with an avatar) so you never paste a raw `0x…` twice. |
 | 🧾 **History + receipts** | Full transaction history with per-transaction detail and a saveable receipt image. |
-| 🌐 **Multi-currency display** | Show balances in USDC or EURC; the underlying token is always labelled honestly. |
+| 🌐 **Multi-currency display** | Show balances in USDC, EURC or Vietnamese dong; with VND you can also type the amount you want to send and the app converts it to USDC. The underlying token is always labelled honestly. |
 
 ## Tech stack
 
@@ -180,9 +180,11 @@ Being upfront about what this is not, yet:
 
 - **Testnet only.** Runs on Arc Testnet; balances have no real-world value.
 - **No mainnet deployment.**
-- **English-only UI.** The Circle PIN screen is a cross-origin iframe that only
-  renders in English, so the rest of the app is kept in English to match. The
-  i18n scaffolding exists but is disabled.
+- **English by default.** Vietnamese is fully translated – including Circle's PIN
+  and security-question screens – and selectable under Language & Currency, but the
+  app does not auto-switch on it. A few strings inside Circle's iframe stay English
+  regardless: runtime error messages have no localization field in the SDK, and
+  `common.showPin` is currently ignored (reported to Circle).
 - **Google sign-in is not supported.** Email + PIN only.
 - **QR scanning is limited to crypto wallet QR codes.** Real-world QR codes
   (product barcodes, bank QRs, etc.) are not handled.

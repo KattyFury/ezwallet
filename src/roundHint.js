@@ -18,20 +18,32 @@
 // Làm sạch sai số dấu phẩy động khi nhân/chia (0.1*3 = 0.30000000000000004 → chip hiện số xấu).
 const clean = (v, dec) => Math.round(v * 10 ** dec) / 10 ** dec
 
-// amount, avail: CÙNG ĐƠN VỊ TOKEN. dec = số lẻ token (2 cho USDC/EURC, 6 cho cirBTC).
+// amount, avail: CÙNG ĐƠN VỊ. dec = số lẻ (2 cho USDC/EURC, 6 cho cirBTC, 0 cho VND).
 // Trả MẢNG số chẵn (tăng dần, tối đa 3) để user bấm chọn. Không có gì hay → [].
+//
+// ⚠️ SỬA 2026-08-04: đơn vị làm tròn phải CO GIÃN THEO ĐỘ LỚN của số. Bản cũ ghim u = 1 cho mọi
+// số ≥ 1 → trượt tới 39.000 thì gợi ý "39.000,5" và "39.001" (đo thật, user bắt lỗi). Số càng lớn
+// thì bước làm tròn càng phải lớn theo — không ai chọn tiền theo nửa đồng khi đang ở mức mấy chục
+// nghìn.
+//   u = 10^floor(log10(amount)) / 2  →  7.35 → 0.5 · 39.000 → 5.000 · 0.0083 → 0.0005
+// Rồi lấy bội GẦN NHẤT của u làm tâm, kèm 1 bước mỗi bên:
+//   7,35    → 7 · 7,5 · 8
+//   39.000  → 35.000 · 40.000 · 45.000   (đúng ví dụ user đưa)
+//   0,0083  → 0,008 · 0,0085 · 0,009     (cirBTC, dec=6)
+//
+// ⚠️ ĐÁNH ĐỔI ĐÃ CHỐT (user chọn phương án A, 2026-08-04): 24,4 giờ ra "20 · 25 · 30" chứ KHÔNG
+// còn "24 · 24,5 · 25" như spec 07-17e. Một công thức KHÔNG THỂ vừa cho bước 0,5 ở mức 24 vừa
+// cho bước 5.000 ở mức 39.000. User đã xem bảng so sánh và chọn giữ MỘT công thức duy nhất thay
+// vì tách hai nhánh theo độ lớn. ĐỪNG "sửa lại cho giống 07-17" — đó là quyết định cũ đã bị thay.
 export function roundHints(amount, avail, dec = 2) {
   if (!(amount > 0) || !(avail > 0)) return []
   const eps = 10 ** -dec / 2
 
-  // Đơn vị làm tròn: số ≥ 1 → 1 (số nguyên, đúng ví dụ user). Số < 1 (cirBTC: 0.008327) mà làm
-  // tròn theo 1 thì sàn = 0 → co đơn vị theo độ lớn (10^k): 0.008327 → [0.008, 0.0085, 0.009].
-  const k = Math.floor(Math.log10(amount))
-  const u = k >= 0 ? 1 : 10 ** k
+  const u = 10 ** Math.floor(Math.log10(amount)) / 2
+  // Bội GẦN NHẤT của u (không phải sàn) → tâm của bộ ba nằm sát số đang trượt nhất.
+  const mid = clean(Math.round(amount / u) * u, dec)
 
-  // +1e-9 trước khi floor: 24/1 có thể ra 23.999… do dấu phẩy động → sàn tụt nhầm 1 đơn vị
-  const base = clean(Math.floor(amount / u + 1e-9) * u, dec)
-  return [base, clean(base + u / 2, dec), clean(base + u, dec)].filter(v =>
+  return [clean(mid - u, dec), mid, clean(mid + u, dec)].filter(v =>
     v > 0 &&
     v <= avail + 1e-12 &&                 // KHÔNG BAO GIỜ gợi ý vượt số dư
     Math.abs(v - amount) >= eps           // đang đứng đúng số đó rồi → khỏi gợi ý lại
