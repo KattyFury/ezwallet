@@ -308,6 +308,15 @@ Sau đó tìm ra ROOT CAUSE THẬT: **gọi SAI CHỮ KÝ `setCustomSecurityQues
 
 **Còn treo:** (1) tin nhắn gửi Circle support đã soạn xong, chưa gửi; (2) merge nhánh này vào `main` sau khi test xong; (3) tiếng Trung — chạy `npm run check-lang zh` tới 100% + thêm bản dịch Circle rồi mới thêm `'zh'` vào `READY_LANGS`.
 
+**⚠️ CHECKLIST KHI MERGE nhánh này vào `main`** — README/PITCH hiện mô tả ĐÚNG cho `main` (English-only) nhưng sẽ thành SAI ngay khi merge. Phải sửa CÙNG LÚC merge, đừng sửa trước (README public sẽ quảng cáo thứ chưa live):
+- `README.md:183-184` — *"**English-only UI.** The Circle PIN screen is a cross-origin iframe that only renders in English, so the rest of the app is kept in English to match."* → **XOÁ HẲN**. Đây chính là niềm tin SAI đã bị chứng minh ngược (Circle localize được, xem mục 7); để lại là tự mâu thuẫn với chính tài liệu của mình.
+- `README.md:101` — "Show balances in USDC or EURC" → thêm VND.
+- `PITCH.md:108` — "UI chỉ tiếng Anh (màn PIN của Circle là iframe chỉ có tiếng Anh)" → xoá khỏi mục "chưa có".
+- `PITCH.md:110` — "thêm ngôn ngữ & tiền tệ" đang nằm ở mục ĐỊNH HƯỚNG TƯƠNG LAI → chuyển sang mục đã làm (còn lại: thêm ngôn ngữ khác).
+- `PITCH.md:62` — "Hiển thị số dư theo USDC hoặc EURC" → thêm VND.
+- `PITCH.md:173` và `PITCH.md:211` — "English-only UI (for now)" trong 2 kịch bản nói → bỏ.
+- Cân nhắc thêm dòng "Tiếng Việt đầy đủ + hiển thị/nhập bằng VND" vào bảng tính năng của cả 2 file — đây là điểm bán hàng mạnh nhất với người dùng Việt, đừng để lọt.
+
 ---
 
 **Đã làm xong phiên 08-03:** `6f6b2cb` **core value** – thêm mục "0. Core value" vào file này + mục riêng vào `CLAUDE.md`/`README.md`/`PITCH.md` (nguyên văn 3 đoạn tiếng Anh user chốt + bản dịch), mọi tính năng/quyết định từ nay phải trả lời được câu "có làm crypto đơn giản hơn cho user phổ thông không". Nhân tiện phát hiện + sửa **GitHub repo description** đang lỡ dùng "your grandma" (vi phạm luật Brand Voice khoá trong `CLAUDE.md`) → đổi đúng slogan "my mom" + khớp core value. Đã grep xác nhận slogan ngắn đã nhất quán sẵn ở `package.json`/`index.html`/`SECURITY.md`/`DECK-DESIGN-SPEC.md`, không cần sửa thêm.
