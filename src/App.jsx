@@ -69,8 +69,12 @@ export default function App() {
   // không có KV binding / mạng lỗi / MOCK → bỏ qua, app không hề biết. Đặt ở đây (mở app) chứ
   // KHÔNG đặt trong màn Contacts: lúc này user chắc chắn chưa mở màn nào đọc danh bạ nên ghi đè
   // local không giật UI. Chi tiết luật gộp: src/sync.js.
+  // ⚠️ Từ 08-06 (auth chữ ký PIN): lượt kéo CHÍNH nằm ở PinGate, ngay sau khi user nhập PIN —
+  // vì token phiên sync chỉ có sau bước ký. Chỗ này giờ chỉ còn ăn ở trường hợp RELOAD tab
+  // (sessionStorage sống sót → đã có `ez_pin_ok` + `ez_sync_token`, không qua PinGate nữa).
+  // Chưa có token thì `pullOnce` tự bỏ qua im lặng.
   useEffect(() => {
-    if (!localStorage.getItem('ez_user_token') || !localStorage.getItem('ez_wallet_addr')) return
+    if (!sessionStorage.getItem('ez_sync_token') || !localStorage.getItem('ez_wallet_addr')) return
     import('./sync').then(s => s.pullOnce()).catch(() => {})
   }, [])
 

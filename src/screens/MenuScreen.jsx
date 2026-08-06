@@ -69,6 +69,7 @@ export default function MenuScreen() {
           // session Google (refreshToken/email/method) để đăng xuất sạch, deviceId giữ (định danh máy).
           ;['ez_user_token','ez_wallet_addr','ez_wallet_id','ez_encryption_key','ez_email','ez_notifs','ez_last_recv_ts','ez_refresh_token','ez_google_email','ez_login_method'].forEach(k => localStorage.removeItem(k))
           sessionStorage.removeItem('ez_pin_ok')   // đăng nhập lại phải qua cổng PIN
+          sessionStorage.removeItem('ez_sync_token')   // token sao lưu gắn với lượt ký PIN của phiên này
           window.location.reload()
         }}>
           <Icon name="out" size="var(--is-md-lg)" color="var(--color-error)" />

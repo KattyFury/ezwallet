@@ -37,7 +37,13 @@ Being explicit about what is *not* hardened yet:
   email without an ownership check (email OTP is deliberately disabled, because
   Circle only supports PIN authentication on the plain email flow – OTP/SSO accounts
   cannot have a PIN). Funds are still protected: every transfer requires the PIN.
-- **Contact backup is opt-in infrastructure and currently disabled in production.**
-  The optional Cloudflare KV backup of contacts and saved QR codes inherits the
-  identity weakness above, so it is not enabled. See `HANDOFF.md` for the plan to
-  gate it behind a PIN signature before it is turned on.
+- **Contact backup is gated behind a PIN signature, not the email session.**
+  The optional Cloudflare KV backup of contacts and saved QR codes does *not* use
+  the email-derived session token above. `/api/sync` issues a single-use nonce, the
+  wallet signs it through Circle's MPC signer (the same PIN prompt that unlocks the
+  app – no extra step for the user), and the server derives the storage identity by
+  recovering the address from that signature. Knowing an email is therefore not
+  enough to read or write someone's contact book. Session tokens live in
+  `sessionStorage` and expire after 24h server-side. Avatars are never uploaded.
+  The backup still requires a `EZ_SYNC` KV binding to be present; without it the
+  endpoint returns `503` and the app silently keeps everything local.

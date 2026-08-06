@@ -19,9 +19,23 @@ export default function PinGate() {
   async function attemptUnlock(forceFresh) {
     const { userToken, encryptionKey } = forceFresh ? await forceFreshSession() : await refreshSession()
     const walletId = localStorage.getItem('ez_wallet_id')
-    const challengeId = await signMessageChallenge(userToken, walletId)
-    await executeChallenge(await getSDK(), userToken, encryptionKey, challengeId)
+    // Xin nonce TRƯỚC khi ký: một lượt PIN này vừa mở khoá app, vừa mở phiên sao lưu danh bạ
+    // (auth chữ ký PIN — xem functions/api/sync.js). User KHÔNG phải nhập PIN thêm lần nào.
+    // Không lấy được nonce (chưa bật KV / mạng chậm / lỗi) → ký câu mặc định, app mở như thường.
+    const sync = await import('../sync')
+      .then(async s => ({ s, m: await s.prepareUnlockMessage() }))
+      .catch(() => null)
+    const challengeId = await signMessageChallenge(userToken, walletId, sync?.m?.message)
+    const result = await executeChallenge(await getSDK(), userToken, encryptionKey, challengeId)
     sessionStorage.setItem('ez_pin_ok', '1')
+    // Sao lưu là tính năng PHỤ: đổi chữ ký lấy token rồi kéo bản sao về đều chạy NỀN, không
+    // await và nuốt mọi lỗi — không được phép giữ user đứng lại ở cửa vào app vì cái sổ danh bạ.
+    const signature = result?.data?.signature
+    if (sync?.m && signature) {
+      sync.s.openSession(sync.m.nonce, signature)
+        .then(ok => { if (ok) return sync.s.pullOnce() })
+        .catch(() => {})
+    }
     navigate(next)
   }
 
@@ -55,6 +69,7 @@ export default function PinGate() {
   function signOut() {
     ;['ez_user_token', 'ez_wallet_addr', 'ez_wallet_id', 'ez_encryption_key', 'ez_email', 'ez_refresh_token', 'ez_google_email', 'ez_login_method'].forEach(k => localStorage.removeItem(k))
     sessionStorage.removeItem('ez_pin_ok')
+    sessionStorage.removeItem('ez_sync_token')
     navigate('Login')
   }
 

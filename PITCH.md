@@ -121,7 +121,7 @@ Shill sai một câu là mất uy tín cả dự án. Đây là loại lỗi kh�
 4. ❌ Không chế **số người dùng, TVL, số giao dịch**. Chưa có thì nói chưa có.
 5. ❌ Không dùng **ảnh giao diện dựng/mockup**. Chỉ dùng ảnh/GIF thật trong `docs/` (mục 9).
 6. ❌ Không nói **"đã audit"** – chưa audit.
-7. ❌ Không quảng bá **"sao lưu danh bạ trên cloud an toàn"** (thêm 07-29). App CÓ sao lưu danh bạ/kho QR lên Cloudflare KV, nhưng cửa vào hiện chỉ là userToken (cấp theo email) → ai biết email là đọc được sổ danh bạ. Tiền không ảnh hưởng. Cứ để nó là tính năng thầm lặng "đổi máy không mất danh bạ"; **chỉ đem đi shill sau khi làm auth bằng chữ ký PIN** (HANDOFF mục 9 việc 7).
+7. ❌ Không quảng bá **"sao lưu danh bạ trên cloud"** (thêm 07-29, cập nhật 08-06). Lý do cũ (auth yếu: biết email là đọc được sổ danh bạ) **ĐÃ SỬA XONG** – giờ cửa vào là chữ ký PIN của chính ví (HANDOFF mục 3). Nhưng tính năng **VẪN CHƯA SỐNG trên production** vì chưa tạo KV binding, và luồng ký chỉ verify được trên deploy thật. → **Chỉ đem đi shill sau khi bật KV + đi hết checklist deploy 08-06.** Trước đó cứ để nó là tính năng thầm lặng, đừng nhắc.
 
 > Sức mạnh của bài shill này nằm ở chỗ **thật**. "Chưa lên mainnet, chưa audit, code mở đây, vào bấm thử đi" thuyết phục hơn mọi tính từ.
 

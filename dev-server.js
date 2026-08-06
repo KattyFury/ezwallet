@@ -12,13 +12,23 @@ import * as sync from './functions/api/sync.js'
 
 const PORT = 8787
 
-// KV GIẢ cho local (Cloudflare KV chỉ có trên deploy): đủ API `get`/`put` mà sync.js dùng.
-// Dữ liệu nằm trong RAM → restart dev-server là mất, đúng ý: local chỉ để thử luồng.
+// KV GIẢ cho local (Cloudflare KV chỉ có trên deploy): đủ API `get`/`put`/`delete` mà sync.js dùng.
+// `expirationTtl` được tôn trọng thật (nonce/token phiên có hạn) để luồng auth chữ ký PIN ở local
+// cư xử giống deploy. Dữ liệu nằm trong RAM → restart dev-server là mất, đúng ý: local chỉ để thử luồng.
 const fakeKV = (() => {
   const m = new Map()
   return {
-    get: async k => (m.has(k) ? m.get(k) : null),
-    put: async (k, v) => { m.set(k, v); console.log(`[dev-server] KV put ${k} (${v.length} bytes)`) },
+    get: async k => {
+      const rec = m.get(k)
+      if (!rec) return null
+      if (rec.exp && Date.now() > rec.exp) { m.delete(k); return null }
+      return rec.v
+    },
+    put: async (k, v, opts) => {
+      m.set(k, { v, exp: opts?.expirationTtl ? Date.now() + opts.expirationTtl * 1000 : 0 })
+      console.log(`[dev-server] KV put ${k} (${v.length} bytes)`)
+    },
+    delete: async k => { m.delete(k) },
   }
 })()
 
