@@ -272,8 +272,13 @@ hay đang bắt họ thích nghi với crypto?". Lệch khỏi đây thì dừng
 
 **1. Gắn domain `ezwallet.cash`** – ✅ **XONG** (đo 07-29 tối: A `172.67.168.76`/`104.21.94.133` + AAAA, HTTPS **200**, SSL hợp lệ, server Cloudflare). ⚠️ **`www.ezwallet.cash` CHƯA gắn** (không phân giải) – muốn www chạy thì Custom domains → thêm `www.ezwallet.cash`.
 
-**2. Tạo KV binding cho sao lưu danh bạ** – ❌ **CHƯA** (probe `POST https://ezwallet.cash/api/sync` trả **503** = `sync-disabled`). → **ezwallet → Settings → Bindings → Add → KV namespace**, namespace tên gì cũng được, **Variable name PHẢI đúng `EZ_SYNC`**, **rồi DEPLOY LẠI** (Pages chỉ áp binding cho deployment MỚI – tạo binding xong mà không deploy lại thì vẫn 503).
-  ✅ **08-06: điều kiện chặn đã gỡ – auth chữ ký PIN LÀM XONG** (mục 3 + mục 9 việc 7). Lỗ "biết email là đọc được danh bạ" không còn, nên bật KV giờ là an toàn. Bật xong PHẢI chạy checklist deploy ở mục 3 (2 mục 🔴 dưới cùng) vì luồng ký chỉ verify được trên deploy thật.
+**2. Tạo KV binding cho sao lưu danh bạ** – ✅ **XONG 08-06, Claude tự làm** (KHÔNG cần vào Dashboard: `wrangler` đã đăng nhập sẵn bằng OAuth, có scope `workers_kv (write)` + `pages (write)`).
+  - Namespace `EZ_SYNC` id `5aec627d80c74c3981944dc070b3bbf0` (`wrangler kv namespace create EZ_SYNC`).
+  - Gắn vào Pages project bằng REST `PATCH /accounts/{acct}/pages/projects/ezwallet` với `deployment_configs.production.kv_namespaces` (+ `preview`). **PATCH là merge** – 3 env var `API_KEY`/`KIT_KEY`/`VITE_CIRCLE_APP_ID` đã kiểm tra lại sau khi PATCH: còn nguyên.
+  - Deploy lại bằng REST `POST .../deployments` (branch `main`) → deployment `7dd93cfe`, commit `d01f7b6`.
+  - **⚠️ ĐỪNG dùng `wrangler pages deploy` hay thêm `pages_build_output_dir` vào `wrangler.toml`** cho project này: nó đang nối GitHub (`source: github/ezwallet`, prod branch `main`). Deploy trực tiếp = deployment direct-upload lạc khỏi luồng Git; chuyển sang cấu hình bằng `wrangler.toml` thì env var đặt ở Dashboard có thể bị bỏ qua → gãy `API_KEY` = gãy login/swap. Đường REST ở trên là đường an toàn, dùng lại lần sau.
+  - **Verify trên production (08-06):** `POST https://ezwallet.cash/api/sync {"action":"nonce"}` → **200** (trước là 503). Chạy hết luồng bằng khoá test viem: nonce → ký → session (`address` recover khớp ví ký) → push → pull (avatar bị loại đúng) → replay nonce **401 bad-nonce** → token bịa **401 bad-token**. **Đã xoá sạch 3 key test khỏi KV sau khi đo** (`wrangler kv key list` trả `[]`).
+  - **CÒN LẠI = 1 thứ duy nhất chưa verify được bằng máy:** chữ ký THẬT của Circle có đúng chuẩn EIP-191 như server giả định không (Circle SDK không chạy localhost, và khoá test không thay được MPC). → checklist 🔴 ở mục 3.
 
 **2b. CI chưa lên được** – `.github/workflows/ci.yml` **đã viết sẵn, nằm LOCAL, chưa commit**: GitHub từ chối push vì token `gh` thiếu scope `workflow`. Sửa: chạy `gh auth refresh -h github.com -s workflow` (mở browser) rồi `git add .github && git commit && git push`. Badge CI trong README cũng đã tạm bỏ, thêm lại khi workflow lên.
 
@@ -289,7 +294,7 @@ hay đang bắt họ thích nghi với crypto?". Lệch khỏi đây thì dừng
 - [ ] 6 sửa UI 07-29: nút 3/4 màn (Swap · Tap-to-copy · Hold-to-show · Back ở About/Language/Security) · nút ⇅ gradient + icon trắng · Scan QR có tiêu đề hàng 1 + nút **Done** · Contacts nút Add không icon · QR Storage có cặp **Back | Add**
 - [ ] ⚠️ Nhắc lại: user cũ trên `ezwallet.pages.dev` sang domain mới sẽ thấy **chưa đăng nhập + trống danh bạ** (localStorage theo origin). Ví/tiền không mất. Xem gotcha mục 7.
 - [ ] **Mới 08-04 – localize PIN tiếng Việt:** tạo ví mới (màn Tạo PIN + Xác nhận PIN) · Đổi PIN (Security) · Quên PIN (câu hỏi bảo mật) → chữ phải ra tiếng Việt như `circleLocalizations.js`, không vỡ layout/tràn chữ. Lỡ nhập sai PIN thì câu lỗi vẫn tiếng Anh – ĐÚNG như thiết kế, không phải bug.
-- [ ] **🔴 Mới 08-06 – AUTH SAO LƯU DANH BẠ (chỉ verify được trên deploy).** Sau khi tạo KV binding `EZ_SYNC` + deploy lại:
+- [ ] **🔴 Mới 08-06 – AUTH SAO LƯU DANH BẠ.** KV binding + deploy + phần server ĐÃ verify xong bằng khoá test (mục 9 việc 2). Phần dưới đây là phần **chỉ máy thật mới đo được** vì cần PIN + Circle MPC ký:
   - [ ] Mở app → qua PinGate → **Console KHÔNG được có dòng `[sync] địa chỉ recover từ chữ ký KHÔNG khớp ví đang mở`**. Có dòng đó = Circle ký KHÔNG theo EIP-191 như giả định → sao lưu tự tắt (app vẫn chạy, không hỏng gì) nhưng **báo lại ngay**, phải đổi cách verify ở `functions/api/sync.js`.
   - [ ] Máy A thêm 1 danh bạ → máy B (cùng email + PIN) mở app → danh bạ hiện ra, **KHÔNG có ảnh** (đúng thiết kế, avatar không lên server).
   - [ ] Xoá danh bạ đó ở máy B → mở lại máy A → phải **mất luôn** (last-write-wins; sống lại = luật gộp hỏng).
