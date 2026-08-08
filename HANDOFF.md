@@ -7,7 +7,7 @@
 |---|---|
 | **Demo** | https://ezwallet.cash (domain mua trên Cloudflare 07-29; `ezwallet.pages.dev` chạy song song, auto-deploy từ `main`) |
 | **GitHub** | https://github.com/KattyFury/ezwallet |
-| **Video** | https://youtu.be/UIR4Ee3Wp_Y |
+| **Video** | https://youtu.be/nZwn4Z2DtXY |
 | **Deck** | https://canva.link/zr3ik84radd39vc |
 
 ### 📍 ĐANG Ở ĐÂU (cuối phiên 08-04)
