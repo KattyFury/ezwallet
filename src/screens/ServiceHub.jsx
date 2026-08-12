@@ -54,15 +54,18 @@ export default function ServiceHub() {
                   minWidth: 0, border: '1.5px solid var(--color-gray)', borderRadius: 16,
                   background: 'var(--color-white)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  gap: 12, padding: '18px 10px', fontFamily: 'inherit',
+                  gap: 12, padding: '16px 10px', fontFamily: 'inherit',
                   opacity: soon ? 0.4 : 1, cursor: soon ? 'not-allowed' : 'pointer',
                 }}>
-                {/* Icon TO 64 — 3 icon này user vẽ ở khung 200×200 riêng cho cỡ lớn. Màu brand
-                    xanh = ngôn ngữ icon dẫn đầu của menu-item (user chốt 07-17e). */}
-                <Icon name={icon} size={64} color="var(--color-brand)" />
-                {/* Chữ = ĐÚNG CỠ TIÊU ĐỀ MÀN (--fs-title 30, user chốt 08-13 "to bằng header luôn").
-                    Nhãn dài xuống 2 dòng → KHÔNG whiteSpace:nowrap; lineHeight 1.1 để 2 dòng vẫn gọn. */}
-                <span style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', textAlign: 'center', lineHeight: 1.1, maxWidth: '100%' }}>
+                {/* Icon 56 — 3 icon này user vẽ ở khung 200×200 riêng cho cỡ lớn. Màu brand xanh =
+                    ngôn ngữ icon dẫn đầu của menu-item (user chốt 07-17e).
+                    ⚠️ CỠ ĐÃ CHỐT SAU 2 LẦN LỆCH (user 08-13): 48+chữ 17 = "nhỏ quá",
+                    64+chữ 30 = "to quá" → chốt ở GIỮA: icon 56 + chữ 21. ĐỪNG đẩy lại 2 cực. */}
+                <Icon name={icon} size={56} color="var(--color-brand)" />
+                {/* Chữ = --fs-md-lg 21 = ĐÚNG cỡ chữ NÚT của app (mấy ô này vốn là button) → cân
+                    với icon 56 mà vẫn to hơn hẳn bản 17 cũ. Nhãn dài xuống 2 dòng → KHÔNG
+                    whiteSpace:nowrap; lineHeight 1.15 để 2 dòng vẫn gọn. */}
+                <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', textAlign: 'center', lineHeight: 1.15, maxWidth: '100%' }}>
                   {t(label)}
                 </span>
               </button>
