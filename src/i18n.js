@@ -256,7 +256,11 @@ const DICTS = { en: EN, zh: ZH }
 //   2. Có bản dịch Circle trong circleLocalizations.js (CIRCLE_LOCALIZATIONS + SECURITY_QUESTIONS
 //      + SECURITY_CONFIRM_ITEMS), không thì màn PIN sẽ rơi về English trong khi app đã dịch.
 // 'zh' đang ở 35% từ điển + KHÔNG có bản Circle → chưa đủ điều kiện, giữ ngoài danh sách.
-export const READY_LANGS = ['vi', 'en']
+//
+// ⛔ 'vi' TẮT 2026-08-12 (user chốt): cả 2 máy chạy English/USD, để tiếng Việt + VND mở gây lẫn
+// đơn vị tiền. Từ điển VN vẫn còn nguyên (key gốc là tiếng Việt) — bật lại chỉ cần thêm 'vi' vào
+// mảng này. Máy nào đã lỡ lưu ez_lang='vi' sẽ tự rơi về 'en' ở detect() bên dưới.
+export const READY_LANGS = ['en']
 
 // ⚠️ MẶC ĐỊNH LÀ ENGLISH (user chốt 08-04, lúc merge nhánh đa ngôn ngữ vào `main`).
 // KHÔNG tự đoán theo `navigator.language` nữa — máy cài tiếng Việt vẫn mở ra tiếng Anh.

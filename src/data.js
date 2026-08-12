@@ -82,7 +82,9 @@ export function fmtMoney(amount, currency) {
 // USDC/EURC = stablecoin có thật trong ví. VND = tiền pháp định, CHỈ để hiển thị/nhập cho dễ hình
 // dung — thứ THỰC SỰ chạy trên chain vẫn là USDC (xem SendAmount/SendConfirm). CNY còn khoá vì
 // chưa wire tỷ giá (mở: thêm 'CNY' vào đây + 1 dòng CURRENCY_CFG + tỷ giá ở chain.js fetchPrices).
-const SUPPORTED_CURRENCIES = ['USDC', 'EURC', 'VND']
+// ⛔ VND TẮT 2026-08-12 (user chốt) — bỏ khỏi danh sách này thì máy nào ĐÃ LỠ lưu
+// ez_currency='VND' cũng tự rơi về USDC, không cần user vào xoá tay.
+const SUPPORTED_CURRENCIES = ['USDC', 'EURC']
 export function getDisplayCurrency() {
   const c = localStorage.getItem('ez_currency')
   return SUPPORTED_CURRENCIES.includes(c) ? c : 'USDC'

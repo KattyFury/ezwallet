@@ -6,11 +6,15 @@ import { isOwnAddress } from '../data'
 
 function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
 
+// QR không ghi tiền tệ (địa chỉ 0x trần, hoặc link ezwallet thiếu &cur) → mặc định USD.
+// ⚠️ TRƯỚC ĐÂY để 'VND' làm mặc định: hồi đó VND chưa nằm trong CURRENCIES của SendAmount nên nó
+// bị coi là "không rõ" và rơi về USD. Từ lúc mở VND (08-04) chuỗi 'VND' thành hợp lệ → quét QR
+// địa chỉ trần là màn nhập tiền mở ra VND dù app đang English/USD. Mặc định PHẢI là 'USD'.
 function parseQR(text) {
   const raw = text.trim()
-  if (isValid(raw)) return { address: raw, amount: null, currency: 'VND' }
+  if (isValid(raw)) return { address: raw, amount: null, currency: 'USD' }
   const m = raw.match(/ezwallet:(0x[0-9a-fA-F]{40})(?:\?amount=([\d.]+))?(?:&cur=(\w+))?/)
-  if (m) return { address: m[1], amount: m[2] ? parseFloat(m[2]) : null, currency: m[3] || 'VND' }
+  if (m) return { address: m[1], amount: m[2] ? parseFloat(m[2]) : null, currency: m[3] || 'USD' }
   return null
 }
 

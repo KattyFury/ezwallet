@@ -97,7 +97,8 @@ hay đang bắt họ thích nghi với crypto?". Lệch khỏi đây thì dừng
 - **Màn Gửi nhập theo "USD"** (nhãn thân thiện) = gửi USDC 1:1; chọn token thật qua chip.
 - **Format tiền MỘT CHUỖI MỘT STYLE:** `fmtMoney()` → `$2` / `€2` / `2 USDC`. CẤM tách số đậm + ký hiệu thường.
 - **Chừa phí:** `GAS_RESERVE_USDC = 1` – khả dụng USDC luôn trừ 1 (gas Arc trả bằng USDC).
-- **App KHOÁ English:** `i18n.js` `LANG='en'` cứng (Circle SDK chỉ English). Màn Language hiện VI/中文 + CNY/VND nhưng disabled. Hạ tầng i18n giữ nguyên – mở lại = cho `LANG` đọc localStorage + bỏ `locked`.
+- **App CHỈ English + USD/EUR (chốt lại 08-12):** `READY_LANGS = ['en']` trong `i18n.js`, `SUPPORTED_CURRENCIES = ['USDC','EURC']` trong `data.js`. Màn Language vẫn hiện VI/中文 + CNY/VND nhưng **disabled** (cờ `locked` của ngôn ngữ lấy tự động từ `READY_LANGS`). Từ điển VN + toàn bộ tỷ giá/format VND **giữ nguyên trong code**, chưa xoá – bật lại = thêm `'vi'` vào `READY_LANGS`, thêm `'VND'` vào `SUPPORTED_CURRENCIES` + `CURRENCIES` (`SendAmount.jsx`) + bỏ `locked` ở `Language.jsx`. Máy đã lỡ lưu `ez_lang='vi'` / `ez_currency='VND'` tự rơi về `en`/`USDC` (cả 2 hàm đọc đều lọc theo danh sách).
+  - **Lý do tắt (bug thật):** `QRScanner.parseQR()` mặc định `currency: 'VND'` cho QR không ghi tiền tệ (địa chỉ `0x` trần / link thiếu `&cur`). Hồi VND còn khoá thì `SendAmount` coi `'VND'` là "không rõ" → rơi về USD, nên vô hại. Mở VND ngày 08-04 làm chuỗi đó thành hợp lệ → **quét QR trên app English/USD lại mở màn nhập tiền bằng VND**. Đã sửa mặc định thành `'USD'`.
 
 ---
 

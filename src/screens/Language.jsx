@@ -21,9 +21,10 @@ const currencyList = () => [
   { code: 'USDC', short: 'USD', label: `USD – ${t('Đô la Mỹ')}`, locked: false },
   { code: 'EURC', short: 'EUR', label: `EUR – ${t('Euro')}`, locked: false },
   { code: 'CNY',  short: 'CNY', label: `CNY – ${t('Nhân dân tệ')}`, locked: true },
-  // ✅ MỞ 08-04: VND đã wire đủ (tỷ giá CoinGecko ở chain.js, cách viết số ở data.js
-  // CURRENCY_CFG, gõ VND khi gửi ở SendAmount). CNY còn khoá vì chưa làm 3 thứ đó.
-  { code: 'VND',  short: 'VND', label: `VND – ${t('Việt Nam Đồng')}`, locked: false },
+  // ⛔ KHOÁ LẠI 08-12 (user chốt): mở 08-04 nhưng gây lỗi — app English/USD mà quét QR ra VND
+  // (QRScanner mặc định 'VND' cho QR không ghi tiền tệ). Bật lại: bỏ locked ở đây + thêm 'VND'
+  // vào SUPPORTED_CURRENCIES (data.js) và CURRENCIES (SendAmount.jsx). Phần tỷ giá/format còn nguyên.
+  { code: 'VND',  short: 'VND', label: `VND – ${t('Việt Nam Đồng')}`, locked: true },
 ]
 const CUR_SHORT = { USDC: 'USD', EURC: 'EUR', CNY: 'CNY', VND: 'VND' }
 

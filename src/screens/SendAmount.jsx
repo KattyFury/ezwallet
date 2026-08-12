@@ -16,10 +16,12 @@ function shortenAddr(addr) {
 }
 
 // USD = nhãn thân thiện, gửi = USDC (1:1). USDC/EURC/cirBTC gửi đúng token đó.
-// VND = TIỀN PHÁP ĐỊNH, không có trên chain → gõ bằng VND nhưng thứ rời ví là USDC (user chốt
-// 2026-08-04: "gõ thẳng VND, app tự quy ra USDC"). Người Việt nghĩ bằng tiền Việt thì cho họ gõ
-// tiền Việt — đúng core value "crypto thích nghi với người, không bắt người thích nghi crypto".
-const CURRENCIES = ['USD', 'VND', 'USDC', 'EURC', 'cirBTC']
+// ⛔ VND TẮT 2026-08-12 (user chốt): app đang chạy English/USD mà quét QR lại ra VND → bỏ 'VND'
+// khỏi danh sách này để nó KHÔNG chọn được và KHÔNG nhận được từ QR (params.currency='VND' sẽ
+// rơi về USD ở dòng dưới). Phần tính toán VND bên dưới (isVnd/vndRate/gợi ý số) GIỮ NGUYÊN, chưa
+// xoá — bật lại chỉ cần thêm 'VND' vào mảng này + bỏ locked ở Language.jsx + data.js.
+// Lý do cũ (user chốt 08-04): "gõ thẳng VND, app tự quy ra USDC" cho người Việt.
+const CURRENCIES = ['USD', 'USDC', 'EURC', 'cirBTC']
 const effectiveToken = c => (c === 'USD' || c === 'VND' ? 'USDC' : c)
 
 export default function SendAmount() {
