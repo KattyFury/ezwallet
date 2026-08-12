@@ -8,7 +8,6 @@
 
 [![Live demo](https://img.shields.io/badge/live%20demo-ezwallet.cash-0B53BF?style=flat-square)](https://ezwallet.cash)
 [![Network](https://img.shields.io/badge/network-Arc%20Testnet-16A34A?style=flat-square)](https://testnet.arcscan.app)
-[![Pitch deck](https://img.shields.io/badge/pitch%20deck-slides-F59E0B?style=flat-square)](https://docs.google.com/presentation/d/1-MuqJeSV1Riwg3Bx6IXZSuNumqbtM83dmzG48-vIRDQ/edit?usp=sharing)
 [![License](https://img.shields.io/badge/license-MIT-black?style=flat-square)](./LICENSE)
 
 </div>
@@ -57,48 +56,43 @@
 
 ## Core belief
 
-> EZwallet was built on a simple belief: everyone should be able to own their
-> own money, without needing to become a crypto expert.
->
-> Self-custody shouldn't mean memorizing seed phrases, copying long wallet
-> addresses, or worrying about gas tokens. Those are technical barriers, not
-> the value of crypto.
->
-> We believe people shouldn't have to adapt to crypto. Crypto should adapt to
-> people, making it simple enough for anyone to use while preserving full
-> ownership of their money.
+> Crypto could be the future of money. Everyone should be able to own and use it.
+
+Crypto is borderless, always-on, and cheap – but it wasn't built for people,
+it was built for developers, and it solves problems most people don't have.
+What people actually need is to send, receive, and hold money, simply. So
+**crypto should adapt to people, not the other way around** – and as
+software, then AI, takes over moving our money, **people should keep control
+of it.**
 
 Every product decision in this repo traces back to this belief.
 
 ## The problem
 
-Most crypto wallets are built for people who already understand crypto. Seed
-phrases, gas tokens, hex addresses, network switching – every one of those is a
-wall for a first-time user, and an outright dealbreaker for someone older who
-just wants to send money to their family.
+Most crypto wallets assume the user already understands crypto – seed
+phrases, gas tokens, hex addresses. Each one is a wall for a first-time user,
+and a dealbreaker for someone older who just wants to send money to family.
 
 ## The approach
 
 EZwallet removes the crypto vocabulary from the surface:
 
-- **No seed phrase.** Sign in with an email and a PIN.
-- **No separate gas token.** Arc uses USDC as its native gas currency, so a user
-  never has to buy a second coin just to move the first one.
-- **Big type, few choices per screen.** Every screen is laid out on a fixed
-  10-row grid with large text and one primary action, aimed at users with
-  weaker eyesight and low tolerance for clutter.
+- **No seed phrase.** Email + PIN to sign in.
+- **No gas token.** Arc uses USDC as gas, so one token does everything.
+- **Big type, one action per screen.** Built for weaker eyesight and low
+  tolerance for clutter.
 
 ## Features
 
 | | |
 |---|---|
-| 🔑 **Email + PIN login** | No seed phrase to write down or lose. Keys are held in Circle's MPC infrastructure; the PIN authorises every signature. |
-| 💸 **Send with a note** | Attach a short message to a transfer, so the receiver knows what the money is for. |
-| 📷 **Receive by QR** | Show a QR to get paid. Optionally set an exact amount, name it, and keep it in a QR library for reuse. |
-| 🔄 **Swap with a % slider** | Choose how much of your balance to convert by dragging a slider instead of typing decimals. Round-number shortcuts are offered as chips. |
-| 👥 **Contacts** | Save addresses under a name (with an avatar) so you never paste a raw `0x…` twice. |
-| 🧾 **History + receipts** | Full transaction history with per-transaction detail and a saveable receipt image. |
-| 🌐 **Multi-currency display** | Show balances in USDC, EURC or Vietnamese dong; with VND you can also type the amount you want to send and the app converts it to USDC. The underlying token is always labelled honestly. |
+| 🔑 **Email + PIN login** | No seed phrase. Circle MPC holds the keys; the PIN signs every transaction. |
+| 💸 **Send with a note** | Attach a message to a transfer. |
+| 📷 **Receive by QR** | Show a QR to get paid, with an optional amount and a reusable QR library. |
+| 🔄 **Swap with a % slider** | Drag to convert a % of your balance – no typing decimals. |
+| 👥 **Contacts** | Save addresses under a name and avatar. |
+| 🧾 **History + receipts** | Full transaction history with saveable receipts. |
+| 🌐 **Multi-currency display** | Show balances in USDC, EURC, or VND. |
 
 ## Tech stack
 
@@ -176,31 +170,22 @@ npm test        # unit tests (node:test)
 
 ## Current limitations
 
-Being upfront about what this is not, yet:
-
-- **Testnet only.** Runs on Arc Testnet; balances have no real-world value.
-- **No mainnet deployment.**
-- **English by default.** Vietnamese is fully translated – including Circle's PIN
-  and security-question screens – and selectable under Language & Currency, but the
-  app does not auto-switch on it. A few strings inside Circle's iframe stay English
-  regardless: runtime error messages have no localization field in the SDK, and
-  `common.showPin` is currently ignored (reported to Circle).
-- **Google sign-in is not supported.** Email + PIN only.
-- **QR scanning is limited to crypto wallet QR codes.** Real-world QR codes
-  (product barcodes, bank QRs, etc.) are not handled.
-- **Not audited.** See [SECURITY.md](./SECURITY.md) for the custody model, the known
-  limitations, and how to report a vulnerability privately.
+- **Testnet only.** Balances have no real-world value; no mainnet yet.
+- **English by default.** Vietnamese is translated and selectable, but the
+  app doesn't auto-switch on it; a few strings inside Circle's iframe stay
+  English regardless.
+- **No Google sign-in.** Email + PIN only.
+- **QR scanning is crypto-wallet QR only** – not bank or product QR codes.
+- **Not audited.** See [SECURITY.md](./SECURITY.md).
 
 ## How this was built
 
-EZwallet was built end to end in collaboration with AI – mostly Claude – by
-someone with no professional programming background. The product decisions, the
-UX rules and the design direction are human; the implementation was written
-through conversation, then verified by actually running the flows and reading
-the results.
+Built end to end with AI (mostly Claude) by someone with no programming
+background. Product decisions, UX, and design are human; the implementation
+came out of conversation and was verified by running every flow.
 
-If you're in the same boat: it's doable. Be specific about what you want, insist
-on seeing it actually work, and don't accept "it should work" as an answer.
+If you're in the same boat: be specific about what you want, and don't accept
+"it should work" as an answer.
 
 ## License
 

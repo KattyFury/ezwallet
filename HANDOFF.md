@@ -1,6 +1,6 @@
 # HANDOFF – EZwallet
 
-**Cập nhật:** 2026-08-05 · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
+**Cập nhật:** 2026-08-12 · **Local:** `D:\Files\Claude\build_on_arc\ezwallet`
 
 ### 🔗 4 LINK CHÍNH THỨC — dùng bộ này khi giới thiệu dự án (user chốt 08-04)
 | | |
@@ -19,14 +19,14 @@
   - **User + Claude** → tinh chỉnh **UX/UI bản tiếng Anh**. Đây là việc đang làm dở khi phiên kết thúc, chưa bắt đầu sửa gì.
 - **Việc còn treo cần bấm tay:** gửi tin nhắn cho Circle support (4 câu hỏi đã soạn xong trong lịch sử chat, chưa gửi) · CI workflow cần `gh auth refresh -h github.com -s workflow`.
 
-> ⚠️ **`PITCH.md` và `DECK-DESIGN-SPEC.md` trong repo ĐÃ LỖI THỜI** (user xác nhận 08-04) — bài giới thiệu và slide thật giờ nằm ở **video YouTube + deck Canva** phía trên, không phải 2 file .md đó. **Đừng dùng chúng làm nguồn khi viết nội dung giới thiệu, và đừng tốn công cập nhật chúng** cho tới khi user quyết định giữ lại hay bỏ. Vẫn để trong repo (không xoá) vì còn chứa vài chốt về Brand Voice.
+> ⚠️ **`PITCH.md` và `DECK-DESIGN-SPEC.md` ĐÃ LỖI THỜI và ĐÃ GITIGNORE (user chốt 08-12)** — bài giới thiệu và slide thật giờ nằm ở **video YouTube + deck Canva** phía trên, không phải 2 file .md đó. 2 file này chỉ còn tồn tại **local**, không còn public trên GitHub nữa (repo giờ chỉ giữ nội dung kỹ thuật). **Đừng dùng chúng làm nguồn khi viết nội dung giới thiệu, và đừng tốn công cập nhật chúng.**
 
 > **Ví stablecoin cho người dùng phổ thông / người già.** UX đơn giản, mobile-first. **Đã chạm mốc user hài lòng (07-18): toàn bộ luồng – login, PIN, gửi, swap tiền thật – user tự test trên deploy, chạy mượt.**
 > ĐẦU MỖI PHIÊN đọc CẢ `HANDOFF.md` (file này) + `CLAUDE.md` (cách làm việc với user).
 > Nguyên tắc: **chạy tech chuẩn Circle/Arc, đọc docs + verify bằng API/eth_call thật trước khi làm, KHÔNG đoán.**
 > Lịch sử chi tiết từng phiên: `git log` (mô tả commit ghi đủ) – file này chỉ giữ TRẠNG THÁI CUỐI + luật + bài học.
 
-**Tài liệu ĐỐI NGOẠI (đừng nhét nội dung marketing vào file này):** `README.md` = giới thiệu kỹ thuật EN cho GitHub · **`PITCH.md` (07-29) = spec dự án + BỘ SHILL** (một dòng chốt, fact sheet "chỉ được nói gì", 5 điểm khác biệt, guardrails 6 câu cấm, copy sẵn cho X/LinkedIn/tiếng Việt, FAQ khó, lịch phát) · `DECK-DESIGN-SPEC.md` = hệ thiết kế deck 9 trang. ⚠️ Đổi tính năng/trạng thái sản phẩm → **sửa mục 2 và 6 của `PITCH.md`** kẻo copy đăng ra ngoài bị sai sự thật.
+**Tài liệu ĐỐI NGOẠI (đừng nhét nội dung marketing vào file này):** `README.md` = giới thiệu kỹ thuật EN cho GitHub (repo public, giữ NGẮN GỌN – 08-12 user yêu cầu rút gọn vì "chữ nhiều quá không dám đọc"). `PITCH.md` và `DECK-DESIGN-SPEC.md` giờ chỉ local, đã gitignore (xem cảnh báo phía trên) – không còn là tài liệu đối ngoại nữa.
 
 Tài nguyên AI: Circle [skills](https://developers.circle.com/ai/skills) · [mcp](https://developers.circle.com/ai/mcp) – Arc [skills](https://docs.arc.io/ai/skills) · [mcp](https://docs.arc.io/ai/mcp). Local đã có: Circle Skill (`circle:*`), Circle MCP (`mcp__circle__*`), Arc MCP (`mcp__arc-docs__*`).
 
