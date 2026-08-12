@@ -29,20 +29,23 @@ export function shouldShowAddToHome() {
   return IS_IOS || IS_ANDROID
 }
 
-// Ký hiệu mô phỏng đúng nút trên máy, để cạnh chữ cho người già dò theo.
+// Ký hiệu mô phỏng đúng nút trên máy, để cạnh chữ cho người già dò theo. Dùng CÙNG MỘT BỘ NÉT ĐẬM
+// (user chốt 08-12) — mũi tên là `⬆︎` = U+2B06 + U+FE0E. Cái đuôi `FE0E` BẮT BUỘC phải có: thiếu
+// nó iOS vẽ mũi tên thành EMOJI XANH, lạc hẳn khỏi bộ đen. (Bản đầu dùng U+1F845 — nét đậm đúng
+// nhưng nằm ở bảng Unicode hiếm, iOS dễ vẽ thành ô vuông trống.) Dấu ✔︎ cũng có FE0E cùng lý do.
 const IOS_STEPS = [
   ['Mở website bằng Safari', ''],
   ['Nhấn nút Option', '•••'],
-  ['Nhấn nút Share', '🡅'],
+  ['Nhấn nút Share', '⬆︎'],
   ['Chọn Add to Home Screen', '✚'],
   ['Nhấn Add', '✔︎'],
 ]
 
 const ANDROID_STEPS = [
   ['Mở website bằng Chrome', ''],
-  ['Nhấn nút Menu', '⋮'],
-  ['Chọn Add to Home screen', '✚'],
-  ['Nhấn Install', '✔︎'],
+  ['Nhấn nút Menu ở góc trên bên phải', '⋮'],
+  ['Chọn Add to Home screen hoặc Install app', '✚'],
+  ['Nhấn Add / Install', '✔︎'],
 ]
 
 export default function AddToHome({ onDone }) {

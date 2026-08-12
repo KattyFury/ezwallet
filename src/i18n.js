@@ -11,9 +11,9 @@ const EN = {
   'Chọn Add to Home Screen': 'Choose Add to Home Screen',
   'Nhấn Add': 'Tap Add',
   'Mở website bằng Chrome': 'Open this website in Chrome',
-  'Nhấn nút Menu': 'Tap the Menu button',
-  'Chọn Add to Home screen': 'Choose Add to Home screen',
-  'Nhấn Install': 'Tap Install',
+  'Nhấn nút Menu ở góc trên bên phải': 'Tap the Menu button in the top right',
+  'Chọn Add to Home screen hoặc Install app': 'Choose Add to Home screen or Install app',
+  'Nhấn Add / Install': 'Tap Add / Install',
   'Bỏ qua': 'Skip',
   // Login / EnterEmail
   // MỘT chuỗi liền, KHÔNG tách 2 key + <br /> như trước: ép ngắt dòng cứng thì câu dài/ngắn theo
