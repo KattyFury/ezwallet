@@ -7,7 +7,7 @@ import { useNav } from '../nav'
 import { t } from '../i18n'
 
 const ITEMS = [
-  { id: 'ServiceHub', icon: 'hub',   label: 'Service Hub', disabled: true },   // nơi gom dịch vụ (của mình + thêm từ người khác) — chưa có nội dung, chưa bấm được
+  { id: 'ServiceHub', icon: 'hub',   label: 'Service Hub' },   // ✅ MỞ 08-12: màn ServiceHub đã có thật (Swap · Heo đất · DCA). Cũng vào được từ tab 1 navbar.
   { id: 'TxHistory',  icon: 'clock', label: 'Lịch sử giao dịch' },
   { id: 'Security',   icon: 'shield', label: 'Bảo mật' },
   { id: 'Language',   icon: 'globe', label: 'Language & Currency' },   // tách lại khỏi Security (08-04, user chốt)
@@ -49,7 +49,7 @@ export default function MenuScreen() {
         </button>
       </div>
 
-      {/* Rows 4-8: menu items (5 mục). Mục disabled (Service Hub) làm mờ + không bấm được. */}
+      {/* Rows 4-8: menu items (5 mục). Mục nào có `disabled` thì làm mờ + không bấm được. */}
       {ITEMS.map(({ id, icon, label, disabled }, i) => (
         <div key={id} className={`row-${i + 4}`} style={{ display: 'flex', alignItems: 'center' }}>
           <button className="menu-item" style={{ width: '100%', opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}

@@ -2,11 +2,14 @@ import { useNav } from '../nav'
 import Icon from './Icon'
 import { t } from '../i18n'
 
+// Tab 1 = SERVICE HUB (08-12), thay tab Swap cũ: Swap giờ là 1 trong nhiều dịch vụ (Swap ·
+// Piggy Bank · DCA) nên navbar trỏ vào TRANG CHỦ dịch vụ, không trỏ thẳng 1 dịch vụ nữa.
+// → Màn Swap KHÔNG còn tab riêng ⇒ hàng 10 của nó là nút Exit (về ServiceHub), không phải NavBar.
 const TABS = [
-  { id: 'Swap',        label: 'Đổi tiền', icon: 'trade' },
-  { id: 'HomeSend',    label: 'Gửi',      icon: 'up' },
-  { id: 'HomeReceive', label: 'Nhận',     icon: 'down' },
-  { id: 'MenuScreen',  label: 'Menu',     icon: 'menu' },
+  { id: 'ServiceHub',  label: 'Dịch vụ', icon: 'hub' },
+  { id: 'HomeSend',    label: 'Gửi',     icon: 'up' },
+  { id: 'HomeReceive', label: 'Nhận',    icon: 'down' },
+  { id: 'MenuScreen',  label: 'Menu',    icon: 'menu' },
 ]
 
 export default function NavBar({ active }) {

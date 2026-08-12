@@ -27,9 +27,18 @@ const EN = {
   'Kho QR': 'QR Storage',
   'Bấm để copy địa chỉ ví của bạn': 'Tap to copy your wallet address',
   // NavBar
+  'Dịch vụ': 'Services',
   'Gửi': 'Send',
   'Nhận': 'Receive',
   'Menu': 'Menu',
+  // ServiceHub — 'Service Hub' là TÊN RIÊNG, giữ nguyên tiếng Anh ở mọi ngôn ngữ (MenuScreen đã
+  // để vậy từ trước). Vẫn PHẢI khai key: `npm run check-lang` quét mọi chuỗi t() và tính là thiếu
+  // nếu không có dòng này, dù t() vốn tự trả lại chuỗi gốc.
+  // 'Đổi tiền' → 'Swap' đã có ở khối HomeSend bên trên, đừng khai lại.
+  'Service Hub': 'Service Hub',
+  'Heo đất': 'Piggy Bank',
+  'Đầu tư định kỳ': 'Dollar-Cost Averaging',   // ⚠️ "Averaging" (danh động từ = tên chiến lược DCA), KHÔNG phải "Average"
+  'Thoát': 'Exit',
   // SendAmount / SendConfirm / SendReceipt
   'Gửi tiền': 'Send money',
   'Gửi cho:': 'Send to:',

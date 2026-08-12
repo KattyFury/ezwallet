@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import NavBar from '../components/NavBar'
+import { useNav } from '../nav'
 import Icon from '../components/Icon'
 import PctSlider from '../components/PctSlider'
 import Numpad from '../components/Numpad'
@@ -63,6 +63,7 @@ function TokenPicker({ current, onSelect, onClose }) {
 }
 
 export default function Swap() {
+  const { navigate } = useNav()                  // nút Exit hàng 10 → về Service Hub
   const [fromSym, setFromSym] = useState('EURC') // mặc định: cứu cánh "hết USDC" → đổi token khác VỀ USDC
   const [toSym, setToSym] = useState('USDC')
   const [pct, setPct] = useState(0)              // % SỐ DƯ đang chọn (0-100) — nguồn sự thật duy nhất của số tiền
@@ -496,7 +497,20 @@ export default function Swap() {
         </div>
       </div>
 
-      <NavBar active="Swap" />
+      {/* HÀNG 10 = NÚT EXIT, KHÔNG phải NavBar (08-12): Swap giờ mở TỪ Service Hub nên nó không
+          còn tab riêng — phải có đường ra rõ ràng, không để user kẹt trong màn. ĐỎ (user chốt):
+          nút Swap hàng 9 đã là gradient xanh, để Exit xanh nữa là 2 nút nhìn y hệt nhau nằm sát
+          nhau → dễ bấm nhầm. Đỏ + chữ "Exit" cỡ .btn (fs-md-lg 21) để người lớn tuổi thấy ngay.
+          ⚠️ ĐỪNG dùng .row10-single ở màn này: class đó là position:absolute neo tâm 90dvh = VỊ
+          TRÍ HÀNG 9 (nó dành cho màn mà hàng 9 còn trống — About/Language/Security). Hàng 9 của
+          Swap ĐANG CÓ nút "Swap" (tâm 84dvh, đáy 87dvh) → Exit dính sát vào, không còn khe (đã
+          chụp thấy 08-12). Đặt gridRow 10 = ĐÚNG băng 90-100dvh mà NavBar vừa nhả ra ⇒ tâm 95dvh,
+          cách nút Swap 5dvh. Bề ngang 3/4 màn = luật nút đứng đơn độc (copy từ .row10-single .btn,
+          neo vào MÀN chứ không phải % của cha đang thụt lề 20px). */}
+      <div className="row-10" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button className="btn btn-error" style={{ width: 'min(75vw, calc(var(--screen-max) * 0.75))' }}
+          onClick={() => navigate('ServiceHub')}>{t('Thoát')}</button>
+      </div>
     </div>
   )
 }

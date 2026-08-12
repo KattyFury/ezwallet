@@ -11,6 +11,7 @@ const Login       = lazy(() => import('./screens/Login'))
 const HomeSend    = lazy(() => import('./screens/HomeSend'))
 const HomeReceive = lazy(() => import('./screens/HomeReceive'))
 const Swap        = lazy(() => import('./screens/Swap'))
+const ServiceHub  = lazy(() => import('./screens/ServiceHub'))
 const MenuScreen  = lazy(() => import('./screens/MenuScreen'))
 const PasteAddress = lazy(() => import('./screens/PasteAddress'))
 const SendAmount  = lazy(() => import('./screens/SendAmount'))
@@ -30,7 +31,7 @@ const PinGate     = lazy(() => import('./screens/PinGate'))
 
 const SCREENS = {
   Login,
-  HomeSend, HomeReceive, Swap, MenuScreen,
+  HomeSend, HomeReceive, Swap, ServiceHub, MenuScreen,
   PasteAddress, SendAmount, SendConfirm, SendReceipt,
   EnterEmail, CreateQR, ShowQR, SavedQRList,
   Contacts, QRScanner,
@@ -88,7 +89,7 @@ export default function App() {
     const cancel = window.cancelIdleCallback ? window.cancelIdleCallback.bind(window) : clearTimeout
     const id = idle(() => {
       import('./screens/HomeSend'); import('./screens/HomeReceive')
-      import('./screens/Swap'); import('./screens/MenuScreen')
+      import('./screens/ServiceHub'); import('./screens/Swap'); import('./screens/MenuScreen')
       import('./screens/SendAmount'); import('./screens/Contacts'); import('./screens/TxHistory')
       if (import.meta.env.VITE_MOCK !== '1') import('@circle-fin/w3s-pw-web-sdk').catch(() => {})
     })
