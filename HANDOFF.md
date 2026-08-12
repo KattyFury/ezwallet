@@ -265,6 +265,31 @@ hay đang bắt họ thích nghi với crypto?". Lệch khỏi đây thì dừng
 
 ## 9. Việc tiếp theo
 
+### 🟡 NHÁNH `feature/add-to-home` – ĐANG LÀM DỞ (handoff 2026-08-13)
+
+> **Tạm dừng vì user quay sang sửa lỗi trên `main` trước.** Nhánh đã push đầy đủ, không mất gì.
+> Quay lại làm tiếp thì `git checkout feature/add-to-home`.
+
+**Preview:** https://feature-add-to-home.ezwallet.pages.dev · **Commit cuối:** `e28c039`
+
+**ĐÃ XONG (user đã test trên iPhone thật, xác nhận "nhìn ok các icon không bị lỗi"):**
+màn chào `src/screens/AddToHome.jsx` + nối vào `App.jsx` + 13 chuỗi dịch EN trong `i18n.js`.
+Chi tiết luật layout xem mục 6 (dòng "MÀN CHÀO Thêm vào màn hình chính").
+
+**VIỆC TIẾP THEO – user yêu cầu 08-13, CHƯA làm:**
+> *"1 2 3 4 5 là số trắng trong box tròn xanh, cho nó có điểm nhấn"*
+
+Tức là số thứ tự từng bước (đang là `1.` chữ xám trần, trong `AddToHome.jsx` chỗ `steps.map`)
+đổi thành **chữ TRẮNG nằm trong hình TRÒN nền XANH brand**. Lưu ý khi làm: giữ chữ hướng dẫn
+thẳng hàng nhau (dùng `align-items: flex-start` + hình tròn cỡ cố định), đừng để dòng 2 chữ
+bị lệch so với dòng 1 chữ; đo lại bằng script `C:\tmp\ezw-verify\a2hs.mjs` (đã có sẵn, chỉ cần
+đổi cổng preview) để chắc cụm chữ vẫn bắt đầu đúng 25dvh và không đè nút hàng 9.
+
+**⚠️ NHÁNH NÀY ĐANG CHẬM HƠN `main` 2 COMMIT** (`c80db30` tắt tiếng Việt + VND, `684940c` Service Hub).
+Nghĩa là: (1) preview của nhánh KHÔNG có Service Hub, đừng tưởng bị mất; (2) trước khi merge phải
+kéo `main` vào nhánh (`git merge main`) – **chỗ dễ đụng nhau là `src/i18n.js`**, cả 2 bên đều thêm
+chuỗi mới vào đầu object `EN` (nhánh này thêm khối AddToHome, main thêm khối ServiceHub).
+
 ### 🔴 CHỜ USER BẤM TAY – chốt phiên 2026-07-31 (đọc mục này TRƯỚC)
 
 > Code xong hết và đã push. Còn **2 việc chỉ làm được trên Cloudflare Dashboard** (Claude không đăng nhập được: `wrangler login` cần OAuth qua browser, và **wrangler v4 KHÔNG có lệnh gắn custom domain cho Pages** – đã kiểm tra `wrangler pages --help`, chỉ có project/deployment/deploy/secret/download).
