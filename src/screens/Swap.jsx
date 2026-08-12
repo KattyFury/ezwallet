@@ -501,15 +501,22 @@ export default function Swap() {
           còn tab riêng — phải có đường ra rõ ràng, không để user kẹt trong màn. ĐỎ (user chốt):
           nút Swap hàng 9 đã là gradient xanh, để Exit xanh nữa là 2 nút nhìn y hệt nhau nằm sát
           nhau → dễ bấm nhầm. Đỏ + chữ "Exit" cỡ .btn (fs-md-lg 21) để người lớn tuổi thấy ngay.
+          ⚠️ LÀ CHỮ, KHÔNG PHẢI NÚT PILL (user sửa 08-13): bản đầu làm .btn-error = khối gradient đỏ
+          to đùng, nhìn nặng và đá nhau với nút Swap gradient xanh ngay trên. Đúng ý: CHỮ "Exit" đỏ,
+          bold, canh giữa hàng 10 — cùng ngôn ngữ với nhãn chữ của NavBar mà nó vừa thay chỗ.
           ⚠️ ĐỪNG dùng .row10-single ở màn này: class đó là position:absolute neo tâm 90dvh = VỊ
           TRÍ HÀNG 9 (nó dành cho màn mà hàng 9 còn trống — About/Language/Security). Hàng 9 của
-          Swap ĐANG CÓ nút "Swap" (tâm 84dvh, đáy 87dvh) → Exit dính sát vào, không còn khe (đã
-          chụp thấy 08-12). Đặt gridRow 10 = ĐÚNG băng 90-100dvh mà NavBar vừa nhả ra ⇒ tâm 95dvh,
-          cách nút Swap 5dvh. Bề ngang 3/4 màn = luật nút đứng đơn độc (copy từ .row10-single .btn,
-          neo vào MÀN chứ không phải % của cha đang thụt lề 20px). */}
-      <div className="row-10" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <button className="btn btn-error" style={{ width: 'min(75vw, calc(var(--screen-max) * 0.75))' }}
-          onClick={() => navigate('ServiceHub')}>{t('Thoát')}</button>
+          Swap ĐANG CÓ nút "Swap" → dính sát vào nhau. gridRow 10 = ĐÚNG băng 90-100dvh NavBar vừa
+          nhả ra. Vùng chạm phủ CẢ HÀNG (không chỉ bề rộng chữ) cho người lớn tuổi dễ bấm. */}
+      <div className="row-10" style={{ display: 'flex' }}>
+        <button onClick={() => navigate('ServiceHub')}
+          style={{
+            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-bold)',
+            color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)',
+            WebkitTapHighlightColor: 'transparent',
+          }}>{t('Thoát')}</button>
       </div>
     </div>
   )

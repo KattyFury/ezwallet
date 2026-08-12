@@ -29,27 +29,40 @@ export default function ServiceHub() {
           nội dung to là banh cả cột (bài học 07-23c màn Kho QR).
           ⚠️ alignItems:'start' — mặc định grid là `stretch`, nó KÉO CAO ô theo hàng rồi
           aspectRatio 1 phình ngang theo => 2 cột lệch (đúng bug 07-23c). start = ô tự giữ vuông. */}
-      <div style={{ gridRow: '2 / 10', background: 'var(--color-surface)', borderRadius: 20, padding: 10, minWidth: 0 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, alignContent: 'start', alignItems: 'start' }}>
+      {/* marginBottom 2dvh = KHE trước NavBar (user báo 08-13: box xám ăn hết hàng 9 nên dính sát
+          navbar). 2dvh là đúng luật chừa đáy đang dùng ở mọi màn khác (action-grid HomeSend/
+          HomeReceive, khối nút màn Swap) — đừng chế số khác cho riêng màn này. */}
+      <div style={{ gridRow: '2 / 10', marginBottom: '2dvh', background: 'var(--color-surface)', borderRadius: 20, padding: 10, minWidth: 0 }}>
+        {/* gridAutoRows '1fr' = MỌI HÀNG CAO BẰNG NHAU, tự lấy theo ô cao nhất. Cần vì nhãn dài
+            ngắn khác nhau ở cỡ chữ 30: "Swap" 1 dòng · "Piggy Bank" 2 dòng · "Dollar-Cost
+            Averaging" 3 dòng → để mặc thì 3 ô cao 147/180/213, so le rất xấu (đo 08-13).
+            KHÔNG dùng alignItems:'start' nữa — phải để `stretch` mặc định thì ô mới giãn đầy hàng.
+            (Cặp aspectRatio + stretch mới là thứ gây bug phình ngang 07-23c; ở đây đã bỏ
+            aspectRatio nên stretch an toàn.) */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridAutoRows: '1fr', gap: 10, alignContent: 'start' }}>
           {SERVICES.map(({ id, icon, label, screen }) => {
             const soon = !screen   // chưa làm → mờ + không bấm được (chuẩn disabled của MenuScreen)
             return (
-              // Ô VUÔNG NỔI = y hệt ô QR trong Kho QR: trắng + viền xám 1.5 (luật "bấm được trong
-              // box xám") + drop shadow .25 như button. aspectRatio 1 → vuông theo bề ngang cột.
+              // Ô NỔI = y hệt ô QR trong Kho QR: trắng + viền xám 1.5 (luật "bấm được trong box
+              // xám") + drop shadow .25 như button.
+              // ⚠️ KHÔNG còn aspectRatio 1 (bản đầu 08-12): chữ lên cỡ tiêu đề 30px thì
+              // "Dollar-Cost Averaging" chiếm 2 dòng ≈ 70px, cộng icon 64 là vượt 160px bề ngang
+              // cột ⇒ ép vuông là tràn chữ ra ngoài ô. minHeight theo bề ngang cột (aspect-ratio
+              // của MIN chứ không phải của size) → ô nào chữ ngắn vẫn vuông, ô chữ dài tự cao thêm.
               <button key={id} disabled={soon} onClick={soon ? undefined : () => navigate(screen)}
                 style={{
-                  minWidth: 0, aspectRatio: '1', border: '1.5px solid var(--color-gray)', borderRadius: 16,
+                  minWidth: 0, border: '1.5px solid var(--color-gray)', borderRadius: 16,
                   background: 'var(--color-white)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
                   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  gap: 14, padding: 12, fontFamily: 'inherit',
+                  gap: 12, padding: '18px 10px', fontFamily: 'inherit',
                   opacity: soon ? 0.4 : 1, cursor: soon ? 'not-allowed' : 'pointer',
                 }}>
-                {/* Icon TO (48) — 3 icon này user vẽ ở khung 200×200 riêng cho cỡ lớn. Màu brand
+                {/* Icon TO 64 — 3 icon này user vẽ ở khung 200×200 riêng cho cỡ lớn. Màu brand
                     xanh = ngôn ngữ icon dẫn đầu của menu-item (user chốt 07-17e). */}
-                <Icon name={icon} size={48} color="var(--color-brand)" />
-                {/* Nhãn 2 dòng được ("Dollar-Cost Averaging" dài) → KHÔNG whiteSpace:nowrap,
-                    căn giữa + lineHeight chặt để 2 dòng vẫn gọn trong ô vuông. */}
-                <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', textAlign: 'center', lineHeight: 1.15, maxWidth: '100%' }}>
+                <Icon name={icon} size={64} color="var(--color-brand)" />
+                {/* Chữ = ĐÚNG CỠ TIÊU ĐỀ MÀN (--fs-title 30, user chốt 08-13 "to bằng header luôn").
+                    Nhãn dài xuống 2 dòng → KHÔNG whiteSpace:nowrap; lineHeight 1.1 để 2 dòng vẫn gọn. */}
+                <span style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', textAlign: 'center', lineHeight: 1.1, maxWidth: '100%' }}>
                   {t(label)}
                 </span>
               </button>
