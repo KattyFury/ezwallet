@@ -1,6 +1,20 @@
 // i18n đơn giản: key = chuỗi tiếng Việt gốc. lang='vi' → trả nguyên; lang khác → tra EN.
 // Đổi ngôn ngữ = reload (đọc lại LANG). Auto-detect theo trình duyệt nếu chưa chọn.
 const EN = {
+  // AddToHome (màn chào lần đầu — hướng dẫn thêm vào màn hình chính)
+  'Chào mừng đến với EZwallet.': 'Welcome to EZwallet.',
+  'Xin hãy thêm website vào màn hình chính iPhone để sử dụng thuận tiện hơn:': 'Please add this website to your iPhone home screen for easier access:',
+  'Xin hãy thêm website vào màn hình chính để sử dụng thuận tiện hơn:': 'Please add this website to your home screen for easier access:',
+  'Mở website bằng Safari': 'Open this website in Safari',
+  'Nhấn nút Option': 'Tap the Option button',
+  'Nhấn nút Share': 'Tap the Share button',
+  'Chọn Add to Home Screen': 'Choose Add to Home Screen',
+  'Nhấn Add': 'Tap Add',
+  'Mở website bằng Chrome': 'Open this website in Chrome',
+  'Nhấn nút Menu': 'Tap the Menu button',
+  'Chọn Add to Home screen': 'Choose Add to Home screen',
+  'Nhấn Install': 'Tap Install',
+  'Bỏ qua': 'Skip',
   // Login / EnterEmail
   // MỘT chuỗi liền, KHÔNG tách 2 key + <br /> như trước: ép ngắt dòng cứng thì câu dài/ngắn theo
   // ngôn ngữ + cỡ chữ đều xuống dòng sai chỗ. Để nguyên câu → CSS tự xuống dòng vừa bề ngang nút.

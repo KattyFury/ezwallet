@@ -1,6 +1,9 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { NavContext } from './nav'
 import ErrorBoundary from './components/ErrorBoundary'
+// IMPORT TĨNH (không lazy): màn này hiện TRƯỚC TIÊN, lazy sẽ chèn thêm 1 lượt tải mạng vào đúng
+// khoảnh khắc đầu app → chớp trắng. File nhỏ, và nó cũng cần chạy sớm để kịp bắt beforeinstallprompt.
+import AddToHome, { shouldShowAddToHome } from './screens/AddToHome'
 
 // NẠP LƯỜI TỪNG MÀN (2026-07-17) — user: "app cùi tại sao load lâu".
 // Trước: App.jsx import TĨNH cả 22 màn → Vite gộp HẾT vào 1 file 1.668 KB, trình duyệt phải tải +
@@ -42,6 +45,10 @@ const SCREENS = {
 }
 
 export default function App() {
+  // MÀN CHÀO "thêm vào màn hình chính" — chỉ khi mở bằng trình duyệt trên điện thoại và user
+  // chưa bấm Bỏ qua. Đã thêm vào màn hình chính → false ngay từ đầu, không ai thấy gì.
+  const [showA2HS, setShowA2HS] = useState(shouldShowAddToHome)
+
   const [nav, setNav] = useState(() => {
     // Còn session → qua CỔNG PIN (khoá mở ví) trước HomeSend, trừ khi phiên này đã mở khoá
     // (ez_pin_ok — set sau khi verify PIN, hoặc sau khi vừa TẠO PIN ở login lần đầu). Chưa có session → Login.
@@ -96,6 +103,10 @@ export default function App() {
   }, [])
 
   const Screen = SCREENS[nav.screen] || SCREENS['Login']
+
+  // Đặt SAU toàn bộ hook ở trên (mọi hook vẫn chạy đủ và đúng thứ tự ở mọi lần render) — các
+  // effect prefetch vẫn làm nóng cache trong lúc user đang đọc màn chào, nên vào app xong là mượt.
+  if (showA2HS) return <AddToHome onDone={() => setShowA2HS(false)} />
 
   return (
     <NavContext.Provider value={{ navigate, params: nav.params }}>
