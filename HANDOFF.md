@@ -289,7 +289,31 @@ ezwallet:0xABC…@5042002?amount=25&cur=USD    ← QR có sẵn số tiền
 
 ---
 
-## 7bb. Web Share trên iOS – ĐỪNG TRỘN `files` VỚI `text` (bug user báo 2026-08-13)
+## 7d. NÚT BÁO LỖI → TELEGRAM (2026-08-13) – ĐANG CHẠY THẬT
+
+Icon 🐛 **xám** (`--color-muted-2`) sát mép phải, canh giữa **hàng 1**, hiện ở **MỌI màn kể cả Login/PinGate** (lỗi hay xảy ra nhất là lúc chưa vào được app). Render 1 lần ở `App.jsx` trong khung neo `maxWidth: var(--screen-max)` → bám mép phải **của app**, không phải mép màn hình desktop.
+
+⚠️ **MÀU: đừng đổi sang xanh/đỏ** (user đã cân nhắc cả 3): xanh brand = màu "bấm cái này đi" → tranh chỗ với nội dung chính trên mọi màn; đỏ = màu lỗi/nguy hiểm → chấm đỏ cạnh số dư làm người lớn tuổi tưởng **tiền của họ** có vấn đề. Xám = "công cụ nằm đó, chưa dùng tới" (= icon navbar chưa chọn).
+
+**`functions/api/bug.js` — bot CHỈ LÀ TOKEN, KHÔNG chạy nền, KHÔNG cần VPS.** Nó không nghe, không poll, không webhook: mỗi lần bấm nút là 1 lệnh `fetch` tới `api.telegram.org` rồi kết thúc. (Khác hẳn bot TemBro trên VPS phải bật 24/7.)
+
+- ⚠️ **KHÔNG dùng `parse_mode`** — chữ user gõ tự do, bật Markdown/HTML là gãy tin nhắn (dấu `*_\`<>`) hoặc chèn được thẻ. Text thuần thì không phải escape gì.
+- ⚠️ **Whitelist đúng 5 field** (`message/screen/wallet/device/version`). Client **KHÔNG được gom localStorage** gửi lên. `ez_user_token` / `ez_encryption_key` / `ez_refresh_token` / `ez_sync_token` lọt ra là **MẤT VÍ**. Địa chỉ ví thì gửi (công khai, và không có nó thì không tra được giao dịch lỗi).
+- Chặn dội tin **5 lần/giờ/IP** qua KV `EZ_SYNC`. **Chưa có KV → BỎ QUA chặn chứ không chặn hết**: thà nhận spam còn hơn khoá nhầm người đang thật sự cần kêu cứu.
+- Telegram trả **200 kèm `ok:false`** khi sai chat_id / bot bị chặn ⇒ phải đọc `ok`, đừng tin mỗi HTTP status.
+- Chưa đặt biến → **503 `bug-report-disabled`**, app chạy bình thường (đúng lối `sync.js` khi chưa có KV binding).
+
+**Biến môi trường (ĐÃ ĐẶT trên Cloudflare Pages production, dạng encrypted):** `TELEGRAM_BOT_TOKEN` · `TELEGRAM_CHAT_ID`. Bot `@ezwallet_report_bot` ("EZwallet Bug Report"). Giá trị cũng nằm ở `.env.txt` local (gitignore) cho `dev-server.js` chạy được.
+⚠️ **Pages CHỈ áp biến mới cho deployment MỚI** — đặt biến xong phải tạo deployment mới (`POST …/pages/projects/ezwallet/deployments -F branch=main`), bản đang chạy sẽ **không** tự nhận.
+⚠️ Telegram **chặn bot nhắn cho ai chưa bấm Start với nó** — đổi người nhận thì người đó phải Start trước.
+
+**Phiên bản trong báo lỗi** = 7 ký tự commit, nhúng lúc build (`vite.config.js` → `__APP_VERSION__`): Cloudflare có sẵn `CF_PAGES_COMMIT_SHA`, local hỏi `git`, hỏng cả hai → `'dev'` (không để build chết).
+
+**Đã verify trên production:** POST thật → `{"ok":true}` + tin về Telegram. Tin rỗng → 400 `empty-message`. *(Chặn 5 lần/giờ mới chỉ đọc code, chưa bắn thử vì thử là spam Telegram user.)*
+
+---
+
+## 7bb. Web Share trên iOS – `files` + `text` làm RỤNG BỚT APP NHẬN (bug user báo 2026-08-13)
 
 **Triệu chứng:** bấm Share ở màn Nhận → bảng chia sẻ iOS **hiện ra bình thường** nhưng **MẤT Messages/Zalo** trong danh sách app nhận.
 
@@ -297,7 +321,17 @@ ezwallet:0xABC…@5042002?amount=25&cur=USD    ← QR có sẵn số tiền
 
 **Luật rút ra:** `navigator.share({ files, text })` làm iOS **lọc bớt app nhận**. Chỉ gửi `{ files }` thì Messages hiện lại.
 
-**Đã sửa:** màn Nhận **vẽ địa chỉ + nhãn `Arc Testnet` + logo THẲNG VÀO ẢNH PNG** rồi share **ảnh không kèm text** — người nhận vẫn có đủ QR lẫn địa chỉ, đúng thứ user muốn gửi qua tin nhắn. Cùng lối làm với ảnh biên lai (`SendReceipt.saveReceipt`). **ĐỪNG thêm `text` trở lại payload** — `saveImageToPhotos(canvas, filename)` vẫn còn tham số `text` cho tương lai nhưng hiện KHÔNG chỗ nào dùng.
+**⚠️ BẢN SỬA ĐẦU ĐÃ BỊ USER BÁC — đọc kỹ kẻo sửa vòng lại.** Bản đầu bỏ `text` và **vẽ địa chỉ lên ảnh**; user chê *"gắn địa chỉ vào QR xấu lắm"* và chốt: ***"miễn sao là cái đó share 2 thứ, not 1 thứ"***.
+
+**TRẠNG THÁI CUỐI (user chốt 08-13):**
+
+| Chỗ share | Gửi gì | Ghi chú |
+|---|---|---|
+| **Màn Nhận** | **ẢNH + TEXT địa chỉ ví** | ⚠️ Kèm text ⇒ iOS lọc bớt app nhận (Messages có thể rụng). **User BIẾT và CHẤP NHẬN.** ĐỪNG bỏ `text` đi để "sửa" lần nữa. |
+| **ShowQR / Kho QR** | **CHỈ ẢNH** | Ở đây thứ quan trọng là SỐ TIỀN trong QR; quét là ra địa chỉ, đính thêm vừa thừa vừa rụng app nhận. |
+| **Biên lai** | CHỈ ẢNH | không đổi |
+
+**Ảnh QR dùng chung `saveImage.brandedQrCanvas()`** — QR + chữ **"Only Arc Testnet"** + logo EZwallet. **KHÔNG vẽ địa chỉ lên ảnh.** Cả màn Nhận lẫn ShowQR đều đi qua hàm này, đừng vẽ tay ở màn nào.
 **Tiện thể xong luôn việc B đang treo ở mục 9:** ảnh chia sẻ giờ CÓ nhãn mạng. Màn hình thì vẫn chưa (user còn phải chọn chỗ đặt).
 
 ---
