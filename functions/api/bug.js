@@ -70,7 +70,14 @@ export async function onRequestPost(ctx) {
   const device = clip(body.device, 200) || '?';
   const version = clip(body.version, 40) || '?';
 
-  const when = new Date().toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+  // ⚠️ Locale 'en-GB' CHỨ KHÔNG PHẢI 'vi-VN': cả hai đều ra ngày/tháng/năm, nhưng vi-VN đặt GIỜ
+  // TRƯỚC NGÀY ("15:14:44 13/8/2026" — đọc rất ngược). en-GB cho "13/08/2026, 15:14" đúng thứ tự
+  // quen thuộc. Múi giờ vẫn ghim Việt Nam vì server Cloudflare chạy ở đâu cũng có thể.
+  const when = new Date().toLocaleString('en-GB', {
+    timeZone: 'Asia/Ho_Chi_Minh',
+    day: '2-digit', month: '2-digit', year: 'numeric',
+    hour: '2-digit', minute: '2-digit', hour12: false,
+  }).replace(',', '');
   const text = [
     '🐛 EZwallet bug report',
     '',

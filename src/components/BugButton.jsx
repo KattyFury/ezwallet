@@ -81,14 +81,15 @@ export default function BugButton({ screen }) {
         <div className="popup-overlay" onClick={close}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
             <div className="popup-title">{t('Báo lỗi')}</div>
-            {/* Nói TRƯỚC là gửi kèm gì — đừng để user phát hiện sau khi đã bấm gửi. */}
+            {/* MỘT dòng mời gõ, hết (user chốt 08-13: "report a bug mà yêu cầu lắm thế?").
+                Bản đầu liệt kê đầy đủ những thứ gửi kèm — đúng về minh bạch nhưng đọc như tờ điều
+                khoản, người ta ngại báo lỗi. Bỏ luôn placeholder trong ô nhập vì trùng ý với dòng này. */}
             <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', lineHeight: 1.35 }}>
-              {t('Gửi kèm: màn hình bạn đang mở, địa chỉ ví, loại máy. Không gửi mật khẩu hay khoá ví.')}
+              {t('Cho chúng tôi biết bị lỗi gì')}
             </span>
             <textarea
               className="address-input" autoFocus value={text} maxLength={1000}
               onChange={e => setText(e.target.value)}
-              placeholder={t('Lỗi gì vậy?')}
               style={{ fontSize: 'var(--fs-body)', minHeight: 96, resize: 'none', lineHeight: 1.35, fontFamily: 'inherit' }}
             />
             {state && state !== 'sending' && (
