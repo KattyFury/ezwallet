@@ -93,9 +93,20 @@ export const NOTIF_FS = 'var(--fs-item)'
 // Format (user chốt 07-21): mỗi dòng là 1 CÂU HOÀN CHỈNH, từ khoá đầu câu = medium + BẤM ĐƯỢC
 // (đi đúng nơi mà nút cùng tên ở hàng 9 dẫn tới). Câu dài → cho XUỐNG DÒNG
 // (không nowrap/ellipsis như thông báo thật, kẻo cắt mất nghĩa).
+// DÒNG ĐẦU = GIỚI HẠN MẠNG (user chốt 08-13). Đặt CỨNG ở đây, KHÔNG truyền prop từ 2 màn:
+// HomeSend và HomeReceive phải nói y hệt nhau, tách ra 2 chỗ là sớm muộn cũng lệch câu.
+// ⚠️ MÀU: dùng --color-error (#DC2626, đỏ) chứ KHÔNG dùng --color-warning (#F59E0B, vàng) —
+// vàng trên nền TRẮNG chỉ tương phản ~2.1:1, người lớn tuổi đọc không ra (đúng bài học đã ghi ở
+// mục 5 HANDOFF về chữ trắng trên vàng). Đỏ trên trắng ~4.8:1, vẫn là màu "quan trọng" của app.
 function HintBlock({ lines }) {
   return (
-    <div style={{ background: 'var(--color-white)', border: '1.5px solid var(--color-brand)', borderRadius: 12, padding: '8px 14px', display: 'flex', flexDirection: 'column', gap: 4, fontSize: NOTIF_FS, color: 'var(--color-brand)', textAlign: 'left' }}>
+    // padding/gap NÉN LẠI 08-13 (từ '8px 14px' + gap 4): thêm dòng cảnh báo là khối thành 4 dòng,
+    // đo được cao 122px trong khi vùng thông báo (hàng 7-8) chỉ 120px → mép trên bị mặt nạ mờ liếm
+    // vào chữ. Nén còn 6px/12px + gap 3 để 4 dòng nằm gọn. ĐỪNG nới lại nếu chưa bỏ bớt dòng.
+    <div style={{ background: 'var(--color-white)', border: '1.5px solid var(--color-brand)', borderRadius: 12, padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: 3, fontSize: NOTIF_FS, color: 'var(--color-brand)', textAlign: 'left' }}>
+      <div style={{ minWidth: 0, lineHeight: 1.35, color: 'var(--color-error)', fontWeight: 'var(--fw-semibold)' }}>
+        {t('Ví hiện chỉ hỗ trợ Arc Testnet')}
+      </div>
       {lines.map((h, i) => (
         <div key={i} style={{ minWidth: 0, lineHeight: 1.35 }}>
           <span

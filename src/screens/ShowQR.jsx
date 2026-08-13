@@ -1,6 +1,7 @@
 import { useRef, useEffect } from 'react'
 import { useNav } from '../nav'
 import { QRCodeCanvas } from 'qrcode.react'
+import Icon from '../components/Icon'
 import { fmtMoney } from '../data'
 import { saveImageToPhotos } from '../saveImage'
 import { t } from '../i18n'
@@ -51,16 +52,34 @@ export default function ShowQR() {
         <QRCodeCanvas value={qrValue} size={512} level="M" style={{ width: 'min(30dvh, 78vw)', height: 'min(30dvh, 78vw)' }} />
       </div>
 
-      {/* Hàng 5 trở xuống: số tiền TO (như số dư màn chính) + phụ đề cỡ vừa-to cho dễ đọc */}
+      {/* Hàng 5 trở xuống: số tiền TO (như số dư màn chính) · câu chú thích · CHỮ Share.
+          Câu chú thích nói rõ GIỚI HẠN (chỉ USDC trên Arc Testnet) — người gửi cầm QR này phải
+          biết ngay, đừng để họ gửi token/chuỗi khác rồi mất tiền. */}
       <div style={{ gridRow: '5 / 9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', gap: 10, paddingTop: 8 }}>
         <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-light)', lineHeight: 1, color: 'var(--color-content)' }}>{amountText}</span>
-        <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)' }}>{t('Cho người gửi quét mã này')}</span>
+        <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center', padding: '0 8px' }}>
+          {t('Cho người gửi quét mã này – hiện chỉ hỗ trợ USDC trên Arc Testnet')}
+        </span>
+        {/* Share = CHỮ XANH + icon, KHÔNG phải nút (user chốt 08-13): không viền, không nền,
+            không đổ bóng. Vẫn bấm được — dùng <button> trần cho đúng ngữ nghĩa + bấm bằng phím. */}
+        <button onClick={shareQR} style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 2,
+          background: 'none', border: 'none', padding: 6, cursor: 'pointer',
+          fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)',
+          color: 'var(--color-brand)', WebkitTextFillColor: 'var(--color-brand)', WebkitTapHighlightColor: 'transparent',
+        }}>
+          <Icon name="share" size="var(--is-md-lg)" color="var(--color-brand)" />
+          {t('Chia sẻ')}
+        </button>
       </div>
 
-      {/* Ranh giới hàng 9-10: [Chia sẻ] trắng (trái) · [Quay lại] xanh (phải) */}
+      {/* Hàng 10: [Back] trắng · [Done] xanh (user sửa 08-13 — trước là [Chia sẻ] trắng ·
+          [Quay lại] XANH, sai vai trò: nút xanh trong app LUÔN là hành động chính/kết thúc, mà
+          "Quay lại" thì không phải; còn Chia sẻ đã chuyển lên thành chữ ở trên).
+          Back = về đúng màn vừa tới từ đó (kho QR / màn Nhận). Done = xong hẳn, về màn Nhận. */}
       <div className="row10-dual">
-        <button className="btn btn-secondary" onClick={shareQR}>{t('Chia sẻ')}</button>
-        <button className="btn btn-primary" onClick={() => navigate(back)}>{t('Quay lại')}</button>
+        <button className="btn btn-secondary" onClick={() => navigate(back)}>{t('Quay lại')}</button>
+        <button className="btn btn-primary" onClick={() => navigate('HomeReceive')}>{t('Xong')}</button>
       </div>
     </div>
   )

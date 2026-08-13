@@ -95,7 +95,9 @@ const EN = {
   // CreateQR / ShowQR / SavedQRList
   'Tạo QR nhận tiền': 'Create receive QR',
   'Số tiền muốn nhận': 'Amount to receive',
-  'Cho người gửi quét mã này': 'Have the sender scan this code',
+  // Câu chú thích dưới QR — NÓI RÕ GIỚI HẠN ngay trên màn (user chốt 08-13): người cầm QR này đi
+  // gửi tiền phải biết chỉ USDC + chỉ Arc Testnet, đừng để họ gửi token/chuỗi khác rồi mất tiền.
+  'Cho người gửi quét mã này – hiện chỉ hỗ trợ USDC trên Arc Testnet': 'Have the sender scan this code – currently supports only USDC on Arc Testnet',
   // TxHistory
   'Lịch sử giao dịch': 'Transaction history',
   'Chưa có giao dịch nào': 'No transactions yet',
@@ -169,7 +171,13 @@ const EN = {
   'Lưu người bạn hay gửi tiền': 'Save people you send to often',
   'Lưu những QR bạn hay dùng': 'Save your favorite QR codes',
   'Tạo QR để nhận đúng số tiền': 'Create a QR to receive money',
-  'Chia sẻ địa chỉ ví của bạn': 'Share your wallet address',
+  'Chia sẻ QR + địa chỉ ví của bạn': 'Share your QR + wallet address',
+  // Dòng CẢNH BÁO đầu khối gợi ý, hiện ở CẢ màn Gửi lẫn màn Nhận (NotifArea.HintBlock).
+  // ⚠️ PHẢI VỪA ĐÚNG 1 DÒNG. Vùng thông báo chỉ cao 2 hàng (7-8) và đã có 3 dòng gợi ý — câu này
+  // tràn xuống dòng 2 là cả khối cao quá chỗ, dòng đầu bị mặt nạ mờ CẮT MẤT (đo 08-13: bản
+  // "This wallet currently supports Arc Testnet only" 46 ký tự → 2 dòng → mất chữ). Thêm/sửa câu
+  // này thì đo lại bề rộng thật, đừng ước lượng.
+  'Ví hiện chỉ hỗ trợ Arc Testnet': 'This wallet supports Arc Testnet only',
   'Giữ để xem số lượng token': 'Hold to show token amounts',
   // Swap
   'Bạn trả': 'You pay',

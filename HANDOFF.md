@@ -289,6 +289,19 @@ ezwallet:0xABC…@5042002?amount=25&cur=USD    ← QR có sẵn số tiền
 
 ---
 
+## 7bb. Web Share trên iOS – ĐỪNG TRỘN `files` VỚI `text` (bug user báo 2026-08-13)
+
+**Triệu chứng:** bấm Share ở màn Nhận → bảng chia sẻ iOS **hiện ra bình thường** nhưng **MẤT Messages/Zalo** trong danh sách app nhận.
+
+**Cách khoanh vùng (dùng lại được cho bug share sau này):** hỏi user 2 câu — *bảng có hiện không* (hiện ⇒ `navigator.share()` KHÔNG bị chặn, loại bỏ giả thuyết "gọi share ngoài cú chạm") và *2 nút share kia còn chạy không* (còn ⇒ lỗi nằm ở riêng chỗ này, không phải `saveImage.js`). Rồi `grep saveImageToPhotos(` → **màn Nhận là chỗ DUY NHẤT truyền tham số `text`**; ShowQR và SendReceipt chỉ gửi ảnh và vẫn chạy tốt. ⇒ thủ phạm là `text`.
+
+**Luật rút ra:** `navigator.share({ files, text })` làm iOS **lọc bớt app nhận**. Chỉ gửi `{ files }` thì Messages hiện lại.
+
+**Đã sửa:** màn Nhận **vẽ địa chỉ + nhãn `Arc Testnet` + logo THẲNG VÀO ẢNH PNG** rồi share **ảnh không kèm text** — người nhận vẫn có đủ QR lẫn địa chỉ, đúng thứ user muốn gửi qua tin nhắn. Cùng lối làm với ảnh biên lai (`SendReceipt.saveReceipt`). **ĐỪNG thêm `text` trở lại payload** — `saveImageToPhotos(canvas, filename)` vẫn còn tham số `text` cho tương lai nhưng hiện KHÔNG chỗ nào dùng.
+**Tiện thể xong luôn việc B đang treo ở mục 9:** ảnh chia sẻ giờ CÓ nhãn mạng. Màn hình thì vẫn chưa (user còn phải chọn chỗ đặt).
+
+---
+
 ## 7c. ÂM THANH báo thành công (user chốt 2026-08-13) — ⚠️ ĐANG LÀM DỞ
 
 **Trạng thái:** `src/sound.js` đã viết xong. **CHƯA nối vào màn nào, CHƯA có nút tắt, CHƯA test, CHƯA commit.** Việc còn lại ở mục 9.

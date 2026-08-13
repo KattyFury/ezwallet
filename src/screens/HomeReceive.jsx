@@ -10,6 +10,7 @@ import { getTokenBalances, cachedBalances } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import { t } from '../i18n'
 import { buildQR } from '../qr'
+import logoLong from '../../design/logo.svg'
 
 export default function HomeReceive() {
   const { navigate } = useNav()
@@ -33,14 +34,46 @@ export default function HomeReceive() {
     getTokenBalances(walletAddr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0))).catch(() => {})
   }, [walletAddr])
 
-  // Share = chia sẻ ẢNH QR (PNG) kèm text địa chỉ → sheet iOS có "Save Image" (lưu vào kho ảnh) +
-  // vẫn mang địa chỉ ví. (Muốn copy riêng địa chỉ thì bấm vào địa chỉ dưới QR — handleCopyAddr.)
+  // ⚠️ BUG USER BÁO 08-13: bấm Share thì bảng chia sẻ iOS hiện ra NHƯNG MẤT Messages/Zalo.
+  // Nguyên nhân (đã khoanh vùng bằng chính app): đây là chỗ DUY NHẤT gọi share kèm CẢ `files` LẪN
+  // `text`. Hai chỗ share còn lại (ShowQR, SendReceipt) chỉ gửi ẢNH và VẪN CHẠY BÌNH THƯỜNG trên
+  // máy user. iOS lọc bớt app nhận khi gói share trộn file + chữ ⇒ Messages rụng khỏi danh sách.
+  //
+  // CÁCH SỬA: chỉ gửi ẢNH (giống 2 màn đang chạy được), nhưng VẼ ĐỊA CHỈ THẲNG VÀO ẢNH để người
+  // nhận vẫn có đủ QR + địa chỉ — đúng thứ user muốn gửi qua tin nhắn. Cùng lối làm với ảnh biên
+  // lai (SendReceipt.saveReceipt).
+  // ⚠️ ĐỪNG thêm `text` trở lại vào payload share ở đây — đó chính là thứ làm mất Messages.
   async function handleShare() {
-    const canvas = qrRef.current?.querySelector('canvas')
-    if (canvas && navigator.canShare) { saveImageToPhotos(canvas, 'ezwallet-qr.png', walletAddr); return }
-    // Fallback (không hỗ trợ share ảnh): copy địa chỉ
-    await navigator.clipboard.writeText(walletAddr)
-    setCopied(true); setTimeout(() => setCopied(false), 2000)
+    const qrCanvas = qrRef.current?.querySelector('canvas')
+    if (!qrCanvas || !navigator.canShare) {
+      // Máy không hỗ trợ share ảnh → copy địa chỉ cho đỡ cụt
+      await navigator.clipboard.writeText(walletAddr)
+      setCopied(true); setTimeout(() => setCopied(false), 2000)
+      return
+    }
+    const W = 620, QR = 420, PAD = 50
+    const cv = document.createElement('canvas')
+    cv.width = W; cv.height = 700
+    const x = cv.getContext('2d')
+    x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, W, cv.height)
+    x.drawImage(qrCanvas, (W - QR) / 2, PAD, QR, QR)
+
+    x.textAlign = 'center'
+    // NHÃN MẠNG: ảnh này đi ra ngoài app, người nhận không có gì khác để biết đây là chuỗi nào.
+    x.fillStyle = '#0B53BF'; x.font = '600 26px sans-serif'
+    x.fillText('Arc Testnet', W / 2, PAD + QR + 46)
+    // ĐỊA CHỈ cắt 2 dòng: 42 ký tự 1 dòng ở cỡ đọc được là tràn khung 620px.
+    x.fillStyle = '#000000'; x.font = '500 25px monospace'
+    x.fillText(walletAddr.slice(0, 21), W / 2, PAD + QR + 92)
+    x.fillText(walletAddr.slice(21), W / 2, PAD + QR + 126)
+
+    const lw = 168, lh = lw * 380 / 1160   // tỉ lệ logo.svg (viewBox 1160×380), giống SendReceipt
+    const img = new Image()
+    img.src = logoLong
+    try { await img.decode() } catch {}
+    x.drawImage(img, (W - lw) / 2, cv.height - 22 - lh, lw, lh)
+
+    saveImageToPhotos(cv, 'ezwallet-qr.png')   // ẢNH THÔI — không kèm text, xem chú thích trên
   }
 
   async function handleCopyAddr() {
@@ -95,7 +128,9 @@ export default function HomeReceive() {
         <NotifArea hints={[
           { label: t('Kho QR'), desc: t('Lưu những QR bạn hay dùng'), onClick: () => navigate('SavedQRList') },
           { label: t('Tạo QR'), desc: t('Tạo QR để nhận đúng số tiền'), onClick: () => navigate('CreateQR') },
-          { label: t('Chia sẻ'), desc: t('Chia sẻ địa chỉ ví của bạn'), onClick: handleShare },
+          // "QR + địa chỉ" (user sửa 08-13) — mô tả ĐÚNG thứ gửi đi: ảnh PNG có cả mã QR lẫn
+          // địa chỉ viết bằng chữ. Xem handleShare phía trên.
+          { label: t('Chia sẻ'), desc: t('Chia sẻ QR + địa chỉ ví của bạn'), onClick: handleShare },
         ]} />
       </div>
 
