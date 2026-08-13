@@ -3,7 +3,7 @@ import { useNav } from '../nav'
 import { QRCodeCanvas } from 'qrcode.react'
 import Icon from '../components/Icon'
 import { fmtMoney } from '../data'
-import { saveImageToPhotos } from '../saveImage'
+import { saveImageToPhotos, brandedQrCanvas } from '../saveImage'
 import { t } from '../i18n'
 import { loadSavedQRs, saveSavedQRs } from '../store'
 import { buildQR } from '../qr'
@@ -30,10 +30,13 @@ export default function ShowQR() {
   }, [])
 
   // "Chia sẻ": Web Share API → iOS/Android "Lưu ảnh vào Photos" + gửi qua app social.
-  function shareQR() {
+  // CHỈ ẢNH, KHÔNG kèm text địa chỉ (user chốt 08-13) — khác màn Nhận. Ở đây thứ quan trọng là
+  // SỐ TIỀN trong QR, người ta quét là ra địa chỉ; đính thêm địa chỉ vừa thừa vừa làm iOS lọc bớt
+  // app nhận. Ảnh vẫn qua brandedQrCanvas để có logo + nhãn "Only Arc Testnet" như màn Nhận.
+  async function shareQR() {
     const canvas = wrapRef.current?.querySelector('canvas')
     if (!canvas) return
-    saveImageToPhotos(canvas, `ezwallet-qr-${amount}.png`)
+    saveImageToPhotos(await brandedQrCanvas(canvas), `ezwallet-qr-${amount}.png`)
   }
 
   // Tiêu đề (user chốt 07-20e): mở QR ĐÃ LƯU từ kho (fromStorage) → "QR: <tên>" (bỏ chữ "Storage"

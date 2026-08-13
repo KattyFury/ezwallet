@@ -111,6 +111,16 @@ const EN = {
   'Thời gian': 'Time',
   'Xem trên ArcScan': 'View on ArcScan',
   'Đóng': 'Close',
+  // BugButton — nút 🐛 góc phải hàng 1, hiện ở mọi màn
+  'Báo lỗi': 'Report a bug',
+  'Lỗi gì vậy?': 'What went wrong?',
+  'Gửi kèm: màn hình bạn đang mở, địa chỉ ví, loại máy. Không gửi mật khẩu hay khoá ví.': 'Includes: the screen you are on, your wallet address, your device. Never your PIN or wallet keys.',
+  'Gửi': 'Send',
+  'Đang gửi...': 'Sending...',
+  'Đã gửi, cảm ơn bạn!': 'Sent – thank you!',
+  'Gửi thất bại, thử lại': 'Could not send, please try again',
+  'Chưa cấu hình gửi báo lỗi': 'Bug reporting is not set up yet',
+  'Bạn đã gửi quá nhiều, thử lại sau 1 giờ': 'Too many reports – please try again in an hour',
   // MenuScreen
   'Rút tiền': 'Withdraw',
   'Nạp tiền': 'Deposit',

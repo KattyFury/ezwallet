@@ -4,6 +4,7 @@
 // back · facebook · google · hint · left · right · swap. FILE .svg VẪN CÒN trong `icon/`
 // (tranh của user, không xoá). Cần dùng lại: thêm 1 dòng import + 1 tên vào ICONS là xong.
 import add from '../../icon/add.svg?raw'
+import bug from '../../icon/bug.svg?raw'
 import check from '../../icon/check.svg?raw'
 import clock from '../../icon/clock.svg?raw'
 import copy from '../../icon/copy.svg?raw'
@@ -37,7 +38,7 @@ import x from '../../icon/x.svg?raw'
 // 3 icon này hiện TO trong Service Hub, nên nét mảnh hơn tương đối là đúng ý đồ. ĐỪNG "chuẩn hoá"
 // về 100×100 hay nhân đôi stroke-width. Hiển thị không ảnh hưởng: width/height = 100%, viewBox tự scale.
 const ICONS = {
-  add, check, clock, copy, dca, down, down2, download, erase, exchange, globe, hub,
+  add, bug, check, clock, copy, dca, down, down2, download, erase, exchange, globe, hub,
   human, info, mail, menu, option, out, pencil, pig, qr, right2, scan, share, shield, trade, up, warning, x,
 }
 

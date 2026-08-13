@@ -9,6 +9,7 @@ import * as wallet from './functions/api/wallet.js'
 import * as send from './functions/api/send.js'
 import * as swap from './functions/api/swap.js'
 import * as sync from './functions/api/sync.js'
+import * as bug from './functions/api/bug.js'
 
 const PORT = 8787
 
@@ -54,6 +55,7 @@ const ROUTES = {
   '/api/send': send,
   '/api/swap': swap,
   '/api/sync': sync,
+  '/api/bug': bug,
 }
 
 const server = createServer(async (req, res) => {

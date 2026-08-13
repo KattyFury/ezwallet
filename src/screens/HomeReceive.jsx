@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef } from 'react'
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react'
-import { saveImageToPhotos } from '../saveImage'
+import { saveImageToPhotos, brandedQrCanvas } from '../saveImage'
 import NavBar from '../components/NavBar'
 import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
@@ -10,7 +10,6 @@ import { getTokenBalances, cachedBalances } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import { t } from '../i18n'
 import { buildQR } from '../qr'
-import logoLong from '../../design/logo.svg'
 
 export default function HomeReceive() {
   const { navigate } = useNav()
@@ -34,15 +33,13 @@ export default function HomeReceive() {
     getTokenBalances(walletAddr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0))).catch(() => {})
   }, [walletAddr])
 
-  // ⚠️ BUG USER BÁO 08-13: bấm Share thì bảng chia sẻ iOS hiện ra NHƯNG MẤT Messages/Zalo.
-  // Nguyên nhân (đã khoanh vùng bằng chính app): đây là chỗ DUY NHẤT gọi share kèm CẢ `files` LẪN
-  // `text`. Hai chỗ share còn lại (ShowQR, SendReceipt) chỉ gửi ẢNH và VẪN CHẠY BÌNH THƯỜNG trên
-  // máy user. iOS lọc bớt app nhận khi gói share trộn file + chữ ⇒ Messages rụng khỏi danh sách.
+  // Share = ẢNH QR (có logo + nhãn "Only Arc Testnet") **KÈM TEXT là ĐỊA CHỈ VÍ** — user chốt
+  // 08-13: "miễn sao là cái đó share 2 thứ, not 1 thứ".
   //
-  // CÁCH SỬA: chỉ gửi ẢNH (giống 2 màn đang chạy được), nhưng VẼ ĐỊA CHỈ THẲNG VÀO ẢNH để người
-  // nhận vẫn có đủ QR + địa chỉ — đúng thứ user muốn gửi qua tin nhắn. Cùng lối làm với ảnh biên
-  // lai (SendReceipt.saveReceipt).
-  // ⚠️ ĐỪNG thêm `text` trở lại vào payload share ở đây — đó chính là thứ làm mất Messages.
+  // ⚠️ ĐÁNH ĐỔI ĐÃ BIẾT VÀ ĐÃ CHẤP NHẬN: kèm `text` làm iOS LỌC BỚT app nhận trong bảng chia sẻ
+  // (Messages có thể rụng — chính là bug user báo sáng 08-13). Bản sửa đầu bỏ text và VẼ địa chỉ
+  // lên ảnh, user chê "gắn địa chỉ vào QR xấu lắm" và chọn quay lại kèm text. ĐỪNG bỏ `text` đi
+  // lần nữa để "sửa" danh sách app nhận — đó là quyết định của user, không phải lỗi.
   async function handleShare() {
     const qrCanvas = qrRef.current?.querySelector('canvas')
     if (!qrCanvas || !navigator.canShare) {
@@ -51,29 +48,7 @@ export default function HomeReceive() {
       setCopied(true); setTimeout(() => setCopied(false), 2000)
       return
     }
-    const W = 620, QR = 420, PAD = 50
-    const cv = document.createElement('canvas')
-    cv.width = W; cv.height = 700
-    const x = cv.getContext('2d')
-    x.fillStyle = '#FFFFFF'; x.fillRect(0, 0, W, cv.height)
-    x.drawImage(qrCanvas, (W - QR) / 2, PAD, QR, QR)
-
-    x.textAlign = 'center'
-    // NHÃN MẠNG: ảnh này đi ra ngoài app, người nhận không có gì khác để biết đây là chuỗi nào.
-    x.fillStyle = '#0B53BF'; x.font = '600 26px sans-serif'
-    x.fillText('Arc Testnet', W / 2, PAD + QR + 46)
-    // ĐỊA CHỈ cắt 2 dòng: 42 ký tự 1 dòng ở cỡ đọc được là tràn khung 620px.
-    x.fillStyle = '#000000'; x.font = '500 25px monospace'
-    x.fillText(walletAddr.slice(0, 21), W / 2, PAD + QR + 92)
-    x.fillText(walletAddr.slice(21), W / 2, PAD + QR + 126)
-
-    const lw = 168, lh = lw * 380 / 1160   // tỉ lệ logo.svg (viewBox 1160×380), giống SendReceipt
-    const img = new Image()
-    img.src = logoLong
-    try { await img.decode() } catch {}
-    x.drawImage(img, (W - lw) / 2, cv.height - 22 - lh, lw, lh)
-
-    saveImageToPhotos(cv, 'ezwallet-qr.png')   // ẢNH THÔI — không kèm text, xem chú thích trên
+    saveImageToPhotos(await brandedQrCanvas(qrCanvas), 'ezwallet-qr.png', walletAddr)
   }
 
   async function handleCopyAddr() {
@@ -128,8 +103,8 @@ export default function HomeReceive() {
         <NotifArea hints={[
           { label: t('Kho QR'), desc: t('Lưu những QR bạn hay dùng'), onClick: () => navigate('SavedQRList') },
           { label: t('Tạo QR'), desc: t('Tạo QR để nhận đúng số tiền'), onClick: () => navigate('CreateQR') },
-          // "QR + địa chỉ" (user sửa 08-13) — mô tả ĐÚNG thứ gửi đi: ảnh PNG có cả mã QR lẫn
-          // địa chỉ viết bằng chữ. Xem handleShare phía trên.
+          // "QR + địa chỉ" (user sửa 08-13) — mô tả ĐÚNG 2 thứ gửi đi: ẢNH mã QR (kèm logo +
+          // nhãn mạng) và ĐỊA CHỈ dạng text. Xem handleShare phía trên.
           { label: t('Chia sẻ'), desc: t('Chia sẻ QR + địa chỉ ví của bạn'), onClick: handleShare },
         ]} />
       </div>

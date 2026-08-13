@@ -1,6 +1,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { NavContext } from './nav'
 import ErrorBoundary from './components/ErrorBoundary'
+import BugButton from './components/BugButton'
 
 // NẠP LƯỜI TỪNG MÀN (2026-07-17) — user: "app cùi tại sao load lâu".
 // Trước: App.jsx import TĨNH cả 22 màn → Vite gộp HẾT vào 1 file 1.668 KB, trình duyệt phải tải +
@@ -104,9 +105,17 @@ export default function App() {
         {/* fallback = KHUNG MÀN TRẮNG TRỐNG, cố tình KHÔNG spinner/chữ "đang tải": màn tải trong
             <100ms, nhấp một cái spinner rồi biến còn khó chịu hơn là không có gì. Giữ nền trắng +
             đúng khung .screen → không giật layout khi màn thật hiện ra. */}
-        <Suspense fallback={<div className="screen" />}>
-          <Screen />
-        </Suspense>
+        {/* KHUNG NEO cho nút báo lỗi: cùng bề ngang + canh giữa y hệt .screen (max 430px), để
+            nút bám mép PHẢI CỦA APP chứ không phải mép màn hình (trên desktop 2 chỗ đó cách nhau
+            rất xa). .screen bên trong vẫn tự lo height/overflow của nó. */}
+        <div style={{ position: 'relative', maxWidth: 'var(--screen-max)', margin: '0 auto' }}>
+          <Suspense fallback={<div className="screen" />}>
+            <Screen />
+          </Suspense>
+          {/* Nút báo lỗi hiện ở MỌI màn, kể cả Login/PinGate — lỗi hay xảy ra nhất là lúc chưa
+              vào được app, chặn ở đó thì đúng ca cần báo nhất lại không báo được. */}
+          <BugButton screen={nav.screen} />
+        </div>
       </ErrorBoundary>
     </NavContext.Provider>
   )
