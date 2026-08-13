@@ -10,13 +10,16 @@
 | **Video** | https://youtu.be/UIR4Ee3Wp_Y |
 | **Deck** | https://canva.link/zr3ik84radd39vc |
 
-### 📍 ĐANG Ở ĐÂU (cuối phiên 08-04)
+### 📍 ĐANG Ở ĐÂU (cuối phiên 2026-08-13)
 
-- **Chỉ còn 1 nhánh: `main`.** Mọi nhánh WIP đã merge và xoá. Ai làm gì cũng trên `main`.
-- **Production đang chạy:** tiếng Anh mặc định + hạ tầng đa ngôn ngữ + tiền tệ VND (đều đã merge, đều chọn được nhưng không tự bật).
+- **Chỉ còn 1 nhánh: `main`.** Mọi nhánh WIP đã merge và xoá. Ai làm gì cũng trên `main`. Bản mới nhất `1c348a2`.
+- **Production đang chạy:** **CHỈ tiếng Anh + USD/EUR.** Tiếng Việt và VND **ĐÃ TẮT 08-13** (xem mục 2) — hạ tầng đa ngôn ngữ vẫn còn nguyên trong code, chỉ là không chọn được.
+- **🔴 SWAP ĐANG CHẾT** — `No route available`, lỗi phía Circle/LI.FI chứ không phải code mình. **Đọc khối đỏ đầu mục 4 TRƯỚC KHI định sửa gì.**
+- **Mới có trong phiên 08-13:** Service Hub (tab 1 navbar) · QR khoá mạng Arc · nút báo lỗi 🐛 gửi thẳng Telegram · thông báo nhận tiền hết chậm. Chi tiết ở bảng đầu mục 9.
+- **Đang làm dở:** âm thanh báo thành công (`src/sound.js` viết xong, **chưa nối vào app**) — mục 7c + 9A.
 - **Chia việc:**
-  - **LongDC** → thêm ngôn ngữ mới + sửa sạn bản tiếng Việt (xem mục bàn giao ở dưới).
-  - **User + Claude** → tinh chỉnh **UX/UI bản tiếng Anh**. Đây là việc đang làm dở khi phiên kết thúc, chưa bắt đầu sửa gì.
+  - **LongDC** → thêm ngôn ngữ mới + sửa sạn bản tiếng Việt (xem mục bàn giao ở dưới). ⚠️ Lưu ý tiếng Việt hiện đang TẮT.
+  - **User + Claude** → tinh chỉnh UX/UI bản tiếng Anh.
 - **Việc còn treo cần bấm tay:** gửi tin nhắn cho Circle support (4 câu hỏi đã soạn xong trong lịch sử chat, chưa gửi) · CI workflow cần `gh auth refresh -h github.com -s workflow`.
 
 > ⚠️ **`PITCH.md` và `DECK-DESIGN-SPEC.md` trong repo ĐÃ LỖI THỜI** (user xác nhận 08-04) — bài giới thiệu và slide thật giờ nằm ở **video YouTube + deck Canva** phía trên, không phải 2 file .md đó. **Đừng dùng chúng làm nguồn khi viết nội dung giới thiệu, và đừng tốn công cập nhật chúng** cho tới khi user quyết định giữ lại hay bỏ. Vẫn để trong repo (không xoá) vì còn chứa vài chốt về Brand Voice.
@@ -132,6 +135,14 @@ hay đang bắt họ thích nghi với crypto?". Lệch khỏi đây thì dừng
 ---
 
 ## 4. Swap – cách hoạt động (⚠️ đụng tiền thật, đọc kỹ)
+
+> 🔴 **TÌNH TRẠNG 2026-08-13: SWAP ĐANG CHẾT — `No route available` (331001), LỖI PHÍA CIRCLE/LI.FI, KHÔNG PHẢI CODE MÌNH.**
+> Đo thật trên production: **mọi cặp, mọi mức tiền đều trả 331001** — 0,01 / 0,1 / 0,5 / 1 / 10 EURC→USDC · 10 USDC→EURC · 10 USDC→cirBTC.
+> **Cách suy luận (dùng lại được lần sau):** nếu do *số quá nhỏ* thì số to phải chạy → không phải. Nếu do *code mình* thì 07-18 đã không swap được bằng tiền thật → không phải. `331001` là mã **ĐỊNH TUYẾN** của LI.FI (bộ tìm đường Circle Stablecoin Kit dùng bên dưới), nghĩa là bên đó **không tìm ra đường đổi trên Arc Testnet** — nhiều khả năng pool testnet bị rút thanh khoản.
+> 3 file lõi swap (`swap.js` · `_swapCore.js` · `circle.js`) **chưa ai đụng từ 05-08**. Thay đổi 08-12/08-13 ở `Swap.jsx` chỉ là thay NavBar bằng chữ Exit — không chạm logic.
+> ⚠️ Còn 1 điểm chưa chắc: đo bằng **địa chỉ ví giả** `0x0000…0001`. Muốn chắc 100% thì đo lại bằng ví thật của user (nhưng 331001 là lỗi tuyến đường, không phải lỗi số dư).
+> **ĐỪNG đi sửa code swap khi thấy lỗi này** — đo lại 3 cặp như trên trước; cả 3 cùng chết thì là phía Circle, chỉ chờ.
+
 
 **Luồng (`functions/api/_swapCore.js` – lõi dùng chung swap.js + dev-server):**
 1. `POST https://api.circle.com/v1/stablecoinKits/swap` (Bearer `KIT_KEY`) → trả **1 INTENT CÓ CHỮ KÝ**. ⚠️ `amount` = **SỐ NGUYÊN BASE UNITS** (decimal → 400; quá nhỏ → 422 `331001` "No route").
@@ -397,6 +408,37 @@ Icon 🐛 **xám** (`--color-muted-2`) sát mép phải, canh giữa **hàng 1**
 
 ## 9. Việc tiếp theo
 
+### 📒 PHIÊN 2026-08-13 ĐÃ LÀM GÌ (9 commit, `c80db30` → `1c348a2`)
+
+| # | Việc | Ghi ở mục |
+|---|---|---|
+| 1 | **Tắt tiếng Việt + VND.** Bug gốc: `QRScanner` mặc định tiền tệ `'VND'` cho QR không ghi đơn vị → app English/USD quét QR ra VND | 2 |
+| 2 | **Service Hub** thành tab 1 navbar, Swap thành 1 dịch vụ bên trong; màn Swap hàng 10 = chữ Exit đỏ | 3 |
+| 3 | **Khoá QR theo mạng Arc** (`src/qr.js` = nguồn sự thật duy nhất) | 7b |
+| 4 | **Share QR**: màn Nhận gửi ảnh + text địa chỉ; ShowQR gửi chỉ ảnh; cả hai có logo + "Only Arc Testnet" | 7bb |
+| 5 | **Nút báo lỗi → Telegram**, đã chạy thật trên production | 7d |
+| 6 | **Sửa bug thông báo nhận tiền hiện rất chậm** + nhịp hỏi theo màn (Nhận 5s / Gửi 15s) | 7e |
+| 7 | **Sửa bug gợi ý số chẵn** nhảy bậc gấp 10 tại mốc 10 | 3 · `roundHint` |
+| 8 | 2 nút pill trắng ôm sát chữ; Menu bỏ Service Hub | 6 · 3 |
+| 9 | `src/sound.js` viết xong **nhưng chưa nối vào app** | 7c |
+
+**Quyết định user chốt trong phiên (ĐỪNG hỏi lại, ĐỪNG tự đổi):**
+- `- 08-13: Tắt 'vi' + VND` – reason: 2 máy chạy English/USD, để mở gây lẫn đơn vị tiền.
+- `- 08-13: QR khoá Arc nhưng địa chỉ dạng chữ để trần` – reason: QR là đường bấm-một-phát-là-gửi phải chặn; địa chỉ chữ là lối thoát để nạp từ sàn.
+- `- 08-13: Màn Nhận share ẢNH + TEXT dù iOS lọc bớt app nhận` – reason: *"miễn sao là cái đó share 2 thứ, not 1 thứ"*.
+- `- 08-13: Icon bug màu XÁM` – reason: xanh tranh chỗ nội dung chính, đỏ làm người già tưởng tiền có vấn đề.
+- `- 08-13: Gợi ý số chẵn — ≥30 bước 1, 3–30 bước 0,5, <3 co nhỏ; lấy bội GẦN NHẤT` – reason: bản cũ nhảy bậc gấp 10 tại mốc 10.
+- `- 08-13: Service Hub icon 56 + chữ 21px` – reason: 48+17 "nhỏ quá", 64+30 "to quá".
+
+**Đã thử rồi HỎNG, đừng làm lại:**
+- `- 08-13: Bỏ text khỏi payload share + VẼ địa chỉ lên ảnh QR` → user chê *"gắn địa chỉ vào QR xấu lắm"* → quay lại kèm text, chấp nhận iOS lọc bớt app nhận.
+- `- 08-13: Nút Exit màn Swap làm .btn-error (khối gradient đỏ to)` → user chê nặng, đá nhau với nút Swap xanh → đổi thành CHỮ đỏ canh giữa.
+- `- 08-13: Dùng .row10-single cho nút Exit` → class đó neo tâm 90dvh = vị trí hàng 9, dính vào nút Swap → phải để `gridRow 10`.
+- `- 08-13: Popup báo lỗi liệt kê 1 câu dài` → user *"report a bug mà yêu cầu lắm thế?"* → rút 1 dòng → user lại muốn danh sách đánh số → chốt bản 3.
+- `- 08-13: Ép ô Service Hub vuông (aspectRatio 1)` → chữ 30px tràn ra ngoài → bỏ aspectRatio, dùng `gridAutoRows: '1fr'`.
+
+---
+
 ### 🟠 ĐANG DỞ – phiên 2026-08-13 (làm tiếp cái này TRƯỚC)
 
 **A. Âm thanh báo thành công** (quyết định đầy đủ ở mục 7c, đừng hỏi lại user):
@@ -408,7 +450,11 @@ Icon 🐛 **xám** (`--color-muted-2`) sát mép phải, canh giữa **hàng 1**
 6. Key i18n EN cần thêm: `'Âm thanh'`→Sound · `'Bật'`→On · `'Tắt'`→Off · `'Cài đặt'`→Settings. Xong chạy `npm run check-lang en` phải 100%.
 7. **Test trên máy thật của user** (Playwright headless KHÔNG nghe được tiếng, chỉ verify được là không văng lỗi + nút tắt ghi đúng localStorage): kiểm iOS có tôn trọng **nút gạt im lặng** không.
 
-**B. Nhãn mạng dưới QR màn Nhận – CHỜ USER CHỌN CHỖ ĐẶT.** QR đã khoá Arc ở tầng dữ liệu (mục 7b) nhưng **màn hình không có chữ nào nói đây là mạng gì** – máy thì đọc được `@5042002`, người thì chỉ thấy ô vuông đen trắng. Hợp với mô hình user đang nghĩ tới: *"chain khác nhau = ngân hàng khác nhau"*. Vướng: màn Nhận đã kín (hàng 6 nút copy, 7-8 vùng gợi ý, 9 ba nút) → **đặt ở đâu là quyết định bố cục của user, đừng tự chèn**.
+**B. Nhãn mạng TRÊN MÀN HÌNH màn Nhận – CHỜ USER CHỌN CHỖ ĐẶT.** *(Ảnh chia sẻ ĐÃ có chữ "Only Arc Testnet" từ 08-13 — xem 7bb. Còn thiếu đúng phần hiện trên màn.)* QR đã khoá Arc ở tầng dữ liệu (mục 7b) nhưng **màn hình không có chữ nào nói đây là mạng gì** – máy thì đọc được `@5042002`, người thì chỉ thấy ô vuông đen trắng. Hợp với mô hình user đang nghĩ tới: *"chain khác nhau = ngân hàng khác nhau"*. Vướng: màn Nhận đã kín (hàng 6 nút copy, 7-8 vùng gợi ý, 9 ba nút) → **đặt ở đâu là quyết định bố cục của user, đừng tự chèn**.
+
+**C. Thông báo nhận tiền chỉ chạy ở màn Gửi/Nhận – CHỜ USER DUYỆT (đụng kiến trúc).** Hai màn đó là chỗ duy nhất render `NotifArea` (mục 7e). Đang ở Lịch sử / Menu / Swap mà tiền về thì không có gì báo tới khi quay lại Home. Muốn báo ở mọi màn phải dời việc hỏi lên `App.jsx` — ~20 phút, nhưng đổi chỗ đặt logic nên cần user gật.
+
+**D. Swap `No route available` – KHÔNG PHẢI VIỆC CỦA MÌNH, CHỜ CIRCLE.** Xem khối đỏ đầu mục 4. Đừng sửa code; định kỳ đo lại 3 cặp, chạy lại được thì thôi.
 
 ### 🔴 CHỜ USER BẤM TAY – chốt phiên 2026-07-31 (đọc mục này TRƯỚC)
 
@@ -483,7 +529,10 @@ Sau đó tìm ra ROOT CAUSE THẬT: **gọi SAI CHỮ KÝ `setCustomSecurityQues
 >
 > **Sạn tiếng Việt:** user đã review bản tiếng Việt và báo "còn nhiều sạn" nhưng chấp nhận merge. Việc rà và sửa sạn đó thuộc phần LongDC — user KHÔNG liệt kê, tự tìm bằng cách dùng thử app ở chế độ tiếng Việt.
 
-### 🌏 ĐA NGÔN NGỮ + TIỀN TỆ VND — phiên 08-04 (ĐÃ MERGE vào `main`)
+### 🌏 ĐA NGÔN NGỮ + TIỀN TỆ VND — phiên 08-04 (⚠️ ĐÃ BỊ TẮT 08-13, đọc mục 2 trước)
+
+> 🔴 **CẢNH BÁO: mục này mô tả trạng thái 08-04, KHÔNG còn đúng.** Ngày 08-13 user chốt **TẮT tiếng Việt và VND** (`READY_LANGS = ['en']`, `SUPPORTED_CURRENCIES = ['USDC','EURC']`) vì bug lẫn đơn vị tiền — xem mục 2. Hạ tầng bên dưới vẫn nguyên, mục này giữ lại làm tài liệu cho lúc bật lại.
+
 
 > **ĐÃ MERGE vào `main` 08-04** (commit `1c3a6c0`), nhánh WIP đã xoá, đang chạy trên `ezwallet.cash`.
 > **Mặc định là ENGLISH** — `detect()` KHÔNG đoán theo `navigator.language` nữa, máy cài tiếng Việt vẫn mở ra tiếng Anh. Tiếng Việt + VND nằm sẵn trong màn Language & Currency cho ai TỰ CHỌN. Lý do: video demo + deck giới thiệu đều tiếng Anh, app phải khớp thứ người ta xem.
@@ -560,4 +609,9 @@ Sau đó tìm ra ROOT CAUSE THẬT: **gọi SAI CHỮ KÝ `setCustomSecurityQues
 - **Retry dày với RPC rate-limit = tự giết mình** – gộp Multicall + backoff dài; số chưa chắc thì hiện `…` đừng vẽ 0.
 - **Circle iframe giữ modal khi user nhập sai** – reject sớm promise = user nhập đúng lại nhưng kết quả rơi vào hư không.
 - **Grid không khai cột / flex thiếu minWidth:0** = 1 chuỗi dài phá layout cả màn.
+- **Hàm tên `poll…` mà không có `setInterval` = im lặng chết người** (08-13): thông báo nhận tiền chỉ chạy 1 lần lúc mở màn suốt nhiều tuần. Gửi thì hiện ngay (tự `addNotif` tại chỗ) nên bug núp kỹ. **Đối tượng người già: app im lặng ở màn hình tiền bạc là lỗi NẶNG, không phải lỗi nhỏ.**
+- **Bước làm tròn theo luỹ thừa 10 thì mỗi thập phân chỉ có 1 bậc — quá thô** (08-13): 9,99 bước 0,5 mà 10,0 bước thành 5 → nhích 1 xu là gợi ý đổi hẳn hàng. Sửa 3 lần mới đúng; xem mục 3 phần `roundHint`.
+- **Sửa code mà quên sửa test = test mất tác dụng cảnh báo** (08-13): commit 08-04 để `npm test` đỏ 9 ngày, nhìn quen rồi cho qua. **Sửa `roundHint.js` phải sửa test TRONG CÙNG COMMIT.**
+- **Đo trước khi đổ lỗi** (08-13): 3 lần trong 1 phiên tưởng lỗi của mình mà hoá ra không — (a) tiếng Việt mất dấu trong Telegram = `curl` trên Windows mã hoá sai, các nhãn do server sinh vẫn đủ dấu; (b) Swap `No route` = phía Circle, 3 file lõi chưa ai đụng 8 ngày; (c) khối gợi ý tràn trên Android 360px = **đã tràn sẵn từ trước**, kiểm bằng `git stash`. **Luôn dựng phép đo tách bạch trước khi sửa.**
+- **Cloudflare Pages chỉ áp biến môi trường cho deployment MỚI** (08-13) — đặt biến xong phải tạo deployment mới, bản đang chạy không tự nhận.
 - **"Cải tiến" không verify từng bước** (retry, catch-về-0) từng gây regression nặng hơn lỗi gốc – mọi thay đổi UI verify Playwright mock, mọi thay đổi swap verify eth_simulateV1.
