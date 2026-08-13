@@ -100,7 +100,9 @@ export default function HomeReceive() {
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
         {/* Mỗi dòng = 1 CÂU đủ nghĩa, từ khoá gạch chân BẤM ĐƯỢC → đi đúng nơi nút cùng tên ở
             hàng 9 dẫn tới (user chốt 07-21). Thứ tự khớp layout nút: QR Storage · Create QR · Share. */}
-        <NotifArea hints={[
+        {/* pollMs 5s (user chốt 08-13): đây là màn người ta VỪA CHÌA QR RA VÀ ĐANG ĐỨNG CHỜ tiền
+            vào → hỏi dày hơn hẳn màn Gửi (15s mặc định). Xem NotifArea. */}
+        <NotifArea pollMs={5000} hints={[
           { label: t('Kho QR'), desc: t('Lưu những QR bạn hay dùng'), onClick: () => navigate('SavedQRList') },
           { label: t('Tạo QR'), desc: t('Tạo QR để nhận đúng số tiền'), onClick: () => navigate('CreateQR') },
           // "QR + địa chỉ" (user sửa 08-13) — mô tả ĐÚNG 2 thứ gửi đi: ẢNH mã QR (kèm logo +

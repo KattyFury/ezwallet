@@ -289,6 +289,32 @@ ezwallet:0xABC…@5042002?amount=25&cur=USD    ← QR có sẵn số tiền
 
 ---
 
+## 7e. THÔNG BÁO NHẬN TIỀN – nhịp hỏi (bug user báo 2026-08-13)
+
+**Triệu chứng:** *"thông báo nhận tiền xuất hiện rất lâu"*, trong khi **gửi thì hiện ngay**.
+
+**Gốc:** `NotifArea.pollIncoming` — tên là *poll* (hỏi lặp lại) nhưng gọi **ĐÚNG MỘT LẦN** lúc mở màn (`useEffect(..., [])`), và **toàn app không có `setInterval` nào**. Ngồi yên ở màn Gửi/Nhận thì tiền về cũng không ai hỏi lại → thông báo chỉ hiện khi user vô tình chuyển tab qua lại (component remount). Chiều **GỬI** hiện ngay vì `SendReceipt` tự `addNotif` tại chỗ, không phải hỏi mạng — nên chỉ chiều NHẬN chậm.
+
+**⚠️ VÌ SAO KHÔNG PHẢI LỖI NHỎ:** app cho người lớn tuổi. Được báo *"đã chuyển tiền rồi"* mà mở app không thấy gì thì người ta **LO**, rồi gọi điện hỏi, rồi bấm lung tung. Im lặng ở màn hình tiền bạc là lỗi nặng. Đừng "tối ưu" bỏ việc hỏi lặp đi.
+
+**NHỊP HỎI THEO VIỆC USER ĐANG LÀM (user chốt):**
+
+| Màn | Nhịp | Vì sao |
+|---|---|---|
+| **Nhận** | **5s** (`pollMs={5000}`) | Vừa chìa QR cho người ta, **đang đứng chờ** tiền vào |
+| **Gửi** | **15s** (mặc định) | Không ai chờ tiền vào ở màn này |
+
+- **Bỏ qua nhịp khi tab ẩn** (tốn pin/dữ liệu mà user có nhìn đâu) + **hỏi NGAY khi quay lại app** (`visibilitychange`) — kịch bản hay gặp nhất: được báo đã chuyển tiền → mở app lên → phải thấy liền.
+- Cờ module `polling` chống chồng lệnh khi mạng chậm.
+- ⚠️ **Muốn nhanh hơn ở màn nào thì truyền `pollMs` cho RIÊNG màn đó**, ĐỪNG hạ nhịp mặc định: mỗi nhịp là 1 request nhân với mọi máy đang mở app.
+- ⚠️ Deps của effect là `[pollMs]`, không phải `[]`.
+
+**Đo Playwright:** cùng 22s → màn Nhận **4 lần, cách đều 5.0s**; màn Gửi **1 lần**. Ẩn/hiện tab → hỏi ngay lập tức.
+
+**CÒN THIẾU:** việc hỏi chỉ chạy khi đang ở **màn Gửi hoặc Nhận** (2 màn duy nhất render `NotifArea`). Đang ở Lịch sử/Menu/Swap mà tiền về thì không có gì báo tới khi quay lại Home. Muốn báo ở mọi màn phải dời việc hỏi lên tầng `App.jsx` — **chưa làm, cần user duyệt vì đụng kiến trúc**.
+
+---
+
 ## 7d. NÚT BÁO LỖI → TELEGRAM (2026-08-13) – ĐANG CHẠY THẬT
 
 Icon 🐛 **xám** (`--color-muted-2`) sát mép phải, canh giữa **hàng 1**, hiện ở **MỌI màn kể cả Login/PinGate** (lỗi hay xảy ra nhất là lúc chưa vào được app). Render 1 lần ở `App.jsx` trong khung neo `maxWidth: var(--screen-max)` → bám mép phải **của app**, không phải mép màn hình desktop.

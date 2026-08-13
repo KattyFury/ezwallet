@@ -126,7 +126,11 @@ function HintBlock({ lines }) {
 // hints: [{label, desc}] — render CHUNG thành 1 khối. warning: JSX | null — cảnh báo (vd hết
 // USDC trả phí). Cả 2 giờ là ITEM trong CÙNG 1 stack với thông báo thật (không early-return
 // thay thế nữa) — luôn cuộn+căn đáy+mờ đồng bộ, warning không đè mất hint.
-export default function NotifArea({ hints = [], warning = null }) {
+// pollMs = nhịp hỏi tiền vào, THEO VIỆC USER ĐANG LÀM (user chốt 08-13):
+//   · màn NHẬN  → 5s  (vừa chìa QR cho người ta, ĐANG ĐỨNG CHỜ tiền vào)
+//   · màn GỬI   → 15s (không ai chờ tiền vào ở đây)
+// Nhanh chỗ đang chờ, thưa chỗ không chờ — đừng bắt cả app chạy chung một nhịp dày.
+export default function NotifArea({ hints = [], warning = null, pollMs = 15000 }) {
   const { navigate } = useNav()
   const [notifs, setNotifs] = useState(getNotifs())
   const scrollRef = useRef(null)
@@ -139,19 +143,24 @@ export default function NotifArea({ hints = [], warning = null }) {
   // VÌ SAO PHẢI SỬA: app cho người lớn tuổi. Người ta được báo "đã chuyển tiền rồi" mà mở app ra
   // không thấy gì thì LO, rồi gọi điện hỏi, rồi bấm lung tung. Im lặng ở đây không phải lỗi nhỏ.
   //
-  // 15s: Arc chốt khối dưới 1s, phần trễ còn lại là ArcScan lập chỉ mục. 15s đủ nhanh để người ta
-  // không kịp lo, mà không dội API. ĐỪNG hạ xuống vài giây — mỗi nhịp là 1 request cho MỌI máy.
+  // Nhịp lấy từ prop `pollMs` (5s màn Nhận · 15s màn Gửi) — xem chú thích ở chỗ khai báo.
+  // Arc chốt khối dưới 1s, phần trễ còn lại là ArcScan lập chỉ mục.
+  // ⚠️ ĐỪNG hạ nhịp mặc định xuống vài giây cho MỌI màn: mỗi nhịp là 1 request, nhân với mọi máy
+  // đang mở app. Muốn nhanh hơn ở màn nào thì truyền pollMs cho RIÊNG màn đó.
   useEffect(() => {
     const tick = () => { if (document.visibilityState === 'visible') pollIncoming(() => setNotifs(getNotifs())) }
     tick()                                   // hỏi ngay lúc mở màn (giữ nguyên hành vi cũ)
-    const id = setInterval(tick, 15000)
+    const id = setInterval(tick, pollMs)
     // Quay lại app thì hỏi NGAY, không đợi hết nhịp: kịch bản thường gặp nhất là "được báo đã
     // chuyển tiền" → mở app lên → phải thấy liền. Cũng là lý do tick() bỏ qua khi tab đang ẩn:
     // chạy nền chỉ tốn pin/dữ liệu vì user có nhìn đâu mà thấy.
     const onVisible = () => { if (document.visibilityState === 'visible') tick() }
     document.addEventListener('visibilitychange', onVisible)
     return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisible) }
-  }, [])
+    // [pollMs] chứ không phải []: effect ĐANG DÙNG pollMs, để [] thì đổi nhịp mà interval vẫn
+    // chạy theo số cũ. Hiện mỗi màn mount NotifArea với 1 giá trị cố định nên chưa lộ, nhưng
+    // để [] là gài sẵn bug cho lần sau.
+  }, [pollMs])
   // Mặc định cuộn tới ĐÁY (thông báo mới nhất) mỗi khi danh sách đổi — cũ hơn phải cuộn lên mới thấy.
   // BUG đã sửa: thiếu `warning` trong dependency → khi warning xuất hiện SAU (vd sau khi tải xong
   // số dư token, async, trễ hơn lần render đầu) thì effect không chạy lại, để scroll bị "kẹt" giữa
