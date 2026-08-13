@@ -57,7 +57,11 @@ export default function ShowQR() {
           biết ngay, đừng để họ gửi token/chuỗi khác rồi mất tiền. */}
       <div style={{ gridRow: '5 / 9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', gap: 10, paddingTop: 8 }}>
         <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-light)', lineHeight: 1, color: 'var(--color-content)' }}>{amountText}</span>
-        <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center', padding: '0 8px' }}>
+        {/* Cỡ chữ: --fs-item 17 (user chốt 08-13 "dù sao nó cũng chỉ là chú thích"), hạ từ
+            --fs-md-lg 21 — 21 là cỡ dành cho NÚT, để cho chú thích là sai vai trò và câu này ăn
+            tận 3 dòng. KHÔNG hạ thẳng xuống --fs-label 15 (cỡ "text phụ" chuẩn): app này cho
+            người lớn tuổi, 15px là ranh giới khó đọc. 17 = đúng cỡ khối gợi ý màn Gửi/Nhận. */}
+        <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', textAlign: 'center', padding: '0 8px' }}>
           {t('Cho người gửi quét mã này – hiện chỉ hỗ trợ USDC trên Arc Testnet')}
         </span>
         {/* Share = CHỮ XANH + icon, KHÔNG phải nút (user chốt 08-13): không viền, không nền,
