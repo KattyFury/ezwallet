@@ -3,20 +3,10 @@ import jsQR from 'jsqr'
 import { useNav } from '../nav'
 import { t } from '../i18n'
 import { isOwnAddress } from '../data'
-
-function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
-
-// QR không ghi tiền tệ (địa chỉ 0x trần, hoặc link ezwallet thiếu &cur) → mặc định USD.
-// ⚠️ TRƯỚC ĐÂY để 'VND' làm mặc định: hồi đó VND chưa nằm trong CURRENCIES của SendAmount nên nó
-// bị coi là "không rõ" và rơi về USD. Từ lúc mở VND (08-04) chuỗi 'VND' thành hợp lệ → quét QR
-// địa chỉ trần là màn nhập tiền mở ra VND dù app đang English/USD. Mặc định PHẢI là 'USD'.
-function parseQR(text) {
-  const raw = text.trim()
-  if (isValid(raw)) return { address: raw, amount: null, currency: 'USD' }
-  const m = raw.match(/ezwallet:(0x[0-9a-fA-F]{40})(?:\?amount=([\d.]+))?(?:&cur=(\w+))?/)
-  if (m) return { address: m[1], amount: m[2] ? parseFloat(m[2]) : null, currency: m[3] || 'USD' }
-  return null
-}
+// parseQR nằm ở src/qr.js — CHUNG với chỗ vẽ QR, để định dạng chỉ có 1 nguồn sự thật.
+// Trả { wrongChain } khi gặp QR EZwallet của chuỗi KHÁC → phải bắt riêng, KHÔNG được để rơi vào
+// nhánh "hợp lệ" (nó không có .address, đi tiếp là sang màn nhập tiền với địa chỉ undefined).
+import { parseQR } from '../qr'
 
 export default function QRScanner() {
   const { navigate } = useNav()
@@ -57,7 +47,9 @@ export default function QRScanner() {
         const code = jsQR(img.data, img.width, img.height, { inversionAttempts: 'dontInvert' })
         if (code) {
           const parsed = parseQR(code.data)
-          if (parsed && isOwnAddress(parsed.address)) {
+          if (parsed?.wrongChain) {
+            setHint(t('QR của mạng khác – ví này chỉ dùng trên Arc'))
+          } else if (parsed && isOwnAddress(parsed.address)) {
             // Quét trúng QR NHẬN TIỀN của chính mình (rất dễ xảy ra: QR của mình đang mở ở màn Nhận
             // hoặc trong kho QR). KHÔNG đi tiếp — báo rồi quét tiếp, đừng đưa vào màn nhập tiền.
             setHint(t('Đây là QR của bạn – quét QR người nhận'))
@@ -98,7 +90,8 @@ export default function QRScanner() {
         URL.revokeObjectURL(url)
         const code = jsQR(data.data, data.width, data.height)
         const parsed = code ? parseQR(code.data) : null
-        if (parsed && isOwnAddress(parsed.address)) setHint(t('Đây là QR của bạn – quét QR người nhận'))
+        if (parsed?.wrongChain) setHint(t('QR của mạng khác – ví này chỉ dùng trên Arc'))
+        else if (parsed && isOwnAddress(parsed.address)) setHint(t('Đây là QR của bạn – quét QR người nhận'))
         else if (parsed) navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount, currency: parsed.currency })
         else setHint(t('Không tìm thấy mã QR hợp lệ trong ảnh'))
       }

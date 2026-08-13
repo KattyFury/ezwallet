@@ -265,6 +265,29 @@ hay đang bắt họ thích nghi với crypto?". Lệch khỏi đây thì dừng
 
 ---
 
+## 7b. QR – KHOÁ MẠNG ARC (user chốt 2026-08-13)
+
+**`src/qr.js` = NGUỒN SỰ THẬT DUY NHẤT của định dạng QR.** Mọi chỗ vẽ (HomeReceive · ShowQR · SavedQRList) gọi `buildQR()`, chỗ đọc (QRScanner) gọi `parseQR()`. **ĐỪNG nối chuỗi `ezwallet:...` bằng tay ở màn nào** – trước 08-13 rải 3 chỗ, sửa 1 chỗ là lệch.
+
+```
+ezwallet:0xABC…@5042002                      ← QR mặc định màn Nhận
+ezwallet:0xABC…@5042002?amount=25&cur=USD    ← QR có sẵn số tiền
+```
+
+**Vì sao khoá:** QR mặc định TRƯỚC ĐÂY vẽ **địa chỉ trần `0x…`**. Địa chỉ EVM giống hệt nhau trên MỌI chuỗi ⇒ ví bất kỳ đang ở Ethereum/Base/BSC quét là gửi được, tiền sang chuỗi khác là **mất luôn**. Đối tượng app là người lớn tuổi, không có cửa tự nhận ra sai chuỗi. Chủ trương của user: **"giờ chỉ dùng 1 mạng thôi"**; sau này tính CCTP Unified Balance, và có thể theo mô hình *"chain khác nhau = ngân hàng khác nhau"*.
+
+**Phân vai CỐ Ý bất đối xứng (đừng "sửa cho nhất quán"):**
+- **QR = KHOÁ** Arc. Đây là đường bấm-một-phát-là-gửi, phải chặn.
+- **Địa chỉ dạng chữ (nút copy / Share) = ĐỂ TRẦN**, không kèm chuỗi. Đây là lối thoát để nạp từ sàn / ví khác. User chốt: *"địa chỉ ví thì không sao"*.
+
+**⚠️ CỐ TÌNH KHÔNG DÙNG EIP-681 (`ethereum:0x…@5042002`):** chuẩn đó CÓ trường chainId, nhưng nhiều ví cài ẩu – đọc địa chỉ rồi **bỏ qua `@chainId`** và gửi trên chuỗi đang mở ⇒ còn nguy hơn địa chỉ trần vì mình tưởng đã khoá. Scheme lạ `ezwallet:` thì ví khác chỉ có một cửa là **từ chối**.
+
+**parseQR nhận 3 dạng** (đã test round-trip): `ezwallet:…@5042002` chuẩn · `ezwallet:…` **không có @chain** (QR CŨ đã in/share/lưu ảnh trước 08-13 – coi như Arc, phải còn quét được) · **`0x…` trần** (QR từ ví ngoài mình quét ĐỂ GỬI ĐI – khoá cái này là user hết đường gửi cho người ngoài). QR EZwallet của chuỗi khác → trả `{ wrongChain }` → màn quét báo *"QR của mạng khác – ví này chỉ dùng trên Arc"*. **`{ wrongChain }` KHÔNG có `.address`** – bắt riêng trước nhánh hợp lệ, không thì sang màn nhập tiền với address `undefined`.
+
+**Đổi chuỗi (lên mainnet / thêm chuỗi) → sửa `ARC_CHAIN_ID` trong `src/qr.js`** (`chain.js` import lại hằng này cho `defineChain`, không khai 2 nơi).
+
+---
+
 ## 8. localStorage keys
 
 **Session:** `ez_user_token`, `ez_encryption_key`, `ez_wallet_addr`, `ez_wallet_id`, `ez_email` (email login), `ez_refresh_token`/`ez_google_email`/`ez_google_deviceId`/`ez_login_method` (Google), `ez_notifs`, `ez_last_recv_ts`, `ez_email_history`, `ez_notified_hashes`, `ez_faucet_pending`. `sessionStorage.ez_pin_ok` = cờ mở khoá phiên; **`sessionStorage.ez_sync_token`** = token sao lưu danh bạ, đổi từ chữ ký PIN ở `PinGate` (08-06) – **cố ý để sessionStorage** để nó chết cùng phiên app, mở lại app là ký lại.

@@ -6,6 +6,7 @@ import Numpad from '../components/Numpad'
 import { fmtMoney, getDisplayCurrency, displaySymbol } from '../data'
 import { t } from '../i18n'
 import { loadSavedQRs, saveSavedQRs } from '../store'
+import { buildQR } from '../qr'
 
 export default function SavedQRList() {
   const { navigate } = useNav()
@@ -84,7 +85,7 @@ export default function SavedQRList() {
                     (viewBox tự scale, không méo); flexShrink 0 chống grid ép dẹp (bug méo cũ). */}
                 <div style={{ alignSelf: 'stretch', margin: '0 12px', flexShrink: 0 }}>
                   {/* height auto = svg tự giữ vuông theo viewBox (ép height 100% từng lệch 3px) */}
-                  <QRCodeSVG value={`ezwallet:${walletAddr}?amount=${q.amount}&cur=${c}`} size={104} level="M" style={{ width: '100%', height: 'auto', display: 'block' }} />
+                  <QRCodeSVG value={buildQR(walletAddr, { amount: q.amount, currency: c })} size={104} level="M" style={{ width: '100%', height: 'auto', display: 'block' }} />
                 </div>
                 {q.name && <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.name}</span>}
                 <span className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-brand)' }}>{label}</span>

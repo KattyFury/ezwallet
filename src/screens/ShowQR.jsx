@@ -5,12 +5,14 @@ import { fmtMoney } from '../data'
 import { saveImageToPhotos } from '../saveImage'
 import { t } from '../i18n'
 import { loadSavedQRs, saveSavedQRs } from '../store'
+import { buildQR } from '../qr'
 
 export default function ShowQR() {
   const { navigate, params } = useNav()
   const { amount, currency = 'USD', name = '', saveToLibrary, fromStorage, back = 'HomeReceive' } = params
   const walletAddr = localStorage.getItem('ez_wallet_addr') || ''
-  const qrValue = `ezwallet:${walletAddr}?amount=${amount}&cur=${currency}`
+  // Khoá chuỗi Arc — xem src/qr.js. ĐỪNG nối chuỗi `ezwallet:...` bằng tay ở đây nữa.
+  const qrValue = buildQR(walletAddr, { amount, currency })
   // MỘT CHUỖI MỘT STYLE: "$2" / "2 USDC" (fmtMoney) — không tách bold số + regular đơn vị.
   const amountText = fmtMoney(amount, currency)
   const wrapRef = useRef(null)

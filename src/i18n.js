@@ -87,6 +87,7 @@ const EN = {
   'QR không hợp lệ, thử lại': 'Invalid QR, try again',
   'Đây là QR của bạn – quét QR người nhận': "That's your own QR – scan the recipient's QR",
   'Không truy cập được camera – chọn ảnh QR hoặc dán địa chỉ.': 'Cannot access camera – pick a QR image or paste an address.',
+  'QR của mạng khác – ví này chỉ dùng trên Arc': 'QR from another network – this wallet only works on Arc',
   'Không tìm thấy mã QR hợp lệ trong ảnh': 'No valid QR found in the image',
   'Không đọc được ảnh': 'Could not read the image',
   'Không đọc được ảnh QR': 'Could not read the QR image',

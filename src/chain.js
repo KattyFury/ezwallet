@@ -1,12 +1,16 @@
 import { createPublicClient, http, decodeEventLog, parseAbiItem } from 'viem'
 import { defineChain } from 'viem'
 import { MOCK, MOCK_AMOUNTS, MOCK_RATES } from './mock'
+// Chain id khai ở qr.js (module KHÔNG phụ thuộc viem) để màn nào chỉ cần vẽ/đọc QR — ShowQR,
+// SavedQRList — dùng được mà không phải kéo cả viem vào chunk của nó. MỘT nguồn sự thật: đổi
+// chuỗi thì sửa đúng 1 chỗ bên đó, đây tự theo.
+import { ARC_CHAIN_ID } from './qr'
 
 // Multicall3 chuẩn có sẵn trên Arc Testnet (docs Arc → Network → Contract addresses:
 // "Aggregates multiple read calls into a single call for efficient data retrieval").
 // Khai trong chain để publicClient.multicall() gộp N lệnh đọc vào 1 request — xem getTokenBalances.
 export const arcTestnet = defineChain({
-  id: 5042002,
+  id: ARC_CHAIN_ID,
   name: 'Arc Testnet',
   nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
   rpcUrls: { default: { http: ['https://rpc.testnet.arc.network'] } },

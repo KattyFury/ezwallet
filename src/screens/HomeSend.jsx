@@ -35,14 +35,17 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
       style={{
         position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
-        // Rộng CỐ ĐỊNH = 3/4 bề ngang MÀN (user chốt 07-29, sửa lỗi chữ "Hold to show tokens" rớt
-        // xuống dòng trên iPhone đời cũ do rộng trước đây tự co theo padding 22px, không đủ chỗ).
-        // min(75vw, ...) neo thẳng vào .screen giống công thức logo Login (index.css dòng 83-86).
-        width: 'min(75vw, calc(var(--screen-max) * 0.75))',
+        // ⚠️ RỘNG ÔM SÁT CHỮ (user chốt 08-13: "để nó to quá như này mình hơi hối hận") — bỏ bề
+        // rộng cố định 3/4 màn của 07-29. Cặp nút này KHÔNG còn bằng nhau nữa vì 2 câu dài khác
+        // nhau; đó là ý user, đừng "sửa lại cho đều".
+        // AN TOÀN với lỗi cũ 07-29 (chữ rớt xuống dòng trên iPhone đời cũ khi rộng tự co): đã có
+        // whiteSpace:'nowrap' bên dưới nên chữ KHÔNG THỂ xuống dòng. maxWidth + ellipsis chỉ là
+        // lưới an toàn cho ngôn ngữ nào dịch ra câu quá dài.
+        maxWidth: 'min(92vw, calc(var(--screen-max) - 24px))', overflow: 'hidden', textOverflow: 'ellipsis',
         // Nút NẰM TRONG box xám (vùng token 07-17f) → TRẮNG + VIỀN XÁM để nổi trên nền surface
         // (luật user 07-17f: "button nằm trong vùng box xám thì thành trắng viền xám", giống chip
         // token màn Swap). Chữ ĐEN + drop shadow (user chốt 07-22f: nút này phải nổi/bấm được rõ).
-        padding: '0 22px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
+        padding: '0 18px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
         color: 'var(--color-content)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
         fontWeight: 'var(--fw-medium)', cursor: 'pointer', whiteSpace: 'nowrap',

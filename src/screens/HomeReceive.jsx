@@ -9,6 +9,7 @@ import { useNav } from '../nav'
 import { getTokenBalances, cachedBalances } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import { t } from '../i18n'
+import { buildQR } from '../qr'
 
 export default function HomeReceive() {
   const { navigate } = useNav()
@@ -54,14 +55,18 @@ export default function HomeReceive() {
 
       {/* Canvas ẩn (chất lượng cao) để Share xuất ra PNG → "Save Image" vào kho ảnh */}
       <div ref={qrRef} style={{ position: 'absolute', left: -9999, top: -9999 }} aria-hidden>
-        <QRCodeCanvas value={walletAddr || '0x'} size={512} level="M" includeMargin />
+        <QRCodeCanvas value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" includeMargin />
       </div>
 
       {/* QR neo ĐÚNG hàng 3-5 (user chốt 07-19: trước để 3-6 + paddingBottom "nhường chỗ" cho dòng
           địa chỉ ở hàng 6 → QR bị đẩy lệch tâm khỏi khối 3 hàng. Giờ hàng 6 dành riêng cho
           nút địa chỉ, không chồng lấn nữa nên QR canh giữa thẳng trong đúng 3 hàng). */}
       <div style={{ gridRow: '3 / 6', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0 }}>
-        <QRCodeSVG value={walletAddr || '0x'} size={512} level="M" style={{ width: 'min(30dvh, 78vw)', height: 'min(30dvh, 78vw)' }} />
+        {/* ⚠️ KHÔNG vẽ địa chỉ trần `0x…` nữa (user chốt 08-13) — địa chỉ EVM giống nhau trên MỌI
+            chuỗi nên ví ở Ethereum/Base/BSC quét là gửi nhầm chuỗi, tiền MẤT LUÔN. buildQR bọc
+            trong scheme riêng + gắn chainId Arc; xem src/qr.js.
+            Ai cần địa chỉ dạng thường (nạp từ sàn, ví khác) thì bấm nút copy ngay dưới QR. */}
+        <QRCodeSVG value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" style={{ width: 'min(30dvh, 78vw)', height: 'min(30dvh, 78vw)' }} />
       </div>
       {/* Địa chỉ + copy: neo absolute top 55% = TRÙNG toạ độ nút "Hold to show tokens" màn Gửi
           (user chốt 07-17f "càng tốt") — qua lại 2 tab, dòng phụ nằm đúng 1 chỗ.
@@ -71,10 +76,11 @@ export default function HomeReceive() {
       <button onClick={handleCopyAddr} style={{
         position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
-        // Rộng CỐ ĐỊNH = 3/4 bề ngang MÀN — KHỚP "Hold to show tokens" bên HomeSend (user chốt 07-29:
-        // 2 nút này là 1 CẶP ở cùng toạ độ 55%, phải cùng cỡ; mọi nút đứng đơn độc trong app = 3/4).
-        width: 'min(75vw, calc(var(--screen-max) * 0.75))',
-        padding: '0 22px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
+        // ⚠️ RỘNG ÔM SÁT CHỮ (user chốt 08-13) — bỏ bề rộng cố định 3/4 màn của 07-29. Cặp nút này
+        // với "Hold to show tokens" (HomeSend) giờ KHÔNG còn bằng nhau vì 2 câu dài khác nhau;
+        // đó là ý user, đừng "sửa lại cho đều". Sửa 1 nút thì sửa luôn nút kia cho cùng công thức.
+        maxWidth: 'min(92vw, calc(var(--screen-max) - 24px))', overflow: 'hidden', textOverflow: 'ellipsis',
+        padding: '0 18px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
         color: addrCopied ? 'var(--color-primary)' : 'var(--color-content)', fontFamily: 'var(--font-condensed)',
         fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', cursor: 'pointer', whiteSpace: 'nowrap',

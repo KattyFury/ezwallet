@@ -6,8 +6,10 @@ import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
 import { t } from '../i18n'
 
+// ⛔ BỎ 'Service Hub' KHỎI ĐÂY 08-13 (user chốt): nó đã là TAB 1 của NavBar, để thêm 1 cửa nữa
+// trong Menu là 2 đường vào cùng 1 chỗ — thừa với người dùng phổ thông. Vào bằng navbar thôi.
+// (Mục này từng nằm đây dạng disabled từ 07-31 lúc chưa có màn thật.)
 const ITEMS = [
-  { id: 'ServiceHub', icon: 'hub',   label: 'Service Hub' },   // ✅ MỞ 08-12: màn ServiceHub đã có thật (Swap · Heo đất · DCA). Cũng vào được từ tab 1 navbar.
   { id: 'TxHistory',  icon: 'clock', label: 'Lịch sử giao dịch' },
   { id: 'Security',   icon: 'shield', label: 'Bảo mật' },
   { id: 'Language',   icon: 'globe', label: 'Language & Currency' },   // tách lại khỏi Security (08-04, user chốt)
@@ -49,7 +51,7 @@ export default function MenuScreen() {
         </button>
       </div>
 
-      {/* Rows 4-8: menu items (5 mục). Mục nào có `disabled` thì làm mờ + không bấm được. */}
+      {/* Rows 4-7: menu items (4 mục). Mục nào có `disabled` thì làm mờ + không bấm được. */}
       {ITEMS.map(({ id, icon, label, disabled }, i) => (
         <div key={id} className={`row-${i + 4}`} style={{ display: 'flex', alignItems: 'center' }}>
           <button className="menu-item" style={{ width: '100%', opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
@@ -62,8 +64,9 @@ export default function MenuScreen() {
         </div>
       ))}
 
-      {/* Row 9: Đăng xuất (5 mục ITEMS chiếm row 4-8 từ khi thêm Service Hub + tách lại Language) */}
-      <div className="row-9" style={{ display: 'flex', alignItems: 'center' }}>
+      {/* Row 8: Đăng xuất (4 mục ITEMS chiếm row 4-7). Bỏ Service Hub 08-13 → về lại đúng bố cục
+          trước 07-31, hàng 9 để trống làm khe trước NavBar. */}
+      <div className="row-8" style={{ display: 'flex', alignItems: 'center' }}>
         <button className="menu-item" style={{ width: '100%' }} onClick={() => {
           // GIỮ ez_email_history (gợi ý email lúc đăng nhập lại — user báo mất hint). Xóa cả
           // session Google (refreshToken/email/method) để đăng xuất sạch, deviceId giữ (định danh máy).
