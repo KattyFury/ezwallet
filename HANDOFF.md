@@ -116,7 +116,7 @@ hay đang bắt họ thích nghi với crypto?". Lệch khỏi đây thì dừng
   - ⚠️ **Màn Swap không còn tab riêng** ⇒ hàng 10 của nó là **CHỮ "Exit" đỏ, bold, canh giữa** (KHÔNG phải nút pill — user sửa 08-13: bản đầu làm `.btn-error` gradient đỏ to đùng, nhìn nặng và đá nhau với nút Swap gradient xanh ngay trên). Vùng chạm phủ cả hàng cho người lớn tuổi dễ bấm. **ĐỪNG dùng class `.row10-single`**: class đó `position:absolute; top:85dvh` = neo tâm **90dvh (vị trí hàng 9)**, mà hàng 9 màn Swap đang có nút "Swap" → dính sát nhau. Phải để `gridRow 10` (tâm 95dvh = đúng băng NavBar vừa nhả).
   - **Cỡ chữ/icon trong hub — CHỐT SAU 2 LẦN LỆCH (user 08-13), đừng đẩy lại 2 cực:** `icon 48 + chữ --fs-item 17` = user chê **"nhỏ quá"** → `icon 64 + chữ --fs-title 30` = user chê **"to quá"** → **CHỐT GIỮA: `icon 56` + chữ `--fs-md-lg` 21** (= đúng cỡ chữ NÚT của app, mà mấy ô này vốn là button). Ở cỡ này "Piggy Bank" gọn 1 dòng, chỉ "Dollar-Cost Averaging" xuống 2 dòng.
   - **Ô KHÔNG ÉP VUÔNG** (`aspectRatio:1`) — ô ra ~160×150 (gần vuông trên điện thoại) nhưng cột hẹp nhất (Android 360 → 145px) thì nội dung 150px vẫn cao hơn cột; ép vuông là tràn chữ, mà `aspectRatio` KHÔNG tự cao thêm theo nội dung. Dùng **`gridAutoRows:'1fr'`** cho các hàng cao bằng nhau (bỏ mặc thì 3 ô cao 147/180/213, so le rất xấu); phải để `alignItems` mặc định `stretch`, đừng đặt `'start'`. Box xám có **`marginBottom:'2dvh'`** = khe trước NavBar (user báo dính navbar), đúng luật chừa đáy của mọi màn khác. Đo Playwright 4 cỡ màn: 3 ô cao bằng nhau, không tràn ô/tràn box/tràn ngang.
-  - Mục **Service Hub trong MenuScreen** (trước disabled chờ tính năng) đã **mở khoá** – vào được từ cả 2 đường.
+  - Mục **Service Hub trong MenuScreen**: mở khoá 08-12 → **BỎ HẲN 08-13** (user chốt). Nó đã là tab 1 navbar, để thêm 1 cửa trong Menu là 2 đường vào cùng 1 chỗ, thừa với người dùng phổ thông. Menu về lại **4 mục hàng 4-7 + Sign out hàng 8** (đúng bố cục trước 07-31), hàng 9 để trống làm khe trước NavBar.
 - **Balance on-chain + tỷ giá live** có cache (`_balCache`/`_ratesCache`) – chuyển màn hiện số cũ ngay, fetch nền cập nhật.
 - **TxHistory** (ArcScan + memo event, box xám, nhóm theo ngày), **Contacts** (per-account, avatar cropper, box xám), **QR** (tạo/quét/kho), **thông báo in-app** (NotifArea), **biên lai** (canvas → Photos qua Web Share), per-account store (`store.js`).
 - **Đổi PIN** (email user): `PUT /v1/w3s/user/pin` ✅. **`refreshSession()`** gọi TRƯỚC mọi thao tác PIN (userToken sống 60').
@@ -153,6 +153,7 @@ hay đang bắt họ thích nghi với crypto?". Lệch khỏi đây thì dừng
 - Xanh lá `#34C759 → #16A34A` (`.btn-success`) · Đỏ `#FF4D51 → #DC2626` (`.btn-error`) · Vàng `#FFCC00 → #F59E0B` (token giữ, class btn-warning đã bỏ vì chưa dùng – thêm lại thì CHỮ ĐEN)
 - **DROP SHADOW nút bấm được (user chốt 07-22d – bản cuối):** bóng **THẲNG ĐỨNG** (offset-x 0, đổ dọc) `box-shadow: 0 4px 6px rgba(0,0,0,ALPHA)` – **VỪA, KHÔNG TỎA** (blur nhỏ 6px), bóng ĐEN (đừng tô theo màu nút). **ALPHA khác nhau để NHÌN NGANG BẰNG (user chốt 07-22g): nút GRADIENT `.35`, nút TRẮNG/chip `.25`** – nền tối của nút gradient "nuốt" bóng đen nên phải đậm hơn mới trông bằng nút trắng. Áp: `.btn-primary/.btn-success/.btn-error/.btn-secondary` + `.action-card` + `.action-card.primary` (class), VÀ **mọi nút/chip pill inline bấm được** (user chốt 07-22f "mọi button có bóng cho bà già hiểu"): chip token Swap `TokenRow`, "Hold to show tokens" (HomeSend), nút copy địa chỉ (HomeReceive), chip English/USD (Language). ĐỪNG tô màu nút, đừng tăng blur. **Nút pill trắng "Hold to show tokens" + copy địa chỉ: chữ ĐEN (07-22f, trước muted).**
 - **NÚT ĐỨNG ĐƠN ĐỘC = RỘNG 3/4 MÀN (user chốt 07-29 – "cho các button đứng đơn độc to ra cùng 1 dạng cho đồng bộ"):** `width: min(75vw, calc(var(--screen-max) * 0.75))` (neo vào .screen, KHÔNG dùng % vì khung cha đang thụt lề 20px → % ra số khác nhau mỗi màn). Đã áp: "Hold to show tokens" (HomeSend), "Tap to copy your wallet address" (HomeReceive), **nút Swap** (trước 66.67%). **+ `.row10-single .btn` (index.css) đổi 66.67% → 3/4** (user chốt 07-29, ăn About/Language/Security) **+ nút Reload màn ErrorBoundary**. Đo Playwright 07-29: MỌI nút đơn độc = **293px @390 · 281px @375**, bằng nhau; tâm `.row10-single` vẫn đúng 90dvh. Cặp nút `.row10-dual` (44% mỗi nút) GIỮ NGUYÊN – luật này chỉ cho nút đứng MỘT MÌNH. **Ngoại lệ CỐ Ý: nút "Sign in with Email" màn Login vẫn 80%** – nó ăn theo bề rộng dòng slogan phía trên (cũng 80%), hạ về 75% là lệch cặp; đừng "đồng bộ" nhầm.
+  - ⛔ **RÚT LẠI 08-13 CHO ĐÚNG 2 NÚT PILL TRẮNG** (user: *"hơi hối hận khi để nó to quá như này"*): **"Hold to show tokens"** (HomeSend) và **"Tap to copy your wallet address"** (HomeReceive) **BỎ bề rộng 3/4 màn, đổi sang ÔM SÁT CHỮ** – `padding: '0 18px'` + `maxWidth` + `overflow/textOverflow` làm lưới an toàn. Đo được nút/chữ = **1.26×** và **1.16×** (đúng tinh thần user "chữ 50 thì nút 60"). ⚠️ 2 nút này TRƯỚC ĐÂY cố tình bằng nhau ("1 CẶP" ở cùng toạ độ 55% của 2 tab) – **giờ CỐ Ý lệch nhau vì 2 câu dài khác nhau, đừng "sửa cho đều"**. ⚠️ An toàn với bug cũ 07-29 (chữ rớt xuống dòng trên iPhone đời cũ khi bề rộng tự co) vì cả 2 nút đã có `whiteSpace:'nowrap'`. Luật 3/4 màn VẪN GIỮ cho các nút đơn độc còn lại (nút Swap, `.row10-single`, Reload).
 - **Nút trong cặp `.row10-dual` = CHỮ TRẦN, KHÔNG icon** (user chốt 07-29: nút "Add" màn Contacts từng có icon `add` → lạc so với mọi cặp Back/<hành động> khác trong app).
 - **Mũi tên dropdown `down2` = `--color-brand`** (user chốt 07-22c, trước là muted): chip token màn Swap (`TokenRow`) + chip tiền tệ màn Send (`SendAmount`) + chip English/USD màn Language (07-22f).
 
@@ -288,6 +289,29 @@ ezwallet:0xABC…@5042002?amount=25&cur=USD    ← QR có sẵn số tiền
 
 ---
 
+## 7c. ÂM THANH báo thành công (user chốt 2026-08-13) — ⚠️ ĐANG LÀM DỞ
+
+**Trạng thái:** `src/sound.js` đã viết xong. **CHƯA nối vào màn nào, CHƯA có nút tắt, CHƯA test, CHƯA commit.** Việc còn lại ở mục 9.
+
+**4 quyết định của user (đã cân nhắc phương án khác rồi mới chốt — đừng đề xuất lại):**
+
+| | Chốt | Đã LOẠI, vì sao |
+|---|---|---|
+| Kêu ở đâu | **Gửi tiền xong** (SendReceipt) · **Swap xong** | ❌ *Nhận được tiền*: tiền tự về, KHÔNG có cú chạm nào ⇒ iOS chặn phát âm, phải giữ AudioContext sống cả phiên. ❌ *Copy/lưu QR/việc nhỏ*: kêu nhiều thì tiếng **mất thiêng**, đúng lúc tiền rời ví lại không nổi bật |
+| Tiếng lấy đâu | **Tự sinh Web Audio** (2 nốt sin đi lên C6→E6, ~0,3s) | ❌ *File mp3*: phải xin/đi tìm file, tăng dung lượng, dính bản quyền, lần đầu có thể trễ |
+| Nút tắt | **CÓ** — thêm 1 hàng vào màn `Language` (đang có 2 hàng Ngôn ngữ + Tiền tệ) | ❌ *Không có nút tắt*: nếu iOS phát kể cả khi điện thoại đang im lặng thì user hết đường tắt |
+| Mặc định | **BẬT** (`localStorage.ez_sound`, chỉ ghi `'off'` khi tắt) | — |
+
+**⚠️ LUẬT iOS — lý do có `unlockOnFirstTouch()`:** `AudioContext` sinh ra ở trạng thái `suspended`, **chỉ `resume()` được BÊN TRONG một cú chạm của user**. Lúc gửi tiền xong thì đã qua nhiều `await` (ký PIN trong iframe Circle, chờ on-chain) ⇒ **chuỗi cử chỉ ĐỨT**, gọi `resume()` ở đó là quá muộn. Nên phải mở khoá sẵn ở **cú chạm ĐẦU TIÊN vào app** (App.jsx gọi 1 lần). Chạm vào iframe PIN của Circle **không tính** cho trang mình.
+
+**⚠️ CHƯA BIẾT, phải test trên máy thật của user:** iOS có tôn trọng **nút gạt im lặng** với Web Audio hay không — khác nhau theo đời iOS. Đây chính là lý do bắt buộc có nút tắt trong app.
+
+**⚠️ Rung (`navigator.vibrate`) KHÔNG khả thi trên iPhone** — Safari iOS không hỗ trợ, chỉ Android có. Đừng hứa "rung + kêu".
+
+**Luật vàng:** `playSuccess()` phải **im lặng khi lỗi** (mọi thứ bọc try/catch, thiếu `AudioContext` thì return) — **TUYỆT ĐỐI không để tiếng chuông làm văng luồng tiền**.
+
+---
+
 ## 8. localStorage keys
 
 **Session:** `ez_user_token`, `ez_encryption_key`, `ez_wallet_addr`, `ez_wallet_id`, `ez_email` (email login), `ez_refresh_token`/`ez_google_email`/`ez_google_deviceId`/`ez_login_method` (Google), `ez_notifs`, `ez_last_recv_ts`, `ez_email_history`, `ez_notified_hashes`, `ez_faucet_pending`. `sessionStorage.ez_pin_ok` = cờ mở khoá phiên; **`sessionStorage.ez_sync_token`** = token sao lưu danh bạ, đổi từ chữ ký PIN ở `PinGate` (08-06) – **cố ý để sessionStorage** để nó chết cùng phiên app, mở lại app là ký lại.
@@ -296,6 +320,19 @@ ezwallet:0xABC…@5042002?amount=25&cur=USD    ← QR có sẵn số tiền
 ---
 
 ## 9. Việc tiếp theo
+
+### 🟠 ĐANG DỞ – phiên 2026-08-13 (làm tiếp cái này TRƯỚC)
+
+**A. Âm thanh báo thành công** (quyết định đầy đủ ở mục 7c, đừng hỏi lại user):
+1. `App.jsx` → gọi `unlockOnFirstTouch()` 1 lần trong `useEffect` lúc mở app.
+2. `SendReceipt.jsx` → `playSuccess()` khi vào màn (cạnh chỗ `addNotif('Đã gửi…')`).
+3. `Swap.jsx` → `playSuccess()` ngay sau `setSuccess(true)` (bước "đã gửi lệnh", chỗ user thấy nút xanh lá).
+4. `Language.jsx` → thêm hàng thứ 3 **"Âm thanh: On/Off"**, dùng lại đúng component `Picker` + kiểu `CHIP` sẵn có (đừng chế toggle kiểu mới). Box xám phải nới `gridRow: '2 / 4'` → `'2 / 5'` cho 3 hàng cao đều.
+5. **Đổi tên màn** `Language` → **"Settings"**: nhãn ở `MenuScreen` ITEMS + tiêu đề màn + key i18n. Lý do: màn không còn chỉ có ngôn ngữ & tiền tệ nữa. ⚠️ Việc TÁCH màn này khỏi Security (08-04) vẫn giữ, đừng gộp lại.
+6. Key i18n EN cần thêm: `'Âm thanh'`→Sound · `'Bật'`→On · `'Tắt'`→Off · `'Cài đặt'`→Settings. Xong chạy `npm run check-lang en` phải 100%.
+7. **Test trên máy thật của user** (Playwright headless KHÔNG nghe được tiếng, chỉ verify được là không văng lỗi + nút tắt ghi đúng localStorage): kiểm iOS có tôn trọng **nút gạt im lặng** không.
+
+**B. Nhãn mạng dưới QR màn Nhận – CHỜ USER CHỌN CHỖ ĐẶT.** QR đã khoá Arc ở tầng dữ liệu (mục 7b) nhưng **màn hình không có chữ nào nói đây là mạng gì** – máy thì đọc được `@5042002`, người thì chỉ thấy ô vuông đen trắng. Hợp với mô hình user đang nghĩ tới: *"chain khác nhau = ngân hàng khác nhau"*. Vướng: màn Nhận đã kín (hàng 6 nút copy, 7-8 vùng gợi ý, 9 ba nút) → **đặt ở đâu là quyết định bố cục của user, đừng tự chèn**.
 
 ### 🔴 CHỜ USER BẤM TAY – chốt phiên 2026-07-31 (đọc mục này TRƯỚC)
 
