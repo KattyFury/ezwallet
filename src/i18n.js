@@ -113,7 +113,12 @@ const EN = {
   'Đóng': 'Close',
   // BugButton — nút 🐛 góc phải hàng 1, hiện ở mọi màn
   'Báo lỗi': 'Report a bug',
-  'Cho chúng tôi biết bị lỗi gì': 'Tell us what is wrong',
+  'Tin nhắn này sẽ gửi kèm:': 'This report will include:',
+  'Màn hình bạn bấm Bug Report': 'The screen you reported from',
+  'Địa chỉ ví của bạn': 'Your wallet address',
+  'Thiết bị bạn dùng': 'Your device',
+  'Phiên bản app': 'App version',
+  'Thời gian bạn gửi': 'The time you reported',
   'Gửi': 'Send',
   'Đang gửi...': 'Sending...',
   'Đã gửi, cảm ơn bạn!': 'Sent – thank you!',

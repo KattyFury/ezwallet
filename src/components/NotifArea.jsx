@@ -16,9 +16,13 @@ function markNotified(hash) {
   localStorage.setItem('ez_notified_hashes', JSON.stringify([...s].slice(-100)))
 }
 
+// Chống chồng lệnh: mạng chậm mà nhịp hỏi tới thì bỏ qua nhịp đó, đừng bắn 2 request song song.
+let polling = false
+
 function pollIncoming(after) {
   const addr = localStorage.getItem('ez_wallet_addr')
-  if (!addr) return
+  if (!addr || polling) return
+  polling = true
   fetch(`https://testnet.arcscan.app/api?module=account&action=tokentx&address=${addr}&sort=desc&limit=20`)
     .then(r => r.json()).then(d => {
       const all = d?.result || []
@@ -62,7 +66,7 @@ function pollIncoming(after) {
         })
         after()
       }
-    }).catch(() => {})
+    }).catch(() => {}).finally(() => { polling = false })
 }
 
 // Kiểu thông báo: NỀN MÀU NHẠT (iOS-style) + icon đậm màu, chữ đen
@@ -126,7 +130,28 @@ export default function NotifArea({ hints = [], warning = null }) {
   const { navigate } = useNav()
   const [notifs, setNotifs] = useState(getNotifs())
   const scrollRef = useRef(null)
-  useEffect(() => { pollIncoming(() => setNotifs(getNotifs())) }, [])
+  // ⚠️ BUG USER BÁO 08-13: "thông báo nhận tiền xuất hiện rất lâu".
+  // GỐC: hàm tên `pollIncoming` (poll = hỏi LẶP LẠI) nhưng trước đây gọi ĐÚNG MỘT LẦN lúc mở màn
+  // (`useEffect(..., [])`) và TOÀN APP KHÔNG CÓ setInterval nào. Ngồi yên ở màn Gửi/Nhận thì tiền
+  // về cũng không ai hỏi lại → thông báo chỉ hiện khi user vô tình chuyển tab qua lại (remount).
+  // Gửi tiền thì hiện NGAY vì màn Biên lai tự `addNotif` tại chỗ, không phải hỏi mạng — nên chỉ
+  // chiều NHẬN bị chậm, đúng như user mô tả.
+  // VÌ SAO PHẢI SỬA: app cho người lớn tuổi. Người ta được báo "đã chuyển tiền rồi" mà mở app ra
+  // không thấy gì thì LO, rồi gọi điện hỏi, rồi bấm lung tung. Im lặng ở đây không phải lỗi nhỏ.
+  //
+  // 15s: Arc chốt khối dưới 1s, phần trễ còn lại là ArcScan lập chỉ mục. 15s đủ nhanh để người ta
+  // không kịp lo, mà không dội API. ĐỪNG hạ xuống vài giây — mỗi nhịp là 1 request cho MỌI máy.
+  useEffect(() => {
+    const tick = () => { if (document.visibilityState === 'visible') pollIncoming(() => setNotifs(getNotifs())) }
+    tick()                                   // hỏi ngay lúc mở màn (giữ nguyên hành vi cũ)
+    const id = setInterval(tick, 15000)
+    // Quay lại app thì hỏi NGAY, không đợi hết nhịp: kịch bản thường gặp nhất là "được báo đã
+    // chuyển tiền" → mở app lên → phải thấy liền. Cũng là lý do tick() bỏ qua khi tab đang ẩn:
+    // chạy nền chỉ tốn pin/dữ liệu vì user có nhìn đâu mà thấy.
+    const onVisible = () => { if (document.visibilityState === 'visible') tick() }
+    document.addEventListener('visibilitychange', onVisible)
+    return () => { clearInterval(id); document.removeEventListener('visibilitychange', onVisible) }
+  }, [])
   // Mặc định cuộn tới ĐÁY (thông báo mới nhất) mỗi khi danh sách đổi — cũ hơn phải cuộn lên mới thấy.
   // BUG đã sửa: thiếu `warning` trong dependency → khi warning xuất hiện SAU (vd sau khi tải xong
   // số dư token, async, trễ hơn lần render đầu) thì effect không chạy lại, để scroll bị "kẹt" giữa

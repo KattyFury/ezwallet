@@ -81,16 +81,30 @@ export default function BugButton({ screen }) {
         <div className="popup-overlay" onClick={close}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
             <div className="popup-title">{t('Báo lỗi')}</div>
-            {/* MỘT dòng mời gõ, hết (user chốt 08-13: "report a bug mà yêu cầu lắm thế?").
-                Bản đầu liệt kê đầy đủ những thứ gửi kèm — đúng về minh bạch nhưng đọc như tờ điều
-                khoản, người ta ngại báo lỗi. Bỏ luôn placeholder trong ô nhập vì trùng ý với dòng này. */}
-            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', lineHeight: 1.35 }}>
-              {t('Cho chúng tôi biết bị lỗi gì')}
-            </span>
+            {/* DANH SÁCH ĐÁNH SỐ những thứ gửi kèm (user chốt 08-13, bản thứ 3).
+                Đường đi: liệt kê 1 câu dài → user chê "yêu cầu lắm thế?" → rút còn 1 dòng → user
+                muốn LIỆT KÊ LẠI nhưng dạng danh sách đánh số cho dễ soi. Danh sách dễ đọc hơn hẳn
+                câu dài nhồi 4 mệnh đề. `paddingLeft` phải khai tay: reset ở index.css dòng 96 xoá
+                sạch margin/padding của mọi thẻ, không có nó thì số thứ tự bị cắt mất. */}
+            {/* lineHeight 1.3 (không phải 1.45): trên màn nhỏ 360×640 popup chạm trần 56dvh và
+                phải cuộn mới thấy nút Gửi. Mỗi 0.1 lineHeight ở đây đổi được ~6px chiều cao. */}
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', lineHeight: 1.3 }}>
+              {t('Tin nhắn này sẽ gửi kèm:')}
+              <ol style={{ paddingLeft: 20 }}>
+                <li>{t('Màn hình bạn bấm Bug Report')}</li>
+                <li>{t('Địa chỉ ví của bạn')}</li>
+                <li>{t('Thiết bị bạn dùng')}</li>
+                <li>{t('Phiên bản app')}</li>
+                <li>{t('Thời gian bạn gửi')}</li>
+              </ol>
+            </div>
             <textarea
               className="address-input" autoFocus value={text} maxLength={1000}
               onChange={e => setText(e.target.value)}
-              style={{ fontSize: 'var(--fs-body)', minHeight: 96, resize: 'none', lineHeight: 1.35, fontFamily: 'inherit' }}
+              // minHeight 72 (hạ từ 96): thêm danh sách 5 gạch đầu dòng là popup chạm trần
+              // max-height 56dvh của .popup-card → phải CUỘN mới thấy nút Gửi (đo 08-13).
+              // 72px vẫn đủ 3 dòng gõ, gõ dài hơn thì ô tự cuộn bên trong.
+              style={{ fontSize: 'var(--fs-body)', minHeight: 72, resize: 'none', lineHeight: 1.35, fontFamily: 'inherit' }}
             />
             {state && state !== 'sending' && (
               <span style={{ fontSize: 'var(--fs-label)', color: state === 'sent' ? 'var(--color-primary)' : 'var(--color-error)' }}>
