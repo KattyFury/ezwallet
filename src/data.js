@@ -69,6 +69,20 @@ export function fmtDisplay(usd, cur, rates) {
   return c.after ? `${n} ${c.symbol}` : `${c.symbol}${n}`
 }
 
+// Số lượng TOKEN thật (khác fmtDisplay/displayNum vốn là TIỀN QUY ĐỔI theo tiền tệ hiển thị).
+// Số lẻ theo token: cirBTC 6, còn lại 2 — cùng thang với decimalsFor() ở Swap.jsx.
+// ⚠️ BUG USER BÁO 2026-08-25: thông báo faucet ghi "received 0.00 cirBTC" vì chỗ đó toFixed(2)
+// cứng cho MỌI token, mà faucet Circle phát cirBTC dạng bụi (0.000549) → làm tròn thành 0.00,
+// người dùng tưởng nhận hụt. Nên: token nào nhỏ hơn cả bậc số lẻ của nó thì nới tới 8 số lẻ rồi
+// cắt số 0 thừa — thà dài 1 chút còn hơn hiện số 0 sai sự thật.
+export function fmtTokenAmount(n, symbol) {
+  const v = Number(n) || 0
+  const dec = symbol === 'cirBTC' ? 6 : 2
+  const trim = str => (str.includes('.') ? str.replace(/0+$/, '').replace(/\.$/, '') : str)
+  if (v > 0 && v < 10 ** -dec) return trim(v.toFixed(8))
+  return dec > 2 ? trim(v.toFixed(dec)) : v.toFixed(dec)
+}
+
 // Format tiền MỘT CHUỖI MỘT STYLE: "$2" (không phải "2 USD" tách số đậm + đơn vị thường —
 // user chốt 2026-07-03: lệch font weight/size giữa số và đơn vị là LỖI). USD/EUR đứng TRƯỚC
 // dạng ký hiệu; token thật (USDC/EURC/cirBTC) đứng SAU cách 1 space.

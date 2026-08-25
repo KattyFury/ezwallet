@@ -40,7 +40,7 @@ export default function SendReceipt() {
   // Lưu thông báo "đã gửi" để HomeSend hiện. dedupeKey theo timestamp (duy nhất mỗi lần gửi thật)
   // → chống nhân đôi do React.StrictMode gọi effect 2 lần ở dev mode.
   useEffect(() => {
-    addNotif(`${'Sent'} ${amountText} ${'to'} ${to}`, 'sent', null, `sent-${timestamp}`)
+    addNotif(`Sent ${amountText} to ${to}`, 'sent', null, `sent-${timestamp}`)
   }, [])
 
   // Vẽ biên lai ra canvas rồi tải về kho ảnh

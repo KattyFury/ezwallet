@@ -4,6 +4,7 @@ import { useNav } from '../nav'
 import { getNotifs, dismissNotif, addNotif } from '../notif'
 import { isFaucetAddress } from '../chain'
 import { findContactName } from '../store'
+import { fmtTokenAmount } from '../data'
 
 // Phát hiện tiền vào (poll ArcScan) → tạo thông báo "đã nhận" (dùng chung mọi màn có NotifArea)
 // Chống trùng: mỗi tx hash chỉ thông báo MỘT lần (lưu set hash đã thông báo).
@@ -36,8 +37,8 @@ function pollIncoming(after) {
       if (lastSeen) {
         const seen = notifiedHashes()
         recv.filter(tx => parseInt(tx.timeStamp) > lastSeen && !seen.has(tx.hash)).reverse().forEach(tx => {
-          const amt = (parseFloat(tx.value) / Math.pow(10, parseInt(tx.tokenDecimal || 6))).toFixed(2)
           const symbol = tx.tokenSymbol || 'USDC'
+          const amt = fmtTokenAmount(parseFloat(tx.value) / Math.pow(10, parseInt(tx.tokenDecimal || 6)), symbol)
           // FAUCET — 2 cách nhận biết, ưu tiên cách chắc chắn:
           // 1) Địa chỉ gửi NẰM TRONG danh sách faucet đã tra từ ArcScan (chain.js) — chắc ăn, không
           //    phụ thuộc user có bấm nút Faucet trong app hay không, không hết hạn.
@@ -59,7 +60,7 @@ function pollIncoming(after) {
           } else {
             // Hiện TÊN DANH BẠ nếu địa chỉ người gửi đã lưu (đồng bộ thông báo "Đã gửi cho <tên>")
             const fromName = findContactName(tx.from) || `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`
-            addNotif(`${'Received'} ${amt} ${symbol} ${'from'} ${fromName}`, 'received', tx.hash, `recv-${tx.hash}`)
+            addNotif(`Received ${amt} ${symbol} from ${fromName}`, 'received', tx.hash, `recv-${tx.hash}`)
           }
           markNotified(tx.hash)
         })
@@ -75,11 +76,14 @@ const STYLE = {
   error:    { color: 'var(--color-error)',   bg: 'var(--color-error-soft)',   icon: 'warning' },  // lỗi = đỏ
 }
 
-// 1 dòng — bắt buộc 1 hàng (không xuống dòng), cắt "..." nếu dài, để tối đa số thông báo
-// hiện được trong vùng cố định (rows 7-8).
-// minWidth:0 BẮT BUỘC: đây là flex item, mặc định min-width:auto = KHÔNG co dưới bề rộng chữ →
-// nowrap sẽ ĐẨY RỘNG cả hàng thay vì cắt "…" (chính là thứ làm phình cột grid, lệch cả màn).
-const ROW_TEXT = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }
+// ⚠️ ĐỔI 2026-08-25 (user báo lỗi): trước đây ép 1 DÒNG + cắt "…" cho gọn, nhưng câu thông báo
+// swap dài hơn bề ngang máy nên bị cắt mất phần đuôi — "Swapped 0.000549 cirBTC to ~262.80 U…"
+// giấu luôn tên token nhận. Thông báo mất chữ thì thà cao thêm 1 dòng: giờ CHO XUỐNG DÒNG, hàng
+// tự cao theo nội dung (minHeight 40 giữ dáng 1 dòng), vùng thông báo vốn cuộn được nên không vỡ.
+// minWidth:0 VẪN BẮT BUỘC: đây là flex item, mặc định min-width:auto = không co dưới bề rộng chữ
+// → chữ dài sẽ ĐẨY RỘNG cả hàng, phình cột grid, lệch cả màn.
+// overflowWrap:anywhere để chuỗi dài không khoảng trắng (địa chỉ ví 0x…) cũng ngắt được.
+const ROW_TEXT = { minWidth: 0, lineHeight: 1.3, overflowWrap: 'anywhere' }
 
 // MỘT CỠ CHỮ DUY NHẤT cho cả vùng thông báo (hint / cảnh báo / thông báo thật) — trước đây hint và
 // cảnh báo dùng --fs-label (15) còn thông báo dùng --fs-body (19) → cùng 1 chỗ mà cái to cái nhỏ.
@@ -205,9 +209,10 @@ export default function NotifArea({ hints = [], warning = null, pollMs = 15000 }
           const s = STYLE[n.type] || STYLE.sent
           const clickable = n.type === 'received' || n.type === 'sent'
           return (
-            // Chiều cao = đúng nút "Gửi" trong Contacts.jsx (height 40, cố định) — đỡ tốn space,
-            // hiện được nhiều thông báo hơn trong vùng cố định (hàng 7-8).
-            <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: s.bg, borderRadius: 12, height: 40, minHeight: 40, padding: '0 14px', cursor: clickable ? 'pointer' : 'default' }}>
+            // Cao TỐI THIỂU 40 = đúng nút "Gửi" trong Contacts.jsx; câu dài thì hàng tự cao thêm
+            // (bỏ `height: 40` cứng ngày 08-25, xem chú thích ROW_TEXT). padding dọc 8 để 1 dòng
+            // vẫn ra đúng 40px như cũ.
+            <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: s.bg, borderRadius: 12, minHeight: 40, padding: '8px 14px', cursor: clickable ? 'pointer' : 'default' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: NOTIF_FS, color: 'var(--color-content)', ...ROW_TEXT }}>
                 <Icon name={s.icon} size="var(--is-item)" color={s.color} style={{ flexShrink: 0 }} />
                 <span style={ROW_TEXT}>{n.text}</span>

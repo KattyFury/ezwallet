@@ -100,7 +100,7 @@ export default function SendConfirm() {
       if (e?.code === 155701) return   // user tự bấm hủy nhập PIN → im lặng, về màn xác nhận
       console.error('[SendConfirm] send failed:', e)
       const reason = circleErrorMessage(e)
-      const msg = `${'Send failed:'} ${reason}`
+      const msg = `Send failed: ${reason}`
       setError(msg)
       addNotif(msg, 'error')
     }
