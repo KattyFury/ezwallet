@@ -4,7 +4,7 @@
 
 ---
 
-## Core Value – mọi thứ xoay quanh cái này
+## Core Value – everything revolves around this
 
 > EZwallet was built on a simple belief: everyone should be able to own their
 > own money, without needing to become a crypto expert.
@@ -17,11 +17,11 @@
 > people, making it simple enough for anyone to use while preserving full
 > ownership of their money.
 
-Mọi tính năng, quyết định UX, và trade-off kỹ thuật đều phải phục vụ niềm tin
-này: người dùng phổ thông (không phải dân crypto) tự giữ tiền của họ, không
-phải học crypto để dùng được. Đề xuất nào bắt user "thích nghi với crypto"
-(seed phrase, địa chỉ hex, gas token riêng...) thì mặc định SAI hướng – nêu ra
-và hỏi lại, đừng tự làm.
+Every feature, UX decision and technical trade-off has to serve this belief:
+everyday people (not crypto natives) holding their own money, without having to
+learn crypto to use it. Any proposal that makes the user "adapt to crypto"
+(seed phrases, hex addresses, a separate gas token...) is wrong by default – raise it
+and ask, do not just build it.
 
 ---
 
@@ -41,7 +41,7 @@ I'm a **Vietnamese vibecoder** – I have ideas, not a programming background. I
 My background is crypto research (VHG, 2023-2024). Now I do content + community ([0xhieu.xyz](https://0xhieu.xyz)). I have datasets on TGE, FDV, market conditions. I build tools that turn **data and statistics into predictions** – e.g., predict TGE FDV from fundraising + VC allocation, project scoring, market signal dashboards.
 
 **Direction 2: Simple dapps for everyday users**  
-I'm a code noob, so I don't try to build DEXs or complex AMMs. I aim for **small but useful dapps** – payment app (QuickPay), savings app (PigSave / Bỏ Heo), trading agent (Arcis). Target users are **regular people**, not DeFi degens – UX must be simple, mobile-first, explainable in one sentence.
+I'm a code noob, so I don't try to build DEXs or complex AMMs. I aim for **small but useful dapps** – payment app (QuickPay), savings app (PigSave), trading agent (Arcis). Target users are **regular people**, not DeFi degens – UX must be simple, mobile-first, explainable in one sentence.
 
 **Stack**: Solidity + Cloudflare Workers + Cloudflare Pages  
 **Chains**: Arc, Seismic, Monad (EVM-compatible)  
@@ -62,18 +62,18 @@ I'm a code noob, so I don't try to build DEXs or complex AMMs. I aim for **small
 
 ---
 
-## Brand Voice – KHÔNG ĐƯỢC SAI
+## Brand Voice – GET THIS RIGHT
 
-- **Slogan chốt, dùng y nguyên mọi nơi:** *"A crypto wallet simple enough for my mom to use."*
-  - Bản VN: *"Ví crypto đơn giản đến mức mẹ mình cũng dùng được."*
-  - KHÔNG biến thể: không "your grandma", không "your mom", không "stablecoin wallet".
-  - Chỗ phải khớp: `<title>` + `og:title` + `twitter:title` trong `index.html`, ảnh `public/og.png`,
+- **The settled slogan, used verbatim everywhere:** *"A crypto wallet simple enough for my mom to use."*
+  - English only – the project dropped Vietnamese and Chinese on 2026-08-25.
+  - NO variants: not "your grandma", not "your mom", not "stablecoin wallet".
+  - Places that must match: `<title>` + `og:title` + `twitter:title` in `index.html`, the image `public/og.png`,
     `package.json` description, `README.md`, `PITCH.md`, slide P1 trong `DECK-DESIGN-SPEC.md`.
-- **Dấu gạch dài: CHỈ dùng en dash `–` (U+2013). TUYỆT ĐỐI KHÔNG em dash `—` (U+2014).**
-  Áp dụng cho mọi chữ người đọc nhìn thấy: web, tài liệu, slide, bài đăng. (Comment code tiếng Việt
-  trong `src/` thì không bắt buộc.)
-- Đổi slogan → phải dựng lại `public/og.png` (script `C:\tmp\ezw-verify\make-og.mjs` + `og-card.html`,
-  1200×630) và bump `?v=` trong `og:image` để X/Facebook quét lại thẻ.
+- **Long dashes: ONLY the en dash `–` (U+2013). NEVER the em dash `—` (U+2014).**
+  Applies to every word a reader sees: the web app, documents, slides, posts. (Code comments in `src/`
+  are English now, and the same rule is worth keeping there too.)
+- Changing the slogan → rebuild `public/og.png` (script `C:\tmp\ezw-verify\make-og.mjs` + `og-card.html`,
+  1200×630) and bump the `?v=` in `og:image` so X/Facebook re-scan the card.
 
 ---
 

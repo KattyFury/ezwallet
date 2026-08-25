@@ -4,8 +4,6 @@
 
 **A crypto wallet simple enough for my mom to use.**
 
-<sub>*Ví crypto đơn giản đến mức mẹ mình cũng dùng được.*</sub>
-
 [![Live demo](https://img.shields.io/badge/live%20demo-ezwallet.cash-0B53BF?style=flat-square)](https://ezwallet.cash)
 [![Network](https://img.shields.io/badge/network-Arc%20Testnet-16A34A?style=flat-square)](https://testnet.arcscan.app)
 [![Pitch deck](https://img.shields.io/badge/pitch%20deck-slides-F59E0B?style=flat-square)](https://docs.google.com/presentation/d/1-MuqJeSV1Riwg3Bx6IXZSuNumqbtM83dmzG48-vIRDQ/edit?usp=sharing)

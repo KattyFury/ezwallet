@@ -1,31 +1,31 @@
-# EZwallet – Spec dự án & bộ shill
+# EZwallet – project spec & messaging kit
 
-> **File này để LÀM GÌ:** mọi thứ cần để nói về EZwallet ra ngoài – một dòng chốt, fact sheet
-> (chỉ được nói những gì trong đó), điểm khác biệt, và **copy sẵn để đăng** (X, bài dài, tiếng Việt,
-> Discord/TG). Copy trong mục 8 dán là dùng được, không cần sửa.
+> **WHAT THIS FILE IS FOR:** everything needed to talk about EZwallet publicly – the one-liner, the fact sheet
+> (say only what is in it), the differentiators, and **ready-to-post copy** (X, long form,
+> Discord/TG). The copy in section 8 can be pasted as-is.
 >
-> **Cập nhật:** 2026-07-29 · Đối chiếu sự thật với `HANDOFF.md` (trạng thái kỹ thuật) + `README.md`.
-> Sửa sản phẩm → sửa mục 2 và 6 của file này TRƯỚC khi đăng bài mới.
+> **Updated:** 2026-08-25 · Cross-check the facts against `HANDOFF.md` (technical state) + `README.md`.
+> Change the product → update sections 2 and 6 of this file BEFORE posting anything new.
 
 ---
 
-## 1. Một dòng – chọn theo chỗ đăng
+## 1. The one-liner – pick by where it goes
 
-| Độ dài | EN (dùng làm mặc định) | VN |
-|---|---|---|
-| **6 chữ** | A crypto wallet for my mom. | Ví crypto cho mẹ mình dùng. |
-| **1 câu** | A crypto wallet simple enough for my mom to use – email + PIN, no seed phrase, no gas token. | Ví crypto đơn giản đến mức mẹ mình cũng dùng được – email + mã PIN, không seed phrase, không cần mua token trả phí. |
-| **1 đoạn** | EZwallet is a mobile-first crypto wallet built for people who don't know what a wallet is. You sign in with an email and a 6-digit PIN – no seed phrase to lose. It runs on Arc, where USDC *is* the gas token, so nobody has to buy a second coin just to move the first one. Send, receive by QR, swap by dragging a slider. Live on Arc Testnet. | EZwallet là ví stablecoin mobile-first dành cho người **không biết ví là gì**. Đăng nhập bằng email + mã PIN 6 số – không có seed phrase để mất. Chạy trên Arc, nơi **USDC chính là token trả phí**, nên không ai phải đi mua thêm coin thứ hai chỉ để chuyển được coin thứ nhất. Gửi, nhận bằng QR, đổi tiền bằng cách kéo thanh trượt. Đang chạy trên Arc Testnet. |
+| Length | Copy |
+|---|---|
+| **6 words** | A crypto wallet for my mom. |
+| **1 sentence** | A crypto wallet simple enough for my mom to use – email + PIN, no seed phrase, no gas token. |
+| **1 paragraph** | EZwallet is a mobile-first crypto wallet built for people who don't know what a wallet is. You sign in with an email and a 6-digit PIN – no seed phrase to lose. It runs on Arc, where USDC *is* the gas token, so nobody has to buy a second coin just to move the first one. Send, receive by QR, swap by dragging a slider. Live on Arc Testnet. |
 
-**Tagline chốt (dùng thống nhất mọi nơi):**
+**The settled tagline (used consistently everywhere):**
 > *A crypto wallet simple enough for my mom to use.*
 
-> ⚠️ **Luật văn phong:** viết đúng câu trên, không biến thể (không "grandma", không "your mom").
-> Dấu gạch dài: **CHỈ dùng en dash `–` (U+2013)**, tuyệt đối không dùng em dash `—` (U+2014).
+> ⚠️ **Voice rule:** write that sentence exactly, with no variants (no "grandma", no "your mom").
+> Long dashes: **ONLY the en dash `–` (U+2013)**, never the em dash `—` (U+2014).
 
 ---
 
-## 1.5. Core belief (mọi thứ trong file này phải bám theo đây)
+## 1.5. Core belief (everything in this file has to follow it)
 
 > EZwallet was built on a simple belief: everyone should be able to own their
 > own money, without needing to become a crypto expert.
@@ -38,98 +38,98 @@
 > people, making it simple enough for anyone to use while preserving full
 > ownership of their money.
 
-VN: Con người không cần thích nghi với crypto – crypto phải thích nghi với con
-người, đơn giản đến mức ai cũng dùng được mà vẫn giữ trọn quyền sở hữu tiền của
-họ. Mọi bài đăng/copy trong file này nên quy về niềm tin này, không chỉ liệt kê
-tính năng.
+People should not have to adapt to crypto – crypto has to adapt to people,
+simple enough for anyone to use while keeping full ownership of their
+money. Every post and every piece of copy here should come back to that belief, not just
+list features.
 
 ---
 
-## 2. Fact sheet – CHỈ được nói những gì trong bảng này
+## 2. Fact sheet – say ONLY what is in this table
 
-Mọi con số dưới đây đều verify được (chạy thật / đọc on-chain / có trong code). **Ngoài bảng này thì đừng chế.**
+Every number below is verifiable (actually run / read on-chain / present in the code). **Outside this table, invent nothing.**
 
-| Hạng mục | Sự thật |
+| Item | Fact |
 |---|---|
-| **Trạng thái** | Chạy được, public, **Arc Testnet** – tiền test, không có giá trị thật. Chưa lên mainnet. |
-| **Link sản phẩm** | https://ezwallet.cash |
-| **Mã nguồn** | https://github.com/KattyFury/ezwallet – **MIT, mở hoàn toàn** |
+| **Status** | Working, public, **Arc Testnet** – test money, no real value. Not on mainnet. |
+| **Product link** | https://ezwallet.cash |
+| **Source** | https://github.com/KattyFury/ezwallet – **MIT, fully open** |
 | **Pitch deck** | [Google Slides](https://docs.google.com/presentation/d/1-MuqJeSV1Riwg3Bx6IXZSuNumqbtM83dmzG48-vIRDQ/edit?usp=sharing) |
-| **Đăng nhập** | Email + **PIN 6 số**. KHÔNG seed phrase. Khoá do **Circle User-Controlled Wallets (MPC)** giữ; PIN ký từng giao dịch. |
-| **Chain** | **Arc** (L1 của Circle) Testnet, chainId `5042002`, explorer `testnet.arcscan.app` |
-| **Phí gas** | Trả bằng **USDC** (Arc dùng USDC làm native gas) – thực đo **dưới $0.01/giao dịch** |
-| **Token hỗ trợ** | USDC · EURC · cirBTC |
-| **Tính năng chạy thật** | Gửi (kèm lời nhắn on-chain qua Memo precompile của Arc) · Nhận bằng QR (đặt sẵn số tiền + kho QR) · **Swap bằng thanh trượt %** · Danh bạ có ảnh · Lịch sử + biên lai lưu về máy · Hiển thị số dư theo USDC hoặc EURC |
-| **Swap chạy bằng** | Circle **Stablecoin Kit**, route qua LiFi, settle qua Swap Adapter – **1 lần nhập PIN cho cả approve + swap** (gộp qua Multicall3) |
-| **Mô hình doanh thu** | Phí app **0,1%** trên mỗi lệnh swap (trừ ở token đầu vào, hiển thị trong "You receive"). Đang chạy trên testnet. |
-| **Quy mô app** | 20 màn, PWA (thêm vào màn hình chính iOS được), 1 font, lưới 10 hàng cố định |
-| **Hạ tầng** | React 18 + Vite · Cloudflare Pages + Pages Functions (API key nằm server-side) · viem đọc on-chain |
-| **Người làm** | Hieu Nguyen – [0xhieu.xyz](https://0xhieu.xyz) · X [@0xhieuxyz](https://x.com/0xhieuxyz) · TG [@nguyen0xhieu](https://t.me/nguyen0xhieu) · GitHub [KattyFury](https://github.com/KattyFury) |
-| **Cách làm** | Xây end-to-end **cùng AI (Claude)** bởi người **không có nền lập trình**. Quyết định sản phẩm/UX/thiết kế là của người; phần code viết qua hội thoại rồi chạy thật để verify. |
+| **Sign-in** | Email + a **6-digit PIN**. NO seed phrase. Keys held by **Circle User-Controlled Wallets (MPC)**; the PIN signs each transaction. |
+| **Chain** | **Arc** (Circle's L1) Testnet, chainId `5042002`, explorer `testnet.arcscan.app` |
+| **Gas fees** | Paid in **USDC** (Arc uses USDC as native gas) – measured at **under $0.01 per transaction** |
+| **Supported tokens** | USDC · EURC · cirBTC |
+| **Features that genuinely work** | Send (with an on-chain note through Arc's Memo precompile) · Receive by QR (preset amounts + a QR library) · **Swap with a % slider** · Contacts with photos · History + receipts saved to the device · Balances shown in USDC or EURC |
+| **Swap runs on** | Circle **Stablecoin Kit**, routed through LiFi, settled through the Swap Adapter – **one PIN entry for approve + swap together** (batched through Multicall3) |
+| **Revenue model** | An app fee of **0.1%** per swap (taken from the input token, shown in "You receive"). Running on testnet. |
+| **App size** | 20 screens, PWA (installable on the iOS home screen), one font, a fixed 10-row grid |
+| **Infrastructure** | React 18 + Vite · Cloudflare Pages + Pages Functions (the API key stays server-side) · viem for on-chain reads |
+| **Who built it** | Hieu Nguyen – [0xhieu.xyz](https://0xhieu.xyz) · X [@0xhieuxyz](https://x.com/0xhieuxyz) · TG [@nguyen0xhieu](https://t.me/nguyen0xhieu) · GitHub [KattyFury](https://github.com/KattyFury) |
+| **How it was built** | Built end to end **with AI (Claude)** by someone with **no programming background**. The product, UX and design decisions are human; the code came out of conversation and was verified by running it for real. |
 
 ---
 
-## 3. Câu chuyện 30 giây (khung kể mọi lúc)
+## 3. The 30-second story (the frame to use every time)
 
-1. **Vấn đề:** ví crypto được thiết kế cho người đã hiểu crypto. Seed phrase 12 từ, địa chỉ `0x` dài ngoằng, phải mua ETH mới chuyển được USDC – mỗi thứ là một bức tường. Với người lớn tuổi thì đó là chấm hết ngay bước 1.
-2. **Nhận ra:** stablecoin đã đủ tốt để là "tiền" với người thường rồi. Thứ chưa đủ tốt là **cái ví**.
-3. **Giải pháp:** bỏ hết từ vựng crypto khỏi bề mặt. Email + PIN. Phí trả bằng chính đồng tiền bạn đang cầm. Chữ to, mỗi màn một hành động chính. Muốn đổi tiền thì **kéo thanh trượt**, không phải gõ số thập phân.
-4. **Bằng chứng:** không phải mockup – vào link bấm thử được ngay, code mở MIT.
+1. **The problem:** crypto wallets are designed for people who already understand crypto. A 12-word seed phrase, long `0x` addresses, having to buy ETH before you can move USDC – each one is a wall. For an older person it is over at step 1.
+2. **The realisation:** stablecoins are already good enough to be "money" for ordinary people. What is not good enough yet is **the wallet**.
+3. **The solution:** take the crypto vocabulary off the surface. Email + PIN. Fees paid in the money you are already holding. Big type, one primary action per screen. To swap, **drag a slider** instead of typing decimals.
+4. **The proof:** it is not a mockup – open the link and use it right now, the code is MIT.
 
 ---
 
-## 4. 5 điểm khác biệt (mỗi cái đều có bằng chứng)
+## 4. Five differentiators (each with its evidence)
 
-| # | Điểm | Bằng chứng để chốt |
+| # | Point | Evidence to close with |
 |---|---|---|
-| 1 | **Không seed phrase** – email + PIN 6 số | Circle MPC giữ khoá; PIN ký từng lệnh. Mất máy không mất tiền. |
-| 2 | **Không cần token trả phí riêng** | Arc dùng USDC làm native gas → cầm USDC là dùng được, không phải đi mua ETH trước. |
-| 3 | **Swap không cần gõ số** | Kéo thanh trượt chọn % số dư, có 5 mốc nam châm + chip gợi ý số chẵn. Đây là thứ mọi người thử xong đều nhắc. |
-| 4 | **Lời nhắn nằm trên blockchain** | Gửi kèm câu "Mẹ gửi con tiền nhé" qua Memo precompile của Arc – như nội dung chuyển khoản ngân hàng. |
-| 5 | **Thiết kế cho mắt kém** | Chữ to, lưới 10 hàng cố định, mỗi màn một nút chính, nút bấm được đều có bóng. Accessibility là tính năng, không phải khẩu hiệu. |
+| 1 | **No seed phrase** – email + a 6-digit PIN | Circle MPC holds the keys; the PIN signs each transaction. Losing the phone does not lose the money. |
+| 2 | **No separate gas token needed** | Arc uses USDC as native gas → holding USDC is enough, no buying ETH first. |
+| 3 | **Swapping without typing numbers** | Drag a slider to pick a % of the balance, with 5 magnet marks + round-number chips. This is the thing everyone mentions after trying it. |
+| 4 | **Notes live on the blockchain** | Send "Mommy, I sent you money" through Arc's Memo precompile – like the description on a bank transfer. |
+| 5 | **Designed for weaker eyesight** | Big type, a fixed 10-row grid, one primary button per screen, and everything tappable has a shadow. Accessibility as a feature, not a slogan. |
 
-**Điểm số 3 và số 4 là thứ dễ viral nhất – luôn để trong 2 tweet đầu.**
-
----
-
-## 5. Nói với ai
-
-- **Vòng 1 (dễ nhất):** builder/hackathon Arc + Circle, dev DeFi quan tâm UX, người theo dõi sẵn của anh.
-- **Vòng 2:** cộng đồng crypto Việt (Telegram/FB group) – chủ đề "làm sản phẩm thật thay vì farm airdrop".
-- **Vòng 3:** nhóm no-code / build-with-AI (rất hợp câu chuyện "người không biết code làm ra ví chạy được").
-- **Ai KHÔNG phải target:** degen tìm yield, người tìm ví multi-chain đủ tính năng. Đừng cố bán cho họ.
+**Points 3 and 4 are the most shareable – always keep them in the first 2 tweets.**
 
 ---
 
-## 6. Trạng thái & lộ trình (nói rõ đâu là hiện tại, đâu là tương lai)
+## 5. Who to talk to
 
-**Đang có (hiện tại, chạy thật):** login email+PIN · gửi kèm lời nhắn · nhận QR + kho QR · swap 3 token · danh bạ · lịch sử + biên lai · PWA cài lên iPhone.
-
-**Chưa có (nói thẳng khi bị hỏi):** chưa lên mainnet · mới 1 chain · UI chỉ tiếng Anh (màn PIN của Circle là iframe chỉ có tiếng Anh) · chưa có Google login · quét QR chỉ đọc QR ví crypto, không đọc QR ngân hàng.
-
-**Định hướng (ghi rõ là TƯƠNG LAI, không hứa ngày):** mainnet · app native iOS/Android (FaceID thay PIN) · thêm ngôn ngữ & tiền tệ · vài dịch vụ tài chính chọn lọc nhúng thẳng vào app.
-
----
-
-## 7. GUARDRAILS – 6 câu TUYỆT ĐỐI không được nói
-
-Shill sai một câu là mất uy tín cả dự án. Đây là loại lỗi không sửa lại được:
-
-1. ❌ Không nói/ám chỉ **mainnet** hay **tiền thật**. Mọi bài phải có chữ **Arc Testnet** hoặc "test money".
-2. ❌ Không hứa **lãi suất, lợi nhuận, yield, "tiền của bạn được bảo hiểm"**. EZwallet không phải ngân hàng.
-3. ❌ Không nói **"non-custodial"** kiểu tuyệt đối. Nói đúng: *khoá do Circle MPC quản lý, người dùng ký bằng PIN* – đây là **user-controlled**, không phải seed-phrase self-custody. Ai hỏi kỹ thì trả lời đúng như vậy.
-4. ❌ Không chế **số người dùng, TVL, số giao dịch**. Chưa có thì nói chưa có.
-5. ❌ Không dùng **ảnh giao diện dựng/mockup**. Chỉ dùng ảnh/GIF thật trong `docs/` (mục 9).
-6. ❌ Không nói **"đã audit"** – chưa audit.
-7. ❌ Không quảng bá **"sao lưu danh bạ trên cloud"** (thêm 07-29, cập nhật 08-06). Lý do cũ (auth yếu: biết email là đọc được sổ danh bạ) **ĐÃ SỬA XONG** – giờ cửa vào là chữ ký PIN của chính ví (HANDOFF mục 3). Nhưng tính năng **VẪN CHƯA SỐNG trên production** vì chưa tạo KV binding, và luồng ký chỉ verify được trên deploy thật. → **Chỉ đem đi shill sau khi bật KV + đi hết checklist deploy 08-06.** Trước đó cứ để nó là tính năng thầm lặng, đừng nhắc.
-
-> Sức mạnh của bài shill này nằm ở chỗ **thật**. "Chưa lên mainnet, chưa audit, code mở đây, vào bấm thử đi" thuyết phục hơn mọi tính từ.
+- **Ring 1 (easiest):** Arc + Circle builders/hackathon people, DeFi devs who care about UX, the existing following.
+- **Ring 2:** crypto communities that care about "shipping a real product instead of farming airdrops".
+- **Ring 3:** no-code / build-with-AI groups (a great fit for the "someone who cannot code shipped a working wallet" story).
+- **Who is NOT the target:** degens hunting yield, people who want a full-featured multi-chain wallet. Do not try to sell to them.
 
 ---
 
-## 8. Copy sẵn để đăng
+## 6. Status & roadmap (be explicit about what is now and what is later)
 
-### 8.1 · Thread X (EN) – bài chính, đăng 1 lần rồi ghim
+**Available now (real, working):** email+PIN login · sending with a note · QR receiving + the QR library · 3-token swap · contacts · history + receipts · PWA installable on iPhone.
+
+**Not available (say it plainly when asked):** not on mainnet · one chain only · English-only UI (Circle's PIN screen is an English-only iframe) · no Google login · the QR scanner reads crypto wallet QRs only, not bank QRs.
+
+**Direction (label it clearly as THE FUTURE, promise no dates):** mainnet · native iOS/Android apps (FaceID instead of a PIN) · more currencies · a few selected financial services embedded in the app.
+
+---
+
+## 7. GUARDRAILS – 7 things NEVER to say
+
+One wrong sentence costs the project its credibility. This is the kind of mistake that cannot be walked back:
+
+1. ❌ Never say or imply **mainnet** or **real money**. Every post must carry the words **Arc Testnet** or "test money".
+2. ❌ Never promise **interest, profit, yield, "your money is insured"**. EZwallet is not a bank.
+3. ❌ Never claim **"non-custodial"** in absolute terms. The accurate wording: *keys managed by Circle MPC, the user signs with a PIN* – this is **user-controlled**, not seed-phrase self-custody. Answer exactly that to anyone who digs.
+4. ❌ Never invent **user counts, TVL or transaction numbers**. If there are none, say there are none.
+5. ❌ Never use **mocked-up UI images**. Only the real screenshots/GIFs in `docs/` (section 9).
+6. ❌ Never say **"audited"** – it has not been audited.
+7. ❌ Do not promote **"contacts backed up to the cloud"** (added 07-29, updated 08-06). The old reason (weak auth: knowing an email opened the address book) is **NOW FIXED** – the door is a PIN signature from the wallet itself (HANDOFF section 3). But the feature is **STILL NOT LIVE in production** because the KV binding has not been created, and the signing flow can only be verified on a real deploy. → **Only talk about it after enabling KV + completing the 08-06 deploy checklist.** Until then it stays a silent feature; do not mention it.
+
+> The strength of this messaging is that it is **true**. "Not on mainnet, not audited, here is the open code, go try it" is more convincing than any adjective.
+
+---
+
+## 8. Ready-to-post copy
+
+### 8.1 · X thread (the main post – publish once and pin it)
 
 > **1/**
 > My mom will never write down 12 words on a piece of paper.
@@ -186,7 +186,7 @@ Shill sai một câu là mất uy tín cả dự án. Đây là loại lỗi kh�
 > Built on @Arc + @circle.
 > Tell me the first thing that confuses you – that's the bug I want.
 
-### 8.2 · Tweet lẻ (xoay vòng, mỗi tuần 1-2 cái)
+### 8.2 · Standalone tweets (rotate, 1-2 per week)
 
 - *"Type the exact amount" is the most user-hostile pattern in crypto. I replaced it with a slider that snaps to round numbers. Mom-tested. → ezwallet.cash* [GIF swap]
 - *Sent my mom $20 on-chain with the note "Mommy, I sent you money" attached. She didn't have to know what a wallet is. Arc Testnet, but the flow is real.* [GIF send]
@@ -195,7 +195,7 @@ Shill sai một câu là mất uy tín cả dự án. Đây là loại lỗi kh�
 - *Building in public update: shipped QR storage – save the QR codes you use often (rent, coffee, your kid) and reuse them.* [IMG qr-storage]
 - *I can't code. I shipped a working crypto wallet. The bottleneck was never the syntax – it was knowing exactly what I wanted, and refusing "it should work" as an answer.*
 
-### 8.3 · Bài dài EN (LinkedIn / Warpcast / Mirror / Reddit)
+### 8.3 · Long form (LinkedIn / Warpcast / Mirror / Reddit)
 
 > **I built a crypto wallet for people who don't know what a wallet is.**
 >
@@ -217,74 +217,51 @@ Shill sai một câu là mất uy tín cả dự án. Đây là loại lỗi kh�
 >
 > Tell me the first thing that confuses you. That's the bug I actually want.
 
-### 8.4 · Bài tiếng Việt (Telegram / Facebook group)
-
-> **Mình vừa làm xong một cái ví crypto cho... mẹ mình dùng.**
->
-> Mọi ví mình từng đưa cho người không chơi crypto đều chết ở đúng một chỗ: màn hình seed phrase. 12 từ tiếng Anh ngẫu nhiên, "ghi ra giấy đi, mất là mất tiền luôn đấy". Người thường dừng ngay ở đó.
->
-> Nên mình làm **EZwallet**: đăng nhập bằng **email + mã PIN 6 số**, không có seed phrase để mà mất (khoá do hạ tầng MPC của Circle giữ, PIN dùng để ký từng giao dịch). Chạy trên **Arc** – chain mà **USDC chính là token trả phí**, nên không dính cái cửa ải "muốn chuyển USDC thì đi mua ETH trước". Phí đo thật: **dưới $0.01/giao dịch**.
->
-> 3 thứ mình tâm đắc:
-> • **Đổi tiền bằng cách KÉO THANH TRƯỢT**, không gõ số. Bắt người mới gõ "0.0247" là lỗi của giao diện chứ không phải lỗi người dùng.
-> • **Lời nhắn đi kèm tiền, nằm trên blockchain** – gửi kèm câu "Mẹ gửi con tiền nhé" y như nội dung chuyển khoản ngân hàng.
-> • **Chữ to, mỗi màn một nút chính** – làm cho người mắt kém dùng được.
->
-> Nói thẳng phần chưa được: **mới chạy Arc Testnet, tiền là tiền test không có giá trị thật**, chưa lên mainnet, chưa audit, giao diện mới có tiếng Anh.
->
-> Và điều mình muốn kể nhất: **mình không phải dev**. Toàn bộ app này mình làm cùng AI (Claude) – ý tưởng sản phẩm, luật UX, hướng thiết kế là của mình; code viết qua hội thoại rồi chạy thật để kiểm chứng từng luồng. Ai đang có ý tưởng mà không biết code: làm được, thật.
->
-> Vào bấm thử 2 phút (có sẵn tiền test): **ezwallet.cash**
-> Code mở MIT: **github.com/KattyFury/ezwallet**
->
-> Ai thử xong nhắn mình chỗ đầu tiên thấy khó hiểu nhé – đấy mới là bug mình cần.
-
-### 8.5 · Ba dòng (Discord, Telegram, form hackathon, bio dự án)
+### 8.4 · Three lines (Discord, Telegram, hackathon forms, project bios)
 
 > **EZwallet** – a crypto wallet simple enough for my mom to use.
 > Email + PIN (no seed phrase) · USDC pays its own gas on Arc · swap by dragging a slider · notes ride on-chain with the money.
 > Live on Arc Testnet: ezwallet.cash · MIT: github.com/KattyFury/ezwallet
 
-### 8.6 · Một dòng cho bio / chữ ký
+### 8.5 · One line for a bio / signature
 
 > Building EZwallet – a crypto wallet simple enough for my mom to use. Arc Testnet, MIT, ezwallet.cash
 
 ---
 
-## 9. Ảnh/GIF được phép dùng (đều là ảnh THẬT, nằm sẵn trong repo)
+## 9. Approved images/GIFs (all REAL, already in the repo)
 
-| File | Dùng cho |
+| File | Used for |
 |---|---|
-| `docs/flow-swap.gif` | **Mạnh nhất** – thanh trượt swap. Luôn để tweet 2. |
-| `docs/flow-send.gif` | Gửi kèm lời nhắn. Tweet 3. |
-| `docs/flow-login.gif` | Đăng nhập email + PIN (chứng minh "không seed phrase"). |
-| `docs/flow-receive.gif` | Nhận bằng QR. |
-| `docs/app-home.jpg` · `app-swap.jpg` · `app-receive.jpg` · `app-contacts.jpg` · `app-qr-storage.jpg` · `app-create-qr.jpg` | Ảnh tĩnh từng màn – dùng cho bài dài / carousel. |
-| `design/logo.svg` | Logo (nền sáng dùng bản màu, nền gradient dùng bản trắng). |
+| `docs/flow-swap.gif` | **The strongest one** – the swap slider. Always tweet 2. |
+| `docs/flow-send.gif` | Sending with a note. Tweet 3. |
+| `docs/flow-login.gif` | Email + PIN sign-in (proving "no seed phrase"). |
+| `docs/flow-receive.gif` | Receiving by QR. |
+| `docs/app-home.jpg` · `app-swap.jpg` · `app-receive.jpg` · `app-contacts.jpg` · `app-qr-storage.jpg` · `app-create-qr.jpg` | Still screenshots of each screen – for long form / carousels. |
+| `design/logo.svg` | The logo (the colour version on light backgrounds, the white version on gradients). |
 
-Deck 9 trang: xem `DECK-DESIGN-SPEC.md` (hệ thiết kế) + link Google Slides ở mục 2.
+The 9-page deck: see `DECK-DESIGN-SPEC.md` (the design system) + the Google Slides link in section 2.
 
 ---
 
-## 10. Câu hỏi khó – trả lời thật, đừng vòng vo
+## 10. Hard questions – answer honestly, do not dodge
 
-| Bị hỏi | Trả lời |
+| Asked | Answer |
 |---|---|
-| *"Custodial hay non-custodial?"* | User-controlled: khoá do **Circle MPC** quản lý, mọi chữ ký cần **PIN của người dùng**. Không phải self-custody kiểu seed phrase, và mình không giấu điều đó. Đánh đổi có chủ ý: bỏ seed phrase để người thường dùng được. |
-| *"Mất PIN thì sao?"* | Có luồng khôi phục PIN của Circle (`user/pin/restore`) kèm câu hỏi bảo mật đặt lúc tạo ví. |
-| *"Khác gì Coinbase Wallet / Trust Wallet?"* | Chúng nó làm cho người **đã** hiểu crypto và cố gắng làm mọi thứ. EZwallet cố tình chỉ làm 4 việc (gửi/nhận/đổi/danh bạ) và làm cho người **chưa** hiểu gì. Không có dApp browser – cố ý, vì đó là chỗ người già bị lừa. |
-| *"Sao chỉ testnet?"* | Vì Arc mới có testnet cho công chúng và mình không muốn cầm tiền thật của ai khi chưa audit. Lên mainnet là bước tiếp theo, không hứa ngày. |
-| *"AI viết code thì tin được không?"* | Từng luồng đều chạy thật để verify – swap còn mô phỏng bằng `eth_simulateV1` trước khi ship. Code mở MIT, đọc thoải mái. Và mình nói thẳng là chưa audit. |
-| *"Kiếm tiền kiểu gì?"* | Phí app 0,1% trên mỗi lệnh swap. Gửi/nhận không thu phí. |
-| *"Có token / airdrop không?"* | **Không.** Không có token, không có điểm, không có airdrop. Đừng farm. |
+| *"Custodial or non-custodial?"* | User-controlled: the keys are managed by **Circle MPC** and every signature needs **the user's PIN**. It is not seed-phrase self-custody, and I do not hide that. A deliberate trade-off: drop the seed phrase so ordinary people can actually use it. |
+| *"What if I lose my PIN?"* | Circle has a PIN recovery flow (`user/pin/restore`) using the security questions set when the wallet was created. |
+| *"How is it different from Coinbase Wallet / Trust Wallet?"* | They are built for people who **already** understand crypto and try to do everything. EZwallet deliberately does 4 things (send/receive/swap/contacts) and does them for people who understand **nothing** yet. No dApp browser – on purpose, because that is where older people get scammed. |
+| *"Why testnet only?"* | Because Arc has only opened a testnet to the public, and I do not want to hold anyone's real money before an audit. Mainnet is the next step, with no date promised. |
+| *"Can AI-written code be trusted?"* | Every flow was run for real to verify it – the swap is even simulated with `eth_simulateV1` before shipping. The code is MIT, read it freely. And I say plainly that it is not audited. |
+| *"How does it make money?"* | A 0.1% app fee on each swap. Sending and receiving are free. |
+| *"Is there a token / airdrop?"* | **No.** No token, no points, no airdrop. Do not farm it. |
 
 ---
 
-## 11. Thứ tự phát (gợi ý 2 tuần đầu)
+## 11. Release order (a suggestion for the first 2 weeks)
 
-1. **Ngày 1** – Thread 8.1 trên X, ghim lên đầu profile. Đổi bio thành 8.6.
-2. **Ngày 1-2** – Đăng 8.4 vào các group Việt + Telegram cộng đồng của anh.
-3. **Ngày 3** – 8.3 lên LinkedIn/Warpcast (nhấn mạnh góc "không biết code vẫn ship được" – góc này kéo được người ngoài crypto).
-4. **Ngày 4-5** – Gửi 8.5 vào Discord/TG của Arc + Circle, kèm GIF swap. Hỏi feedback, đừng xin retweet.
-5. **Từ tuần 2** – mỗi tuần 1-2 tweet lẻ (8.2) + 1 update "vừa ship cái gì". Nhịp đều quan trọng hơn một bài nổ.
-6. **Luôn luôn** – ai thử xong phản hồi thì **trả lời từng người**. 10 người thật dùng đáng giá hơn 1000 impression.
+1. **Day 1** – thread 8.1 on X, pinned to the profile. Change the bio to 8.5.
+2. **Day 3** – 8.3 on LinkedIn/Warpcast (lean on the "cannot code, still shipped" angle – it reaches people outside crypto).
+3. **Days 4-5** – send 8.4 into the Arc + Circle Discord/TG with the swap GIF. Ask for feedback, do not ask for retweets.
+4. **From week 2** – 1-2 standalone tweets (8.2) per week + one "just shipped" update. A steady rhythm beats one big post.
+5. **Always** – reply individually to everyone who tries it. 10 real users are worth more than 1000 impressions.
