@@ -73,7 +73,7 @@ export default function SendAmount() {
     if (!walletAddr) { setAvailableAmt(null); return }   // no address yet → treat as loading (null), do NOT force 0
     const tok = effectiveToken(cur)
     setAvailableAmt(null)
-    // spendableOf: USDC holds 1 back for network fees (Arc gas is paid in USDC) - the customer cannot send every last cent
+    // spendableOf: USDC holds GAS_RESERVE_USDC back for network fees (Arc gas is paid in USDC) - the customer cannot send every last cent
     // ⚠️ On a failed read KEEP null (showing "…"), NEVER setAvailableAmt(0): a fake 0 kills the button and
     // reports "Insufficient balance (available: 0.00)" WHILE THE WALLET HAS MONEY - bug 07-17, a 1000 USDC wallet could not
     // send. Retry after 3s so it recovers by itself once the RPC unclogs.
@@ -111,9 +111,9 @@ export default function SendAmount() {
   const availableStr = isVnd
     ? `${availableInCur !== null ? Math.floor(availableInCur).toLocaleString('vi-VN') : '…'} ₫`
     : `${availableAmt !== null ? availableAmt.toFixed(decimalsFor(cur)) : '…'} ${cur}`
-  // The Balance line above "Send to" (user request 08-25: "the Send screen is missing Balance").
+  // The Balance line, now in the blank space below the note field (user request 08-25: "the Send screen is missing Balance").
   // ⚠️ It shows the SPENDABLE amount (the same number the "Insufficient balance" message quotes), NOT the raw
-  // wallet balance: USDC keeps GAS_RESERVE_USDC = 1 back for gas, so printing the raw balance here would promise
+  // wallet balance: USDC keeps GAS_RESERVE_USDC back for gas, so printing the raw balance here would promise
   // money that the Continue button then refuses - the exact confusion this line is meant to remove.
   // Formatted with fmtMoney (ONE STRING ONE STYLE): USD/USDC → "$70.00", EURC → "20.00 EURC", cirBTC → "0.00054321 cirBTC".
   // Not loaded yet → "…", NEVER a drawn 0 (bug 07-16: a fake 0 reads as an empty wallet).

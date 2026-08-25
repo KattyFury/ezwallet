@@ -2,10 +2,11 @@ export function fmtVND(n) {
   return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ' VND'
 }
 
-// ⚠️ Gas on Arc is paid in USDC → ALWAYS hold 1 USDC back as unspendable (sending/swapping),
+// ⚠️ Gas on Arc is paid in USDC → ALWAYS hold some USDC back as unspendable (sending/swapping),
 // otherwise a customer taps "send everything"/"swap everything" and is left with no fee money, wallet stuck (user decision 2026-07-03).
 // Applies to USDC only (the gas token); EURC/cirBTC can be spent to zero. Used EVERYWHERE "available" is computed.
-export const GAS_RESERVE_USDC = 1
+// Lowered 1 → 0.1 (user decision 08-25): 1 USDC was far more than any real gas cost, holding back too much of a small balance.
+export const GAS_RESERVE_USDC = 0.1
 
 // Is this address the user's own wallet? (user decision 07-31: "you must not let me send money to my own wallet").
 // Sending to yourself only burns the network fee, leaves the balance unchanged, and clutters

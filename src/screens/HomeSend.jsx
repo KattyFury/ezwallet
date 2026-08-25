@@ -27,6 +27,12 @@ function TrendArrow({ pct }) {
 
 function pctStr(pct) { return (pct > 0 ? '+' : '') + pct.toFixed(2) + '%' }
 
+// The arrow is for VOLATILE tokens only (user correction 08-25: "stablecoin thì đâu có biến động" - USDC/EURC
+// are pegged 1:1 and showing a jittery ±0.01% arrow on them is noise, not signal). Everything in TOKENS that
+// is not a stablecoin gets it - today that is only cirBTC.
+const STABLECOINS = ['USDC', 'EURC']
+const isVolatile = symbol => !STABLECOINS.includes(symbol)
+
 // Matches the "Send" button in Contacts.jsx (height 40, fs-item, Barlow medium - .btn) so both come from the same
 // design system. The width is NOT fixed - it hugs its content.
 // PRESS AND HOLD (not a sticky toggle): by default it shows $ (which everyday users understand);
@@ -147,17 +153,22 @@ export default function HomeSend() {
                 <Icon name="check" size="var(--is-num)" color="var(--color-primary)" />
 
                 {/* SAME font and SAME colour as "USDC" on the left (TOKEN_TEXT_STYLE) - follows the shared toggle above.
-                    Shifted 15px left of the row's right edge (marginRight) to make room for the 24h trend arrow
-                    (user request 08-25) without pushing the row wider. */}
-                <span style={{ display: 'flex', alignItems: 'center', gap: 5, marginLeft: 'auto' }}>
-                  <span style={{ ...TOKEN_TEXT_STYLE, marginRight: 15 }}>
+                    The 24h trend arrow (user request 08-25) is VOLATILE TOKENS ONLY - not USDC/EURC, they are
+                    stablecoins. When it applies, it sits in a fixed 15px gap right after the amount (marginLeft:15
+                    on the arrow itself, nothing added on top) - no arrow for a token → no gap, the amount sits
+                    flush at the row's edge exactly as before this feature existed. */}
+                <span style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}>
+                  <span style={TOKEN_TEXT_STYLE}>
                     {showToken
                       ? tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)
                       : (rates ? fmtDisplay(tk.usd, cur, rates) : '…')}
                   </span>
-                  {rates && (
+                  {rates && isVolatile(tk.symbol) && tk.change24h != null && Math.abs(tk.change24h) >= 0.005 && (
+                    // padding 6 = a bigger touch target than the 10px triangle alone; the negative margin cancels
+                    // it on 3 sides (no added width/height) and on the left leaves EXACTLY 15px from the amount
+                    // (9px margin + 6px padding = 15, not 15+6 - the touch target must not widen the visible gap).
                     <button onClick={() => setPctPopup(tk)} aria-label={`24h price change for ${tk.symbol}`}
-                      style={{ background: 'none', border: 'none', padding: 4, margin: '-4px -4px -4px 0', display: 'flex', cursor: 'pointer' }}>
+                      style={{ background: 'none', border: 'none', padding: 6, margin: '-6px -6px -6px 9px', display: 'flex', cursor: 'pointer' }}>
                       <TrendArrow pct={tk.change24h} />
                     </button>
                   )}
