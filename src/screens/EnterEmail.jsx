@@ -4,12 +4,12 @@ import { createSession, createEmailToken, getSDK, initializeWallet, executeChall
 
 const DOMAINS = ['@gmail.com', '@yahoo.com', '@icloud.com']
 const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
-// ✅ Email OTP: đăng nhập phải nhập MÃ gửi về email → chỉ chủ hòm thư vào được (bịt lỗ "ai gõ
-// email cũng vào"). Cần SMTP đã khai ở Circle Console (đã xong 2026-07-05). Tắt cờ = false → về
-// luồng email trực tiếp cũ (PIN, KHÔNG xác minh email) nếu OTP có sự cố.
-// ĐÃ TEST (2026-07-05): user OTP ký bằng Confirmation UI, KHÔNG có PIN → mất lớp chống-người-nhà +
-// màn "Contract Interaction" khó hiểu với người già. → TẮT, về Email+PIN. Bật lại khi Circle cho
-// social/OTP dùng PIN (hoặc customize confirm UI đẹp hơn). Code OTP giữ nguyên, chỉ đổi cờ này.
+// ✅ Email OTP: signing in requires the CODE mailed to you → only the mailbox owner gets in (closing the "anyone who
+// types your email is in" hole). Needs SMTP configured in Circle Console (done 2026-07-05). Flag off = back to the old
+// direct-email flow (PIN, NO email verification) if OTP has problems.
+// TESTED (2026-07-05): OTP users sign with the Confirmation UI and have NO PIN → losing the guard against family
+// members + a "Contract Interaction" screen that baffles older users. → TURNED OFF, back to Email+PIN. Re-enable when
+// Circle lets social/OTP use a PIN (or the confirm UI can be customised properly). The OTP code stays, only this flag flips.
 const EMAIL_OTP_ENABLED = false
 
 function getEmailHistory() {
@@ -37,17 +37,17 @@ export default function EnterEmail() {
 
   function applyDomain(d) { setEmail(e => e + d); setError('') }
 
-  // Sau khi có userToken (từ OTP): tạo ví (nếu chưa) → challenge (PIN hoặc Approve tuỳ Circle) →
-  // lấy địa chỉ → vào Home. User OTP làm mới token bằng refreshToken (như Google), KHÔNG set ez_email.
+  // Once a userToken exists (from OTP): create the wallet (if missing) → challenge (PIN or Approve, Circle's choice) →
+  // fetch the address → into Home. OTP users refresh their token with refreshToken (like Google), and do NOT set ez_email.
   async function finishOtpLogin(result, emailStr, deviceId) {
     const { userToken, encryptionKey, refreshToken } = result
     localStorage.setItem('ez_user_token', userToken)
     localStorage.setItem('ez_encryption_key', encryptionKey)
     if (refreshToken) localStorage.setItem('ez_refresh_token', refreshToken)
-    localStorage.setItem('ez_google_deviceId', deviceId)   // fingerprint máy — dùng cho refreshSocial
-    localStorage.setItem('ez_google_email', emailStr)      // hiển thị "Login email"
+    localStorage.setItem('ez_google_deviceId', deviceId)   // device fingerprint - used by refreshSocial
+    localStorage.setItem('ez_google_email', emailStr)      // shown as "Login email"
     localStorage.setItem('ez_login_method', 'email')
-    localStorage.removeItem('ez_email')                    // tránh nhánh PIN-createSession (sai cho user OTP)
+    localStorage.removeItem('ez_email')                    // avoid the PIN-createSession branch (wrong for OTP users)
     localStorage.removeItem('ez_wallet_addr'); localStorage.removeItem('ez_wallet_id')
 
     const walletData = await initializeWallet(userToken)
@@ -62,7 +62,7 @@ export default function EnterEmail() {
     if (info?.address) localStorage.setItem('ez_wallet_addr', info.address)
     if (info?.walletId) localStorage.setItem('ez_wallet_id', info.walletId)
     saveEmailHistory(emailStr)
-    sessionStorage.setItem('ez_pin_ok', '1')   // user OTP không có PIN → bỏ qua cổng PIN
+    sessionStorage.setItem('ez_pin_ok', '1')   // OTP users have no PIN → skip the PIN gate
     navigate('HomeSend')
   }
 
@@ -76,12 +76,12 @@ export default function EnterEmail() {
         const sdk = await getSDK()
         const deviceId = await sdk.getDeviceId()
         const { otpToken, deviceToken, deviceEncryptionKey } = await createEmailToken(deviceId, em)
-        // Set config + callback rồi mở màn nhập OTP hosted của Circle.
+        // Set the config + callback, then open Circle's hosted OTP screen.
         sdk.updateConfigs(
           { appSettings: { appId: APP_ID }, loginConfigs: { deviceToken, deviceEncryptionKey, otpToken } },
           async (error, result) => {
             if (error) {
-              if (error?.code === 155701) { setLoading(false); return }   // user tự hủy → im lặng
+              if (error?.code === 155701) { setLoading(false); return }   // user cancelled → stay silent
               setError(circleErrorMessage(error)); setLoading(false); return
             }
             if (!result?.userToken) { setLoading(false); return }
@@ -89,14 +89,14 @@ export default function EnterEmail() {
             catch (e) { setError(circleErrorMessage(e)); setLoading(false) }
           }
         )
-        sdk.verifyOtp()   // giữ loading=true; callback ở trên sẽ điều hướng hoặc bật lỗi
+        sdk.verifyOtp()   // keep loading=true; the callback above will navigate or raise the error
       } catch (e) {
         setError(circleErrorMessage(e)); setLoading(false)
       }
       return
     }
 
-    // ── Luồng cũ (cờ tắt): email trực tiếp + PIN, KHÔNG xác minh email ──
+    // ── Old flow (flag off): direct email + PIN, NO email verification ──
     try {
       localStorage.removeItem('ez_wallet_addr')
       localStorage.removeItem('ez_wallet_id')
@@ -124,7 +124,7 @@ export default function EnterEmail() {
       if (walletInfo?.walletId) localStorage.setItem('ez_wallet_id', walletInfo.walletId)
 
       saveEmailHistory(email.trim())
-      // Lần 1 = vừa TẠO PIN (có challengeId) → đã xác thực → vào thẳng. Lần 2+ (không challengeId) → cổng PIN.
+      // First time = the PIN was just CREATED (challengeId present) → already authenticated → straight in. Second time on (no challengeId) → the PIN gate.
       if (challengeId) { sessionStorage.setItem('ez_pin_ok', '1'); navigate('HomeSend') }
       else navigate('PinGate', { next: 'HomeSend' })
     } catch (e) {
@@ -141,7 +141,7 @@ export default function EnterEmail() {
       </div>
 
       <div className="row-3" style={{ position: 'relative' }}>
-        {/* Input khóa vị trí giữa row-5 */}
+        {/* The input is pinned to the middle of row-5 */}
         <input
           type="email"
           className="address-input"
@@ -153,14 +153,14 @@ export default function EnterEmail() {
           style={{ position: 'absolute', top: '50%', left: 0, right: 0, transform: 'translateY(-50%)', height: 52, fontSize: 'var(--fs-md-lg)' }}
         />
 
-        {/* Suggestions hiện absolute bên dưới input — không đẩy input */}
+        {/* Suggestions render absolutely below the input - they do not push it */}
         {suggestions.length > 0 && (
           <div style={{ position: 'absolute', top: 'calc(50% + 32px)', left: 0, right: 0, display: 'flex', flexDirection: 'column', gap: 4, marginTop: 8 }}>
             {suggestions.map(s => (
               <button key={s} onClick={() => { setEmail(s); setError('') }}
                 style={{
-                  // HINT CHUẨN TOÀN APP (user chốt 07-22d) = chip VIỀN XANH + CHỮ XANH + nền trắng
-                  // (đồng bộ với chip gợi ý số tiền màn Swap). Bấm được.
+                  // THE APP-WIDE HINT STANDARD (user decision 07-22d) = a chip with a BLUE BORDER + BLUE TEXT on white
+                  // (matching the amount suggestion chips on Swap). Tappable.
                   textAlign: 'left', padding: '6px 12px',
                   border: '1.5px solid var(--color-brand)', borderRadius: 999,
                   background: 'var(--color-white)', cursor: 'pointer',
@@ -174,15 +174,15 @@ export default function EnterEmail() {
           </div>
         )}
 
-        {/* Domain suggestions khi gõ phần trước @ */}
+        {/* Domain suggestions while typing the part before the @ */}
         {showDomains && suggestions.length === 0 && (
-          // flexWrap: 3 chip @gmail/@yahoo/@icloud ở cỡ chữ 21 KHÔNG đủ chỗ trên 1 hàng (350px) →
-          // trước đây tràn khỏi mép phải màn. Cho xuống dòng thay vì cắt/tràn.
+          // flexWrap: 3 chips @gmail/@yahoo/@icloud at font size 21 do NOT fit on one row (350px) →
+          // they used to overflow past the right edge. Let them wrap instead of clipping/overflowing.
           <div style={{ position: 'absolute', top: 'calc(50% + 32px)', left: 0, right: 0, display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
             {DOMAINS.map(d => (
               <button key={d} onClick={() => applyDomain(d)}
                 style={{
-                  // Chip HINT chuẩn = viền xanh + chữ xanh (đồng bộ gợi ý email ở trên + chip Swap)
+                  // The standard HINT chip = blue border + blue text (matching the email suggestions above + the Swap chips)
                   padding: '6px 12px', border: '1.5px solid var(--color-brand)', borderRadius: 999,
                   background: 'var(--color-white)', cursor: 'pointer',
                   fontSize: 'var(--fs-item)', fontFamily: 'inherit', color: 'var(--color-brand)',

@@ -4,7 +4,7 @@ import './index.css'
 import App from './App'
 import { MOCK, seedMockSession, installMockFetch } from './mock'
 
-// MOCK MODE (npm run mock): bỏ qua Login/PIN, chặn network → data giả. KHÔNG vào production.
+// MOCK MODE (npm run mock): skips Login/PIN, blocks the network, feeds fake data. NEVER in production.
 if (MOCK) { seedMockSession(); installMockFetch() }
 
 ReactDOM.createRoot(document.getElementById('root')).render(

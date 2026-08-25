@@ -3,25 +3,25 @@ import { getDisplayCurrency, fmtDisplay } from '../data'
 import { getDisplayRates, cachedRates } from '../chain'
 import { useFitFontSize } from '../useFitFontSize'
 
-// Cụm số dư dùng chung cho HomeSend / HomeReceive / MenuScreen — chiếm 2 hàng (row-1-2),
-// con số là phần to nổi bật. Hiển thị theo TIỀN TỆ MẶC ĐỊNH (ez_currency).
+// Shared balance block for HomeSend / HomeReceive / MenuScreen - takes 2 rows (row-1-2),
+// the number being the big focal piece. Rendered in the DEFAULT CURRENCY (ez_currency).
 export default function BalanceHeader({ totalUsd, loading }) {
   const cur = getDisplayCurrency()
-  const [rates, setRates] = useState(cachedRates)   // seed từ cache → không "..." khi chuyển màn
+  const [rates, setRates] = useState(cachedRates)   // seeded from cache → no "..." when switching screens
 
   useEffect(() => {
     getDisplayRates().then(setRates).catch(() => setRates(r => r || { USDC: 1, EURC: 1.08 }))
   }, [])
 
-  // CHƯA BIẾT số dư → '…', KHÔNG BAO GIỜ vẽ "$0.00" (đó là bịa số dư — bug 07-16).
-  // totalUsd == null = chưa tải xong / đọc hỏng; chỉ 0 THẬT mới được hiện "$0.00".
+  // BALANCE NOT KNOWN YET → '…', NEVER draw "$0.00" (that is inventing a balance - bug 07-16).
+  // totalUsd == null = still loading / failed to read; only a REAL 0 may show as "$0.00".
   const unknown = loading || !rates || totalUsd == null || Number.isNaN(totalUsd)
-  // fmtDisplay tự đặt ký hiệu ĐÚNG BÊN: "$127.66" nhưng "1.250.000 ₫" (tiếng Việt để ₫ sau số).
+  // fmtDisplay puts the symbol on the CORRECT side: "$127.66" but "1.250.000 ₫" (symbol trails the number).
   const str = unknown ? '…' : fmtDisplay(totalUsd, cur, rates)
 
-  // Số dư TO chiếm ~1 hàng chiều cao (user chốt 07-20e: lấp chỗ trống): base 76px, tự CO theo
-  // BỀ RỘNG THẬT đo bằng canvas (useFitFontSize) — KHÔNG dùng amountFontSize (đếm ký tự) nữa:
-  // số VND dài gấp đôi số USD ("1.250.000 ₫" vs "$50.00") nên đoán theo số ký tự là tràn layout.
+  // The BIG balance takes ~1 row of height (user decision 07-20e: fill the empty space): base 76px, shrinking
+  // by REAL MEASURED WIDTH via canvas (useFitFontSize) - NOT amountFontSize (character counting) any more:
+  // some currencies are twice as long as USD ("1.250.000 ₫" vs "$50.00"), so guessing by length overflows.
   const [fitRef, fitSize] = useFitFontSize(str, { max: 76, min: 28, weight: 300 })
   return (
     <div ref={fitRef} className="row-1-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0, padding: '0 12px' }}>

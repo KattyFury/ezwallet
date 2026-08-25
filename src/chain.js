@@ -1,14 +1,14 @@
 import { createPublicClient, http, decodeEventLog, parseAbiItem } from 'viem'
 import { defineChain } from 'viem'
 import { MOCK, MOCK_AMOUNTS, MOCK_RATES } from './mock'
-// Chain id khai ở qr.js (module KHÔNG phụ thuộc viem) để màn nào chỉ cần vẽ/đọc QR — ShowQR,
-// SavedQRList — dùng được mà không phải kéo cả viem vào chunk của nó. MỘT nguồn sự thật: đổi
-// chuỗi thì sửa đúng 1 chỗ bên đó, đây tự theo.
+// The chain id is declared in qr.js (a module that does NOT depend on viem) so screens that only draw/read QRs - ShowQR,
+// SavedQRList - can use it without pulling all of viem into their chunk. ONE source of truth: changing chains means
+// editing exactly one place over there, and this file follows.
 import { ARC_CHAIN_ID } from './qr'
 
-// Multicall3 chuẩn có sẵn trên Arc Testnet (docs Arc → Network → Contract addresses:
+// The standard Multicall3 is already deployed on Arc Testnet (Arc docs → Network → Contract addresses:
 // "Aggregates multiple read calls into a single call for efficient data retrieval").
-// Khai trong chain để publicClient.multicall() gộp N lệnh đọc vào 1 request — xem getTokenBalances.
+// Declared on the chain so publicClient.multicall() can fold N reads into 1 request - see getTokenBalances.
 export const arcTestnet = defineChain({
   id: ARC_CHAIN_ID,
   name: 'Arc Testnet',
@@ -27,32 +27,32 @@ const ERC20_ABI = [
   { name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'account', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ]
 
-// GIÁ QUY VỀ USD (đơn vị tính của app). cgId: giá USD live từ CoinGecko; usdRate: fallback offline
-// (USD mỗi 1 đơn vị). USDC LUÔN ghim = 1 (nó CHÍNH LÀ USD) → stablecoin hiện đúng 1:1, không lệch
-// "$5"→"$4.99" như cách cũ (đi vòng qua VND + noise CoinGecko).
+// PRICES IN USD (the app's unit of account). cgId: the live USD price from CoinGecko; usdRate: the offline fallback
+// (USD per unit). USDC is ALWAYS pinned to 1 (it IS the dollar) → stablecoins show exactly 1:1, without the old
+// "$5"→"$4.99" drift (which came from routing through VND + CoinGecko noise).
 export const TOKENS = [
   { symbol: 'USDC',   address: '0x3600000000000000000000000000000000000000', decimals: 6, color: '#2775CA', cgId: 'usd-coin',  usdRate: 1 },
   { symbol: 'EURC',   address: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', decimals: 6, color: '#1A56DB', cgId: 'euro-coin', usdRate: 1.08 },
   { symbol: 'cirBTC', address: '0xf0c4a4ce82a5746abaad9425360ab04fbba432bf', decimals: 8, color: '#F7931A', cgId: 'bitcoin',   usdRate: 65000 },
 ]
 
-// ── ĐỊA CHỈ FAUCET Circle trên Arc Testnet ──
-// Tiền từ faucet phải hiện "Faucet successful", KHÔNG phải "Đã nhận … từ 0xd4c0…daae" (người già
-// nhìn địa chỉ lạ sẽ tưởng người lạ chuyển tiền).
-// TRA RA BẰNG DỮ LIỆU THẬT (ArcScan, 2026-07-17), không đoán: quét ~1000 tx gần nhất của cả 3
-// token rồi lọc theo HÀNH VI faucet = gửi tới RẤT NHIỀU ví khác nhau + CHƯA BAO GIỜ nhận về.
-// Cả 5 địa chỉ dưới đều phát ĐÚNG một bộ cố định USDC 20.00 + EURC 20.00 + cirBTC 0.00 cho
-// 88–101 ví khác nhau, số nhận về = 0 → không thể nhầm với ví người dùng.
-// (Đã loại 0xc3de926d… và 0xfa61e1de… : tuy cũng "chưa nhận về" nhưng số tiền lung tung
-//  0.09/0.50/1.00… → là user thường, không phải faucet.)
-// Faucet mới sinh ra sau này mà chưa có ở đây → vẫn được bắt bằng cờ ez_faucet_pending
-// (user bấm nút Faucet trong app) — xem NotifArea.pollIncoming.
+// ── CIRCLE FAUCET ADDRESSES on Arc Testnet ──
+// Money from the faucet must read "Faucet successful", NOT "Received … from 0xd4c0…daae" (an older person seeing an
+// unknown address assumes a stranger sent them money).
+// FOUND FROM REAL DATA (ArcScan, 2026-07-17), not guessed: scanned the ~1000 most recent txs of all 3
+// tokens and filtered by FAUCET BEHAVIOUR = sends to MANY different wallets + has NEVER received anything.
+// All 5 addresses below pay out the exact same fixed bundle, USDC 20.00 + EURC 20.00 + cirBTC 0.00, to
+// 88-101 different wallets, with 0 incoming → they cannot be confused with a user's wallet.
+// (0xc3de926d… and 0xfa61e1de… were excluded: they have also never received anything, but their amounts are all over
+//  the place - 0.09/0.50/1.00… - so they are ordinary users, not faucets.)
+// A new faucet created later that is not listed here → still caught by the ez_faucet_pending flag
+// (the user pressed the Faucet button in the app) - see NotifArea.pollIncoming.
 const FAUCET_ADDRESSES = new Set([
-  '0x70e3fb28e1794bb91d5bceb7d66b731d0c61af8e',   // 101 ví · USDC+EURC+cirBTC
-  '0x319dd63e0ac72e7ac74443029d074032c043460f',   //  96 ví
-  '0x3c3380cdfb94dfeeaa41cad9f58254ae380d752d',   //  90 ví
-  '0xd844ba11f64d23a7481e24474d2f184e350b9b3d',   //  89 ví
-  '0xd4c0b787aa2ff9eb751bb515c877ebbf2daddaae',   //  88 ví
+  '0x70e3fb28e1794bb91d5bceb7d66b731d0c61af8e',   // 101 wallets · USDC+EURC+cirBTC
+  '0x319dd63e0ac72e7ac74443029d074032c043460f',   //  96 wallets
+  '0x3c3380cdfb94dfeeaa41cad9f58254ae380d752d',   //  90 wallets
+  '0xd844ba11f64d23a7481e24474d2f184e350b9b3d',   //  89 wallets
+  '0xd4c0b787aa2ff9eb751bb515c877ebbf2daddaae',   //  88 wallets
 ])
 export function isFaucetAddress(addr) {
   return !!addr && FAUCET_ADDRESSES.has(addr.toLowerCase())
@@ -61,12 +61,12 @@ export function isFaucetAddress(addr) {
 let priceCache = {}
 let lastFetch = 0
 
-// ── Cache tầng module: chuyển màn (Send↔Receive↔Menu) hiện số NGAY, không "..." nhấp nháy.
-// Mỗi navigate thay mới component → mount lại → fetch lại; nếu seed state từ cache thì số cũ
-// hiện tức thì, fetch nền cập nhật sau (như app ngân hàng). Sống theo phiên (mất khi reload trang).
-let _balCache = {}      // addr(lowercase) -> tokens[] (kết quả getTokenBalances gần nhất)
-let _ratesCache = null  // { USDC, EURC, cirBTC } gần nhất
-// MOCK MODE: dựng số dư ảo từ TOKENS + MOCK_AMOUNTS (không đọc RPC).
+// ── Module-level cache: switching screens (Send↔Receive↔Menu) shows the number IMMEDIATELY, with no "..." flash.
+// Every navigate swaps the component → it remounts → it refetches; seeding state from the cache shows the previous
+// number instantly while a background fetch updates it (like a banking app). It lives for the session (lost on page reload).
+let _balCache = {}      // addr(lowercase) -> tokens[] (the most recent getTokenBalances result)
+let _ratesCache = null  // the most recent { USDC, EURC, cirBTC }
+// MOCK MODE: build fake balances from TOKENS + MOCK_AMOUNTS (no RPC reads).
 function mockBalances() {
   return TOKENS
     .map(t => { const amount = MOCK_AMOUNTS[t.symbol] || 0; return { ...t, amount, usd: amount * (MOCK_RATES[t.symbol] ?? t.usdRate) } })
@@ -74,30 +74,30 @@ function mockBalances() {
 }
 
 export function cachedBalances(addr) {
-  if (MOCK) return mockBalances()   // trả ngay, không "..." nhấp nháy
+  if (MOCK) return mockBalances()   // return immediately, no "..." flash
   return addr ? (_balCache[addr.toLowerCase()] || null) : null
 }
 export function cachedRates() { return MOCK ? MOCK_RATES : _ratesCache }
 
-// Tỷ giá dự phòng USD→VND khi CoinGecko không trả (mất mạng/rate limit). Thà lệch vài % còn hơn
-// KHÔNG hiện được số nào — nhưng ĐỪNG coi đây là nguồn chính, nó sẽ cũ dần theo năm tháng.
+// Fallback USD→VND rate for when CoinGecko does not answer (offline / rate limited). Being a few % off beats
+// showing NO number at all - but do NOT treat this as the primary source, it goes stale over the years.
 const VND_PER_USD_FALLBACK = 26300
 
 async function fetchPrices() {
   if (Date.now() - lastFetch < 60000) return priceCache
   try {
     const ids = TOKENS.filter(t => t.cgId).map(t => t.cgId).join(',')
-    // +vnd: xin LUÔN giá quy ra VND trong CÙNG 1 request (đừng thêm request thứ 2 — CoinGecko
-    // free tier rate-limit chặt, mà app đã gọi hàm này mỗi 60s).
+    // +vnd: ask for the VND price IN THE SAME request (do not add a second one - CoinGecko's
+    // free tier is strictly rate limited, and the app already calls this every 60s).
     const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,vnd`)
     const data = await res.json()
     TOKENS.forEach(t => {
       if (t.cgId && data[t.cgId]?.usd != null) priceCache[t.symbol] = data[t.cgId].usd
     })
-    priceCache['USDC'] = 1  // ghim: USDC = $1 chính xác (đừng để CoinGecko ~0.9998 làm lệch)
-    // VND lưu dạng "USD mỗi 1 VND" cho ĐỒNG BỘ với mọi rate khác (rates[cur] = USD/1 đơn vị),
-    // nhờ vậy displayNum(usd, cur, rates) = usd / rates[cur] dùng chung được, không phải rẽ nhánh.
-    // usd-coin.vnd = số VND cho 1 USDC (~26.300) → nghịch đảo ra ~0.000038.
+    priceCache['USDC'] = 1  // pinned: USDC = exactly $1 (do not let CoinGecko's ~0.9998 skew it)
+    // VND is stored as "USD per 1 VND" to MATCH every other rate (rates[cur] = USD per unit),
+    // which is what lets displayNum(usd, cur, rates) = usd / rates[cur] be shared with no special case.
+    // usd-coin.vnd = the number of VND per USDC (~26,300) → inverted, ~0.000038.
     const vndPerUsd = data['usd-coin']?.vnd
     priceCache['VND'] = 1 / (vndPerUsd > 0 ? vndPerUsd : VND_PER_USD_FALLBACK)
     lastFetch = Date.now()
@@ -105,26 +105,26 @@ async function fetchPrices() {
   return priceCache
 }
 
-// Đọc số dư CẢ 3 TOKEN bằng ĐÚNG 1 HTTP request (Multicall3 gộp 3 balanceOf).
+// Read the balances of ALL 3 TOKENS in EXACTLY 1 HTTP request (Multicall3 folds the 3 balanceOf calls together).
 //
-// ⚠️ RPC công cộng của Arc CÓ RATE LIMIT (docs Arc "running-a-node" quảng cáo chạy node riêng =
-// "No rate limits" → endpoint chung thì có). Đo thật 2026-07-17: bắn 3 balanceOf SONG SONG →
-// HTTP 429, hỏng 5/5 lần. Tuần tự nghỉ 350ms vẫn 5/5 hỏng; phải nghỉ 700ms/token mới qua (>2s
-// mới có số dư = quá chậm). Gộp Multicall3 → 5/5 thành công, 1 request/lần đọc.
+// ⚠️ Arc's public RPC IS RATE LIMITED (the Arc "running-a-node" docs advertise running your own node as
+// "No rate limits" → so the shared endpoint has them). Measured for real 2026-07-17: firing 3 balanceOf calls IN PARALLEL →
+// HTTP 429, failing 5 times out of 5. Sequential with a 350ms gap still failed 5/5; only a 700ms gap per token got through (>2s
+// before a balance appeared = far too slow). Folding into Multicall3 → 5/5 successes, 1 request per read.
 //
-// ĐỪNG QUAY LẠI đọc từng token rồi retry: bản cũ (readBalance thử 3 lần/token) bắn tới 9 request
-// mỗi lần đọc số dư → TỰ ĐÂM vào rate limit → 429 → càng retry càng hỏng (HomeSend còn tự thử lại
-// mỗi 3s → vòng lặp chết). Đó CHÍNH LÀ bug "1000 USDC mà báo khả dụng 0.00" ngày 07-17.
-// Bonus: multicall đọc cả 3 token trong CÙNG 1 block → số dư nhất quán, không lệch block.
+// DO NOT GO BACK to per-token reads with retries: the old version (readBalance trying 3 times per token) fired up to 9 requests
+// per balance read → it WALKED INTO the rate limit → 429 → and every retry made it worse (HomeSend also retried
+// every 3s → a death loop). That IS the "1000 USDC but it says available 0.00" bug of 07-17.
+// Bonus: multicall reads all 3 tokens in the SAME block → consistent balances, never split across blocks.
 //
-// Thử lại 2 lần cho trường hợp 429/timeout lẻ tẻ, giãn 600/1200ms (rate limit cần nghỉ LÂU hơn
-// hẳn mức 250/500ms cũ). Hết lượt vẫn hỏng → NÉM LỖI (đừng nuốt → xem cảnh báo getTokenBalances).
+// Two retries for the occasional 429/timeout, spaced 600/1200ms (rate limits need a MUCH longer pause than the
+// old 250/500ms). Still failing after that → THROW (do not swallow → see the getTokenBalances warning).
 async function readAllBalances(walletAddress, tries = 3) {
   let lastErr
   for (let i = 0; i < tries; i++) {
     try {
       const raws = await publicClient.multicall({
-        allowFailure: false,   // 1 token hỏng → ném lỗi, KHÔNG trả 0 bịa
+        allowFailure: false,   // one bad token → throw, do NOT return a made-up 0
         contracts: TOKENS.map(token => ({
           address: token.address,
           abi: ERC20_ABI,
@@ -141,35 +141,35 @@ async function readAllBalances(walletAddress, tries = 3) {
   throw lastErr
 }
 
-// ⚠️ ĐỪNG BAO GIỜ TRẢ 0 KHI ĐỌC HỎNG — đó là BỊA SỐ DƯ.
-// Bug 07-16 (user: "các con số cứ loạn lên sai lệch rồi mới bình thường trở lại, ví dụ hiện
-// 0 0 22 xong rồi mới về lại 240 0 0"): code cũ bọc mỗi balanceOf trong try/catch rồi trả
-// `{amount: 0}` khi lỗi. RPC Arc lỗi lẻ tẻ từng token → token đọc hỏng hiện 0 y như số dư thật
-// bằng 0 → lần fetch sau ăn thì số nhảy về đúng. Tệ hơn: kết quả BỊA đó còn được GHI VÀO CACHE
-// → số sai lan sang mọi màn khác.
-// Giờ: đọc hỏng cả 3 lần → Promise.all reject → HÀM NÉM LỖI → màn hình GIỮ NGUYÊN số cũ (cache/
-// seed) thay vì vẽ số bịa. Chỉ ghi cache khi ĐỦ CẢ 3 TOKEN đọc thật thành công.
+// ⚠️ NEVER RETURN 0 ON A FAILED READ - that is INVENTING A BALANCE.
+// Bug 07-16 (the user: "the numbers go all over the place and wrong before settling down, e.g. it shows
+// 0 0 22 and then comes back to 240 0 0"): the old code wrapped each balanceOf in try/catch and returned
+// `{amount: 0}` on error. Arc's RPC fails sporadically per token → a failed read showed 0 exactly like a real zero
+// balance → the next successful fetch snapped the number back. Worse: that INVENTED result was also WRITTEN TO CACHE
+// → the wrong number spread to every other screen.
+// Now: all 3 attempts fail → Promise.all rejects → THE FUNCTION THROWS → the screen KEEPS the previous number (cache/
+// seed) instead of drawing a fiction. The cache is only written when ALL 3 TOKENS were genuinely read.
 export async function getTokenBalances(walletAddress) {
   if (MOCK) return mockBalances()
   if (!walletAddress) return []
-  // Giá và số dư chạy SONG SONG (trước đây await giá xong mới đọc số dư → chậm gấp đôi).
-  // Giá hỏng không sao: fetchPrices tự nuốt lỗi, rate rơi về usdRate offline — giá sai lệch vài %
-  // thì chấp nhận được, còn SỐ DƯ sai thì không.
+  // Prices and balances run IN PARALLEL (it used to await the prices before reading balances → twice as slow).
+  // A failed price fetch is fine: fetchPrices swallows its own errors and the rate falls back to the offline usdRate - a price
+  // being a few % off is acceptable, a wrong BALANCE is not.
   const [prices, amounts] = await Promise.all([
     fetchPrices(),
-    readAllBalances(walletAddress),   // 1 request cho cả 3 token (Multicall3) — đừng tách ra lại
+    readAllBalances(walletAddress),   // 1 request for all 3 tokens (Multicall3) - do not split it up again
   ])
-  // Hiện MỌI token hỗ trợ (kể cả số dư 0 THẬT) — ví luôn thấy đủ USDC/EURC/cirBTC (user chốt 07-15)
+  // Show EVERY supported token (including a REAL zero balance) - the wallet always lists USDC/EURC/cirBTC (user decision 07-15)
   const out = TOKENS.map((token, i) => {
     const amount = amounts[i]
     const rate = prices[token.symbol] ?? token.usdRate
-    return { ...token, amount, usd: amount * rate }   // giá trị USD (KHÔNG làm tròn — cần phần lẻ cent)
+    return { ...token, amount, usd: amount * rate }   // the USD value (NOT rounded - the cents matter)
   })
-  _balCache[walletAddress.toLowerCase()] = out   // chỉ tới đây khi CẢ 3 token đọc thật thành công
+  _balCache[walletAddress.toLowerCase()] = out   // only reached when all 3 tokens were genuinely read
   return out
 }
 
-// Giá USD của 1 token (USD mỗi 1 đơn vị). USDC = 1. Fallback usdRate offline.
+// The USD price of one token (USD per unit). USDC = 1. Falls back to the offline usdRate.
 export async function getUsdRate(symbol = 'USDC') {
   if (MOCK) return MOCK_RATES[symbol] ?? 1
   const prices = await fetchPrices()
@@ -177,39 +177,39 @@ export async function getUsdRate(symbol = 'USDC') {
   return prices[symbol] ?? token?.usdRate ?? 1
 }
 
-// Tỷ giá cho tiền tệ hiển thị: USD mỗi 1 đơn vị {USDC:1, EURC:~1.08, cirBTC:~giá BTC}.
-// USDC ghim 1 → stablecoin hiện đúng 1:1 (5 USDC = $5.00). cirBTC để TxHistory quy đổi giao dịch
-// cirBTC dùng CHUNG 1 nguồn tỷ giá với cột hiển thị (tránh lệch nguồn).
+// Rates for the display currency: USD per unit {USDC:1, EURC:~1.08, cirBTC:~the BTC price}.
+// USDC pinned to 1 → stablecoins show exactly 1:1 (5 USDC = $5.00). cirBTC is included so TxHistory converts cirBTC
+// transactions using the SAME rate source as the display column (avoiding a source mismatch).
 export async function getDisplayRates() {
   if (MOCK) { _ratesCache = MOCK_RATES; return MOCK_RATES }
   const [u, e, b] = await Promise.all([getUsdRate('USDC'), getUsdRate('EURC'), getUsdRate('cirBTC')])
-  // VND: KHÔNG phải token nên không đi qua getUsdRate (hàm đó tra TOKENS) — lấy thẳng từ
-  // priceCache mà fetchPrices vừa nạp ở 3 lệnh trên. Chưa có (lần gọi đầu hỏng) → dùng dự phòng.
+  // VND: not a token, so it does not go through getUsdRate (which looks through TOKENS) - it is taken straight from
+  // the priceCache that fetchPrices filled in the 3 calls above. Missing (the first call failed) → use the fallback.
   const prices = await fetchPrices()
   _ratesCache = { USDC: u, EURC: e, cirBTC: b, VND: prices.VND || 1 / VND_PER_USD_FALLBACK }
   return _ratesCache
 }
 
-// Số dư 1 token + giá USD (USDC = token dùng để gửi)
+// One token's balance + its USD price (USDC = the token used for sending)
 export async function getTokenInfo(addr, symbol = 'USDC') {
   const [balances, rate] = await Promise.all([getTokenBalances(addr), getUsdRate(symbol)])
   const t = balances.find(b => b.symbol === symbol)
   return { balance: t?.amount ?? 0, usd: t?.usd ?? 0, rate }
 }
 
-// Đọc memo (Arc Transaction Memos) của 1 giao dịch từ Memo event on-chain → text
+// Read the memo (Arc Transaction Memos) of one transaction from the on-chain Memo event → text
 const MEMO_CONTRACT = '0x5294E9927c3306DcBaDb03fe70b92e01cCede505'
 const memoEventAbi = parseAbiItem('event Memo(address indexed sender, address indexed target, bytes32 callDataHash, bytes32 indexed memoId, bytes memo, uint256 memoIndex)')
-// ── LỜI NHẮN: NHỚ LUÔN + XẾP HÀNG, ĐỪNG BẮN DỒN (user chốt 07-31 "đừng spam") ──
-// Mỗi lời nhắn = 1 lệnh đọc receipt riêng. Màn Lịch sử trước đây bắn 30 lệnh CÙNG LÚC mỗi lần mở
-// → RPC công cộng chặn (429), kéo theo cả lệnh đọc số dư/phí bị chặn theo → app khựng.
-// Hai chốt chặn:
-//  1. NHỚ VĨNH VIỄN vào localStorage — giao dịch đã lên chain thì lời nhắn KHÔNG BAO GIỜ đổi.
-//     Nhớ cả trường hợp "không có lời nhắn" (null) — đa số giao dịch rơi vào đây, không nhớ thì
-//     lần nào mở cũng hỏi lại y hệt. Lần mở thứ 2 trở đi = 0 lệnh mạng.
-//  2. TỐI ĐA 3 LỆNH CHẠY CÙNG LÚC, phần còn lại xếp hàng. Vẫn lấy đủ lời nhắn, chỉ là rải ra.
+// ── MEMOS: REMEMBER THEM FOREVER + QUEUE THEM, DO NOT FIRE ALL AT ONCE (user decision 07-31 "stop spamming") ──
+// Each memo is its own receipt read. The History screen used to fire 30 of them AT ONCE on every open
+// → the public RPC blocked it (429), which dragged the balance/fee reads down with it → the app stalled.
+// Two guards:
+//  1. REMEMBER PERMANENTLY in localStorage - once a transaction is on chain its memo NEVER changes.
+//     Remember the "no memo" case (null) too - most transactions land there, and without it
+//     every open asks the same questions again. From the second open on = 0 network calls.
+//  2. AT MOST 3 CALLS IN FLIGHT, the rest queue up. Every memo still arrives, just spread out.
 const MEMO_KEY = 'ez_memos'
-const MEMO_MAX = 800          // ~1 dòng/giao dịch; quá ngưỡng thì xoá sạch làm lại (rẻ hơn LRU)
+const MEMO_MAX = 800          // ~1 line per transaction; over the limit, wipe and start over (cheaper than an LRU)
 const MEMO_CONCURRENCY = 3
 let _memos = null
 function memoStore() {
@@ -241,7 +241,7 @@ function queued(job) {
 
 export async function getTxMemo(hash) {
   const s = memoStore()
-  if (hash in s) return s[hash]              // đã hỏi rồi (kể cả "không có") → KHÔNG hỏi lại
+  if (hash in s) return s[hash]              // already asked (including "none") → do NOT ask again
   const memo = await queued(() => readMemoOnChain(hash))
   rememberMemo(hash, memo)
   return memo
@@ -264,10 +264,10 @@ async function readMemoOnChain(hash) {
   return null
 }
 
-// Phí gas thật: Arc tính gas bằng USDC (18 decimals nội bộ). USDC = $1 → phí USD CHÍNH LÀ feeUsdc.
-// gasUnits: ~65k cho transfer thường, ~110k cho transfer kèm memo. KHÔNG làm tròn (phí rất nhỏ, cần cent).
+// The real gas fee: Arc prices gas in USDC (18 decimals internally). USDC = $1 → the USD fee IS feeUsdc.
+// gasUnits: ~65k for a plain transfer, ~110k for a transfer with a memo. NOT rounded (the fee is tiny, cents matter).
 export async function estimateFeeUsd(gasUnits = 65000) {
-  if (MOCK) return 0.002   // phí ảo nhỏ
+  if (MOCK) return 0.002   // a small fake fee
   try {
     const gasPrice = await publicClient.getGasPrice()
     return Number(gasPrice * BigInt(gasUnits)) / 1e18

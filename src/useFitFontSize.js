@@ -7,11 +7,11 @@ function measureWidth(text, font) {
   return _measureCtx.measureText(text).width
 }
 
-// Cỡ chữ số tiền AUTO CO theo BỀ RỘNG THẬT đo bằng canvas.measureText — thay cho đoán
-// "N ký tự vừa khít ở size X" (amountFontSize cũ): đoán theo số ký tự sai khi container hẹp hơn
-// giả định (vd card Swap share 1 hàng với chip token) → số vẫn tràn/bị "…" cắt cụt dù đúng cỡ ký
-// tự cho phép (user 07-22: gõ 1000000 vẫn hiện "100000…", không co).
-// ref gắn vào container (bề rộng chỗ số được PHÉP chiếm); trả cỡ chữ TO NHẤT mà `text` vừa khít.
+// Amount font size AUTO-SHRINKS by REAL WIDTH measured with canvas.measureText - replacing the guess
+// "N characters fit at size X" (the old amountFontSize): counting characters is wrong when the container is
+// narrower than assumed (e.g. the Swap card shares a row with the token chip) → the number still overflows or
+// gets cut with "…" even at an allowed character count (user 07-22: typing 1000000 still showed "100000…").
+// ref goes on the container (the width the number is ALLOWED to take); returns the LARGEST size `text` fits at.
 export function useFitFontSize(text, { max = 52, min = 16, weight = 300, family = 'Barlow, sans-serif', buffer = 4 } = {}) {
   const ref = useRef(null)
   const [size, setSize] = useState(max)
@@ -20,13 +20,13 @@ export function useFitFontSize(text, { max = 52, min = 16, weight = 300, family 
     const el = ref.current
     if (!el) return
     const fit = () => {
-      // clientWidth GỒM CẢ padding trái/phải (CSS: clientWidth = content + padding) — trừ ra để
-      // lấy đúng bề rộng chữ THẬT được phép chiếm, không thì tính dư (số vẫn tràn/bị ellipsis dù
-      // "đã fit" — bug 07-22e khi div có padding 2/12 cho vùng chạm mà quên trừ).
-      // - buffer (mặc định 4px): lưới an toàn cho sai số đo (vd caret "_" có margin-left 2px
-      //   trong CSS nhưng canvas.measureText không biết → đo thiếu, số thật rộng hơn tính toán
-      //   đúng phần margin đó → tràn/ellipsis dù "đã fit", bug 07-22f lệch 2px làm ellipsis kích
-      //   hoạt oan). Trừ thêm cho chắc thay vì tính đúng từng px lẻ của từng phần tử con.
+      // clientWidth INCLUDES left/right padding (CSS: clientWidth = content + padding) - subtract it to get
+      // the REAL width the text may occupy, otherwise the budget is too generous (the number still overflows /
+      // gets ellipsised though it "fits" - bug 07-22e, a div with padding 2/12 for the touch area was not subtracted).
+      // - buffer (default 4px): safety net for measurement error (e.g. the "_" caret has margin-left 2px in
+      //   CSS but canvas.measureText knows nothing about it → the measurement comes up short, the real text is
+      //   wider than computed → overflow/ellipsis though it "fits", bug 07-22f where 2px triggered the ellipsis
+      //   for nothing). Subtract a little extra rather than accounting for every stray pixel of every child.
       const cs = getComputedStyle(el)
       const width = el.clientWidth - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0) - buffer
       if (!width) return
@@ -41,9 +41,9 @@ export function useFitFontSize(text, { max = 52, min = 16, weight = 300, family 
     fit()
     const ro = new ResizeObserver(fit)
     ro.observe(el)
-    // Barlow load qua Google Fonts <link> ASYNC (index.html) — nếu canvas đo TRƯỚC khi font tải
-    // xong, nó âm thầm fallback sang font hệ thống (bề rộng khác) → size tính ra sai. Đo lại 1 lần
-    // sau khi font sẵn sàng để tự sửa (chỉ ảnh hưởng lần đo đầu tiên lúc mới vào app).
+    // Barlow loads through an ASYNC Google Fonts <link> (index.html) - if canvas measures BEFORE the font
+    // finishes loading, it silently falls back to a system font (different widths) → the computed size is wrong.
+    // Measure once more when the font is ready to self-correct (only affects the very first measurement on entry).
     if (document.fonts && !document.fonts.check(`${weight} 16px ${family}`)) {
       document.fonts.ready.then(fit)
     }

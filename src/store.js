@@ -1,18 +1,18 @@
-// Lưu trữ cục bộ TÁCH THEO TỪNG VÍ — danh bạ & kho QR riêng cho mỗi tài khoản.
-// Trước đây dùng key chung (ez_contacts, ez_saved_qrs) → đăng nhập tài khoản khác
-// vẫn thấy danh bạ tài khoản cũ. Giờ key gắn theo địa chỉ ví đang đăng nhập.
+// Local storage SPLIT PER WALLET - contacts & QR library are separate for each account.
+// It used to use shared keys (ez_contacts, ez_saved_qrs) → signing in with another account
+// still showed the previous account's contacts. Keys are now tied to the signed-in wallet address.
 //
-// localStorage VẪN LÀ NGUỒN SỰ THẬT (app đọc/ghi ở đây, offline vẫn chạy). Từ 07-29 có thêm
-// SAO LƯU lên Cloudflare KV: mỗi lần ghi sẽ đóng mốc thời gian + hẹn đẩy lên (xem `sync.js`).
-// Đây chỉ là bản sao chống mất khi đổi máy/xoá cache/đổi domain — KHÔNG phải database chính.
-// `*Local()` = ghi THUẦN local, KHÔNG đẩy lên server (dùng khi vừa kéo bản mới từ server về,
-// tránh vòng lặp pull → save → push → pull).
+// localStorage IS STILL THE SOURCE OF TRUTH (the app reads/writes here, works offline). Since 07-29
+// there is also a BACKUP to Cloudflare KV: every write stamps a timestamp and schedules a push (see `sync.js`).
+// That is only a copy to survive a new machine / cleared cache / changed domain - NOT the main database.
+// `*Local()` = write PURELY local, do NOT push to the server (used right after pulling a fresh copy
+// from the server, to avoid the pull → save → push → pull loop).
 
 function acct() {
   return (localStorage.getItem('ez_wallet_addr') || 'anon').toLowerCase()
 }
 
-// Migrate 1 lần: dữ liệu key-chung cũ → gán cho tài khoản đang đăng nhập, rồi xóa key chung
+// One-time migration: old shared-key data → assigned to the signed-in account, then the shared key is removed
 function migrate(base) {
   const oldKey = `ez_${base}`
   const newKey = `ez_${base}_${acct()}`
@@ -34,11 +34,11 @@ function save(base, list) {
 export function loadContacts() { return load('contacts') }
 export function loadSavedQRs() { return load('saved_qrs') }
 
-// Ghi THUẦN local (không đẩy lên server) — dành cho luồng restore trong sync.js
+// Write PURELY local (no push to server) - for the restore flow in sync.js
 export function saveContactsLocal(list) { save('contacts', list) }
 export function saveSavedQRsLocal(list) { save('saved_qrs', list) }
 
-// Ghi + đóng mốc + hẹn sao lưu. import() động để store.js không kéo sync.js vào mọi màn.
+// Write + stamp + schedule backup. Dynamic import() so store.js does not drag sync.js into every screen.
 function saveAndBackup(base, list) {
   save(base, list)
   import('./sync').then(s => { s.setLocalStamp(Date.now()); s.schedulePush() }).catch(() => {})

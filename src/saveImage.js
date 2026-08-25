@@ -1,15 +1,15 @@
 import logoLong from '../design/logo.svg'
 
-// ══ ẢNH QR CÓ THƯƠNG HIỆU — dùng chung cho MỌI chỗ share QR (user chốt 08-13) ══
-// Nhận canvas QR trần → trả canvas mới: QR + chữ "Only Arc Testnet" + logo EZwallet.
-// Dùng ở: màn Nhận (Share) và màn ShowQR (QR tự tạo / QR trong kho).
+// ══ BRANDED QR IMAGE - shared by EVERY place that shares a QR (user decision 08-13) ══
+// Takes a bare QR canvas → returns a new canvas: QR + the words "Only Arc Testnet" + the EZwallet logo.
+// Used by: the Receive screen (Share) and the ShowQR screen (a created QR / a QR from the library).
 //
-// ⚠️ CỐ Ý KHÔNG vẽ địa chỉ ví lên ảnh (user chốt 08-13: "gắn địa chỉ vào QR xấu lắm").
-// Màn Nhận gửi địa chỉ dưới dạng TEXT kèm theo ảnh; màn ShowQR không gửi địa chỉ (người ta
-// quét QR để lấy, và ở đó điều quan trọng là SỐ TIỀN chứ không phải địa chỉ).
+// ⚠️ DELIBERATELY does not draw the wallet address onto the image (user decision 08-13: "putting the address on the QR looks awful").
+// The Receive screen sends the address as TEXT alongside the image; ShowQR sends no address at all (people
+// scan the QR to get it, and what matters there is the AMOUNT, not the address).
 //
-// Nhãn mạng PHẢI có trên ảnh: ảnh này rời khỏi app, người nhận không còn gì khác để biết
-// đây là chuỗi nào. Xem thêm luật khoá mạng ở src/qr.js.
+// The network label MUST be on the image: this image leaves the app, and the recipient has nothing else
+// telling them which chain it is. See also the network-lock rule in src/qr.js.
 export async function brandedQrCanvas(qrCanvas) {
   const W = 620, QR = 420, PAD = 50
   const cv = document.createElement('canvas')
@@ -22,7 +22,7 @@ export async function brandedQrCanvas(qrCanvas) {
   x.fillStyle = '#0B53BF'; x.font = '600 30px sans-serif'
   x.fillText('Only Arc Testnet', W / 2, PAD + QR + 58)
 
-  const lw = 168, lh = lw * 380 / 1160   // tỉ lệ logo.svg (viewBox 1160×380), giống ảnh biên lai
+  const lw = 168, lh = lw * 380 / 1160   // logo.svg aspect ratio (viewBox 1160×380), same as the receipt image
   const img = new Image()
   img.src = logoLong
   try { await img.decode() } catch {}
@@ -30,18 +30,18 @@ export async function brandedQrCanvas(qrCanvas) {
   return cv
 }
 
-// Lưu ảnh từ canvas vào KHO ẢNH (iOS: Web Share API → "Lưu ảnh" vào Photos, không phải Files).
-// Fallback (desktop/không hỗ trợ): tải file về.
+// Save a canvas image to the PHOTO LIBRARY (iOS: Web Share API → "Save Image" into Photos, not Files).
+// Fallback (desktop / unsupported): download the file.
 //
-// ⚠️ THAM SỐ `text` (08-13): kèm text thì iOS LỌC BỚT app nhận trong bảng chia sẻ (Messages có
-// thể rụng). User BIẾT và CHỌN đánh đổi này cho màn Nhận: "miễn sao là cái đó share 2 thứ, not
-// 1 thứ" — địa chỉ ví phải đi kèm ảnh. ĐỪNG bỏ `text` đi để "sửa" danh sách app nhận.
-// Màn ShowQR thì KHÔNG truyền text (chỉ ảnh) — cũng là ý user.
+// ⚠️ THE `text` ARGUMENT (08-13): including text makes iOS FILTER the apps offered in the share sheet (Messages
+// can disappear). The user KNOWS and ACCEPTED that trade-off for the Receive screen: "as long as it shares 2 things,
+// not 1" - the wallet address has to travel with the image. Do NOT drop `text` to "fix" the app list.
+// The ShowQR screen passes NO text (image only) - also the user's call.
 export function saveImageToPhotos(canvas, filename, text) {
   canvas.toBlob(async (blob) => {
     if (!blob) return
     const file = new File([blob], filename, { type: 'image/png' })
-    // Kèm text (địa chỉ ví) để share vẫn mang địa chỉ; share FILE ảnh → iOS hiện "Save Image" (kho ảnh).
+    // Include the text (wallet address) so the share still carries the address; sharing a FILE → iOS offers "Save Image".
     const payload = text ? { files: [file], text } : { files: [file] }
     if (navigator.canShare && navigator.canShare(payload)) {
       try { await navigator.share(payload); return } catch (e) { if (e?.name === 'AbortError') return }

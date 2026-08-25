@@ -1,9 +1,9 @@
 import { useNav } from '../nav'
 import Icon from './Icon'
 
-// Tab 1 = SERVICE HUB (08-12), thay tab Swap cũ: Swap giờ là 1 trong nhiều dịch vụ (Swap ·
-// Piggy Bank · LuckyPot) nên navbar trỏ vào TRANG CHỦ dịch vụ, không trỏ thẳng 1 dịch vụ nữa.
-// → Màn Swap KHÔNG còn tab riêng ⇒ hàng 10 của nó là nút Exit (về ServiceHub), không phải NavBar.
+// Tab 1 = SERVICE HUB (08-12), replacing the old Swap tab: Swap is now one service among many
+// (Swap · Piggy Bank · LuckyPot), so the navbar points at the services HOME, not at one service.
+// → Swap has no tab of its own ⇒ its row 10 is the Exit button (back to ServiceHub), not the NavBar.
 const TABS = [
   { id: 'ServiceHub',  label: 'Services', icon: 'hub' },
   { id: 'HomeSend',    label: 'Send',     icon: 'up' },

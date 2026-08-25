@@ -13,11 +13,11 @@ export default function SavedQRList() {
   const [adding, setAdding] = useState(false)
   const [name, setName] = useState('')
   const [amountStr, setAmountStr] = useState('')
-  const [pendingDelete, setPendingDelete] = useState(null)   // QR đang chờ xác nhận xóa (user chốt 07-20e)
-  // LUẬT BÀN PHÍM (user chốt 07-23 hướng A): NHẬP TIỀN = numpad app, NHẬP CHỮ = bàn phím iPhone.
-  // Ô Amount trong popup KHÔNG còn là <input> (bàn phím iPhone numpad thiếu dấu , theo locale +
-  // lệch chuẩn app) → bấm vào mở SHEET numpad app (geometry y hệt sheet Swap). Back = hủy số vừa
-  // gõ, Done/bấm ra ngoài = giữ.
+  const [pendingDelete, setPendingDelete] = useState(null)   // the QR awaiting delete confirmation (user decision 07-20e)
+  // KEYBOARD RULE (user decision 07-23, option A): ENTERING MONEY = the app numpad, ENTERING TEXT = the iPhone keyboard.
+  // The Amount field in the popup is no longer an <input> (the iPhone numeric keyboard lacks a locale decimal separator and
+  // breaks the app standard) → tapping it opens the app numpad SHEET (geometry identical to the Swap sheet). Back = discard what
+  // was typed, Done / tapping outside = keep it.
   const [pad, setPad] = useState(false)
   const padPrev = useRef('')
   const walletAddr = localStorage.getItem('ez_wallet_addr') || ''
@@ -26,14 +26,14 @@ export default function SavedQRList() {
 
   function openPad() { padPrev.current = amountStr; setPad(true) }
   function cancelPad() { setAmountStr(padPrev.current); setPad(false) }
-  // Phím numpad — logic giống SendAmount ('.' 1 lần, BACK xóa lùi, tối đa 12 ký tự)
+  // Numpad keys - same logic as SendAmount ('.' once, BACK deletes backwards, at most 12 characters)
   function handlePadKey(key) {
     if (key === 'BACK') { setAmountStr(d => d.slice(0, -1)); return }
     if (key === '.') { setAmountStr(d => (d.includes('.') ? d : (d === '' ? '0.' : d + '.'))); return }
     setAmountStr(d => (d.length >= 12 ? d : d === '0' ? key : d + key))
   }
 
-  // Bấm dấu × → MỞ POPUP xác nhận (không xóa ngay — chống bấm nhầm, như Delete contact)
+  // Tapping × → OPEN A CONFIRMATION POPUP (no instant delete - guards against mis-taps, like Delete contact)
   function askDelete(q, e) { e.stopPropagation(); setPendingDelete(q) }
   function confirmDelete() {
     const updated = list.filter(q => q.id !== pendingDelete.id)
@@ -42,7 +42,7 @@ export default function SavedQRList() {
 
   function resetForm() { setAdding(false); setName(''); setAmountStr(''); setPad(false) }
 
-  // Save = TẠO QR vào KHO (không show QR cho scan — đó là tính năng Create QR). currency mặc định USD.
+  // Save = CREATE a QR in the LIBRARY (it does not show the QR for scanning - that is the Create QR feature). Currency defaults to USD.
   function handleSave() {
     if (!(amountNum > 0)) return
     const updated = [...list, { id: Date.now(), amount: amountNum, currency: 'USD', name: name.trim(), createdAt: new Date().toISOString() }]
@@ -56,34 +56,34 @@ export default function SavedQRList() {
         QR Storage
       </div>
 
-      {/* Vùng QR = BOX XÁM lớn hàng 2-8 (user chốt 07-23, đồng bộ kiểu box History) · lưới 2 CỘT
-          (trước 3 cột QR bé quá) → QR + chữ to lên cho bà già dễ đọc. Mỗi QR = box TRẮNG nổi trên
-          nền xám: viền xám 1.5 (luật "bấm được trong box xám") + DROP SHADOW như button (07-22d,
-          trắng = alpha .25). X xóa góc trên-phải. Nhiều thì scroll trong box. */}
-      {/* Box xám NGOÀI (padding 10 = box trắng cách lề trái/phải/trên đúng 10px, user chốt 07-23b)
-          + scroll TRONG bằng .scroll-hidden. ⚠️ ĐỪNG dùng .scroll-thin Ở TRONG box xám: class đó có
-          margin-right -20px (mẹo cho list full-bleed) → nội dung tràn phải; PC có scrollbar-gutter
-          bù nên nhìn ổn, iOS KHÔNG hỗ trợ → vỡ layout (bug mobile user báo 07-23b). */}
+      {/* The QR area = a large GREY BOX over rows 2-8 (user decision 07-23, matching the History box style) · a 2-COLUMN grid
+          (3 columns made the QRs too small) → bigger QRs and bigger text for older eyes. Each QR = a WHITE box raised off the
+          grey: 1.5 grey border (the "tappable inside a grey box" rule) + a DROP SHADOW like a button (07-22d,
+          white = alpha .25). The delete X sits top-right. With many QRs the box scrolls. */}
+      {/* OUTER grey box (padding 10 = the white boxes sit exactly 10px from the left/right/top edges, user decision 07-23b)
+          + INNER scrolling via .scroll-hidden. ⚠️ Do NOT use .scroll-thin INSIDE a grey box: that class has
+          margin-right -20px (a trick for full-bleed lists) → content overflows to the right; desktop has scrollbar-gutter
+          to compensate so it looks fine, but iOS does NOT support it → broken layout (the mobile bug reported 07-23b). */}
       <div style={{ gridRow: '2 / 9', background: 'var(--color-surface)', borderRadius: 20, padding: 10, overflow: 'hidden' }}>
       <div className="scroll-hidden" style={{ height: '100%' }}>
-        {/* ⚠️ CỘT PHẢI minmax(0,1fr) — '1fr' trần cho content quyết min-width, box to kéo banh cột
-            (đúng bài học .screen mục 6). Bug user chụp 07-23c: 3 QR → hàng 2 = [Blend | nút +],
-            nút + aspectRatio 1 bị kéo cao bằng box Blend → PHÌNH NGANG theo → 2 cột lệch hẳn. */}
+        {/* ⚠️ RIGHT COLUMN minmax(0,1fr) - with a bare '1fr' the content dictates min-width, and one big box blows the column
+            open (the same lesson as .screen, section 6). Bug the user screenshotted 07-23c: 3 QRs → row 2 = [Blend | + button],
+            and the + button with aspectRatio 1 was stretched as tall as the Blend box → so it INFLATED SIDEWAYS → the 2 columns went badly uneven. */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, alignContent: 'start' }}>
           {list.map(q => {
             const c = q.currency || 'USD'
             const label = fmtMoney(q.amount, c)
             return (
-              // Xem QR đã lưu (không lưu lại), Back về Kho QR. Hiển thị: QR · Tên + số tiền (XANH brand
-              // cho nổi trên nền QR đen, user chốt 07-28).
+              // View a saved QR (it is not re-saved), Back returns to the QR library. Shows: the QR · name + amount (brand BLUE
+              // so it stands out against the black QR, user decision 07-28).
               <button key={q.id} onClick={() => navigate('ShowQR', { amount: q.amount, currency: c, name: q.name, fromStorage: true, saveToLibrary: false, back: 'SavedQRList' })}
                 style={{ position: 'relative', minWidth: 0, border: '1.5px solid var(--color-gray)', borderRadius: 16, background: 'var(--color-white)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '16px 10px 12px', fontFamily: 'inherit' }}>
                 <span onClick={e => askDelete(q, e)} style={{ position: 'absolute', top: 8, right: 8, display: 'flex' }}><Icon name="x" size={16} color="var(--color-muted)" /></span>
-                {/* QR CO GIÃN THEO BOX (user chốt 07-23b "đừng cố định, tùy theo xám"): khung vuông
-                    aspectRatio 1 ăn hết bề ngang box (trừ 24px chừa lề + chỗ nút X), svg fill 100%
-                    (viewBox tự scale, không méo); flexShrink 0 chống grid ép dẹp (bug méo cũ). */}
+                {/* THE QR SCALES WITH THE BOX (user decision 07-23b "do not fix the size, follow the grey"): a square frame with
+                    aspectRatio 1 taking the full box width (minus 24px of margin and room for the X), svg fill 100%
+                    (the viewBox scales, no distortion); flexShrink 0 stops the grid squashing it (the old distortion bug). */}
                 <div style={{ alignSelf: 'stretch', margin: '0 12px', flexShrink: 0 }}>
-                  {/* height auto = svg tự giữ vuông theo viewBox (ép height 100% từng lệch 3px) */}
+                  {/* height auto = the svg keeps itself square via the viewBox (forcing height 100% was 3px off) */}
                   <QRCodeSVG value={buildQR(walletAddr, { amount: q.amount, currency: c })} size={104} level="M" style={{ width: '100%', height: 'auto', display: 'block' }} />
                 </div>
                 {q.name && <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.name}</span>}
@@ -91,10 +91,10 @@ export default function SavedQRList() {
               </button>
             )
           })}
-          {/* ô + → mở POPUP thêm QR (không sang màn mới). HÌNH DỌC đồng bộ ô QR (user chốt 07-28):
-              minHeight 190 ≈ chiều cao ô QR (đo Playwright: QR box 194@390 / 187@375) + LỚN HƠN bề
-              rộng cột (~160) → luôn là hình dọc khi đứng RIÊNG. Chung hàng với QR thì grid stretch tự
-              kéo cao bằng. KHÔNG dùng aspectRatio (bug 07-23c: aspectRatio bị stretch kéo phình ngang). */}
+          {/* The + tile → opens the ADD QR POPUP (no new screen). PORTRAIT shape matching the QR tiles (user decision 07-28):
+              minHeight 190 ≈ the height of a QR tile (measured with Playwright: QR box 194@390 / 187@375) + WIDER than the
+              column (~160) → always portrait when it stands ALONE. Sharing a row with a QR, grid stretch makes them equal.
+              Do NOT use aspectRatio (bug 07-23c: aspectRatio plus stretch inflated it sideways). */}
           <button onClick={() => setAdding(true)}
             style={{ minWidth: 0, minHeight: 190, border: '1.5px dashed var(--color-muted)', borderRadius: 16, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="add" size={40} color="var(--color-muted)" />
@@ -103,30 +103,30 @@ export default function SavedQRList() {
       </div>
       </div>
 
-      {/* Cặp Back TRẮNG (trái) + Add XANH (phải) theo chuẩn .row10-dual (user chốt 07-29, thay
-          .row10-single Back xanh cũ): Add mở đúng popup thêm QR như ô "+" trong lưới — thêm QR là
-          hành động chính của màn nên phải có nút ở hàng 9, không bắt cuộn xuống tìm ô "+". */}
+      {/* A WHITE Back (left) + BLUE Add (right) pair following the .row10-dual standard (user decision 07-29, replacing
+          the old .row10-single blue Back): Add opens the same add-QR popup as the "+" tile in the grid - adding a QR is
+          the main action of this screen, so it needs a button in row 9 rather than making people scroll to find "+". */}
       <div className="row10-dual">
         <button className="btn btn-secondary" onClick={() => navigate('HomeReceive')}>Back</button>
         <button className="btn btn-primary" onClick={() => setAdding(true)}>Add</button>
       </div>
 
-      {/* Popup thêm QR — chuẩn .popup-card (tâm vùng hàng 2-5, chừa bàn phím nửa dưới) */}
+      {/* Add QR popup - standard .popup-card (centred over rows 2-5, leaving the bottom half for the keyboard) */}
       {adding && (
         <div className="popup-overlay" onClick={resetForm}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
             <div className="popup-title">Add to QR Storage</div>
             <input className="address-input" placeholder={'Name (optional)'} value={name} onChange={e => setName(e.target.value)} maxLength={30} style={{ fontSize: 'var(--fs-body)' }} />
-            {/* Label kèm ký hiệu tiền tệ MẶC ĐỊNH của user (user chốt 07-20: USDC→$, EURC→€…) */}
-            {/* Ô Amount = KHÔNG phải input (luật bàn phím 07-23) — bấm mở sheet numpad app; blur ô
-                Name trước để bàn phím iPhone hạ xuống rồi numpad mới trồi lên (không chồng nhau).
-                Caret _ nhấp nháy khi sheet đang mở (đồng bộ tín hiệu nhập tiền toàn app). */}
+            {/* Label carries the user's DEFAULT currency symbol (user decision 07-20: USDC→$, EURC→€…) */}
+            {/* The Amount field is NOT an input (keyboard rule 07-23) - tapping opens the app numpad sheet; the Name field is
+                blurred first so the iPhone keyboard drops before the numpad rises (never both at once).
+                A blinking _ caret while the sheet is open (the app-wide signal that money is being entered). */}
             <div className="address-input" onClick={() => { document.activeElement?.blur?.(); openPad() }}
               style={{ fontSize: 'var(--fs-body)', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
               {amountStr ? (
                 <span className="num">{amountStr}{pad && <span className="caret">_</span>}</span>
               ) : pad ? (
-                <span className="num"><span className="caret">_</span></span>   /* trống + đang nhập = CHỈ caret (chuẩn 07-20b) */
+                <span className="num"><span className="caret">_</span></span>   /* empty while typing = caret ONLY (standard 07-20b) */
               ) : (
                 <span style={{ color: 'var(--color-muted)' }}>{`Amount (${displaySymbol(getDisplayCurrency())})`}</span>
               )}
@@ -139,9 +139,9 @@ export default function SavedQRList() {
         </div>
       )}
 
-      {/* Sheet numpad nhập Amount — geometry Y HỆT sheet Swap (.sheet-overlay/.sheet numpad-gray,
-          55→100dvh, overlay trong suốt). Render SAU popup → nổi trên popup (cùng z-index 100,
-          DOM sau thắng); popup neo nửa trên nên không che nhau. */}
+      {/* The Amount numpad sheet - geometry IDENTICAL to the Swap sheet (.sheet-overlay/.sheet numpad-gray,
+          55→100dvh, transparent overlay). Rendered AFTER the popup → it floats above it (same z-index 100,
+          later in the DOM wins); the popup is anchored to the top half, so they do not cover each other. */}
       {pad && (
         <div className="sheet-overlay" onClick={() => setPad(false)}>
           <div className="sheet numpad-gray" onClick={e => e.stopPropagation()}>
@@ -158,7 +158,7 @@ export default function SavedQRList() {
         </div>
       )}
 
-      {/* Xác nhận xóa QR — chuẩn popup (tâm vùng hàng 1-6). "Delete QR: <tên>" (không tên → số tiền) */}
+      {/* QR delete confirmation - standard popup (centred over rows 1-6). "Delete QR: <name>" (no name → the amount) */}
       {pendingDelete && (
         <div className="popup-overlay" onClick={() => setPendingDelete(null)}>
           <div className="popup-card" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>

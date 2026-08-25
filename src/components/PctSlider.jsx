@@ -1,36 +1,36 @@
 import { useRef, useState } from 'react'
 
-// Thanh trượt CHỌN % SỐ DƯ (thay bàn phím số ở màn Swap — user chốt 07-17: người già/người mới
-// không phải gõ từng chữ số, chỉ kéo "bao nhiêu % tài sản").
+// The % OF BALANCE slider (replacing the numeric keypad on the Swap screen - user decision 07-17: older/new users
+// should not have to type digits, only drag "what share of my money").
 //
-// Hành vi (spec user):
-// - Kéo TỰ DO, độ chính xác 1%.
-// - HÚT NAM CHÂM vào 5 mốc 0/25/50/75/100 khi thumb lọt trong ±SNAP_ZONE% (user chốt 07-17f —
-//   trước là 6 mốc bước 20) → cảm giác "cạch" đúng mốc.
-// - Chạm/bấm thẳng vào bất kỳ đâu trên thanh (kể cả mốc) → nhảy tới đó luôn, không cần kéo.
-// - CHỈ % — KHÔNG hiện nhãn tiền ($0/$15/$29…) dưới mốc (user chốt: thừa, rối).
+// Behaviour (user spec):
+// - FREE dragging, 1% precision.
+// - MAGNET SNAP to the 5 marks 0/25/50/75/100 when the thumb falls within ±SNAP_ZONE% (user decision 07-17f -
+//   it used to be 6 marks in steps of 20) → it feels like it "clicks" onto the mark.
+// - Tapping/clicking anywhere on the track (marks included) → jumps straight there, no dragging needed.
+// - % ONLY - no money labels ($0/$15/$29…) under the marks (user decision: redundant, cluttered).
 //
-// ⚠️ Dùng POINTER EVENTS + setPointerCapture, KHÔNG dùng <input type=range>: range không tuỳ biến
-// được mốc/bong bóng, và iOS bắt buộc kéo đúng thumb mới ăn (bấm vào track không nhảy).
+// ⚠️ Built on POINTER EVENTS + setPointerCapture, NOT <input type=range>: range cannot be customised for marks or
+// the bubble, and iOS requires dragging the thumb itself (tapping the track does not move it).
 const MARKERS = [0, 25, 50, 75, 100]
-// 2 mức hút KHÁC NHAU theo hành vi (user chốt 07-20d): CLICK/TAP = hút MẠNH (±9%) cho dễ trúng mốc;
-// ĐANG KÉO = hút NHẸ (±2%) để không lấn ý người kéo (nam châm mạnh lúc kéo làm lệch giá trị muốn chọn).
+// 2 DIFFERENT snap strengths by gesture (user decision 07-20d): CLICK/TAP = STRONG snap (±9%) to hit marks easily;
+// WHILE DRAGGING = LIGHT snap (±2%) so it does not fight the drag (a strong magnet mid-drag pulls you off your value).
 const SNAP_TAP = 9
 const SNAP_DRAG = 2
 
-// ⚠️ THỤT LỀ THANH TRƯỢT — ĐỪNG BỎ (user chốt 07-17c: "nó phải cách lề chuẩn số đo mình quy định").
-// `.screen` chừa lề 20px mỗi bên. Nếu để track chạy hết bề ngang hàng thì mọi thứ NEO Ở MỐC 0%/100%
-// (thumb, bong bóng %, nhãn "0%"/"100%") đều canh giữa quanh đầu mút → thò NỬA MÌNH ra ngoài, đè lên
-// lề 20px và chạm mép màn (đúng lỗi user bắt). Thụt track vào EDGE px thì phần thò ra vẫn nằm gọn
-// trong 20px: nhãn "100%" rộng ~40px → nửa = 20px = vừa khít lề, thumb 26px → nửa = 13px < 20px.
+// ⚠️ THE SLIDER INSET - DO NOT REMOVE (user decision 07-17c: "it has to respect the margin standard we defined").
+// `.screen` leaves a 20px margin each side. If the track ran the full row width, everything ANCHORED AT 0%/100%
+// (thumb, % bubble, the "0%"/"100%" labels) would be centred on the end points → HALF of each would stick out over
+// the 20px margin and touch the screen edge (exactly the bug the user caught). Inset the track by EDGE px and the
+// overhang stays inside those 20px: the "100%" label is ~40px wide → half = 20px = exactly the margin, thumb 26px → half = 13px < 20px.
 const EDGE = 22
 
 export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disabled }) {
   const trackRef = useRef(null)
   const [dragging, setDragging] = useState(false)
 
-  // x màn hình → % (0-100, làm tròn 1%), có hút nam châm quanh mốc. snapZone = độ mạnh hút:
-  // to (SNAP_TAP) lúc click, nhỏ (SNAP_DRAG) lúc kéo.
+  // screen x → % (0-100, rounded to 1%), with magnet snapping around the marks. snapZone = snap strength:
+  // large (SNAP_TAP) on click, small (SNAP_DRAG) while dragging.
   function pctFromEvent(e, snapZone) {
     const r = trackRef.current.getBoundingClientRect()
     const raw = ((e.clientX - r.left) / r.width) * 100
@@ -43,16 +43,16 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
     if (disabled) return
     e.currentTarget.setPointerCapture(e.pointerId)
     setDragging(true); onDragStart?.()
-    onChange(pctFromEvent(e, SNAP_TAP))   // chạm đầu tiên = như click → hút mạnh
+    onChange(pctFromEvent(e, SNAP_TAP))   // the first touch counts as a click → strong snap
   }
-  function move(e) { if (dragging && !disabled) onChange(pctFromEvent(e, SNAP_DRAG)) }   // kéo → hút nhẹ
+  function move(e) { if (dragging && !disabled) onChange(pctFromEvent(e, SNAP_DRAG)) }   // dragging → light snap
   function up() { if (!dragging) return; setDragging(false); onDragEnd?.() }
 
   const dim = disabled ? 'var(--color-gray)' : 'var(--color-brand)'
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', userSelect: 'none', padding: `0 ${EDGE}px` }}>
-      {/* Bong bóng % — bám theo thumb. translateX(-50%) để tâm bong bóng trùng tâm thumb ở MỌI vị trí. */}
+      {/* The % bubble - follows the thumb. translateX(-50%) keeps the bubble centred on the thumb at EVERY position. */}
       <div style={{ position: 'relative', height: 30, marginBottom: 2 }}>
         <div style={{
           position: 'absolute', left: `${pct}%`, transform: 'translateX(-50%)',
@@ -64,13 +64,13 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
         </div>
       </div>
 
-      {/* Vùng CHẠM cao 44px (ngón tay) nhưng thanh vẽ mảnh — hitbox to, nhìn vẫn thanh mảnh */}
+      {/* The TOUCH area is 44px tall (fingers) while the drawn bar is thin - big hitbox, slim look */}
       <div onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
         style={{ position: 'relative', height: 44, display: 'flex', alignItems: 'center', cursor: disabled ? 'default' : 'pointer', touchAction: 'none' }}>
         <div ref={trackRef} style={{ position: 'relative', width: '100%', height: 4, borderRadius: 2, background: 'var(--color-gray)' }}>
-          {/* Phần đã chọn */}
+          {/* The selected portion */}
           <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: dim, borderRadius: 2, transition: dragging ? 'none' : 'width .15s ease' }} />
-          {/* 5 mốc — to hơn (07-20: 8→14) cho người già dễ nhắm */}
+          {/* The 5 marks - bigger (07-20: 8→14) so older users can aim at them */}
           {MARKERS.map(m => (
             <div key={m} style={{
               position: 'absolute', left: `${m}%`, top: '50%', transform: 'translate(-50%,-50%)',
@@ -87,8 +87,8 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
         </div>
       </div>
 
-      {/* Nhãn % — to hơn (07-20: fs-label 15 → fs-item 17) + BẤM ĐƯỢC (chạm nhãn = nhảy tới mốc,
-          hitbox rộng padding 6px cho ngón tay người già). Không có nhãn tiền (user chốt). */}
+      {/* % labels - bigger (07-20: fs-label 15 → fs-item 17) and TAPPABLE (tapping a label jumps to that mark,
+          hitbox widened with 6px padding for older fingers). No money labels (user decision). */}
       <div style={{ position: 'relative', height: 26, marginTop: 4 }}>
         {MARKERS.map(m => (
           <span key={m} onClick={() => !disabled && onChange(m)} style={{

@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import jsQR from 'jsqr'
 import { useNav } from '../nav'
 import { isOwnAddress } from '../data'
-// parseQR nằm ở src/qr.js — CHUNG với chỗ vẽ QR, để định dạng chỉ có 1 nguồn sự thật.
-// Trả { wrongChain } khi gặp QR EZwallet của chuỗi KHÁC → phải bắt riêng, KHÔNG được để rơi vào
-// nhánh "hợp lệ" (nó không có .address, đi tiếp là sang màn nhập tiền với địa chỉ undefined).
+// parseQR lives in src/qr.js - SHARED with the QR drawing code, so the format has one source of truth.
+// It returns { wrongChain } for an EZwallet QR from ANOTHER chain → that must be caught separately, it
+// must NOT fall into the "valid" branch (it has no .address, so going on lands on the amount screen with undefined).
 import { parseQR } from '../qr'
 
 export default function QRScanner() {
@@ -47,10 +47,10 @@ export default function QRScanner() {
         if (code) {
           const parsed = parseQR(code.data)
           if (parsed?.wrongChain) {
-            setHint('QR from another network – this wallet only works on Arc')
+            setHint('QR from another network – this wallet currently only works on Arc')
           } else if (parsed && isOwnAddress(parsed.address)) {
-            // Quét trúng QR NHẬN TIỀN của chính mình (rất dễ xảy ra: QR của mình đang mở ở màn Nhận
-            // hoặc trong kho QR). KHÔNG đi tiếp — báo rồi quét tiếp, đừng đưa vào màn nhập tiền.
+            // Scanned your OWN receive QR (very easy to do: your QR is open on the Receive screen
+            // or sitting in the QR library). Do NOT go on - say so and keep scanning, never enter the amount screen.
             setHint("That's your own QR – scan the recipient's QR")
           } else if (parsed) {
             active = false
@@ -89,7 +89,7 @@ export default function QRScanner() {
         URL.revokeObjectURL(url)
         const code = jsQR(data.data, data.width, data.height)
         const parsed = code ? parseQR(code.data) : null
-        if (parsed?.wrongChain) setHint('QR from another network – this wallet only works on Arc')
+        if (parsed?.wrongChain) setHint('QR from another network – this wallet currently only works on Arc')
         else if (parsed && isOwnAddress(parsed.address)) setHint("That's your own QR – scan the recipient's QR")
         else if (parsed) navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount, currency: parsed.currency })
         else setHint('No valid QR found in the image')
@@ -103,14 +103,14 @@ export default function QRScanner() {
 
   return (
     <div className="screen">
-      {/* Hàng 1 = TIÊU ĐỀ màn, đồng bộ mọi sub-screen khác (user chốt 07-29 — trước màn này không có
-          tiêu đề, ô quét chiếm luôn hàng 1). */}
+      {/* Row 1 = the screen TITLE, consistent with every other sub-screen (user decision 07-29 - this screen
+          had no title before, the scan box took row 1 as well). */}
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
         Scan QR
       </div>
 
-      {/* CỤM (ô vuông quét + 2 dòng chú thích) căn tâm HÀNG 2-7 (user chốt 07-29 — dời xuống nhường
-          hàng 1 cho tiêu đề; trước là 1-6). */}
+      {/* The BLOCK (scan square + 2 caption lines) is centred on ROWS 2-7 (user decision 07-29 - moved down to
+          give row 1 to the title; it used to be 1-6). */}
       <div style={{ gridRow: '2 / 8', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, minWidth: 0 }}>
         {error ? (
           <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center', padding: '0 20px' }}>{error}</span>
@@ -120,7 +120,7 @@ export default function QRScanner() {
               <video ref={videoRef} autoPlay playsInline muted
                 style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
-            {/* Dòng chính "vừa-to" 21 + dòng phụ "vừa" 19 (user chốt 07-17f, kèm câu nói rõ giới hạn) */}
+            {/* Main line "medium-large" 21 + secondary line "medium" 19 (user decision 07-17f, with the network limit spelled out) */}
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '0 10px', textAlign: 'center' }}>
               <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>{hint}</span>
               <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>
@@ -135,8 +135,8 @@ export default function QRScanner() {
 
       <div className="row-10 row10-dual">
         <button className="btn btn-secondary" onClick={() => fileRef.current?.click()}>QR image</button>
-        {/* "Done" chứ KHÔNG phải "Back" (user chốt 07-29): nút XANH = hành động chính/kết thúc,
-            gắn chữ Back vào nút xanh nhìn sai vai trò (Back luôn là nút trắng phụ). */}
+        {/* "Done" and NOT "Back" (user decision 07-29): a BLUE button = the primary/finishing action,
+            putting Back on a blue button reads as the wrong role (Back is always the secondary white button). */}
         <button className="btn btn-primary" onClick={() => navigate('HomeSend')}>Done</button>
       </div>
     </div>

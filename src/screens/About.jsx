@@ -16,7 +16,7 @@ const ITEMS = [
 export default function About() {
   const { navigate } = useNav()
 
-  // VALUE lên fs-item 17 (user 07-17f: About + Security "nội dung hơi nhỏ" — trước fs-label 15)
+  // VALUE raised to fs-item 17 (user 07-17f: About + Security "content feels a bit small" - was fs-label 15)
   const LABEL = { flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }
   const VALUE = { fontSize: 'var(--fs-item)', color: 'var(--color-muted)', maxWidth: '55%', textAlign: 'right', wordBreak: 'break-word' }
 
@@ -26,7 +26,7 @@ export default function About() {
         About
       </div>
 
-      {/* BOX XÁM chung hàng 2-8 (user chốt 07-17f); trong box KHÔNG line xám ngăn cách (luật cũ giữ). */}
+      {/* SHARED GREY BOX rows 2-8 (user decision 07-17f); no grey separator lines inside the box (old rule kept). */}
       <div style={{ gridRow: '2 / 9', background: 'var(--color-surface)', borderRadius: 20, padding: '4px 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', minWidth: 0 }}>
         {ITEMS.map(({ label, value, link }) => (
           link ? (

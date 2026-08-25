@@ -7,10 +7,10 @@ import { createSocialToken, initializeWallet, executeChallenge, getWalletAddress
 
 const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
 
-// Dịch mã lỗi Circle → thông báo rõ nguyên nhân (thay vì chuỗi "Failed to validate..."
-// khó hiểu). 155140 gần như luôn là redirect URI chưa được allowlist ở Circle Console
-// hoặc origin chưa đăng ký ở Google Cloud Console — KHÔNG phải bug code (đã verify với
-// SDK 1.1.11 source). Log full object để lần test trên deploy đọc được mã thật.
+// Translate Circle error codes → a message that names the cause (instead of the baffling
+// "Failed to validate..." string). 155140 is almost always a redirect URI missing from the Circle Console
+// allowlist or an origin not registered in Google Cloud Console - NOT a code bug (verified against
+// SDK 1.1.11 source). The full object is logged so a test on a deploy can read the real code.
 function googleErrMsg(error) {
   console.error('[GoogleLogin]', error?.code, error, JSON.stringify(error || {}))
   const code = error?.code
@@ -18,20 +18,20 @@ function googleErrMsg(error) {
   if (code === 155706) return 'Network error while authenticating with Circle (code 155706). Try again.'
   return circleErrorMessage(error)
 }
-// Config cần cho SDK rehydrate sau redirect — lưu/xóa qua COOKIES (sống qua full page reload
-// của OAuth redirect; sessionStorage KHÔNG sống → đó là root cause lỗi 155140, theo Circle support).
+// Config the SDK needs to rehydrate after the redirect - saved/cleared through COOKIES (they survive the full page reload
+// of an OAuth redirect; sessionStorage does NOT → that was the root cause of error 155140, per Circle support).
 const COOKIE_KEYS = ['appId', 'google.clientId', 'deviceToken', 'deviceEncryptionKey']
 
 export default function Login() {
   const { navigate } = useNav()
   const sdkRef = useRef(null)
-  const [restoring, setRestoring] = useState(false)  // đang hoàn tất sau redirect
+  const [restoring, setRestoring] = useState(false)  // finishing up after the redirect
   const [googleErr, setGoogleErr] = useState('')
 
-  // deviceId PHẢI lấy qua sdk.getDeviceId() (Circle tự fingerprint qua iframe riêng) — KHÔNG
-  // được tự bịa (vd crypto.randomUUID()), vì Circle backend không biết tới ID tự chế → lỗi
-  // "Provided device ID is not found in the system" khi performLogin. Theo đúng mẫu Circle Web
-  // quickstart 3.4: gọi 1 lần, cache vào localStorage để không phải xin lại mỗi lần bấm nút.
+  // deviceId MUST come from sdk.getDeviceId() (Circle fingerprints it through its own iframe) - do NOT
+  // invent one (e.g. crypto.randomUUID()), because Circle's backend knows nothing about a homemade ID → the error
+  // "Provided device ID is not found in the system" at performLogin. Exactly per the Circle Web
+  // quickstart 3.4: call once, cache in localStorage so it is not requested again on every tap.
   async function ensureDeviceId(sdk) {
     let id = localStorage.getItem('ez_google_deviceId')
     if (id) return id
@@ -40,43 +40,43 @@ export default function Login() {
     return id
   }
 
-  // Khởi tạo SDK 1 lần lúc mount với config restore từ cookies + callback onLoginComplete.
-  // Lần đầu (cookies rỗng) → vô hại. Sau redirect Google (cookies còn + URL có hash token)
-  // → SDK constructor tự đọc hash và gọi onLoginComplete để hoàn tất đăng nhập.
-  // ⚡ SDK nạp lười + KHÔNG chặn vẽ màn (2026-07-17). Trước: `import { W3SSdk } from '...'` ở đầu
-  // file → màn Login (màn ĐẦU TIÊN người mới thấy) phải chờ tải xong ~740KB firebase+crypto rồi mới
-  // vẽ được cái logo. Giờ effect vẫn dựng SDK y như cũ (cho luồng Google redirect), nhưng bằng
-  // import() động chạy NỀN → logo + nút hiện ngay, SDK về sau.
+  // Initialise the SDK once on mount with the config restored from cookies + the onLoginComplete callback.
+  // The first time (empty cookies) → harmless. After a Google redirect (cookies present + a token in the URL hash)
+  // → the SDK constructor reads the hash itself and calls onLoginComplete to finish signing in.
+  // ⚡ The SDK is lazy-loaded and does NOT block the first paint (2026-07-17). Before: `import { W3SSdk } from '...'` at the top
+  // of the file → the Login screen (the FIRST thing a newcomer sees) had to download ~740KB of firebase+crypto before it could
+  // even draw the logo. The effect still builds the SDK exactly as before (for the Google redirect flow), but through
+  // a dynamic import() running in the BACKGROUND → the logo + buttons appear immediately, the SDK follows.
   useEffect(() => {
     let cancelled = false
     const onLoginComplete = async (error, result) => {
-      COOKIE_KEYS.forEach(k => deleteCookie(k))   // deviceToken dùng 1 lần → dọn ngay
+      COOKIE_KEYS.forEach(k => deleteCookie(k))   // the deviceToken is single-use → clean it up right away
       if (error) { setGoogleErr(googleErrMsg(error)); setRestoring(false); return }
       if (!result?.userToken) { setRestoring(false); return }
       try {
         const { userToken, encryptionKey, refreshToken, oAuthInfo } = result
         localStorage.setItem('ez_user_token', userToken)
         localStorage.setItem('ez_encryption_key', encryptionKey)
-        // ⚠️ userToken Circle chỉ sống 60 PHÚT (dùng cho challenge PIN). User Google KHÔNG có
-        // ez_email nên refreshSession() cũ KHÔNG làm mới được → sau 1h mọi thao tác PIN (Đổi PIN,
-        // gửi tiền) trả 403 Forbidden. FIX: LƯU refreshToken (Circle trả sẵn) → refreshSession()
-        // đổi lấy userToken mới qua POST /users/token/refresh. ĐỪNG vứt refreshToken nữa.
+        // ⚠️ A Circle userToken only lives 60 MINUTES (it is what the PIN challenge uses). Google users have NO
+        // ez_email, so the old refreshSession() could NOT refresh it → after 1h every PIN action (Change PIN,
+        // sending) returned 403 Forbidden. FIX: SAVE the refreshToken (Circle already returns it) → refreshSession()
+        // trades it for a fresh userToken via POST /users/token/refresh. Do NOT throw the refreshToken away again.
         if (refreshToken) localStorage.setItem('ez_refresh_token', refreshToken)
         localStorage.setItem('ez_login_method', 'google')
-        // Circle CÓ trả email Google trong oAuthInfo.socialUserInfo.email — lưu RIÊNG (KHÔNG ghi
-        // vào ez_email, vì ez_email điều khiển luồng refresh email-login = danh tính KHÁC). Chỉ để
-        // hiển thị "Login email" thay vì "…".
+        // Circle DOES return the Google email in oAuthInfo.socialUserInfo.email - store it SEPARATELY (do NOT write
+        // it into ez_email, because ez_email drives the email-login refresh flow = a DIFFERENT identity). It is only for
+        // displaying "Login email" instead of "…".
         const gEmail = oAuthInfo?.socialUserInfo?.email
         if (gEmail) localStorage.setItem('ez_google_email', gEmail)
         localStorage.removeItem('ez_wallet_addr')
         localStorage.removeItem('ez_wallet_id')
 
-        // Tạo ví (nếu chưa có) → challenge đặt PIN lần đầu
+        // Create the wallet (if there is none) → the challenge to set the first PIN
         const walletData = await initializeWallet(userToken)
         const challengeId = walletData?.data?.challengeId
         if (challengeId) await executeChallenge(sdkRef.current, userToken, encryptionKey, challengeId)
 
-        // Địa chỉ ví có thể provision chậm → thử vài lần
+        // The wallet address can be slow to provision → retry a few times
         let info = null
         for (let i = 0; i < 3 && !info?.address; i++) {
           info = await getWalletAddress(userToken)
@@ -85,15 +85,15 @@ export default function Login() {
         if (info?.address) localStorage.setItem('ez_wallet_addr', info.address)
         if (info?.walletId) localStorage.setItem('ez_wallet_id', info.walletId)
 
-        sessionStorage.setItem('ez_pin_ok', '1')   // user Google không có PIN → bỏ qua cổng PIN
+        sessionStorage.setItem('ez_pin_ok', '1')   // Google users have no PIN → skip the PIN gate
         navigate('HomeSend')
       } catch (e) {
         setGoogleErr(circleErrorMessage(e)); setRestoring(false)
       }
     }
 
-    // Đang quay lại từ redirect (URL có token) → hiện trạng thái "đang đăng nhập" NGAY,
-    // không đợi SDK tải xong.
+    // Coming back from the redirect (a token in the URL) → show the "signing in" state IMMEDIATELY,
+    // without waiting for the SDK to download.
     const restoringNow = /access_token|id_token|code=/.test(window.location.hash + window.location.search)
     if (restoringNow) setRestoring(true)
 
@@ -112,7 +112,7 @@ export default function Login() {
         },
       }, onLoginComplete)
       sdkRef.current = sdk
-      // xin trước cho đỡ trễ lúc bấm nút (không phải lúc restore)
+      // requested ahead of time so tapping the button is not delayed (not during a restore)
       if (!restoringNow) ensureDeviceId(sdk).catch(() => {})
     }).catch(() => {})
     return () => { cancelled = true }
@@ -121,9 +121,9 @@ export default function Login() {
   async function handleGoogleLogin() {
     setGoogleErr('')
     try {
-      // sdkRef có thể CHƯA có nếu bấm trước lúc import() động xong (từ 07-17 SDK nạp lười).
-      // Trước đây SDK dựng đồng bộ trong useEffect nên không bao giờ null → giờ phải tự lo.
-      // (Nút Google đang ẩn khỏi UI nên nhánh này chưa chạy, nhưng đừng để lại mìn cho lúc bật lại.)
+      // sdkRef may NOT exist yet if the button is tapped before the dynamic import() finishes (the SDK is lazy since 07-17).
+      // The SDK used to be built synchronously in useEffect so it was never null → now it has to be handled.
+      // (The Google button is hidden from the UI so this branch does not run today, but do not leave a landmine for when it returns.)
       if (!sdkRef.current) {
         const { W3SSdk } = await import('@circle-fin/w3s-pw-web-sdk')
         sdkRef.current = new W3SSdk({ appSettings: { appId: APP_ID } })
@@ -131,7 +131,7 @@ export default function Login() {
       const sdk = sdkRef.current
       const deviceId = await ensureDeviceId(sdk)
       const { deviceToken, deviceEncryptionKey } = await createSocialToken(deviceId)
-      // Lưu config vào COOKIES để SDK rehydrate sau redirect (theo Circle Web quickstart 3.6)
+      // Save the config into COOKIES so the SDK can rehydrate after the redirect (per Circle Web quickstart 3.6)
       setCookie('appId', APP_ID)
       setCookie('google.clientId', GOOGLE_CLIENT_ID)
       setCookie('deviceToken', deviceToken)
@@ -150,33 +150,33 @@ export default function Login() {
     }
   }
 
-  // ⚠️ Google login DISABLED (2026-07-03, user chốt sau session 10). Bản thân login CHẠY ĐƯỢC
-  // (OAuth redirect + tạo ví SSO + PIN đều ok), nhưng Circle CHẶN đổi PIN cho user SSO ở tầng
-  // platform: PUT /user/pin → 403 code 3 dù token tươi + pinStatus ENABLED (verify bằng gọi API
-  // thật). User quyết định tắt tới khi có hướng xử lý (hoặc Circle mở, hoặc chuyển kiến trúc
-  // lấy email từ Google Identity Services rồi đi luồng email — xem HANDOFF session 8).
-  // Google login ĐÃ BỎ KHỎI GIAO DIỆN (user chốt 2026-07-05). Hạ tầng (handleGoogleLogin, cookies,
-  // deviceId, refreshToken, onLoginComplete) GIỮ NGUYÊN để bật lại nhanh khi cần — chỉ ẩn nút.
+  // ⚠️ Google login is DISABLED (2026-07-03, user decision after session 10). The login itself WORKS
+  // (OAuth redirect + SSO wallet creation + PIN all fine), but Circle BLOCKS changing the PIN for SSO users at the
+  // platform layer: PUT /user/pin → 403 code 3 despite a fresh token + pinStatus ENABLED (verified by calling the real
+  // API). The user decided to turn it off until there is a way forward (either Circle opens it up, or we switch
+  // architecture to take the email from Google Identity Services and use the email flow - see HANDOFF session 8).
+  // Google login is REMOVED FROM THE UI (user decision 2026-07-05). The plumbing (handleGoogleLogin, cookies,
+  // deviceId, refreshToken, onLoginComplete) is KEPT so it can be switched back on quickly - only the button is hidden.
 
   return (
     <div className="screen">
-      {/* Hàng 1-5: logo + slogan, canh giữa */}
+      {/* Rows 1-5: logo + slogan, centred */}
       <div className="row-1-5 center col" style={{ gap: '3dvh' }}>
-        {/* 50% BỀ NGANG MÀN (user chốt 07-17). KHÔNG dùng width:'50%' — đó là 50% của khung
-            .row-1-5 đang thụt lề 20px mỗi bên, ra 175px = 44.9% màn. Tỉ lệ khung/màn còn ĐỔI theo
-            máy nên không có % cố định nào của khung = 50% màn. Neo thẳng vào màn:
-            .screen = min(100vw, --screen-max) → nửa màn = min(50vw, --screen-max / 2). */}
+        {/* 50% OF THE SCREEN WIDTH (user decision 07-17). Do NOT use width:'50%' - that is 50% of the
+            .row-1-5 frame, which is inset 20px each side, giving 175px = 44.9% of the screen. The frame/screen ratio also CHANGES by
+            device, so no fixed % of the frame equals 50% of the screen. Anchor it to the screen directly:
+            .screen = min(100vw, --screen-max) → half the screen = min(50vw, --screen-max / 2). */}
         <img src={logoLong} alt="ezwallet" style={{ width: 'min(50vw, calc(var(--screen-max) / 2))' }} />
-        {/* Rộng ĐÚNG BẰNG nút "Sign in with Email" (user chốt 07-17): nút = width 80% của khung
-            gridRow 9/11, span này = 80% của khung .row-1-5 — hai khung đều là ô lưới CÙNG MỘT CỘT
-            của .screen nên cùng bề ngang → 80% khớp 80%. KHÔNG ép <br /> nữa: chữ tự xuống dòng
-            cho vừa bề ngang đó (câu dài/ngắn theo ngôn ngữ + cỡ chữ vẫn tự vỡ dòng đúng). */}
+        {/* EXACTLY as wide as the "Sign in with Email" button (user decision 07-17): the button = width 80% of the
+            gridRow 9/11 frame, and this span = 80% of the .row-1-5 frame - both frames are grid cells in the SAME COLUMN
+            of .screen, so they share a width → 80% matches 80%. No forced <br /> any more: the text wraps by itself
+            to that width (longer/shorter wording and font sizes still break correctly). */}
         <span style={{ width: '80%', fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center' }}>
           {'Create a wallet with email, send & receive money easily'}
         </span>
       </div>
 
-      {/* Nút Đăng nhập với Email — ở ranh giới hàng 9-10 (giữa row 9/11 = mép dưới, như các màn khác) */}
+      {/* The Sign in with Email button - on the row 9-10 boundary (the bottom edge of rows 9/11, like every other screen) */}
       <div style={{ gridRow: '9 / 11', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2dvh' }}>
         {restoring && (
           <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>Processing...</span>

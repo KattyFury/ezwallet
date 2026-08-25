@@ -3,11 +3,11 @@ import { NavContext } from './nav'
 import ErrorBoundary from './components/ErrorBoundary'
 import BugButton from './components/BugButton'
 
-// NẠP LƯỜI TỪNG MÀN (2026-07-17) — user: "app cùi tại sao load lâu".
-// Trước: App.jsx import TĨNH cả 22 màn → Vite gộp HẾT vào 1 file 1.668 KB, trình duyệt phải tải +
-// parse + chạy XONG TOÀN BỘ rồi React mới vẽ được chữ đầu tiên → ĐO ĐƯỢC 2.7s MÀN TRẮNG trên 4G.
-// Nặng nhất lại là thứ màn đầu KHÔNG CẦN: jsQR 130KB (chỉ màn quét QR), qrcode.react (chỉ màn QR).
-// lazy() → mỗi màn 1 file riêng, chỉ tải khi user thực sự mở màn đó.
+// LAZY-LOAD EVERY SCREEN (2026-07-17) - the user: "why is this rubbish app so slow to load".
+// Before: App.jsx imported all 22 screens STATICALLY → Vite bundled EVERYTHING into one 1,668 KB file, and the
+// browser had to download + parse + run ALL of it before React drew the first character → a MEASURED 2.7s WHITE SCREEN on 4G.
+// The heaviest parts were what the first screen does NOT need: jsQR 130KB (scanner only), qrcode.react (QR screens only).
+// lazy() → one file per screen, downloaded only when the user actually opens it.
 const Login       = lazy(() => import('./screens/Login'))
 const HomeSend    = lazy(() => import('./screens/HomeSend'))
 const HomeReceive = lazy(() => import('./screens/HomeReceive'))
@@ -45,8 +45,8 @@ const SCREENS = {
 
 export default function App() {
   const [nav, setNav] = useState(() => {
-    // Còn session → qua CỔNG PIN (khoá mở ví) trước HomeSend, trừ khi phiên này đã mở khoá
-    // (ez_pin_ok — set sau khi verify PIN, hoặc sau khi vừa TẠO PIN ở login lần đầu). Chưa có session → Login.
+    // Session exists → through the PIN GATE (wallet unlock) before HomeSend, unless this session is already unlocked
+    // (ez_pin_ok - set after verifying the PIN, or right after CREATING the PIN on first login). No session → Login.
     const hasSession = localStorage.getItem('ez_user_token')
     if (!hasSession) return { screen: 'Login', params: {} }
     const unlocked = sessionStorage.getItem('ez_pin_ok')
@@ -57,34 +57,34 @@ export default function App() {
     setNav({ screen, params })
   }
 
-  // iOS/Android: khi bàn phím mở, trình duyệt tự CUỘN trang để lộ ô nhập → màn/popup
-  // "nhảy lên". Mọi ô nhập trong app đã thiết kế nằm NỬA TRÊN (trên vùng bàn phím che),
-  // nên ta khóa cuộn trang về 0 → ô vẫn thấy mà màn không nhảy. (Chỉ khóa cuộn TRANG;
-  // các list cuộn trong (overflow:auto của Danh bạ/Lịch sử) không bị ảnh hưởng.)
+  // iOS/Android: when the keyboard opens, the browser SCROLLS the page to reveal the field → the screen/popup
+  // "jumps up". Every input in this app is deliberately placed in the TOP HALF (above the keyboard area),
+  // so we pin the page scroll at 0 → the field stays visible and the screen does not jump. (Only the PAGE
+  // scroll is pinned; inner scrolling lists - overflow:auto in Contacts/History - are unaffected.)
   useEffect(() => {
     const lock = () => { if (window.scrollY !== 0) window.scrollTo(0, 0) }
     window.addEventListener('scroll', lock, { passive: true })
     return () => window.removeEventListener('scroll', lock)
   }, [])
 
-  // KÉO BẢN SAO LƯU danh bạ/kho QR về 1 lần lúc mở app (2026-07-29). Chạy nền, im lặng:
-  // không có KV binding / mạng lỗi / MOCK → bỏ qua, app không hề biết. Đặt ở đây (mở app) chứ
-  // KHÔNG đặt trong màn Contacts: lúc này user chắc chắn chưa mở màn nào đọc danh bạ nên ghi đè
-  // local không giật UI. Chi tiết luật gộp: src/sync.js.
-  // ⚠️ Từ 08-06 (auth chữ ký PIN): lượt kéo CHÍNH nằm ở PinGate, ngay sau khi user nhập PIN —
-  // vì token phiên sync chỉ có sau bước ký. Chỗ này giờ chỉ còn ăn ở trường hợp RELOAD tab
-  // (sessionStorage sống sót → đã có `ez_pin_ok` + `ez_sync_token`, không qua PinGate nữa).
-  // Chưa có token thì `pullOnce` tự bỏ qua im lặng.
+  // PULL THE BACKUP of contacts/QR library once at startup (2026-07-29). Background, silent:
+  // no KV binding / network error / MOCK → skipped, and the app never notices. It lives here (app startup) and
+  // NOT in the Contacts screen: at this point the user certainly has no screen reading contacts open, so overwriting
+  // local data cannot jolt the UI. Merge rules in detail: src/sync.js.
+  // ⚠️ Since 08-06 (PIN-signature auth): the MAIN pull happens in PinGate, right after the user enters the PIN -
+  // because the sync session token only exists after the signing step. This call now only covers a tab RELOAD
+  // (sessionStorage survives → `ez_pin_ok` + `ez_sync_token` already exist, so PinGate is skipped).
+  // With no token, `pullOnce` silently does nothing.
   useEffect(() => {
     if (!sessionStorage.getItem('ez_sync_token') || !localStorage.getItem('ez_wallet_addr')) return
     import('./sync').then(s => s.pullOnce()).catch(() => {})
   }, [])
 
-  // PREFETCH lúc trình duyệt RẢNH (2026-07-22g — user: "app chưa mượt") → chuyển tab + bước PIN
-  // MƯỢT hơn. KHÔNG đổi logic: chỉ "làm nóng" cache các chunk (import() động vẫn chạy y hệt khi
-  // điều hướng thật). Các màn hay dùng nạp trước → đổi tab KHÔNG chớp trắng (Suspense fallback);
-  // Circle SDK ~1MB (chỉ cần lúc ký PIN) nạp nền → bước PIN không khựng vì tải nguội. Chạy khi
-  // trình duyệt rảnh nên KHÔNG tranh băng thông lúc mở app (không làm chậm màn đầu).
+  // PREFETCH while the browser is IDLE (2026-07-22g - the user: "the app is not smooth yet") → tab switching and the
+  // PIN step feel SMOOTHER. No logic changes: it only warms the chunk cache (the dynamic import() still runs exactly the
+  // same on real navigation). Frequently used screens are preloaded → switching tabs does NOT flash white (Suspense
+  // fallback); the ~1MB Circle SDK (only needed for PIN signing) loads in the background → the PIN step does not stall
+  // on a cold download. It runs when the browser is idle, so it does NOT compete for bandwidth at startup.
   useEffect(() => {
     const idle = window.requestIdleCallback ? window.requestIdleCallback.bind(window) : cb => setTimeout(cb, 1600)
     const cancel = window.cancelIdleCallback ? window.cancelIdleCallback.bind(window) : clearTimeout
@@ -102,18 +102,18 @@ export default function App() {
   return (
     <NavContext.Provider value={{ navigate, params: nav.params }}>
       <ErrorBoundary>
-        {/* fallback = KHUNG MÀN TRẮNG TRỐNG, cố tình KHÔNG spinner/chữ "đang tải": màn tải trong
-            <100ms, nhấp một cái spinner rồi biến còn khó chịu hơn là không có gì. Giữ nền trắng +
-            đúng khung .screen → không giật layout khi màn thật hiện ra. */}
-        {/* KHUNG NEO cho nút báo lỗi: cùng bề ngang + canh giữa y hệt .screen (max 430px), để
-            nút bám mép PHẢI CỦA APP chứ không phải mép màn hình (trên desktop 2 chỗ đó cách nhau
-            rất xa). .screen bên trong vẫn tự lo height/overflow của nó. */}
+        {/* fallback = an EMPTY WHITE SCREEN FRAME, deliberately WITHOUT a spinner or "loading" text: screens load in
+            <100ms, and a spinner that blinks in and out is more annoying than nothing. Keeping the white background +
+            the exact .screen frame → no layout jump when the real screen appears. */}
+        {/* ANCHOR FRAME for the bug-report button: same width and centring as .screen (max 430px), so the button
+            hugs the APP's right edge and not the screen's (on desktop those two are very far apart).
+            The inner .screen still handles its own height/overflow. */}
         <div style={{ position: 'relative', maxWidth: 'var(--screen-max)', margin: '0 auto' }}>
           <Suspense fallback={<div className="screen" />}>
             <Screen />
           </Suspense>
-          {/* Nút báo lỗi hiện ở MỌI màn, kể cả Login/PinGate — lỗi hay xảy ra nhất là lúc chưa
-              vào được app, chặn ở đó thì đúng ca cần báo nhất lại không báo được. */}
+          {/* The bug-report button shows on EVERY screen, Login/PinGate included - errors are most likely exactly when
+              you cannot get into the app, and blocking it there would silence the case that most needs reporting. */}
           <BugButton screen={nav.screen} />
         </div>
       </ErrorBoundary>

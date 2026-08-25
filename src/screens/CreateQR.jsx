@@ -4,7 +4,7 @@ import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
 import { displaySymbol, amountFontSize } from '../data'
 
-// Đồng bộ màn Gửi: USD (nhãn thân thiện, ứng USDC) mặc định + USDC/EURC/cirBTC.
+// Consistent with the Send screen: USD (friendly label, backed by USDC) by default + USDC/EURC/cirBTC.
 const CURRENCIES = ['USD', 'USDC', 'EURC', 'cirBTC']
 
 export default function CreateQR() {
@@ -13,9 +13,9 @@ export default function CreateQR() {
   const [cur, setCur] = useState('USD')
   const [showCur, setShowCur] = useState(false)
   const [name, setName] = useState('')
-  // Luật bàn phím 07-23 (đồng bộ SendAmount): gõ CHỮ (ô tên QR) → ẩn numpad app, blur → hiện lại
+  // Keyboard rule 07-23 (same as SendAmount): typing TEXT (the QR name field) → hide the app numpad, blur → show it again
   const [typingText, setTypingText] = useState(false)
-  // Từ Kho QR → tạo xong LƯU vào kho (kèm TÊN); từ màn Nhận → chỉ hiện để share, KHÔNG lưu.
+  // From the QR library → creating also SAVES it to the library (with a NAME); from Receive → only shown to share, NOT saved.
   const fromLibrary = params?.from === 'SavedQRList'
 
   const amount = parseFloat(digits || '0')
@@ -34,18 +34,18 @@ export default function CreateQR() {
         Create receive QR
       </div>
 
-      {/* ĐỒNG BỘ HÌNH HỌC VỚI SendAmount (user chốt 07-23 "2 màn cùng chức năng phải giống nhau"):
-          cụm nhãn/số tiền = 1 flex column gridRow 2/6 gap 4dvh y hệt bên Gửi. Dòng 1 = "Amount to
-          receive" (chỗ của "Send to: X", CHỮ ĐEN medium cùng cỡ fs-md-lg); dòng 2 = số + chip [USD]
-          copy nguyên style bên Gửi (chip fs-md-lg + mũi tên BRAND — trước đây fs-label + muted là
-          lệch chuẩn 07-22c); dòng 3 = ô tên QR (chỉ khi từ Kho QR — đứng đúng chỗ ô note bên Gửi). */}
+      {/* GEOMETRY MATCHES SendAmount (user decision 07-23 "two screens with the same job must look the same"):
+          the label/amount block is one flex column, gridRow 2/6, gap 4dvh, exactly like Send. Line 1 = "Amount to
+          receive" (where "Send to: X" sits, BLACK medium text at the same fs-md-lg size); line 2 = amount + [USD] chip
+          copied verbatim from Send (chip fs-md-lg + BRAND arrow - it used to be fs-label + muted, which broke
+          the 07-22c standard); line 3 = the QR name field (only from the QR library - sits where Send has its note field). */}
       <div style={{ gridRow: '2 / 6', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4dvh', minWidth: 0 }}>
         <div className="center" style={{ gap: 6 }}>
           <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>Amount to receive</span>
         </div>
 
         <div className="center col" style={{ gap: 6 }}>
-          {/* Số to LUÔN căn giữa; chip tiền tệ neo BÌA PHẢI — copy nguyên khối bên SendAmount */}
+          {/* The big number is ALWAYS centred; the currency chip is anchored to the RIGHT EDGE - block copied from SendAmount */}
           <div style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span className="num" style={{ fontSize: amountFontSize((cur === 'USD' ? '$' : '') + digits, 52, 9), fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
               {cur === 'USD' ? displaySymbol('USDC') : ''}{digits}<span className="caret">_</span>
@@ -64,18 +64,18 @@ export default function CreateQR() {
               onFocus={() => setTypingText(true)} onBlur={() => setTypingText(false)} />
           </div>
         ) : (
-          /* Placeholder CAO BẰNG ô note bên Gửi (52) — cụm bên Gửi 3 hàng, thiếu hàng này thì
-             justify-center kéo nhãn/số tụt xuống 43px, 2 màn hết trùng vị trí (đo 07-23). */
+          /* Placeholder AS TALL as the note field on Send (52) - the Send block has 3 rows, and without this one
+             justify-center drags the label/amount down by 43px, so the two screens stop lining up (measured 07-23). */
           <div style={{ height: 52 }} />
         )}
       </div>
 
-      {/* Numpad panel XÁM phím TRẮNG (user chốt 07-20 đồng bộ sheet Swap + SendAmount): nửa hàng 6
-          → đáy màn, full-bleed, bo góc trên; nút [Hủy][Tạo QR] .row10-dual nổi trên nền xám.
-          ẨN khi đang gõ tên QR (luật bàn phím 07-23 — không cho 2 bàn phím cùng hiện). */}
+      {/* GREY numpad panel with WHITE keys (user decision 07-20, matching the Swap sheet + SendAmount): from half of row 6
+          to the bottom of the screen, full-bleed, rounded top corners; the [Cancel][Create QR] .row10-dual buttons float on the grey.
+          HIDDEN while typing the QR name (keyboard rule 07-23 - never two keyboards at once). */}
       {!typingText && (
       <div className="numpad-gray" style={{ gridRow: '6 / 11', margin: '5dvh -20px 0', padding: '24px 20px 0', background: 'var(--color-surface-2)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column' }}>
-        {/* Numpad 5.5 phần (07-20c: phím thấp lại một tẹo), nút .row10-dual vẫn neo biên hàng 9-10 */}
+        {/* Numpad 5.5 parts (07-20c: keys a touch shorter), the .row10-dual buttons still anchored to the row 9-10 edge */}
         <div style={{ flex: 5.5, minHeight: 0 }}>
           <Numpad onKey={handleKey} showComma />
         </div>
@@ -83,7 +83,7 @@ export default function CreateQR() {
       </div>
       )}
 
-      {/* Nút [Hủy][Tạo QR] = vị trí chuẩn row10-dual (hàng 9-10) */}
+      {/* The [Cancel][Create QR] buttons = the standard row10-dual position (rows 9-10) */}
       <div className="row10-dual">
         <button className="btn btn-secondary" onClick={() => navigate(fromLibrary ? 'SavedQRList' : 'HomeReceive')}>Cancel</button>
         <button className="btn btn-primary" disabled={amount <= 0}

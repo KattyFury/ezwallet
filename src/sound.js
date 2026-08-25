@@ -1,21 +1,21 @@
-// ══ ÂM THANH BÁO THÀNH CÔNG (user chốt 2026-08-13) ══
+// ══ SUCCESS SOUND (user decision 2026-08-13) ══
 //
-// CHỈ kêu ở 2 chỗ ĐỘNG TỚI TIỀN: gửi tiền xong (SendReceipt) · đổi tiền xong (Swap).
-// ⚠️ ĐỪNG rắc thêm tiếng cho copy/lưu QR/chuyển màn: kêu nhiều thì tiếng MẤT THIÊNG, đúng lúc
-// tiền rời ví lại không còn nổi bật (user chốt, đã cân nhắc và loại phương án đó).
-// ⚠️ CŨNG ĐỪNG thêm cho "nhận được tiền": tiền tự về thì KHÔNG có cú chạm nào của user, iOS chặn
-// phát âm → phải giữ AudioContext sống suốt phiên, phức tạp hơn nhiều. User đã chốt bỏ.
+// Plays ONLY at the 2 places that MOVE MONEY: send completed (SendReceipt) · swap completed (Swap).
+// ⚠️ Do NOT sprinkle sounds on copy / save QR / screen changes: too many chimes and the sound LOSES ITS MEANING,
+// so the moment money actually leaves the wallet no longer stands out (the user considered and rejected that).
+// ⚠️ Do NOT add one for "money received" either: incoming money involves NO user gesture, iOS blocks playback →
+// we would have to keep an AudioContext alive for the whole session, far more complexity. The user dropped it.
 //
-// TỰ SINH TIẾNG bằng Web Audio, KHÔNG dùng file .mp3 (user chọn):
-//   · 0 KB thêm vào app · chạy được khi mất mạng · không dính bản quyền nhạc
-//   · đổi cao độ/độ dài = sửa mấy con số ngay dưới đây
+// The tone is GENERATED with Web Audio, no .mp3 file (the user's choice):
+//   · 0 KB added to the app · works offline · no music licensing
+//   · changing pitch/length = editing the numbers just below
 //
-// ⚠️ LUẬT iOS: AudioContext sinh ra ở trạng thái 'suspended', CHỈ resume được BÊN TRONG một cú
-// chạm của người dùng. Lúc gửi tiền xong thì đã qua bao nhiêu await (ký PIN, chờ on-chain) nên
-// chuỗi cử chỉ ĐỨT — gọi resume() ở đó là quá muộn. Vì vậy `unlockOnFirstTouch()` (App.jsx gọi
-// 1 lần lúc mở app) mở khoá sẵn ngay cú chạm ĐẦU TIÊN vào app, sau đó phát lúc nào cũng được.
+// ⚠️ iOS RULE: an AudioContext is born 'suspended' and can ONLY be resumed INSIDE a user gesture. By the time a send
+// finishes, many awaits have passed (PIN signing, waiting on-chain), so the gesture chain is BROKEN - calling resume()
+// there is too late. Hence `unlockOnFirstTouch()` (App.jsx calls it once at startup) unlocks on the very FIRST touch
+// anywhere in the app, after which playback works at any time.
 
-const KEY = 'ez_sound'   // 'off' = tắt. Không có key = BẬT (mặc định bật, user chốt)
+const KEY = 'ez_sound'   // 'off' = muted. No key = ON (on by default, user decision)
 
 export function isSoundOn() { return localStorage.getItem(KEY) !== 'off' }
 export function setSoundOn(on) { localStorage.setItem(KEY, on ? 'on' : 'off') }
@@ -25,13 +25,13 @@ let ctx = null
 function getCtx() {
   if (ctx) return ctx
   const AC = window.AudioContext || window.webkitAudioContext
-  if (!AC) return null              // trình duyệt quá cũ → im lặng, KHÔNG nổ
+  if (!AC) return null              // browser too old → stay silent, do NOT blow up
   try { ctx = new AC() } catch { return null }
   return ctx
 }
 
-// Gọi 1 lần lúc mở app (App.jsx). Cú chạm đầu tiên vào app sẽ resume AudioContext rồi tự gỡ
-// listener. Dùng cả pointerdown lẫn touchstart cho chắc trên iOS đời cũ.
+// Call once at startup (App.jsx). The first touch anywhere resumes the AudioContext and then removes its own
+// listener. Both pointerdown and touchstart are used, to be safe on older iOS.
 export function unlockOnFirstTouch() {
   const unlock = () => {
     const c = getCtx()
@@ -43,32 +43,32 @@ export function unlockOnFirstTouch() {
   window.addEventListener('touchstart', unlock, { once: true, passive: true })
 }
 
-// 1 nốt hình sin + bao âm lượng lên/xuống. PHẢI có bao âm (gain ramp): cho gain nhảy thẳng từ 0
-// lên là loa kêu "tách" ở đầu và cuối nốt.
+// One sine note plus an up/down volume envelope. The gain ramp is REQUIRED: letting gain jump straight from 0
+// makes the speaker "click" at the start and end of the note.
 function note(c, freq, startAt, dur, peak) {
   const osc = c.createOscillator()
   const gain = c.createGain()
   osc.type = 'sine'
   osc.frequency.value = freq
   gain.gain.setValueAtTime(0.0001, startAt)
-  gain.gain.exponentialRampToValueAtTime(peak, startAt + 0.015)      // vào nhanh
-  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + dur)      // tắt dần
+  gain.gain.exponentialRampToValueAtTime(peak, startAt + 0.015)      // quick attack
+  gain.gain.exponentialRampToValueAtTime(0.0001, startAt + dur)      // fade out
   osc.connect(gain); gain.connect(c.destination)
   osc.start(startAt); osc.stop(startAt + dur + 0.02)
 }
 
-// "ting-ting" 2 nốt ĐI LÊN = tín hiệu xong việc/tích cực (đi xuống nghe như báo lỗi).
-// C6 1046.5 → E6 1318.5, tổng ~0,3s. Âm lượng 0.18 = nghe rõ mà không giật mình.
+// A two-note RISING "ting-ting" = the done/positive signal (falling notes read as an error).
+// C6 1046.5 → E6 1318.5, ~0.3s total. Volume 0.18 = clearly audible without startling anyone.
 export function playSuccess() {
   if (!isSoundOn()) return
   const c = getCtx()
   if (!c) return
-  // Vẫn cố resume phòng khi lần mở khoá đầu trượt (iOS đôi lúc trả về suspended sau khi app
-  // chạy nền rồi quay lại). Thất bại thì thôi, im lặng — KHÔNG được để văng lỗi ra màn biên lai.
+  // Still try to resume in case the first unlock missed (iOS sometimes returns to suspended after the app has been
+  // backgrounded and reopened). If it fails, stay silent - it must NEVER throw onto the receipt screen.
   if (c.state === 'suspended') c.resume().catch(() => {})
   try {
     const t0 = c.currentTime
     note(c, 1046.5, t0, 0.12, 0.18)
     note(c, 1318.5, t0 + 0.11, 0.20, 0.18)
-  } catch { /* thiết bị lạ → im lặng, đừng làm hỏng luồng tiền */ }
+  } catch { /* odd device → stay silent, do not break the money flow */ }
 }

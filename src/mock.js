@@ -1,41 +1,41 @@
 // ══════════════════════════════════════════════════════════
-// MOCK MODE (2026-07-15) — chạy LOCAL để canh UI/flow, KHÔNG đụng Circle SDK.
-//   Bật:  npm run mock   (Vite --mode mock đọc .env.mock có VITE_MOCK=1)
-//   Tắt:  npm run dev     (bình thường) — cờ không set → MOCK=false.
-// KHÔNG BAO GIỜ vào production: build prod (mode=production) không có VITE_MOCK.
-// Tác dụng: bỏ qua Login + PIN → vào thẳng app với VÍ ẢO + SỐ DƯ ẢO; mọi /api/* và ArcScan bị
-// chặn trả data giả; nút Gửi/Swap giả lập THÀNH CÔNG (không gọi Circle, không mất tiền thật).
-// Chỉ để dựng/canh giao diện — luồng tiền thật vẫn phải test trên deploy (Circle SDK cần https).
+// MOCK MODE (2026-07-15) - runs LOCALLY to check UI/flow, WITHOUT touching the Circle SDK.
+//   On:   npm run mock   (Vite --mode mock reads .env.mock, which sets VITE_MOCK=1)
+//   Off:  npm run dev    (normal) - flag unset → MOCK=false.
+// NEVER reaches production: a prod build (mode=production) has no VITE_MOCK.
+// What it does: skips Login + PIN → straight into the app with a FAKE WALLET and FAKE BALANCES; every /api/* and
+// ArcScan call is intercepted with fake data; Send/Swap pretend to SUCCEED (no Circle call, no real money).
+// For building/checking the UI only - real money flows still have to be tested on a deploy (the Circle SDK needs https).
 // ══════════════════════════════════════════════════════════
 export const MOCK = import.meta.env.VITE_MOCK === '1'
 
-// Ví ảo (địa chỉ demo, không phải ví thật)
+// Fake wallet (demo address, not a real wallet)
 export const MOCK_ADDR = '0x1234567890AbcdEF1234567890aBCDef12345678'
 const OTHER_ADDR = '0x9AbCDef0123456789ABCdef0123456789abCDEf0'
-const ADAPTER = '0xBBD70b01a1CAbc96d5b7b129Ae1AAabdf50dd40b'   // Swap Adapter (để tx swap nhận diện đúng)
+const ADAPTER = '0xBBD70b01a1CAbc96d5b7b129Ae1AAabdf50dd40b'   // Swap Adapter (so swap txs are recognised correctly)
 
-// Số dư ảo theo symbol (đơn vị token thật). Giá quy USD dùng MOCK_RATES.
+// Fake balances by symbol (in real token units). USD conversion uses MOCK_RATES.
 export const MOCK_AMOUNTS = { USDC: 127.66, EURC: 84.20, cirBTC: 0.01542 }
 export const MOCK_RATES = { USDC: 1, EURC: 1.08, cirBTC: 65000 }
 
-// Lịch sử giao dịch ảo — SHAPE giống ArcScan tokentx (from/to/value base units/tokenSymbol/tokenDecimal/
-// contractAddress/timeStamp/hash). Swap = 2 dòng CÙNG hash (1 out + 1 in) để TxHistory nhận là swap.
+// Fake transaction history - SHAPED like ArcScan tokentx (from/to/value base units/tokenSymbol/tokenDecimal/
+// contractAddress/timeStamp/hash). A swap = 2 rows with the SAME hash (1 out + 1 in) so TxHistory reads it as a swap.
 const _now = Math.floor(Date.now() / 1000)
 export const MOCK_TX = [
-  // Nhận 25 USDC (1h trước)
+  // Received 25 USDC (1h ago)
   { hash: '0xmockrcv1', from: OTHER_ADDR, to: MOCK_ADDR, value: '25000000', tokenSymbol: 'USDC', tokenDecimal: '6', contractAddress: '0x3600000000000000000000000000000000000000', timeStamp: String(_now - 3600) },
-  // Gửi 10 EURC (hôm qua)
+  // Sent 10 EURC (yesterday)
   { hash: '0xmocksnd1', from: MOCK_ADDR, to: OTHER_ADDR, value: '10000000', tokenSymbol: 'EURC', tokenDecimal: '6', contractAddress: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', timeStamp: String(_now - 90000) },
-  // TỰ GỬI CHO CHÍNH MÌNH: 1 DÒNG DUY NHẤT có from == to (bug user báo 07-31 — trước đây bị gán
-  // nhãn "Swapped 5 USDC to USDC" nên tưởng mất tích khỏi lịch sử). Giữ ca này trong mock để lần
-  // sau đụng vào TxHistory là test lại được ngay: phải hiện "Sent to yourself", KHÔNG phải Swapped.
+  // SENDING TO YOURSELF: ONE SINGLE ROW with from == to (bug reported by the user 07-31 - it used to be labelled
+  // "Swapped 5 USDC to USDC", so it looked like it had vanished from history). Keep this case in the mock so the
+  // next person touching TxHistory can retest instantly: it must read "Sent to yourself", NOT Swapped.
   { hash: '0xmockself1', from: MOCK_ADDR, to: MOCK_ADDR, value: '5000000', tokenSymbol: 'USDC', tokenDecimal: '6', contractAddress: '0x3600000000000000000000000000000000000000', timeStamp: String(_now - 7200) },
-  // Swap 20 USDC → ~18.5 EURC (2 ngày trước, cùng hash)
+  // Swap 20 USDC → ~18.5 EURC (2 days ago, same hash)
   { hash: '0xmockswp1', from: MOCK_ADDR, to: ADAPTER, value: '20000000', tokenSymbol: 'USDC', tokenDecimal: '6', contractAddress: '0x3600000000000000000000000000000000000000', timeStamp: String(_now - 180000) },
   { hash: '0xmockswp1', from: ADAPTER, to: MOCK_ADDR, value: '18500000', tokenSymbol: 'EURC', tokenDecimal: '6', contractAddress: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', timeStamp: String(_now - 180000) },
 ]
 
-// Seed phiên đăng nhập giả → App.jsx thấy có session + đã mở khoá PIN → vào thẳng HomeSend.
+// Seed a fake session → App.jsx sees a session + an unlocked PIN → straight into HomeSend.
 export function seedMockSession() {
   localStorage.setItem('ez_user_token', 'mock-token')
   localStorage.setItem('ez_wallet_addr', MOCK_ADDR)
@@ -48,8 +48,8 @@ function jsonRes(obj) {
   return new Response(JSON.stringify(obj), { status: 200, headers: { 'Content-Type': 'application/json' } })
 }
 
-// Chặn network: /api/* (Circle proxy) + ArcScan tokentx → trả data giả. Mọi URL khác (RPC viem…) đi
-// qua fetch gốc và tự fail gracefully (getTxMemo/gasPrice đều có try/catch → không sao).
+// Block the network: /api/* (the Circle proxy) + ArcScan tokentx → fake data. Every other URL (viem RPC…) goes
+// through the real fetch and fails gracefully (getTxMemo/gasPrice both have try/catch → no harm).
 export function installMockFetch() {
   const orig = window.fetch.bind(window)
   window.fetch = async (input, init) => {

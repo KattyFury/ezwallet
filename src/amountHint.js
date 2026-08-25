@@ -1,40 +1,40 @@
-// GỢI Ý SỐ TIỀN khi GÕ TAY ở màn Gửi tiền (user chốt 2026-08-04).
+// AMOUNT SUGGESTIONS while TYPING BY HAND on the Send screen (user decision 2026-08-04).
 //
-// Vấn đề: tiền Việt toàn số lớn — gửi năm trăm nghìn là phải bấm "500000", sáu lần chạm, rất dễ
-// thừa/thiếu một số 0. Người lớn tuổi gõ xong cũng không chắc mình vừa gõ 50.000 hay 500.000.
-// Giải: gõ vài số đầu rồi BẤM CHỌN mức mong muốn — "50" → [5.000] [50.000] [500.000].
+// The problem: some currencies deal in large numbers - sending five hundred thousand means tapping "500000",
+// six touches, and it is very easy to add or drop a zero. Older users then cannot tell 50,000 from 500,000.
+// The fix: type the first few digits then TAP the level you meant - "50" → [5,000] [50,000] [500,000].
 //
-// ⚠️ KHÁC HẲN roundHint.js (thanh trượt màn Swap): bên kia làm tròn số LẺ do kéo trượt ra
-// (7.35 → 7 / 7.5 / 8). Bên này NHÂN THÊM SỐ 0 cho số user vừa gõ. Đừng gộp 2 cái làm một.
+// ⚠️ COMPLETELY DIFFERENT from roundHint.js (the Swap slider): that one rounds the ODD number a drag produces
+// (7.35 → 7 / 7.5 / 8). This one ADDS ZEROES to what the user just typed. Do not merge the two.
 //
-// CHỈ dùng cho tiền tệ số lớn không có số lẻ (VND). USD/EUR gõ "50" là đúng 50 đô rồi, gợi ý
-// nhân 100 lần thành 5.000 đô là vô duyên và NGUY HIỂM (bấm nhầm = gửi gấp trăm lần).
+// ONLY for large-number currencies with no decimals (VND). In USD/EUR, typing "50" already means 50 dollars, and
+// suggesting 100x more (5,000 dollars) is both silly and DANGEROUS (one wrong tap = sending a hundred times too much).
 
-// Bậc nhân: gõ "50" → 5.000 · 50.000 · 500.000 (đúng ví dụ user đưa).
+// Multiplier steps: typing "50" → 5,000 · 50,000 · 500,000 (the exact example the user gave).
 const MULTIPLIERS = [100, 1000, 10000]
 
-// digits: chuỗi user đang gõ (chỉ chữ số, vd '50'). avail: số dư khả dụng CÙNG ĐƠN VỊ tiền tệ.
-// Trả mảng số (tăng dần, tối đa 3) để vẽ chip bấm được. Không có gì đáng gợi ý → [].
+// digits: the string being typed (digits only, e.g. '50'). avail: the available balance IN THE SAME CURRENCY.
+// Returns an array of numbers (ascending, at most 3) to render as tappable chips. Nothing worth suggesting → [].
 export function amountHints(digits, avail) {
   const n = parseInt(digits, 10)
   if (!Number.isFinite(n) || n <= 0) return []
 
-  // Đã gõ số đủ lớn (≥ 6 chữ số = từ 100.000 trở lên) thì thôi, user biết mình đang làm gì rồi —
-  // gợi ý thêm chỉ tổ che mất bàn phím.
+  // Already typed something big enough (≥ 6 digits = 100,000 and up) → stop, the user knows what they are doing -
+  // more suggestions would only cover the keyboard.
   if (digits.replace(/^0+/, '').length >= 6) return []
 
   return MULTIPLIERS
     .map(m => n * m)
     .filter(v =>
       v > 0 &&
-      // KHÔNG BAO GIỜ gợi ý số vượt quá số dư — bấm vào là dính lỗi "số dư không đủ" ngay.
-      // avail chưa biết (null/undefined, số dư đang tải) → cứ hiện, màn tự chặn ở nút Tiếp tục.
+      // NEVER suggest an amount above the balance - tapping it walks straight into "insufficient balance".
+      // avail unknown (null/undefined, balance still loading) → show it anyway, the screen blocks at Continue.
       (avail == null || v <= avail) &&
-      v !== n            // trùng đúng số đang gõ thì gợi ý làm gì
+      v !== n            // exactly the number being typed - no point suggesting it
     )
 }
 
-// Số → chuỗi kiểu Việt Nam: 500000 → "500.000" (dấu CHẤM ngăn nghìn).
+// Number → grouped string: 500000 → "500.000" (DOT as the thousands separator).
 export function fmtAmountHint(v) {
   return v.toLocaleString('vi-VN')
 }

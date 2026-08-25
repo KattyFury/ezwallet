@@ -1,22 +1,22 @@
 // ══════════════════════════════════════════════════════════════════════════════
-// SAO LƯU DANH BẠ + KHO QR (client) — cặp với functions/api/sync.js
+// CONTACTS + QR LIBRARY BACKUP (client side) - the counterpart of functions/api/sync.js
 //
-// LUẬT GỘP = BẢN SỬA MỚI NHẤT THẮNG (last-write-wins theo cả cụm, mốc `updatedAt`).
-// Chọn cách này vì nó DỰ ĐOÁN ĐƯỢC và giải thích được cho người dùng phổ thông:
-// "máy nào sửa sau thì máy đó đúng". Kiểu gộp union (nhập 2 bên) nghe an toàn hơn nhưng
-// XOÁ SẼ KHÔNG BAO GIỜ ĂN — xoá 1 người ở máy A, mở máy B là họ sống lại → còn khó hiểu hơn.
+// MERGE RULE = THE MOST RECENT EDIT WINS (last-write-wins over the whole bundle, by the `updatedAt` stamp).
+// Chosen because it is PREDICTABLE and explainable to an everyday user:
+// "whichever device edited last is the right one". A union merge sounds safer, but DELETES WOULD NEVER STICK -
+// delete someone on device A, open device B and they are alive again → far more confusing.
 //
-// AVATAR không lên server (xem lý do ở functions/api/sync.js). Khi restore từ máy khác,
-// contact về đủ tên + địa chỉ nhưng KHÔNG có ảnh; ảnh ở máy cũ vẫn được GIỮ LẠI khi ghi đè
-// (ghép theo id) để đừng mất ảnh vì một lần pull.
+// AVATARS do not go to the server (reason in functions/api/sync.js). Restoring on another device brings contacts
+// back with names + addresses but NO pictures; pictures on the old device are KEPT when overwriting
+// (matched by id) so one pull cannot lose them.
 //
-// AUTH = CHỮ KÝ PIN (2026-08-06). Token phiên do PinGate lấy về sau khi user nhập PIN
-// (xem `prepareUnlockMessage` + `openSession` bên dưới) và nằm ở sessionStorage → chết
-// cùng phiên app, mở lại app là ký lại. KHÔNG có token = mọi lệnh sync im lặng bỏ qua,
-// app chạy y như cũ (đúng như lúc chưa bật KV).
+// AUTH = PIN SIGNATURE (2026-08-06). The session token is fetched by PinGate after the user enters their PIN
+// (see `prepareUnlockMessage` + `openSession` below) and lives in sessionStorage → it dies with the
+// app session, and reopening the app signs again. NO token = every sync call silently does nothing and
+// the app behaves exactly as before (just like when KV was not enabled).
 //
-// MỌI LỖI ĐỀU IM LẶNG: sao lưu là tính năng phụ, KHÔNG được làm app đứng hay hiện lỗi.
-// Chưa tạo KV binding → server trả 503 → chỗ này bỏ qua, app chạy y như cũ.
+// EVERY ERROR IS SILENT: backup is a side feature and must NEVER stall the app or surface an error.
+// No KV binding yet → the server returns 503 → this code skips, and the app runs exactly as before.
 // ══════════════════════════════════════════════════════════════════════════════
 import { MOCK } from './mock'
 
@@ -29,13 +29,13 @@ export const localStamp = () => Number(localStorage.getItem(stampKey()) || 0)
 export const setLocalStamp = (ts) => localStorage.setItem(stampKey(), String(ts))
 
 let pushTimer = null
-let disabled = false   // server báo sync-disabled (chưa có KV) → thôi không gọi nữa cả phiên
+let disabled = false   // server reported sync-disabled (no KV) → stop calling for the rest of the session
 
 const token = () => sessionStorage.getItem(TOKEN_KEY) || ''
 
-// Gọi API sync. `auth = false` cho 2 lệnh mở phiên (nonce/session) — chúng chưa có token.
-// timeoutMs tồn tại vì bước nonce nằm TRÊN ĐƯỜNG MỞ KHOÁ APP: mạng treo thì thà bỏ sao lưu
-// chứ tuyệt đối không được giữ user đứng ở màn PIN.
+// Call the sync API. `auth = false` for the 2 session-opening calls (nonce/session) - they have no token yet.
+// timeoutMs exists because the nonce step sits ON THE APP UNLOCK PATH: if the network hangs, drop the backup
+// rather than ever leaving the user stuck on the PIN screen.
 async function call(action, payload, { auth = true, timeoutMs = 0, extra } = {}) {
   if (disabled || MOCK) return null
   const body = { action, payload, ...extra }
@@ -57,15 +57,15 @@ async function call(action, payload, { auth = true, timeoutMs = 0, extra } = {})
     if (timer) clearTimeout(timer)
   }
   if (res.status === 503) { disabled = true; return null }
-  // Token hết hạn/không hợp lệ → vứt đi, đừng gọi tiếp bằng token chết. Phiên sau ký lại là có.
+  // Token expired/invalid → throw it away, do not keep calling with a dead token. The next session signs again.
   if (res.status === 401 && auth) { sessionStorage.removeItem(TOKEN_KEY); return null }
   if (!res.ok) return null
   return res.json()
 }
 
-// ── MỞ PHIÊN SAO LƯU (gọi từ PinGate, xen vào đúng lượt nhập PIN sẵn có) ───────
-// Bước 1: xin nonce + câu chữ để đem đi ký. Hỏng/không có KV/mạng chậm → trả null,
-// PinGate ký câu mặc định và app chạy tiếp bình thường, chỉ là không có sao lưu phiên này.
+// ── OPENING THE BACKUP SESSION (called from PinGate, folded into the PIN entry that already happens) ───────
+// Step 1: ask for a nonce + the sentence to sign. Failure / no KV / slow network → return null,
+// PinGate signs the default sentence and the app carries on normally, just without backup this session.
 export async function prepareUnlockMessage() {
   try {
     const res = await call('nonce', undefined, { auth: false, timeoutMs: 4000 })
@@ -73,16 +73,16 @@ export async function prepareUnlockMessage() {
   } catch { return null }
 }
 
-// Bước 2: đổi chữ ký lấy token phiên. Chữ ký do Circle trả về sau khi user nhập PIN đúng.
-// Server tự dựng lại câu chữ từ nonce rồi recover địa chỉ — client không khai địa chỉ của mình.
+// Step 2: trade the signature for a session token. The signature comes back from Circle once the PIN is correct.
+// The server rebuilds the sentence from the nonce and recovers the address - the client never declares its own address.
 export async function openSession(nonce, signature) {
   if (!nonce || !signature) return false
   try {
     const res = await call('session', undefined, { auth: false, timeoutMs: 8000, extra: { nonce, signature } })
     if (!res?.token) return false
-    // CHỐT AN TOÀN: địa chỉ server recover được PHẢI đúng ví đang mở. Lệch = chuẩn ký của Circle
-    // không khớp giả định EIP-191 ở server → dữ liệu sẽ chui vào nhầm khoá KV. Gặp thì TẮT hẳn
-    // sao lưu phiên này (app vẫn chạy bình thường) chứ tuyệt đối không ghi bừa.
+    // SAFETY CHECK: the address the server recovers MUST be the wallet that is open. A mismatch means Circle's signing
+    // convention does not match the server's EIP-191 assumption → data would land under the wrong KV key. If it happens,
+    // DISABLE backup for this session entirely (the app keeps working) rather than writing anything blindly.
     if (res.address && acct() && res.address.toLowerCase() !== acct()) {
       console.error('[sync] address recovered from signature does NOT match the open wallet — disabling backup for this session', res.address, acct())
       return false
@@ -92,7 +92,7 @@ export async function openSession(nonce, signature) {
   } catch { return false }
 }
 
-// PUSH có debounce 1.5s: thêm/sửa/xoá liên tiếp (vd sửa tên rồi đổi ảnh) chỉ tốn 1 lượt ghi KV.
+// PUSH is debounced by 1.5s: consecutive add/edit/delete actions (e.g. renaming then changing the picture) cost one KV write.
 export function schedulePush() {
   clearTimeout(pushTimer)
   pushTimer = setTimeout(() => { pushNow().catch(() => {}) }, 1500)
@@ -104,19 +104,19 @@ export async function pushNow() {
   await call('push', { updatedAt, contacts: loadContacts(), savedQrs: loadSavedQRs() })
 }
 
-// PULL lúc mở app: bản trên server MỚI HƠN local thì ghi đè local (giữ avatar theo id),
-// local mới hơn thì đẩy lên. Trả true nếu vừa ghi đè local (để màn đang mở tự nạp lại).
+// PULL at startup: if the server copy is NEWER than local, overwrite local (keeping avatars by id);
+// if local is newer, push it up. Returns true when local was just overwritten (so an open screen can reload).
 export async function pullOnce() {
   const res = await call('pull').catch(() => null)
   if (!res) return false
   const remote = res.data
   const mine = localStamp()
 
-  if (!remote) { if (mine) schedulePush(); return false }        // server trống → đẩy bản local lên
+  if (!remote) { if (mine) schedulePush(); return false }        // server empty → push the local copy up
   if (remote.updatedAt <= mine) { if (remote.updatedAt < mine) schedulePush(); return false }
 
   const { loadContacts, saveContactsLocal, saveSavedQRsLocal } = await import('./store')
-  // Giữ ảnh đang có ở máy này cho contact cùng id — server không giữ avatar.
+  // Keep the pictures this device already has for contacts with the same id - the server holds no avatars.
   const avatars = new Map(loadContacts().filter(c => c.avatar).map(c => [c.id, c.avatar]))
   saveContactsLocal((remote.contacts || []).map(c => (avatars.has(c.id) ? { ...c, avatar: avatars.get(c.id) } : c)))
   saveSavedQRsLocal(remote.savedQrs || [])

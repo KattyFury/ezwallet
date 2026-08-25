@@ -5,13 +5,13 @@ import { loadContacts, saveContacts } from '../store'
 
 function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
 
-const V = 220 // viewport ảnh tròn
+const V = 220 // circular image viewport
 
-// Cắt ảnh tròn: zoom bằng slider, di chuyển bằng kéo
+// Circular image cropper: zoom with the slider, reposition by dragging
 function AvatarCropper({ src, onCancel, onDone }) {
   const imgRef = useRef(null)
   const [nat, setNat] = useState(null)        // { w, h }
-  const [base, setBase] = useState(1)         // scale phủ kín viewport
+  const [base, setBase] = useState(1)         // scale that fills the viewport
   const [zoom, setZoom] = useState(1)
   const [pos, setPos] = useState({ x: 0, y: 0 })
   const drag = useRef(null)
@@ -38,7 +38,7 @@ function AvatarCropper({ src, onCancel, onDone }) {
     const oldW = dispW || 1
     const newW = nat.w * base * z
     const newH = nat.h * base * z
-    // giữ tâm
+    // keep the centre
     const cx = V / 2 - (V / 2 - pos.x) * (newW / oldW)
     const cy = V / 2 - (V / 2 - pos.y) * (newH / (dispH || 1))
     setZoom(z); setPos(clamp({ x: cx, y: cy }, newW, newH))
@@ -86,14 +86,14 @@ function AvatarCropper({ src, onCancel, onDone }) {
 export default function Contacts() {
   const { navigate, params } = useNav()
   const [contacts, setContacts] = useState(loadContacts)
-  // form = null (đóng) | { id?, name, addr, pfp }. Có id = SỬA; không id = THÊM.
+  // form = null (closed) | { id?, name, addr, pfp }. With an id = EDIT; without = ADD.
   const [form, setForm] = useState(null)
-  const [picked, setPicked] = useState(null)     // ảnh thô đang chỉnh
+  const [picked, setPicked] = useState(null)     // the raw image being cropped
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [copiedId, setCopiedId] = useState(null)
   const fileRef = useRef(null)
 
-  // Tới từ TxHistory [Add] → mở form Thêm với địa chỉ điền sẵn
+  // Arrived from TxHistory [Add] → open the Add form with the address prefilled
   useEffect(() => { if (params?.addAddress) setForm({ name: '', addr: params.addAddress, pfp: null }) }, [])
 
   function copyAddr(c) {
@@ -134,9 +134,9 @@ export default function Contacts() {
         Contacts
       </div>
 
-      {/* BOX XÁM chung cho cả danh sách (user chốt 07-17f: "phân vùng rõ ra cho người ta dễ hình
-          dung đó là 1 box"). Padding ngang của box = lề CÂN 2 BÊN cho mọi hàng (trước hàng full-bleed:
-          PFP sát lề trái còn nút option thụt 4px + rãnh scrollbar → user bắt lỗi "lệch trái"). */}
+      {/* SHARED GREY BOX around the whole list (user decision 07-17f: "mark the area clearly so people can see it
+          is one box"). The box's horizontal padding = an EVEN margin on both sides for every row (rows used to be
+          full-bleed: the PFP touched the left edge while the options button was inset 4px + the scrollbar gutter → the user called it "off to the left"). */}
       <div className="row-2-8" style={{ width: '100%', ...(contacts.length ? { background: 'var(--color-surface)', borderRadius: 20, padding: '4px 16px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' } : {}) }}>
         {contacts.length === 0 ? (
           <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>No contacts yet</span>
@@ -148,8 +148,8 @@ export default function Contacts() {
                 {c.avatar ? (
                   <img src={c.avatar} alt="" style={{ width: 52, height: 52, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
                 ) : (
-                  // Chưa có ảnh → vòng TRẮNG VIỀN XÁM (nằm trong box xám → theo luật chip trắng
-                  // 07-17f), dấu "+" muted, bấm vào để thêm avatar
+                  // No picture yet → a WHITE circle with a GREY BORDER (it sits inside the grey box → follows the
+                  // white-chip rule of 07-17f), a muted "+", tap it to add an avatar
                   <button onClick={() => openEdit(c)}
                     style={{ width: 52, height: 52, borderRadius: '50%', background: 'var(--color-white)', border: '1.5px solid var(--color-gray)', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Icon name="add" size={24} color="var(--color-muted)" />
@@ -182,14 +182,14 @@ export default function Contacts() {
 
       <div className="row-10 row10-dual">
         <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>Back</button>
-        {/* CHỈ CHỮ, không icon (user chốt 07-29): mọi nút cặp Back/<hành động> trong app đều chữ trần —
-            riêng nút này có icon nhìn lạc. */}
+        {/* TEXT ONLY, no icon (user decision 07-29): every Back/<action> button pair in the app is plain text -
+            an icon on just this one looked out of place. */}
         <button className="btn btn-primary" onClick={openAdd}>Add</button>
       </div>
 
       <input ref={fileRef} type="file" accept="image/*" onChange={pickFile} style={{ display: 'none' }} />
 
-      {/* Popup THÊM/SỬA danh bạ — neo nửa trên (tránh bàn phím). Sửa: có "Delete contact" đỏ. */}
+      {/* ADD/EDIT contact popup - anchored to the top half (clear of the keyboard). Edit mode has a red "Delete contact". */}
       {form && (
         <div className="popup-overlay" onClick={closeForm}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
@@ -198,8 +198,8 @@ export default function Contacts() {
             ) : (
               <>
                 <div className="popup-title">{form.id ? 'Edit contact' : 'Add contact'}</div>
-                {/* Vòng thêm PFP dùng CÙNG xám surface với ô nhập bên dưới (user bắt lỗi 07-17f:
-                    2 vùng xám khác màu — trước là --color-gray #E5E5EA vs surface #F2F2F7) */}
+                {/* The add-PFP circle uses the SAME surface grey as the field below it (the user caught this 07-17f:
+                    two grey areas in different greys - it was --color-gray #E5E5EA vs surface #F2F2F7) */}
                 <button onClick={() => fileRef.current?.click()}
                   style={{ alignSelf: 'center', width: 80, height: 80, borderRadius: '50%', border: 'none', cursor: 'pointer', overflow: 'hidden', background: form.pfp ? 'transparent' : 'var(--color-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
                   {form.pfp
@@ -208,10 +208,10 @@ export default function Contacts() {
                 </button>
                 <input className="address-input" placeholder={'Name'} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ fontSize: 'var(--fs-body)' }} />
                 <input className="address-input" placeholder="0x..." value={form.addr} onChange={e => setForm(f => ({ ...f, addr: e.target.value }))} style={{ fontSize: 'var(--fs-body)' }} />
-                {/* SỬA: dòng chữ đỏ "Delete contact" (không phải nút — tránh lòi 3 nút), bấm → confirm.
-                    margin dọc 14px (user chốt 07-20: cách xa ô địa chỉ trên + cặp Back/Save dưới cho
-                    khỏi bấm nhầm — gap popup-card 12px + 14px = ~26px mỗi phía). Popup vẫn tự căn giữa
-                    vùng hàng 1-6 nhờ top:30dvh + translateY(-50%). */}
+                {/* EDIT: a red "Delete contact" line (not a button - avoids ending up with 3 buttons), tapping it → confirm.
+                    14px vertical margin (user decision 07-20: keep it away from the address field above and the Back/Save
+                    pair below so nobody taps it by accident - popup-card gap 12px + 14px = ~26px each side). The popup still
+                    centres itself over rows 1-6 thanks to top:30dvh + translateY(-50%). */}
                 {form.id && (
                   <button onClick={() => setConfirmDelete(true)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)', fontFamily: 'inherit', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', padding: '2px 0', margin: '14px 0', textAlign: 'center' }}>
@@ -228,7 +228,7 @@ export default function Contacts() {
         </div>
       )}
 
-      {/* Xác nhận xóa — chống bấm nhầm (z-index 110: đè lên popup form đang mở) */}
+      {/* Delete confirmation - guards against a mis-tap (z-index 110: sits above the open form popup) */}
       {confirmDelete && (
         <div className="popup-overlay" style={{ zIndex: 110 }} onClick={() => setConfirmDelete(false)}>
           <div className="popup-card" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>

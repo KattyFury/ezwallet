@@ -13,14 +13,14 @@ import { buildQR } from '../qr'
 export default function HomeReceive() {
   const { navigate } = useNav()
   const [copied, setCopied] = useState(false)
-  const [addrCopied, setAddrCopied] = useState(false)   // copy riêng cho nút dưới QR (khác nút "Chia sẻ")
-  const qrRef = useRef(null)   // canvas ẩn để xuất ảnh QR khi Share
-  // Seed tổng số dư từ cache → không "..." khi chuyển màn. CHƯA có cache → null (CHƯA BIẾT),
-  // KHÔNG phải 0 — xem chú thích cùng bug ở MenuScreen (07-16: màn vẽ "$0.00" lúc đang tải).
+  const [addrCopied, setAddrCopied] = useState(false)   // a copy state just for the button under the QR (separate from "Share")
+  const qrRef = useRef(null)   // hidden canvas used to export the QR image for Share
+  // Seed the total balance from cache → no "..." when switching screens. NO cache yet → null (NOT KNOWN YET),
+  // NOT 0 - see the note about the same bug in MenuScreen (07-16: the screen drew "$0.00" while loading).
   const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? c.reduce((s, t) => s + t.usd, 0) : null })
   const [walletAddr, setWalletAddr] = useState(localStorage.getItem('ez_wallet_addr') || '')
 
-  // Lấy lại địa chỉ ví nếu thiếu (tạo ví xong nhưng Circle provision chậm)
+  // Re-fetch the wallet address if missing (wallet created but Circle provisioning is slow)
   useEffect(() => {
     if (walletAddr) return
     ensureWalletAddress().then(a => { if (a) setWalletAddr(a) })
@@ -28,21 +28,21 @@ export default function HomeReceive() {
 
   useEffect(() => {
     if (!walletAddr) return
-    // catch: đọc hỏng thì GIỮ số cũ, đừng để văng thành 0 (getTokenBalances giờ ném lỗi thay vì bịa 0)
+    // catch: on a failed read KEEP the old number, never let it collapse to 0 (getTokenBalances now throws instead of inventing 0)
     getTokenBalances(walletAddr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0))).catch(() => {})
   }, [walletAddr])
 
-  // Share = ẢNH QR (có logo + nhãn "Only Arc Testnet") **KÈM TEXT là ĐỊA CHỈ VÍ** — user chốt
-  // 08-13: "miễn sao là cái đó share 2 thứ, not 1 thứ".
+  // Share = the QR IMAGE (with logo + the "Only Arc Testnet" label) **PLUS the WALLET ADDRESS AS TEXT** - user decision
+  // 08-13: "as long as it shares 2 things, not 1".
   //
-  // ⚠️ ĐÁNH ĐỔI ĐÃ BIẾT VÀ ĐÃ CHẤP NHẬN: kèm `text` làm iOS LỌC BỚT app nhận trong bảng chia sẻ
-  // (Messages có thể rụng — chính là bug user báo sáng 08-13). Bản sửa đầu bỏ text và VẼ địa chỉ
-  // lên ảnh, user chê "gắn địa chỉ vào QR xấu lắm" và chọn quay lại kèm text. ĐỪNG bỏ `text` đi
-  // lần nữa để "sửa" danh sách app nhận — đó là quyết định của user, không phải lỗi.
+  // ⚠️ A KNOWN, ACCEPTED TRADE-OFF: including `text` makes iOS FILTER the apps offered in the share sheet
+  // (Messages can disappear - exactly the bug reported on the morning of 08-13). The first fix dropped the text and DREW the
+  // address onto the image; the user disliked it ("putting the address on the QR looks awful") and chose the text back. Do NOT drop `text`
+  // again to "fix" the app list - that is the user's decision, not a bug.
   async function handleShare() {
     const qrCanvas = qrRef.current?.querySelector('canvas')
     if (!qrCanvas || !navigator.canShare) {
-      // Máy không hỗ trợ share ảnh → copy địa chỉ cho đỡ cụt
+      // Device cannot share images → copy the address so the tap still does something
       await navigator.clipboard.writeText(walletAddr)
       setCopied(true); setTimeout(() => setCopied(false), 2000)
       return
@@ -60,32 +60,32 @@ export default function HomeReceive() {
     <div className="screen">
       <BalanceHeader totalUsd={totalUsd} loading={totalUsd === null} />
 
-      {/* Canvas ẩn (chất lượng cao) để Share xuất ra PNG → "Save Image" vào kho ảnh */}
+      {/* Hidden high-quality canvas so Share can export a PNG → "Save Image" into the photo library */}
       <div ref={qrRef} style={{ position: 'absolute', left: -9999, top: -9999 }} aria-hidden>
         <QRCodeCanvas value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" includeMargin />
       </div>
 
-      {/* QR neo ĐÚNG hàng 3-5 (user chốt 07-19: trước để 3-6 + paddingBottom "nhường chỗ" cho dòng
-          địa chỉ ở hàng 6 → QR bị đẩy lệch tâm khỏi khối 3 hàng. Giờ hàng 6 dành riêng cho
-          nút địa chỉ, không chồng lấn nữa nên QR canh giữa thẳng trong đúng 3 hàng). */}
+      {/* The QR is anchored to rows 3-5 exactly (user decision 07-19: it used to be 3-6 + paddingBottom "making room" for the
+          address line in row 6 → which pushed the QR off-centre within its 3-row block. Row 6 is now reserved for the
+          address button and no longer overlaps, so the QR centres cleanly inside its 3 rows). */}
       <div style={{ gridRow: '3 / 6', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0 }}>
-        {/* ⚠️ KHÔNG vẽ địa chỉ trần `0x…` nữa (user chốt 08-13) — địa chỉ EVM giống nhau trên MỌI
-            chuỗi nên ví ở Ethereum/Base/BSC quét là gửi nhầm chuỗi, tiền MẤT LUÔN. buildQR bọc
-            trong scheme riêng + gắn chainId Arc; xem src/qr.js.
-            Ai cần địa chỉ dạng thường (nạp từ sàn, ví khác) thì bấm nút copy ngay dưới QR. */}
+        {/* ⚠️ No more bare `0x…` addresses (user decision 08-13) - EVM addresses are identical on EVERY
+            chain, so a wallet on Ethereum/Base/BSC scanning it sends on the wrong chain and the money is GONE. buildQR wraps
+            it in a private scheme + the Arc chainId; see src/qr.js.
+            Anyone who needs the plain address (topping up from an exchange or another wallet) taps the copy button under the QR. */}
         <QRCodeSVG value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" style={{ width: 'min(30dvh, 78vw)', height: 'min(30dvh, 78vw)' }} />
       </div>
-      {/* Địa chỉ + copy: neo absolute top 55% = TRÙNG toạ độ nút "Hold to show tokens" màn Gửi
-          (user chốt 07-17f "càng tốt") — qua lại 2 tab, dòng phụ nằm đúng 1 chỗ.
-          07-19: ẩn địa chỉ rút gọn + icon copy riêng, chỉ còn 1 dòng hướng dẫn "bấm để copy" —
-          ĐỒNG BỘ hẳn kiểu nút với ShowTokensButton (HomeSend.jsx) cho khớp cặp 2 tab (user chốt:
-          cùng pill trắng viền xám, cùng cỡ chữ, để nhìn như 1 CẶP nút chứ không phải chữ trôi nổi). */}
+      {/* Address + copy: absolutely positioned at top 55% = the SAME coordinates as the "Hold to show tokens" button on Send
+          (user decision 07-17f "all the better") - switching between the 2 tabs, the secondary line stays in one place.
+          07-19: the shortened address and separate copy icon were hidden, leaving one instruction line "tap to copy" -
+          FULLY MATCHING the button style of ShowTokensButton (HomeSend.jsx) so the 2 tabs form a pair (user decision:
+          same white pill with a grey border, same font size, so they read as a PAIR of buttons and not floating text). */}
       <button onClick={handleCopyAddr} style={{
         position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
-        // ⚠️ RỘNG ÔM SÁT CHỮ (user chốt 08-13) — bỏ bề rộng cố định 3/4 màn của 07-29. Cặp nút này
-        // với "Hold to show tokens" (HomeSend) giờ KHÔNG còn bằng nhau vì 2 câu dài khác nhau;
-        // đó là ý user, đừng "sửa lại cho đều". Sửa 1 nút thì sửa luôn nút kia cho cùng công thức.
+        // ⚠️ WIDTH HUGS THE TEXT (user decision 08-13) - the fixed 3/4-screen width from 07-29 was dropped. This button and
+        // "Hold to show tokens" (HomeSend) are now UNEQUAL because the two sentences differ in length;
+        // that is intended, do not "even them up". If you change one button, change the other to the same formula.
         maxWidth: 'min(92vw, calc(var(--screen-max) - 24px))', overflow: 'hidden', textOverflow: 'ellipsis',
         padding: '0 18px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
@@ -97,21 +97,21 @@ export default function HomeReceive() {
       </button>
 
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
-        {/* Mỗi dòng = 1 CÂU đủ nghĩa, từ khoá gạch chân BẤM ĐƯỢC → đi đúng nơi nút cùng tên ở
-            hàng 9 dẫn tới (user chốt 07-21). Thứ tự khớp layout nút: QR Storage · Create QR · Share. */}
-        {/* pollMs 5s (user chốt 08-13): đây là màn người ta VỪA CHÌA QR RA VÀ ĐANG ĐỨNG CHỜ tiền
-            vào → hỏi dày hơn hẳn màn Gửi (15s mặc định). Xem NotifArea. */}
+        {/* Each line = one COMPLETE SENTENCE whose underlined keyword is TAPPABLE → going where the button of the same name
+            in row 9 goes (user decision 07-21). The order matches the button layout: QR Storage · Create QR · Share. */}
+        {/* pollMs 5s (user decision 08-13): this is the screen where someone HAS JUST HELD OUT THEIR QR AND IS WAITING for the
+            money → poll far more often than the Send screen (15s default). See NotifArea. */}
         <NotifArea pollMs={5000} hints={[
           { label: 'QR Storage', desc: 'Save your favorite QR codes', onClick: () => navigate('SavedQRList') },
           { label: 'Create QR', desc: 'Create a QR to receive money', onClick: () => navigate('CreateQR') },
-          // "QR + địa chỉ" (user sửa 08-13) — mô tả ĐÚNG 2 thứ gửi đi: ẢNH mã QR (kèm logo +
-          // nhãn mạng) và ĐỊA CHỈ dạng text. Xem handleShare phía trên.
+          // "QR + address" (user fix 08-13) - describing EXACTLY the 2 things being sent: the QR IMAGE (with logo +
+          // network label) and the ADDRESS as text. See handleShare above.
           { label: 'Share', desc: 'Share your QR + wallet address', onClick: handleShare },
         ]} />
       </div>
 
-      {/* Thứ tự nút 07-19 (user chốt): QR Storage trái · Create QR giữa · Share PHẢI — đa số thuận
-          tay phải, nút bấm nhiều nhất (Share) nên nằm bên phải dễ với. */}
+      {/* Button order 07-19 (user decision): QR Storage left · Create QR centre · Share RIGHT - most people are
+          right-handed, so the most-used button (Share) sits on the right where it is easy to reach. */}
       <div className="row-9 action-grid">
         <button className="action-card" onClick={() => navigate('SavedQRList')}>
           <Icon name="download" size="var(--is-item)" />

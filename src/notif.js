@@ -1,9 +1,10 @@
-// Hàng đợi thông báo in-app (localStorage). Dùng cho HomeSend hiển thị ở vùng hint.
+// In-app notification queue (localStorage). Used by HomeSend to render in the hint area.
 const KEY = 'ez_notifs'
 const DAY_MS = 24 * 60 * 60 * 1000
 
-// CHỈ GIỮ 24H (user chốt 07-19, đè quyết định "không hết hạn" 07-15 — thông báo swap/gửi/nhận cũ
-// dồn đống nhìn rối): thông báo quá 24h tự rớt khỏi danh sách hiện ra, không cần dismiss tay.
+// KEPT FOR 24H ONLY (user decision 07-19, overriding the 07-15 "never expires" call - old swap/send/
+// receive notifications piled up and looked messy): anything older than 24h drops off the list by
+// itself, with no manual dismiss needed.
 export function getNotifs() {
   try {
     const list = JSON.parse(localStorage.getItem(KEY) || '[]')
@@ -11,9 +12,9 @@ export function getNotifs() {
   } catch { return [] }
 }
 
-// dedupeKey: chống thông báo bị NHÂN ĐÔI — chủ yếu do React.StrictMode (dev) gọi useEffect 2 lần
-// (mount→unmount ảo→mount lại), khiến addNotif() gọi 2 lần cho CÙNG 1 sự kiện thật. Có dedupeKey
-// trùng với thông báo đã có → bỏ qua, không thêm nữa.
+// dedupeKey: guards against DUPLICATED notifications - mainly React.StrictMode (dev) running useEffect
+// twice (mount→fake unmount→mount again), so addNotif() fires twice for ONE real event. If a dedupeKey
+// matches an existing notification → skip, do not add it again.
 export function addNotif(text, type = 'info', hash = null, dedupeKey = null) {
   const list = getNotifs()
   if (dedupeKey && list.some(n => n.dedupeKey === dedupeKey)) return

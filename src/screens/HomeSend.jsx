@@ -8,19 +8,19 @@ import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates } from '
 import { ensureWalletAddress } from '../circle'
 import NotifArea, { NOTIF_FS } from '../components/NotifArea'
 
-// USDC (trái) và $98.59 (phải) phải CÙNG font + CÙNG màu — dùng chung 1 style object
-// để không lệch (thay vì khai riêng, dễ chỉnh nhầm 1 bên).
+// USDC (left) and $98.59 (right) must share the SAME font and the SAME colour - one shared style object
+// so they cannot drift apart (rather than two declarations where it is easy to change only one).
 const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
 
-// Đồng bộ với nút "Gửi" trong Contacts.jsx (height 40, fs-item, Barlow medium — .btn) để cùng
-// hệ thiết kế. Chiều ngang KHÔNG cố định — tự giãn theo nội dung.
-// NHẤN GIỮ (không phải bật/tắt cố định): mặc định hiện $ (dễ hiểu với người dùng phổ thông);
-// giữ tay mới hiện số lượng token thật; nhả tay tự động quay lại $ — tránh việc bấm xong quên
-// đổi lại rồi không hiểu "0.0001 cirBTC" là gì.
-// Xám cả nền lẫn chữ — nút phụ, không quan trọng bằng nội dung chính.
-// NẰM GIỮA hàng 6 (dưới list token hàng 3-5, TRÊN vùng thông báo hàng 7) — tách đều 2 phía để
-// không ai tưởng bấm nút này ra thông báo. top:55% = tâm hàng 6 của .screen (10 hàng đều nhau,
-// hàng 6 = 50%→60%); translate(-50%,-50%) đặt trọn thân nút vào đúng tâm mốc đó.
+// Matches the "Send" button in Contacts.jsx (height 40, fs-item, Barlow medium - .btn) so both come from the same
+// design system. The width is NOT fixed - it hugs its content.
+// PRESS AND HOLD (not a sticky toggle): by default it shows $ (which everyday users understand);
+// holding reveals the real token amounts; releasing returns to $ - so nobody flips it, forgets, and is left
+// staring at "0.0001 cirBTC" with no idea what it means.
+// Grey background and grey text - a secondary button, less important than the content itself.
+// CENTRED ON ROW 6 (below the token list in rows 3-5, ABOVE the notification area in row 7) - evenly spaced from both so
+// nobody thinks this button produces the notifications. top:55% = the centre of row 6 of .screen (10 equal rows,
+// row 6 = 50%→60%); translate(-50%,-50%) drops the whole button body onto that centre.
 function ShowTokensButton({ onHoldStart, onHoldEnd }) {
   return (
     <button
@@ -34,16 +34,16 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
       style={{
         position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
-        // ⚠️ RỘNG ÔM SÁT CHỮ (user chốt 08-13: "để nó to quá như này mình hơi hối hận") — bỏ bề
-        // rộng cố định 3/4 màn của 07-29. Cặp nút này KHÔNG còn bằng nhau nữa vì 2 câu dài khác
-        // nhau; đó là ý user, đừng "sửa lại cho đều".
-        // AN TOÀN với lỗi cũ 07-29 (chữ rớt xuống dòng trên iPhone đời cũ khi rộng tự co): đã có
-        // whiteSpace:'nowrap' bên dưới nên chữ KHÔNG THỂ xuống dòng. maxWidth + ellipsis chỉ là
-        // lưới an toàn cho ngôn ngữ nào dịch ra câu quá dài.
+        // ⚠️ WIDTH HUGS THE TEXT (user decision 08-13: "I slightly regret making it this big") - the fixed
+        // 3/4-screen width from 07-29 was dropped. This pair of buttons is no longer equal because the two sentences
+        // differ in length; that is intended, do not "even them up".
+        // SAFE against the old 07-29 bug (text dropping to a second line on older iPhones once the width was fluid): there is
+        // whiteSpace:'nowrap' below, so the text CANNOT wrap. maxWidth + ellipsis are only a safety net
+        // in case some wording ends up far too long.
         maxWidth: 'min(92vw, calc(var(--screen-max) - 24px))', overflow: 'hidden', textOverflow: 'ellipsis',
-        // Nút NẰM TRONG box xám (vùng token 07-17f) → TRẮNG + VIỀN XÁM để nổi trên nền surface
-        // (luật user 07-17f: "button nằm trong vùng box xám thì thành trắng viền xám", giống chip
-        // token màn Swap). Chữ ĐEN + drop shadow (user chốt 07-22f: nút này phải nổi/bấm được rõ).
+        // The button sits INSIDE the grey box (the token area of 07-17f) → WHITE + GREY BORDER so it stands out on the
+        // surface (user rule 07-17f: "a button inside a grey box becomes white with a grey border", like the token chips
+        // on Swap). BLACK text + drop shadow (user decision 07-22f: this button must look raised and clearly tappable).
         padding: '0 18px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
         boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
         color: 'var(--color-content)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
@@ -59,20 +59,20 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
 
 export default function HomeSend() {
   const { navigate } = useNav()
-  // Seed từ cache tầng module → chuyển màn hiện số NGAY (không "..." nhấp nháy), fetch nền cập nhật.
+  // Seeded from the module-level cache → switching screens shows the number IMMEDIATELY (no "..." flash), with a background fetch updating it.
   const seedTokens = cachedBalances(localStorage.getItem('ez_wallet_addr'))
   const [tokens, setTokens] = useState(seedTokens || [])
   const [loading, setLoading] = useState(!seedTokens)
   const cur = getDisplayCurrency()
   const [rates, setRates] = useState(cachedRates)
-  // Toggle CHUNG cho cả danh sách (không còn per-token): mặc định false = hiện $; nhấn giữ
-  // ShowTokensButton → true = hiện số lượng token thật; nhả tay → về lại $.
+  // ONE toggle for the whole list (no longer per token): false by default = show $; press and hold
+  // ShowTokensButton → true = show the real token amounts; release → back to $.
   const [showToken, setShowToken] = useState(false)
 
-  // Đọc số dư: hỏng thì THỬ LẠI, TUYỆT ĐỐI không để rơi về 0.
-  // Bug 07-16: `.catch(console.error).finally(() => setLoading(false))` — fetch hỏng mà chưa có
-  // cache → tokens=[] + loading=false → totalUsd=0 → màn tự tin vẽ "$0.00" (số dư BỊA). Giờ hỏng
-  // thì GIỮ trạng thái đang tải ("…") + tự thử lại mỗi 3s cho tới khi có số THẬT.
+  // Reading balances: on failure RETRY, and NEVER fall back to 0.
+  // Bug 07-16: `.catch(console.error).finally(() => setLoading(false))` - a failed fetch with no cache yet
+  // → tokens=[] + loading=false → totalUsd=0 → the screen confidently drew "$0.00" (an INVENTED balance). Now a failure
+  // KEEPS the loading state ("…") and retries every 3s until a REAL number arrives.
   useEffect(() => {
     let cancelled = false
     let timer = null
@@ -94,10 +94,10 @@ export default function HomeSend() {
     <div className="screen">
       <BalanceHeader totalUsd={totalUsd} loading={loading} />
 
-      {/* Hàng 3-5.5 (user chốt 07-17f): BOX XÁM surface chứa danh sách token — kéo dài thêm 5dvh
-          xuống nửa hàng 6 (height calc bên dưới; grid không cắt phần thò) để nút "Hold to show
-          tokens" (absolute top 55% = đúng mép dưới box) nằm GỌN TRONG box. Cuộn + mờ đáy nằm ở
-          DIV TRONG — đặt mask lên box thì cả nền xám bị mờ theo, lem sang trắng. */}
+      {/* Rows 3-5.5 (user decision 07-17f): a GREY surface BOX holding the token list - extended 5dvh further
+          down into half of row 6 (height calc below; the grid does not clip the overhang) so the "Hold to show
+          tokens" button (absolute top 55% = exactly the box's bottom edge) sits NEATLY INSIDE the box. Scrolling + the bottom fade live
+          on the INNER DIV - putting the mask on the box would fade the grey background too and smear it into the white. */}
       <div className="row-3-5" style={{ background: 'var(--color-surface)', borderRadius: 20, padding: '12px 16px 0', height: 'calc(100% + 5dvh)', minWidth: 0 }}>
         <div className="scroll-thin" style={{
           display: 'flex', flexDirection: 'column', gap: 26, overflowY: 'auto', height: '100%', paddingTop: 2, paddingBottom: 52,
@@ -125,11 +125,11 @@ export default function HomeSend() {
                 />
                 <div className="token-icon" style={{ background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
 
-                {/* Tên token thật (USDC/EURC/cirBTC) + huy hiệu đã xác minh (xanh lá của app) */}
+                {/* The real token name (USDC/EURC/cirBTC) + the verified badge (the app's green) */}
                 <span style={TOKEN_TEXT_STYLE}>{tk.symbol}</span>
                 <Icon name="check" size="var(--is-num)" color="var(--color-primary)" />
 
-                {/* CÙNG font + CÙNG màu với "USDC" bên trái (TOKEN_TEXT_STYLE) — theo toggle chung ở trên */}
+                {/* SAME font and SAME colour as "USDC" on the left (TOKEN_TEXT_STYLE) - follows the shared toggle above */}
                 <span style={{ ...TOKEN_TEXT_STYLE, marginLeft: 'auto' }}>
                   {showToken
                     ? tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)
@@ -142,15 +142,15 @@ export default function HomeSend() {
         </div>
       </div>
 
-      {/* Nổi giữa hàng 6 (position:absolute trong ShowTokensButton) — KHÔNG chiếm hàng riêng */}
+      {/* Floats in the middle of row 6 (position:absolute inside ShowTokensButton) - it does NOT take a row of its own */}
       {tokens.length > 0 && (
         <ShowTokensButton onHoldStart={() => setShowToken(true)} onHoldEnd={() => setShowToken(false)} />
       )}
 
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
         <NotifArea
-          // Mỗi dòng = 1 CÂU đủ nghĩa, từ khoá gạch chân BẤM ĐƯỢC → đi đúng nơi nút cùng tên ở
-          // hàng 9 dẫn tới (user chốt 07-21).
+          // Each line = one COMPLETE SENTENCE whose underlined keyword is TAPPABLE → going where the button of the same
+          // name in row 9 goes (user decision 07-21).
           hints={[
             { label: 'Paste', desc: 'Paste a wallet address to send', onClick: () => navigate('PasteAddress') },
             { label: 'Scan QR', desc: 'Scan a QR code to send', onClick: () => navigate('QRScanner') },
@@ -160,7 +160,7 @@ export default function HomeSend() {
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
               <div onClick={() => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } localStorage.setItem('ez_faucet_pending', String(Date.now())); window.open('https://faucet.circle.com/', '_blank') }}
                 style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                {/* Icon CENTER-TRÁI cả khối 2 dòng (user chốt 07-17) — không dính dòng 1 */}
+                {/* The icon is CENTRED-LEFT against the whole 2-line block (user decision 07-17) - not stuck to line 1 */}
                 <Icon name="warning" size="var(--is-item)" color="var(--color-warning)" style={{ flexShrink: 0 }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
                   <span style={{ fontSize: NOTIF_FS, color: 'var(--color-content)' }}>Out of USDC for transaction fees</span>
@@ -176,8 +176,8 @@ export default function HomeSend() {
       </div>
 
       <div className="row-9 action-grid">
-        {/* Thứ tự trái→phải: Paste · Scan QR · Contacts (user chốt 07-23: Contacts dùng nhiều
-            hơn → bên PHẢI; hint NotifArea cùng thứ tự) */}
+        {/* Left→right order: Paste · Scan QR · Contacts (user decision 07-23: Contacts is used more
+            often → on the RIGHT; the NotifArea hint uses the same order) */}
         <button className="action-card" onClick={() => navigate('PasteAddress')}><Icon name="copy" size="var(--is-item)" /><span>Paste</span></button>
         <button className="action-card primary" onClick={() => navigate('QRScanner')}><Icon name="scan" size="var(--is-item)" color="var(--color-white)" /><span>Scan QR</span></button>
         <button className="action-card" onClick={() => navigate('Contacts')}><Icon name="human" size="var(--is-item)" /><span>Contacts</span></button>

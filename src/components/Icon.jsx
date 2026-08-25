@@ -1,8 +1,8 @@
-// Icon dùng chung — nhúng SVG (currentColor) → recolor bằng prop color / màu chữ cha.
-// SVG đã chuẩn hóa: viewBox 100x100, stroke/fill = currentColor, width/height 100%.
-// ⚠️ 07-29 (kiểm toán): 8 icon KHÔNG màn nào render đã BỎ IMPORT ở đây cho nhẹ bundle —
-// back · dca · facebook · google · hint · left · right · swap. FILE .svg VẪN CÒN trong `icon/`
-// (tranh của user, không xoá). Cần dùng lại: thêm 1 dòng import + 1 tên vào ICONS là xong.
+// Shared icon component - inlines the SVG (currentColor) → recolour via the color prop / the parent text colour.
+// The SVGs are normalised: viewBox 100x100, stroke/fill = currentColor, width/height 100%.
+// ⚠️ 07-29 (audit): 8 icons that no screen renders had their IMPORT REMOVED here to keep the bundle light -
+// back · dca · facebook · google · hint · left · right · swap. The .svg FILES ARE STILL in `icon/`
+// (the user's drawings, not deleted). To use one again: add one import line + one name to ICONS.
 import add from '../../icon/add.svg?raw'
 import bug from '../../icon/bug.svg?raw'
 import check from '../../icon/check.svg?raw'
@@ -34,11 +34,11 @@ import up from '../../icon/up.svg?raw'
 import warning from '../../icon/warning.svg?raw'
 import x from '../../icon/x.svg?raw'
 
-// ⚠️ luckypot · exchange · pig = viewBox 200×200 (mọi icon khác 100×100). CỐ Ý — user vẽ gấp đôi vì
-// 3 icon này hiện TO trong Service Hub, nên nét mảnh hơn tương đối là đúng ý đồ. ĐỪNG "chuẩn hoá"
-// về 100×100 hay nhân đôi stroke-width. Hiển thị không ảnh hưởng: width/height = 100%, viewBox tự scale.
-// ⚠️ luckypot là icon MÀU SẴN (vàng #FFCC00 + xanh lá #16A34A + nét đen) — CỐ Ý giữ nguyên bản vẽ
-// của user, KHÔNG đổi sang currentColor. Hệ quả: prop `color` không tác dụng lên icon này.
+// ⚠️ luckypot · exchange · pig = viewBox 200×200 (every other icon is 100×100). DELIBERATE - the user drew them
+// at double size because these 3 render LARGE in the Service Hub, so relatively thinner strokes are the intent.
+// Do NOT "normalise" them to 100×100 or double the stroke-width. No display impact: width/height = 100%, the viewBox scales.
+// ⚠️ luckypot is a FULL-COLOUR icon (yellow #FFCC00 + green #16A34A + black outline) - the user's drawing is kept
+// as-is on purpose, NOT converted to currentColor. Consequence: the `color` prop has no effect on this one.
 const ICONS = {
   add, bug, check, clock, copy, down, down2, download, erase, exchange, globe, hub,
   human, info, luckypot, mail, menu, option, out, pencil, pig, qr, right2, scan, share, shield, trade, up, warning, x,

@@ -1,104 +1,104 @@
 ﻿/* ══════════════════════════════════════════════════════════
    DESIGN TOKENS (2026-06-28).
-   FONT (khóa, 2026-07-15): CHỈ 1 FONT = BARLOW cho TOÀN APP (đã bỏ IBM Plex Sans + Barlow Condensed).
-   Thiết kế bắt mắt bằng TƯƠNG PHẢN ĐẬM–NHẠT: Light 300 = số hero (số dư, số tiền) thanh thoát;
-   400 = body/nội dung; 500 = nút, item; 600 = tiêu đề, nhấn mạnh, active. KHÔNG dùng 700 (Barlow 700 xấu).
-   MÀU (khóa): 4 tầng chữ + màu chức năng dưới đây.
-   CỠ CHỮ: ĐÃ MỞ KHÓA — scale dưới là gợi ý, được phép tùy chỉnh px theo từng chỗ.
+   FONT (locked, 2026-07-15): ONE FONT ONLY = BARLOW for the WHOLE APP (IBM Plex Sans + Barlow Condensed were dropped).
+   The design gets its appeal from HEAVY/LIGHT CONTRAST: Light 300 = hero numbers (balances, amounts), airy;
+   400 = body/content; 500 = buttons, items; 600 = titles, emphasis, active. NEVER 700 (Barlow 700 is ugly).
+   COLOURS (locked): the 4 text tiers + the functional colours below.
+   FONT SIZES: UNLOCKED - the scale below is a guide, px values may be tuned per place.
    ══════════════════════════════════════════════════════════ */
 :root {
-  /* ── MÀU CHỮ — trắng/đen là chân ái ── */
-  --color-black:      #000000;   /* text chính + tiêu đề + nút */
-  --color-content:    #000000;   /* nội dung chính = đen */
-  /* TEXT PHỤ = XÁM ĐẬM (user chốt 2026-07-16). Ưu tiên số 1 của app là TO–RÕ cho người già đọc
-     được, nên text phụ KHÔNG được nhạt: #AEAEB2 cũ chỉ đạt tương phản 2.3:1 trên nền trắng = TRƯỢT
-     chuẩn WCAG AA (cần 4.5:1). Nhưng cũng KHÔNG được quá đậm: #48484A (màu slogan cũ, hardcode)
-     đạt 9.1:1 = gần như ĐEN, mất phân cấp chính/phụ.
-     → #636366 = 6.0:1: đạt AA thoải mái mà mắt vẫn đọc ra là XÁM. Đây là 1 nguồn duy nhất cho mọi
-     text phụ — đừng hardcode màu xám rời rạc nữa (bug 07-16: slogan Login lạc hệ #48484A). */
-  --color-muted:      #636366;   /* text phụ = XÁM ĐẬM — DÙNG CHO CHỮ */
-  --color-muted-2:    #8E8E93;   /* XÁM TRUNG BÌNH (iOS systemGray) — nav item CHƯA CHỌN (user chốt 07-22d: xám đậm nhìn dull) */
-  --color-faint:      #E5E5EA;   /* icon ẩn / placeholder (xám nhạt) — chevron right2 giờ dùng --color-brand */
+  /* ── TEXT COLOURS - black and white are the heart of it ── */
+  --color-black:      #000000;   /* main text + titles + buttons */
+  --color-content:    #000000;   /* main content = black */
+  /* SECONDARY TEXT = DARK GREY (user decision 2026-07-16). The app's number one priority is BIG AND CLEAR so older
+     users can read it, so secondary text must NOT be faint: the old #AEAEB2 only reached 2.3:1 on white = FAILING
+     WCAG AA (which needs 4.5:1). But it must not be too dark either: #48484A (the old hardcoded slogan colour)
+     reaches 9.1:1 = practically BLACK, destroying the primary/secondary hierarchy.
+     → #636366 = 6.0:1: comfortably AA while the eye still reads it as GREY. This is the single source for all
+     secondary text - stop hardcoding one-off greys (bug 07-16: the Login slogan was off-system at #48484A). */
+  --color-muted:      #636366;   /* secondary text = DARK GREY - FOR TEXT */
+  --color-muted-2:    #8E8E93;   /* MID GREY (iOS systemGray) - UNSELECTED nav items (user decision 07-22d: dark grey looked dull) */
+  --color-faint:      #E5E5EA;   /* hidden icons / placeholders (pale grey) - the right2 chevron now uses --color-brand */
 
-  /* ── MÀU CHỨC NĂNG ── */
-  --color-primary:      #16A34A; /* xanh lá — active, NHẬN tiền / tích cực */
-  --color-primary-soft: #DCFCE7; /* nền nhạt xanh lá (chọn / nhận) */
-  --color-info:         #0B53BF; /* xanh THƯƠNG HIỆU — GỬI tiền (thông báo) */
-  --color-info-soft:    #E2EAF7; /* nền nhạt xanh thương hiệu */
-  --color-brand:        #0B53BF; /* MÀU THƯƠNG HIỆU (đặc) — CHỮ/VIỀN brand (nav active, filter, option) */
-  --grad-brand: linear-gradient(180deg, #0088FF 0%, #0B53BF 100%); /* GRADIENT thương hiệu (dọc: 0088FF trên → 0B53BF dưới) — NỀN nút CTA + action-card primary (stunning, không flat) */
+  /* ── FUNCTIONAL COLOURS ── */
+  --color-primary:      #16A34A; /* green - active, money RECEIVED / positive */
+  --color-primary-soft: #DCFCE7; /* pale green background (selected / received) */
+  --color-info:         #0B53BF; /* BRAND blue - money SENT (notifications) */
+  --color-info-soft:    #E2EAF7; /* pale brand-blue background */
+  --color-brand:        #0B53BF; /* THE BRAND COLOUR (solid) - brand TEXT/BORDERS (nav active, filters, options) */
+  --grad-brand: linear-gradient(180deg, #0088FF 0%, #0B53BF 100%); /* the brand GRADIENT (vertical: 0088FF top → 0B53BF bottom) - the BACKGROUND of CTA buttons + the primary action-card (striking, not flat) */
 
-  /* ── GRADIENT TRẠNG THÁI (user chốt 2026-07-17d, THAY bộ "đẩy tối" cũ 07-16) — cùng hướng
-     brand: DỌC, nhạt trên → đậm dưới, ĐÁY = đúng màu ngữ nghĩa (--color-primary/warning/error).
-     ⚠️ 0%/100% trong CSS là VỊ TRÍ điểm neo (0%=mép trên, 100%=mép dưới), KHÔNG phải cường độ màu
-     — cả 2 đầu đều màu đặc 100% (user dặn 07-17d: đừng diễn đạt "trên 0%" gây hiểu nhầm màu nhạt).
-     Tương phản đo được (WCAG, đo tại 2 đầu dải): chữ TRẮNG trên xanh lá 2.22→3.30 · trên đỏ
-     3.26→4.83 · chữ ĐEN trên vàng 13.89→9.78 (vàng vẫn BẮT BUỘC chữ đen). */
-  --grad-primary: linear-gradient(180deg, #34C759 0%, #16A34A 100%); /* xanh lá — success/nhận (chữ trắng) */
-  --grad-warning: linear-gradient(180deg, #FFCC00 0%, #F59E0B 100%); /* vàng — cảnh báo (CHỮ ĐEN, không phải trắng) */
-  --grad-error:   linear-gradient(180deg, #FF4D51 0%, #DC2626 100%); /* đỏ — lỗi/xoá (chữ trắng) */
-  --color-error:        #DC2626; /* đỏ — lỗi / xóa bỏ */
-  --color-error-soft:   #FEE2E2; /* nền nhạt đỏ */
-  --color-warning:      #F59E0B; /* vàng cảnh báo */
-  --color-warning-soft: #FEF3C7; /* nền nhạt cảnh báo */
+  /* ── STATUS GRADIENTS (user decision 2026-07-17d, REPLACING the old "push darker" set of 07-16) - same direction
+     as the brand: VERTICAL, lighter on top → darker at the bottom, with the BOTTOM being the exact semantic colour (--color-primary/warning/error).
+     ⚠️ 0%/100% in CSS are STOP POSITIONS (0%=top edge, 100%=bottom edge), NOT colour intensities
+     - both ends are fully opaque colours (the user's note 07-17d: do not phrase it as "0% at the top", it implies a pale colour).
+     Measured contrast (WCAG, at both ends of the ramp): WHITE text on green 2.22→3.30 · on red
+     3.26→4.83 · BLACK text on yellow 13.89→9.78 (yellow still REQUIRES black text). */
+  --grad-primary: linear-gradient(180deg, #34C759 0%, #16A34A 100%); /* green - success/received (white text) */
+  --grad-warning: linear-gradient(180deg, #FFCC00 0%, #F59E0B 100%); /* yellow - warning (BLACK text, not white) */
+  --grad-error:   linear-gradient(180deg, #FF4D51 0%, #DC2626 100%); /* red - error/delete (white text) */
+  --color-error:        #DC2626; /* red - error / delete */
+  --color-error-soft:   #FEE2E2; /* pale red background */
+  --color-warning:      #F59E0B; /* warning yellow */
+  --color-warning-soft: #FEF3C7; /* pale warning background */
   --color-white:        #FFFFFF;
-  --color-gray:         #E5E5EA; /* xám nhạt — border / nền / divider (KHÔNG làm màu chữ) */
-  /* NỀN TILE/CARD — xám rất nhạt, dùng THAY viền để tách khối khỏi nền trắng (user chốt 07-17c:
-     "giao diện chưa nhấn nhá" — card viền xám trên nền trắng nhìn bẹt, mọi khối bằng vai phải lứa).
-     Nhạt hơn hẳn --color-gray (E5E5EA) vì đây là mảng NỀN LỚN, không phải nét viền 1px.
-     Đúng mốc thẩm mỹ user thích: Coinbase Wallet — "tile bo tròn nền nhạt, tối giản viền". */
-  --color-surface:      #F2F2F7; /* nền tile/card (iOS systemGray6) */
-  --color-surface-2:    #D1D1D6; /* XÁM VỪA (iOS systemGray4) — nền PANEL BÀN PHÍM SỐ (user chốt 07-22g: numpad xám nhạt quá, cho xám vừa để phím trắng nổi) */
+  --color-gray:         #E5E5EA; /* pale grey - borders / backgrounds / dividers (NEVER a text colour) */
+  /* TILE/CARD BACKGROUND - a very pale grey, used INSTEAD of a border to lift a block off the white (user decision 07-17c:
+     "the interface has no accents" - grey-bordered cards on white look flat, every block equally weighted).
+     Much paler than --color-gray (E5E5EA) because this is a LARGE FILL, not a 1px line.
+     Matching the reference the user likes: Coinbase Wallet - "rounded tiles on a pale fill, minimal borders". */
+  --color-surface:      #F2F2F7; /* tile/card background (iOS systemGray6) */
+  --color-surface-2:    #D1D1D6; /* MID GREY (iOS systemGray4) - the NUMPAD PANEL background (user decision 07-22g: the numpad grey was too pale, mid grey makes the white keys pop) */
 
-  /* ── FONT — 1 font duy nhất: BARLOW (mọi biến trỏ về Barlow, giữ tên cũ để không phải sửa JSX) ── */
-  --font-base:      'Barlow', sans-serif;              /* NỘI DUNG: menu, mô tả, hint, thông báo, input, memo */
-  --font-display:   'Barlow', sans-serif;              /* THƯƠNG HIỆU: logo, TIÊU ĐỀ chính màn */
-  --font-condensed: 'Barlow', sans-serif;              /* TÊN CŨ: số, ký hiệu tiền tệ, BUTTON */
+  /* ── FONT - a single font: BARLOW (every variable points at Barlow, old names kept so the JSX needs no edits) ── */
+  --font-base:      'Barlow', sans-serif;              /* CONTENT: menus, descriptions, hints, notifications, inputs, memos */
+  --font-display:   'Barlow', sans-serif;              /* BRAND: the logo, main screen TITLES */
+  --font-condensed: 'Barlow', sans-serif;              /* LEGACY NAME: numbers, currency symbols, BUTTONS */
 
-  /* ── CỠ CHỮ (scale gợi ý — đã mở khóa, tùy chỉnh được) ── */
-  --fs-amount:   52px;   /* Barlow display — số tiền lớn */
-  --fs-title:    30px;   /* "size to" — TIÊU ĐỀ trang */
-  --fs-num:      24px;   /* Barlow — số trong list (token amount, VND) */
-  --fs-md-lg:    21px;   /* "font vừa-to" — BUTTON + slogan + chữ khi NHẬP text (to hơn nội dung 2px) */
-  --fs-body:     19px;   /* "font vừa" — NỘI DUNG chữ (nhỏ hơn font vừa-to) */
-  --fs-item:     17px;   /* "font vừa-nhỏ" — item list */
-  --fs-label:    15px;   /* "font nhỏ" — label, text phụ, placeholder */
-  --fs-tiny:     13px;   /* "font mini" — badge / ghi chú rất nhỏ */
+  /* ── FONT SIZES (a suggested scale - unlocked and tunable) ── */
+  --fs-amount:   52px;   /* Barlow display - large money amounts */
+  --fs-title:    30px;   /* "large size" - page TITLES */
+  --fs-num:      24px;   /* Barlow - numbers in lists (token amounts) */
+  --fs-md-lg:    21px;   /* "medium-large" - BUTTONS + the slogan + text while TYPING (2px above content) */
+  --fs-body:     19px;   /* "medium" - body CONTENT (one step below medium-large) */
+  --fs-item:     17px;   /* "medium-small" - list items */
+  --fs-label:    15px;   /* "small" - labels, secondary text, placeholders */
+  --fs-tiny:     13px;   /* "mini" - badges / very small notes */
   --fs-content:  20px;   /* alias → --fs-body */
 
-  /* ── CỠ ICON — LUÔN BÁM THEO CỠ CHỮ ĐI KÈM ──
-     User chốt 2026-07-16: "icon phải tương đồng với chữ, chữ to icon nhỏ là sai".
-     TOÀN BỘ icon có chữ đi kèm PHẢI lấy --is-* GHÉP CẶP với --fs-* của chữ đó (cùng số px).
-     ĐỪNG đặt size={14}/{18}/{20} rời rạc nữa — tăng cỡ chữ là icon lệch ngay (bug 07-16).
-     Chỉ icon ĐỨNG MỘT MÌNH (không có chữ nào bên cạnh để match) mới giữ số cứng: SendReceipt
-     check 76, avatar Contacts, nút xoá QR, nút đảo chiều Swap, numpad erase. */
-  --is-num:     24px;   /* cặp --fs-num    24 */
-  --is-md-lg:   21px;   /* cặp --fs-md-lg  21 — button */
-  --is-body:    19px;   /* cặp --fs-body   19 — nội dung, thông báo, navbar (07-17e: hạ từ md-lg cho thoáng) */
-  --is-item:    17px;   /* cặp --fs-item   17 */
-  --is-label:   15px;   /* cặp --fs-label  15 */
+  /* ── ICON SIZES - ALWAYS TIED TO THE TEXT BESIDE THEM ──
+     User decision 2026-07-16: "icons must match the text, big text with a small icon is wrong".
+     EVERY icon that sits next to text MUST use the --is-* PAIRED with that text's --fs-* (identical px).
+     Stop writing one-off size={14}/{18}/{20} - the moment a font size changes, the icon is out of step (bug 07-16).
+     Only icons STANDING ALONE (with no text to match) keep a hardcoded number: the SendReceipt
+     check at 76, the Contacts avatar, the QR delete button, the Swap reverse button, the numpad erase key. */
+  --is-num:     24px;   /* pairs with --fs-num    24 */
+  --is-md-lg:   21px;   /* pairs with --fs-md-lg  21 - buttons */
+  --is-body:    19px;   /* pairs with --fs-body   19 - content, notifications, navbar (07-17e: down from md-lg for air) */
+  --is-item:    17px;   /* pairs with --fs-item   17 */
+  --is-label:   15px;   /* pairs with --fs-label  15 */
 
-  /* ── BỀ NGANG MÀN ──
-     .screen = min(100vw, --screen-max). Muốn đặt kích cỡ theo % CỦA MÀN (không phải % của khung
-     cha đang bị thụt lề 20px), dùng: min(<x>vw, calc(var(--screen-max) * <x/100>)).
-     Vd logo Login = 50% màn → min(50vw, calc(var(--screen-max) / 2)). */
+  /* ── SCREEN WIDTH ──
+     .screen = min(100vw, --screen-max). To size something as a % OF THE SCREEN (not a % of a parent
+     frame that is inset by 20px), use: min(<x>vw, calc(var(--screen-max) * <x/100>)).
+     E.g. the Login logo = 50% of the screen → min(50vw, calc(var(--screen-max) / 2)). */
   --screen-max: 430px;
 
-  /* Font weights — thang đậm–nhạt cho tương phản Barlow */
-  --fw-light:     300;   /* NHẠT — số hero lớn (số dư, số tiền): thanh thoát, chỉ dùng cho chữ TO */
-  --fw-normal:    400;   /* body, nội dung đọc */
-  --fw-medium:    500;   /* nút, item list, label */
-  --fw-semibold:  600;   /* tiêu đề, nhấn mạnh, active */
-  --fw-bold:      600;   /* KHÓA ở 600 — Barlow không bao giờ 700 (xấu). Max = semibold */
+  /* Font weights - the heavy/light ramp for Barlow contrast */
+  --fw-light:     300;   /* LIGHT - large hero numbers (balances, amounts): airy, only for BIG text */
+  --fw-normal:    400;   /* body, reading content */
+  --fw-medium:    500;   /* buttons, list items, labels */
+  --fw-semibold:  600;   /* titles, emphasis, active */
+  --fw-bold:      600;   /* LOCKED at 600 - Barlow is never 700 (ugly). Max = semibold */
 }
 
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* FONT CHO Ô ĐIỀU KHIỂN — ĐỪNG BỎ. Trình duyệt KHÔNG cho button/input/textarea/select kế thừa
-   font của cha: mặc định chúng dùng font hệ thống (Arial). Mọi <button>/<input> nào quên khai
-   fontFamily sẽ lòi ra chữ ARIAL giữa app Barlow (vd địa chỉ ví ở màn Receive — bug 07-16).
-   Ép inherit ở đây = 1 nguồn duy nhất; chỗ nào cần font khác vẫn tự khai đè được. */
+/* FONT FOR FORM CONTROLS - DO NOT REMOVE. Browsers do NOT let button/input/textarea/select inherit
+   their parent's font: by default they use a system font (Arial). Any <button>/<input> that forgets to declare
+   fontFamily will show ARIAL in the middle of a Barlow app (e.g. the wallet address on Receive - bug 07-16).
+   Forcing inherit here = one single source; anywhere that needs a different font can still override it. */
 button, input, textarea, select { font-family: inherit; }
 
 html, body, #root {
@@ -111,53 +111,53 @@ body {
   font-family: var(--font-base);
   font-size: var(--fs-content);
   color: var(--color-content);
-  background: #D6EAFB;   /* TẠM đổi để quay clip (status bar đồng màu xanh nhạt) — ĐỔI LẠI var(--color-white) sau khi quay xong, xem index.css:114 */
+  background: #D6EAFB;   /* TEMPORARY for filming a clip (so the status bar matches the pale blue) - CHANGE BACK to var(--color-white) once filming is done, see index.css:114 */
   -webkit-font-smoothing: antialiased;
 }
 
-/* DESKTOP/TABLET (rộng hơn --screen-max 430 + lề): vùng NGOÀI khung app đổi sang XANH THƯƠNG HIỆU
-   (user chốt 07-22 — "màu xanh của dự án / USDC"), thấy rõ ranh giới khung điện thoại.
-   ⚠️ CHỈ trong media query này — ĐỪNG đổi `body` mặc định về xanh: trên iPhone PWA standalone, dải
-   status bar lấy đúng màu nền body → body xanh = lộ dải xanh trên đầu. Điện thoại luôn
-   ≤430px nên không bao giờ chạm ngưỡng 481px này. `.screen` đã có nền trắng riêng nên khung app
-   vẫn trắng, không bị xanh lây. */
+/* DESKTOP/TABLET (wider than --screen-max 430 + margins): the area OUTSIDE the app frame turns BRAND BLUE
+   (user decision 07-22 - "the project's blue / USDC blue"), making the phone frame clearly visible.
+   ⚠️ ONLY inside this media query - do NOT change the default `body` to blue: on an iPhone PWA in standalone mode, the
+   status bar takes the body background colour → a blue body = a blue band across the top. Phones are always
+   ≤430px so they never reach this 481px threshold. `.screen` has its own white background, so the app frame
+   stays white and is not tinted. */
 @media (min-width: 481px) {
-  body { background: #D6EAFB; }   /* xanh dương pastel NHẠT NHÒA — user chốt 07-22c (bản #0088FF vẫn chói) */
+  body { background: #D6EAFB; }   /* a SOFT pastel blue - user decision 07-22c (the #0088FF version was still too loud) */
 }
 
-/* ── Layout: Grid 10 hàng ── */
+/* ── Layout: a 10-row grid ── */
 .screen {
-  position: relative;   /* làm mốc cho nút nổi (vd Show tokens neo đúng ranh giới hàng 6/7) */
+  position: relative;   /* the anchor for floating buttons (e.g. Show tokens pinned to the row 6/7 boundary) */
   display: grid;
   grid-template-rows: repeat(10, 1fr);
-  /* CỘT PHẢI KHOÁ minmax(0,1fr) — KHÔNG bỏ dòng này.
-     Không khai báo cột → cột ngầm = auto = giãn theo NỘI DUNG RỘNG NHẤT. Chỉ cần 1 thông báo/địa
-     chỉ dài (nowrap) là cột phình quá bề ngang màn → MỌI hàng (số dư, list token, nút, NavBar) bị
-     kéo rộng theo → nội dung lệch phải và bị overflow:hidden cắt cụt mép phải (bug 07-16).
-     minmax(0,1fr) chặn trần = bề ngang .screen; nội dung dài tự cắt/cuộn trong ô của nó. */
+  /* THE RIGHT COLUMN IS LOCKED TO minmax(0,1fr) - do NOT remove this line.
+     Declare no columns → the implicit column = auto = it grows with the WIDEST CONTENT. A single long notification or
+     address (nowrap) is enough to blow the column past the screen width → EVERY row (balance, token list, buttons, NavBar) gets
+     dragged wider → the content shifts right and overflow:hidden clips its right edge (bug 07-16).
+     minmax(0,1fr) caps it at the .screen width; long content clips or scrolls inside its own cell. */
   grid-template-columns: minmax(0, 1fr);
   height: 100dvh;
   max-width: var(--screen-max);
   margin: 0 auto;
   background: var(--color-white);
   overflow: hidden;
-  padding: 0 20px;                /* lề trái/phải toàn app = 20px (user chốt, nâng từ 15) */
+  padding: 0 20px;                /* the app-wide left/right margin = 20px (user decision, up from 15) */
 }
 
-/* Full-bleed: xuyên qua padding 20px để chạm edge */
+/* Full-bleed: punch through the 20px padding to touch the edge */
 .full-bleed {
   margin-left: -20px;
   margin-right: -20px;
 }
 
-/* Scrollbar NẰM TRONG DẢI LỀ 20PX (user chốt 2026-07-06), và thiết kế GIỮ NGUYÊN CHIỀU NGANG khi
-   chuyển từ không-scroll → scroll (không co lại). Cách làm:
-   - margin-right -20px: container ăn ra sát mép phải màn (phủ luôn dải lề 20px bên phải).
-   - scrollbar-gutter: stable: LUÔN chừa sẵn chỗ cho scrollbar (kể cả lúc chưa scroll) → nội dung
-     không bị đẩy/co khi scrollbar xuất hiện.
-   - padding-right 12px: cùng với ~8px gutter scrollbar = nội dung thụt đúng 20px từ mép màn (bằng
-     lề trái) → chiều ngang nội dung KHÔNG đổi dù có scroll hay không.
-   → Kết quả: [20px lề] [nội dung cố định] [scrollbar mảnh nằm trong dải lề phải 20px]. */
+/* The scrollbar SITS INSIDE THE 20PX MARGIN (user decision 2026-07-06), and the design KEEPS ITS WIDTH when
+   going from no-scroll to scroll (nothing shrinks). How:
+   - margin-right -20px: the container reaches the right screen edge (covering the 20px right margin).
+   - scrollbar-gutter: stable: ALWAYS reserve room for the scrollbar (even when not scrolling) → the content
+     is never pushed or squeezed when the scrollbar appears.
+   - padding-right 12px: together with the ~8px scrollbar gutter, the content is inset exactly 20px from the screen edge (matching
+     the left margin) → the content width does NOT change whether it scrolls or not.
+   → Result: [20px margin] [fixed-width content] [a thin scrollbar living inside the right 20px margin]. */
 .scroll-thin {
   overflow-y: auto;
   margin-right: -20px;
@@ -166,12 +166,12 @@ body {
   scrollbar-width: thin;                              /* Firefox */
   scrollbar-color: var(--color-gray) transparent;
 }
-.scroll-thin::-webkit-scrollbar { width: 8px; }       /* Chrome/Safari — nằm trong dải lề 20px */
+.scroll-thin::-webkit-scrollbar { width: 8px; }       /* Chrome/Safari - sits inside the 20px margin */
 .scroll-thin::-webkit-scrollbar-track { background: transparent; }
 .scroll-thin::-webkit-scrollbar-thumb { background: var(--color-gray); border-radius: 4px; }
 
-/* Cuộn được nhưng ẨN thanh cuộn — dùng cho vùng có hiệu ứng mờ mép riêng (vd NotifArea): thanh
-   cuộn hiện ra sẽ đè/lệch các box thông báo màu → ẩn hẳn, đã có mask mờ gợi ý còn nội dung. */
+/* Scrollable but with the scrollbar HIDDEN - for areas with their own edge-fade effect (e.g. NotifArea): a visible
+   scrollbar would overlap/offset the coloured notification boxes → hide it entirely, the fade mask already hints at more content. */
 .scroll-hidden {
   overflow-y: auto;
   scrollbar-width: none;
@@ -207,9 +207,9 @@ body {
 }
 
 /* ── Buttons ── */
-.screen-title { font-family: var(--font-display); color: var(--color-black); }   /* tiêu đề màn = Barlow, BLACK */
+.screen-title { font-family: var(--font-display); color: var(--color-black); }   /* screen titles = Barlow, BLACK */
 
-/* Mọi số & ký hiệu tiền tệ ($/USDC/EURC/cirBTC) → Barlow (--font-condensed, regular) */
+/* Every number & currency symbol ($/USDC/EURC/cirBTC) → Barlow (--font-condensed, regular) */
 .num { font-family: var(--font-condensed); }
 
 .btn {
@@ -224,67 +224,67 @@ body {
   cursor: pointer;
   padding: 0 16px;
   height: 6dvh;
-  min-height: 48px;        /* vùng chạm tối thiểu cho người già */
+  min-height: 48px;        /* the minimum touch area for older users */
   transition: opacity 0.15s;
 }
 
 .btn:disabled { opacity: 0.4; cursor: default; }
 
-/* Drop shadow THẲNG ĐỨNG (offset-x 0, đổ dọc xuống) cho MỌI nút NỔI/bấm được. User chốt 07-22d:
-   shadow VỪA nhưng KHÔNG TỎA (blur nhỏ 6px) + bóng ĐEN đồng nhất `rgba(0,0,0,.25)` cho mọi nút
-   (KHÔNG tô theo màu nút nữa). Áp cho .btn-primary/success/error/secondary + .action-card(.primary). */
+/* A STRAIGHT-DOWN drop shadow (offset-x 0, cast vertically) for EVERY raised/tappable button. User decision 07-22d:
+   a MEDIUM shadow that does NOT spread (small 6px blur) + a uniform BLACK shadow `rgba(0,0,0,.25)` for all buttons
+   (no longer tinted per button colour). Applies to .btn-primary/success/error/secondary + .action-card(.primary). */
 .btn-primary {
   background: var(--grad-brand);
   color: var(--color-white);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);   /* gradient đậm hơn nút trắng (.35 vs .25) — nền tối nuốt bóng, phải đậm hơn mới nhìn ngang bằng (user chốt 07-22g) */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);   /* gradients need a stronger shadow than white buttons (.35 vs .25) - a dark fill swallows the shadow, so it must be deeper to look equal (user decision 07-22g) */
 }
 
 .btn-secondary {
   background: var(--color-white);
   color: var(--color-black);
   border: 1.5px solid var(--color-gray);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);   /* nút trắng cũng nổi (user chốt 07-22d) — bóng đen, không tỏa */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);   /* white buttons are raised too (user decision 07-22d) - a black shadow, no spread */
 }
 
-/* Nút TRẠNG THÁI — dùng class này, ĐỪNG tự chế inline `background: var(--color-primary)` nữa
-   (nút phẳng lạc giữa các nút gradient). Màu theo hệ ngữ nghĩa: success/nhận = xanh lá,
-   cảnh báo = vàng, lỗi/xoá = đỏ. Chi tiết công thức gradient xem :root --grad-*. */
+/* STATUS buttons - use this class, stop inlining `background: var(--color-primary)` yourself
+   (a flat button looks out of place among gradient ones). Colours follow the semantic system: success/received = green,
+   warning = yellow, error/delete = red. The gradient formulas are in :root --grad-*. */
 .btn-success { background: var(--grad-primary); color: var(--color-white); border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35); }
 .btn-error   { background: var(--grad-error);   color: var(--color-white); border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35); }
-/* (Nút vàng warning chưa màn nào cần — khi thêm lại: nền var(--grad-warning) + BẮT BUỘC chữ ĐEN,
-   chữ trắng trên vàng chỉ 2.15:1 người già không đọc được.) */
+/* (No screen needs the yellow warning button yet - when one does: background var(--grad-warning) + BLACK text is MANDATORY,
+   white on yellow is only 2.15:1 and older users cannot read it.) */
 
-/* Nút Back/Continue: neo TÂM tại VỊ TRÍ 9 (top 85dvh + height 10dvh → tâm 90dvh). THOÁT KHỎI GRID
-   (position:absolute) thay vì chiếm 2 hàng grid-row — box grid stretch cả 2 hàng sẽ chặn click
-   xuống content dưới nó (numpad) dù mắt không thấy. left/right 20px khớp lề .screen. */
+/* Back/Continue buttons: CENTRED at POSITION 9 (top 85dvh + height 10dvh → centre 90dvh). They LEAVE THE GRID
+   (position:absolute) rather than occupying 2 grid rows - a grid box stretched over both rows would block clicks
+   reaching the content beneath it (the numpad) even though nothing is visible. left/right 20px matches the .screen margin. */
 .row10-single, .row10-dual {
   position: absolute;
-  grid-row: auto;               /* HỦY grid-row:10 mà class .row-10 áp vào (Contacts/About...): nếu
-                                   phần tử absolute còn giữ grid-row, nó lấy Ô LƯỚI làm gốc toạ độ
-                                   → top:85dvh tính từ hàng 10 → nút văng khỏi màn (Contacts mất nút).
-                                   grid-row:auto → gốc là .screen → hiện đúng ở MỌI màn. */
+  grid-row: auto;               /* CANCELS the grid-row:10 that the .row-10 class applies (Contacts/About...): if an
+                                   absolute element keeps its grid-row, that GRID CELL becomes its coordinate origin
+                                   → top:85dvh counted from row 10 → the button flies off screen (Contacts lost its button).
+                                   grid-row:auto → the origin is .screen → it lands correctly on EVERY screen. */
   left: 20px;
   right: 20px;
-  top: 85dvh;                   /* height 10dvh → TÂM nút ở 90dvh = VỊ TRÍ 9 (user chốt) */
+  top: 85dvh;                   /* height 10dvh → the button's CENTRE at 90dvh = POSITION 9 (user decision) */
   height: 10dvh;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-/* Nút ĐỨNG MỘT MÌNH = 3/4 BỀ NGANG MÀN (user chốt 07-29 — trước 66.67%): đồng bộ với "Hold to show
-   tokens" (HomeSend), "Tap to copy" (HomeReceive), nút Swap. Tính theo MÀN chứ không phải % của
-   khung cha (cha đang thụt lề 20px → 75% của cha ≠ 75% của màn, mỗi màn ra một cỡ). Ăn: About,
-   Language, Security. Cặp nút .row10-dual bên dưới GIỮ 44% — luật này chỉ cho nút đơn độc. */
+/* A BUTTON STANDING ALONE = 3/4 OF THE SCREEN WIDTH (user decision 07-29 - previously 66.67%): consistent with "Hold to show
+   tokens" (HomeSend), "Tap to copy" (HomeReceive) and the Swap button. Measured against the SCREEN, not as a % of the
+   parent frame (the parent is inset 20px → 75% of the parent ≠ 75% of the screen, and every screen would differ). Used by: About,
+   Currency, Security. The .row10-dual button pairs below KEEP 44% - this rule is only for lone buttons. */
 .row10-single .btn { width: min(75vw, calc(var(--screen-max) * 0.75)); }
 
 .row10-dual { gap: 12px; }
 .row10-dual .btn { width: 44%; }
 
-/* ── Popup dùng chung (chuẩn 2026-07-06) ──
-   TÂM popup neo tại 30dvh = TÂM vùng hàng 2-5 (10-50dvh) → nửa dưới màn hình LUÔN trống cho bàn
-   phím (popup có ô nhập không bị bàn phím che), và mọi popup nằm cùng 1 chỗ → đồng bộ thị giác.
-   Đồng bộ chiều ngang (88% / max 340), padding, gap, bo góc cho TẤT CẢ popup. Popup dài hơn vùng
-   thì cuộn nội bộ (max-height 56dvh, ẩn thanh cuộn) thay vì tràn xuống che bàn phím. */
+/* ── Shared popup (standard 2026-07-06) ──
+   The popup's CENTRE is pinned at 30dvh = the CENTRE of the rows 2-5 area (10-50dvh) → the bottom half of the screen is ALWAYS free for the
+   keyboard (a popup with an input is never covered), and every popup sits in the same place → visually consistent.
+   Width (88% / max 340), padding, gap and corner radius are shared by ALL popups. A popup taller than the area
+   scrolls internally (max-height 56dvh, scrollbar hidden) instead of spilling down over the keyboard. */
 .popup-overlay {
   position: fixed;
   inset: 0;
@@ -314,7 +314,7 @@ body {
   font-family: var(--font-display);
   color: var(--color-black);
   font-size: var(--fs-title);
-  font-weight: var(--fw-semibold);   /* tiêu đề ĐẬM (semibold) — pole đậm của tương phản */
+  font-weight: var(--fw-semibold);   /* the title is BOLD (semibold) - the heavy pole of the contrast */
   text-align: center;
 }
 .popup-actions { display: flex; gap: 8px; }
@@ -352,12 +352,12 @@ body {
 .numpad-key.empty   { pointer-events: none; }
 .numpad.disabled    { opacity: 0.2; pointer-events: none; }
 
-/* ── Bottom sheet numpad (Swap) — trượt TỪ DƯỚI LÊN như màn nhập PIN (user chốt 07-20:
-   bấm vào SỐ TIỀN ở card "You pay" là numpad trồi lên). Overlay flex align-end để sheet
-   nằm đáy + tự căn giữa ngang (KHÔNG dùng translateX trong .sheet — keyframe animate
-   transform sẽ ĐÈ mất translateX, sheet nhảy ngang lúc trượt). */
-/* Overlay KHÔNG làm mờ màn chính (user chốt 07-20: numpad bật lên mà màn tối đi là SAI) —
-   trong suốt, chỉ để bắt click-ra-ngoài đóng sheet. */
+/* ── The numpad bottom sheet (Swap) - slides UP FROM THE BOTTOM like the PIN screen (user decision 07-20:
+   tapping the AMOUNT on the "You pay" card makes the numpad rise). The overlay is flex align-end so the sheet
+   sits at the bottom and centres itself horizontally (do NOT use translateX in .sheet - the keyframe animating
+   transform would OVERRIDE translateX and the sheet would jump sideways as it slides). */
+/* The overlay does NOT dim the main screen (user decision 07-20: a numpad rising while the screen goes dark is WRONG) -
+   it is transparent, and exists only to catch a tap outside and close the sheet. */
 .sheet-overlay {
   position: fixed;
   inset: 0;
@@ -368,37 +368,37 @@ body {
   justify-content: center;
 }
 @keyframes sheet-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
-/* Sheet numpad Swap (user quy hoạch 07-20): chiếm NỬA HÀNG 6 + hàng 7-10 (55→100dvh = 45dvh),
-   NỀN XÁM surface + PHÍM TRẮNG nổi lên — vùng xám CHÍNH LÀ vùng popup, không có khoảng trắng
-   thừa phía trên. Trong sheet: Numpad 30dvh (55→85) + hàng nút Back/Done 10dvh (85→95, khớp vị
-   trí .row10-dual) + đệm đáy 5dvh. Lề ngang 20px = đúng lề .screen. */
+/* The Swap numpad sheet (user's layout 07-20): it takes HALF OF ROW 6 + rows 7-10 (55→100dvh = 45dvh),
+   a GREY surface BACKGROUND with WHITE KEYS raised on it - the grey area IS the popup, with no wasted white
+   space above it. Inside: numpad 30dvh (55→85) + the Back/Done button row 10dvh (85→95, aligned with
+   .row10-dual) + 5dvh of bottom padding. A 20px horizontal margin = exactly the .screen margin. */
 .sheet {
   width: 100%;
   max-width: var(--screen-max);
   height: 45dvh;
-  background: var(--color-surface-2);   /* xám vừa (user chốt 07-22g) */
+  background: var(--color-surface-2);   /* mid grey (user decision 07-22g) */
   border-radius: 20px 20px 0 0;
   padding: 0 20px;
   display: flex;
   flex-direction: column;
   animation: sheet-up .28s ease;
 }
-/* Numpad "XÁM" (user chốt 07-20 "hợp gu"): vùng nền xám surface + PHÍM TRẮNG tile bo 12, khe 8px
-   cho từng nút nổi rõ. Dùng CHUNG cho sheet Swap + panel numpad màn Gửi (SendAmount) + Custom QR
-   (CreateQR) — thêm class "numpad-gray" lên container là ăn. */
+/* The "GREY" numpad (user decision 07-20 "that is the look"): a grey surface area + WHITE key tiles with radius 12 and an 8px gap
+   so each key reads as raised. SHARED by the Swap sheet + the numpad panel on Send (SendAmount) + Custom QR
+   (CreateQR) - just add the "numpad-gray" class to the container. */
 .numpad-gray .numpad { gap: 8px; }
 .numpad-gray .numpad-row { gap: 8px; }
 .numpad-gray .numpad-key { background: var(--color-white); border-radius: 12px; }
 .numpad-gray .numpad-key:active { background: rgba(0,0,0,0.06); }
 .numpad-gray .numpad-key.empty { background: transparent; }
 
-/* Caret nhấp nháy ở ô nhập số (SendAmount/CreateQR/Swap) — cho người dùng biết SỐ SẼ VÀO
-   CHỖ NÀO khi bấm numpad (trước đây chỉ có '0' mờ, không rõ đang nhắm vào đâu). */
+/* The blinking caret in a number field (SendAmount/CreateQR/Swap) - it tells the user WHERE THE DIGITS WILL GO
+   when they press the numpad (before, there was only a faint '0' and no sense of what was being aimed at). */
 @keyframes caret-blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
 .caret {
   display: inline-block;
   margin-left: 2px;
-  color: var(--color-content);   /* ĐEN như chữ số (user chốt 07-22c: caret xám lạc màu với text đen) */
+  color: var(--color-content);   /* BLACK like the digits (user decision 07-22c: a grey caret clashed with the black text) */
   font-weight: var(--fw-normal);
   animation: caret-blink 1.1s step-end infinite;
 }
@@ -414,7 +414,7 @@ body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   border-top: 1px solid var(--color-gray);
-  margin: 0 -20px;               /* NavBar TRÀN SÁT MÉP, KHÔNG cách lề (hủy padding 20px của .screen) — user chốt "trừ NAV BAR" */
+  margin: 0 -20px;               /* the NavBar RUNS EDGE TO EDGE with no margin (cancelling .screen's 20px padding) - user decision "except the NAVBAR" */
 }
 
 .navbar-btn {
@@ -423,9 +423,9 @@ body {
   align-items: center;
   justify-content: center;
   font-family: var(--font-condensed);
-  font-size: var(--fs-body);   /* "font vừa" 19 (user chốt 07-17e — 21 nhìn thô, hạ 1 bậc cho thoáng) */
+  font-size: var(--fs-body);   /* "medium" 19 (user decision 07-17e - 21 looked coarse, one step down for air) */
   font-weight: var(--fw-medium);
-  color: var(--color-muted-2);   /* CHƯA CHỌN = xám trung bình (user chốt 07-22d) */
+  color: var(--color-muted-2);   /* UNSELECTED = mid grey (user decision 07-22d) */
   background: none;
   border: none;
   cursor: pointer;
@@ -470,9 +470,9 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  /* NỀN TRẮNG + VIỀN XÁM = tín hiệu "BẤM ĐƯỢC" (user chốt 07-21, thay nền surface cũ: xám =
-     lõm vào = trông như vùng không bấm được). box-sizing:border-box global nên viền KHÔNG làm
-     đội kích thước card. Card `primary` (Scan QR / Create QR) vẫn gradient, không viền. */
+  /* WHITE BACKGROUND + GREY BORDER = the "TAPPABLE" signal (user decision 07-21, replacing the old surface fill: grey =
+     recessed = it looked like an area you cannot tap). box-sizing:border-box is global, so the border does NOT
+     add to the card's size. The `primary` card (Scan QR / Create QR) stays a gradient with no border. */
   border-radius: 20px;
   border: 1.5px solid var(--color-gray);
   background: var(--color-white);
@@ -482,14 +482,14 @@ body {
   font-weight: var(--fw-medium);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);   /* nút trắng nổi (user chốt 07-22d), bóng đen không tỏa */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);   /* white buttons are raised (user decision 07-22d), a black shadow with no spread */
 }
 
 .action-card.primary {
   border: none;
   background: var(--grad-brand);
   color: var(--color-white);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);   /* gradient đậm hơn nút trắng như .btn-primary */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);   /* gradients get a deeper shadow than white buttons, as in .btn-primary */
 }
 
 /* ── Send flow ── */
@@ -497,7 +497,7 @@ body {
   gap: 10px;
   font-family: var(--font-display);
   font-size: var(--fs-title);
-  font-weight: var(--fw-semibold);   /* tiêu đề màn ĐẬM (semibold) */
+  font-weight: var(--fw-semibold);   /* screen titles are BOLD (semibold) */
   color: var(--color-black);
 }
 
@@ -505,7 +505,7 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
-  /* Chuẩn Swap: ô nhập = nền surface không viền (user chốt 07-17); ô nhỏ giữ bo 10 */
+  /* The Swap standard: input fields = a surface fill with no border (user decision 07-17); small fields keep radius 10 */
   border: none;
   background: var(--color-surface);
   border-radius: 10px;
@@ -526,7 +526,7 @@ body {
 
 .confirm-box {
   width: 100%;
-  /* Chuẩn Swap (user chốt 07-17): nền surface không viền, card lớn bo 20 */
+  /* The Swap standard (user decision 07-17): a surface fill with no border, large cards at radius 20 */
   border: none;
   border-radius: 20px;
   background: var(--color-surface);
@@ -537,7 +537,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 18px;                     /* KHÔNG kẻ line xám (user chốt) — phân tách bằng padding */
+  padding: 12px 18px;                     /* NO grey rule (user decision) - separation comes from the padding */
 }
 
 .confirm-label {
@@ -555,8 +555,8 @@ body {
 }
 
 .warning-badge {
-  /* Theo luật app sẵn có: thông báo = NỀN MÀU NHẠT KHÔNG VIỀN, chữ trong box màu = ĐEN
-     (trước đây class này viền vàng + chữ vàng — lạc luật, sửa 07-17 khi đồng bộ chuẩn Swap) */
+  /* Following the app's existing rule: notifications = a PALE COLOURED FILL WITH NO BORDER, and text inside a coloured box = BLACK
+     (this class used to have a yellow border + yellow text - off-system, fixed 07-17 when aligning to the Swap standard) */
   background: var(--color-warning-soft);
   border: none;
   border-radius: 10px;
@@ -568,7 +568,7 @@ body {
 
 .address-input {
   width: 100%;
-  /* Chuẩn Swap: ô nhập = nền surface không viền (user chốt 07-17); ô nhỏ giữ bo 10 */
+  /* The Swap standard: input fields = a surface fill with no border (user decision 07-17); small fields keep radius 10 */
   border: none;
   background: var(--color-surface);
   border-radius: 10px;
@@ -581,7 +581,7 @@ body {
   line-height: 1.6;
 }
 
-/* Lỗi vẫn PHẢI lộ rõ dù đã bỏ viền thường → viền đỏ vẽ bằng inset shadow (không đổi kích thước ô) */
+/* An error still MUST be obvious even though ordinary borders are gone → the red border is drawn with an inset shadow (which does not change the field's size) */
 .address-input.error { box-shadow: inset 0 0 0 1.5px var(--color-error); }
 .address-input::placeholder { color: var(--color-muted); }
 
@@ -589,16 +589,16 @@ body {
 .menu-item {
   display: flex;
   align-items: center;
-  min-height: 56px;        /* mỗi mục = 1 HÀNG cao cố định (không flex:1 kéo giãn/chia đều diện tích) */
+  min-height: 56px;        /* each item = ONE row of fixed height (not flex:1, which would stretch them to share the space) */
   flex-shrink: 0;
   padding: 0 4px;
   gap: 12px;
   border: none;
   background: none;
-  cursor: pointer;                        /* KHÔNG kẻ line xám ngăn cách (user chốt: bỏ mọi line xám trừ NavBar) */
+  cursor: pointer;                        /* NO grey separator rule (user decision: no grey rules anywhere except the NavBar) */
   font-family: var(--font-base);
   width: 100%;
   text-align: left;
-  color: var(--color-black);              /* iOS Safari mặc định chữ button = màu accent (xanh) → ép đen */
+  color: var(--color-black);              /* iOS Safari defaults button text to the accent colour (blue) → force black */
   -webkit-text-fill-color: var(--color-black);
 }

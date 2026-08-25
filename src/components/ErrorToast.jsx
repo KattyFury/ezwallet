@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import Icon from './Icon'
 
-// Banner lỗi nổi tạm thời — dùng cho màn KHÔNG có NotifArea (vd SendAmount) khi bị
-// điều hướng về kèm lỗi (PIN sai, gửi thất bại...). Không có nó, người dùng chỉ
-// thấy "tự nhiên bị đá về" mà không rõ vì sao. Tự ẩn sau vài giây hoặc bấm X.
+// Temporary floating error banner - for screens WITHOUT a NotifArea (e.g. SendAmount) when the
+// user is navigated back carrying an error (wrong PIN, send failed...). Without it, all they see
+// is "I got kicked back" with no reason. Auto-hides after a few seconds, or tap X.
 export default function ErrorToast({ message }) {
   const [visible, setVisible] = useState(!!message)
 

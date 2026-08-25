@@ -6,15 +6,15 @@ import { getSDK, executeChallenge, resetPinChallenge, refreshSession, circleErro
 export default function Security() {
   const { navigate } = useNav()
   const [copied, setCopied] = useState(false)
-  // ⚠️ pinErr là CỜ RIÊNG, đừng quay lại dò chữ đầu câu (`/^(Error|Lỗi)/`) như bản cũ: chữ đổi
-  // theo ngôn ngữ nên dò chữ là hỏng tô màu ngay khi dịch sang tiếng khác (bug suýt dính 08-04).
+  // ⚠️ pinErr is a DEDICATED FLAG, do not go back to sniffing the start of the string (`/^(Error|...)/`)
+  // like the old version did: wording changes, and sniffing wording breaks the colouring (near-miss bug 08-04).
   const [pinStatus, setPinStatus] = useState('')
   const [pinErr, setPinErr] = useState(false)
   function showStatus(msg, isErr = false) { setPinStatus(msg); setPinErr(isErr) }
 
   async function handleResetPin() {
-    // User Google (SSO, không có ez_email): Circle chặn PUT /user/pin ở tầng platform
-    // (403 code 3 dù token tươi + PIN tồn tại — verify session 10). Không gọi cho đỡ tốn 1 vòng lỗi.
+    // Google users (SSO, no ez_email): Circle blocks PUT /user/pin at the platform layer
+    // (403 code 3 even with a fresh token + an existing PIN - verified session 10). Skip the call, save a round trip.
     if (!localStorage.getItem('ez_email')) {
       showStatus('Not available for Google accounts', true)
       setTimeout(() => showStatus(''), 3000)
@@ -22,7 +22,7 @@ export default function Security() {
     }
     showStatus('Preparing...')
     try {
-      // Làm mới userToken trước — tránh "userToken had expired" (Circle token ~1h).
+      // Refresh the userToken first - avoids "userToken had expired" (Circle tokens last ~1h).
       const { userToken, encryptionKey } = await refreshSession()
       const challengeId = await resetPinChallenge(userToken)
       showStatus('Enter PIN...')
@@ -43,10 +43,10 @@ export default function Security() {
     setCopied(true); setTimeout(() => setCopied(false), 1500)
   }
 
-  // VALUE lên fs-item 17 (user 07-17f: "nội dung hơi nhỏ" — trước fs-label 15)
+  // VALUE raised to fs-item 17 (user 07-17f: "content feels a bit small" - was fs-label 15)
   const LABEL = { flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }
   const VALUE = { fontSize: 'var(--fs-item)', color: 'var(--color-muted)', maxWidth: '55%', textAlign: 'right', wordBreak: 'break-all' }
-  // (Trạng thái đổi PIN: LỖI phải ĐỎ cho bật — user 07-17f. Cờ pinErr khai ở trên.)
+  // (PIN-change status: an ERROR must be RED to stand out - user 07-17f. The pinErr flag is declared above.)
 
   return (
     <div className="screen">
@@ -54,9 +54,9 @@ export default function Security() {
         Security
       </div>
 
-      {/* BOX XÁM chung hàng 2-4 (tách Language & Currency ra màn riêng 08-04 — xem Language.jsx);
-          trong box KHÔNG line xám ngăn cách (luật cũ giữ). Đổi PIN vẫn dùng CHEVRON PHẢI right2
-          (user chốt: nó là hàng đi tiếp, không phải dropdown). */}
+      {/* SHARED GREY BOX rows 2-4 (Currency was split into its own screen 08-04 - see Currency.jsx);
+          no grey separator lines inside the box (old rule kept). Change PIN still uses the RIGHT CHEVRON right2
+          (user decision: it is a row that goes somewhere, not a dropdown). */}
       <div style={{ gridRow: '2 / 5', background: 'var(--color-surface)', borderRadius: 20, padding: '0 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', minWidth: 0 }}>
         <div className="menu-item">
           <span style={LABEL}>Login email</span>

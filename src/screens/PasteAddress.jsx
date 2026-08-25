@@ -10,22 +10,22 @@ export default function PasteAddress() {
   const [dirty, setDirty] = useState(false)
 
   const trimmed = address.trim()
-  // CHẶN GỬI CHO CHÍNH MÌNH (user chốt 07-31). Địa chỉ đúng chuẩn nhưng là ví của user →
-  // KHÔNG cho đi tiếp: gửi cho mình chỉ mất phí, số dư không đổi, lịch sử thêm dòng khó hiểu.
+  // BLOCK SENDING TO YOURSELF (user decision 07-31). A well-formed address that is the user's own wallet →
+  // do NOT let it through: it only burns fees, the balance does not change, and history gains a confusing row.
   const self = isOwnAddress(trimmed)
   const valid = isValid(trimmed) && !self
   const showError = dirty && address && !valid
 
-  // Nút "Dán": ô ĐÃ có địa chỉ hợp lệ → đi tiếp NGAY, KHÔNG đụng clipboard (user chốt 07-23:
-  // trước đây luôn readText → iOS bật popup xác nhận "Paste|Speak" của HỆ ĐIỀU HÀNH cả khi vô
-  // nghĩa — popup đó là bảo mật clipboard iOS 16+, web KHÔNG tắt được, chỉ né được bằng cách
-  // không đọc khi không cần). Ô trống → mới đọc clipboard (popup OS hiện 1 lần, chấp nhận).
+  // The "Paste" button: field ALREADY holds a valid address → go straight on, do NOT touch the clipboard
+  // (user decision 07-23: it used to always readText → iOS popped the OS-level "Paste|Speak" confirmation
+  // even when pointless - that popup is iOS 16+ clipboard security, the web CANNOT turn it off, it can only
+  // be avoided by not reading when there is no need). Empty field → then read the clipboard (one OS popup, fine).
   const goNext = a => { if (isValid(a) && !isOwnAddress(a)) { navigate('SendAmount', { address: a, name: null }); return true } return false }
 
   async function handleDan() {
     let a = trimmed
     if (goNext(a)) return
-    if (isOwnAddress(a)) { setDirty(true); return }   // ví mình → dừng, KHÔNG đọc clipboard đè lên
+    if (isOwnAddress(a)) { setDirty(true); return }   // own wallet → stop, do NOT overwrite from the clipboard
     try {
       const txt = await navigator.clipboard.readText()
       if (txt && txt.trim()) { a = txt.trim(); setAddress(a); setDirty(true) }
@@ -45,7 +45,7 @@ export default function PasteAddress() {
           placeholder="0x..."
           value={address}
           onChange={e => { setAddress(e.target.value); setDirty(true) }}
-          style={{ width: '100%', height: 52, fontSize: 'var(--fs-md-lg)' }}   /* đồng bộ chuẩn ô nhập text (email/memo): cao 52 + --fs-md-lg */
+          style={{ width: '100%', height: 52, fontSize: 'var(--fs-md-lg)' }}   /* matches the standard text field (email/memo): height 52 + --fs-md-lg */
         />
         {showError && (
           <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>
@@ -56,8 +56,8 @@ export default function PasteAddress() {
 
       <div className="row-10 row10-dual">
         <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>Back</button>
-        {/* Ô đã có địa chỉ EVM hợp lệ → nhãn đổi "Paste" → "Confirm" (user chốt 07-23: bấm sẽ đi
-            thẳng không đọc clipboard, để nhãn Paste gây lú). handleDan xử lý đúng cả 2 nhánh. */}
+        {/* Field holds a valid EVM address → label flips "Paste" → "Confirm" (user decision 07-23: tapping goes
+            straight on without reading the clipboard, so a "Paste" label would be confusing). handleDan covers both. */}
         <button className="btn btn-primary" onClick={handleDan}>{valid ? 'Confirm' : 'Paste'}</button>
       </div>
     </div>

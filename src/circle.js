@@ -2,26 +2,26 @@ import { MOCK, MOCK_RATES } from './mock'
 
 let sdk = null
 
-// ⚡ NẠP LƯỜI Circle SDK (2026-07-17) — ĐỪNG đổi lại thành `import { W3SSdk } from '...'` ở đầu file.
-// Đo được (vite build tách chunk theo package): BẢN THÂN w3s-pw-web-sdk chỉ 31 KB, nhưng nó KÉO THEO
+// ⚡ LAZY-LOAD the Circle SDK (2026-07-17) - do NOT turn this back into `import { W3SSdk } from '...'` at the top.
+// Measured (vite build splits chunks per package): w3s-pw-web-sdk ITSELF is only 31 KB, but it DRAGS IN
 // firebase 262 KB + crypto-browserify 480 KB (elliptic/asn1/bn.js/diffie-hellman…, do polyfill
-// `crypto` trong vite.config.js) = ~740 KB ≈ 60% bundle. Import TĨNH ở đây khiến mọi màn lỡ import
-// circle.js (HomeSend chỉ cần ensureWalletAddress!) đều lôi cả 740 KB đó vào lần vẽ đầu → 2.7s màn
-// trắng trên 4G. import() động → 740 KB chỉ tải khi THỰC SỰ cần ký PIN.
+// `crypto` in vite.config.js) = ~740 KB ≈ 60% of the bundle. A STATIC import here means any screen that imports
+// circle.js (HomeSend only needs ensureWalletAddress!) pulls all 740 KB into the first paint → a 2.7s white
+// screen on 4G. A dynamic import() → those 740 KB load only when a PIN signature is ACTUALLY needed.
 async function loadW3SSdk() {
   const m = await import('@circle-fin/w3s-pw-web-sdk')
   return m.W3SSdk
 }
 
-// ⚠️ Circle SDK localization: KHÔNG gọi setLocalizations nữa (bỏ 2026-08-25 cùng lúc gỡ lớp i18n).
-// App chỉ còn tiếng Anh, mà English chính là MẶC ĐỊNH sẵn của Circle → không gọi gì là đúng và gọn nhất
-// (màn PIN + câu hỏi bảo mật tự ra tiếng Anh). Cần làm đa ngôn ngữ lại: xem file circleLocalizations.js
-// trong git history (commit trước bản gỡ i18n) để lấy lại cả bản dịch lẫn cách gọi đúng tham số vị trí.
-// ⚠️ ASYNC (đổi 2026-07-17 khi nạp lười SDK) — MỌI chỗ gọi PHẢI `await getSDK()`.
-// Quên await → truyền Promise vào chỗ chờ SDK thật → PIN chết câm. Đã sửa cả 6 chỗ gọi:
+// ⚠️ Circle SDK localization: setLocalizations is no longer called (dropped 2026-08-25 along with the i18n layer).
+// The app is English-only, and English is Circle's OWN DEFAULT → calling nothing is both correct and simplest
+// (the PIN screen + security questions come out in English). To do multi-language again: see circleLocalizations.js
+// in git history (the commit before the i18n removal) for both the translations and the correct positional-argument call.
+// ⚠️ ASYNC (changed 2026-07-17 when the SDK became lazy) - EVERY call site MUST `await getSDK()`.
+// Forgetting the await → a Promise is passed where the real SDK is expected → the PIN dies silently. All 6 call sites were fixed:
 // EnterEmail(×3), PinGate, Security, SendConfirm, Swap.
 export async function getSDK() {
-  if (MOCK) return {}   // mock: không init SDK thật
+  if (MOCK) return {}   // mock: do not init the real SDK
   if (!sdk) {
     const W3SSdk = await loadW3SSdk()
     sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
@@ -53,8 +53,8 @@ export async function createSession(email) {
   return data
 }
 
-// Verify PIN để MỞ VÍ (khoá truy cập bằng chính PIN Circle — không tạo mã thứ 2). Tạo challenge
-// ký 1 message rỗng; executeChallenge sẽ mở màn nhập PIN. Ký OK = PIN đúng = mở ví.
+// Verify the PIN to UNLOCK THE WALLET (access is gated by the Circle PIN itself - no second code invented). Create a challenge
+// signing an empty message; executeChallenge then opens the PIN screen. A successful signature = correct PIN = wallet unlocked.
 export async function signMessageChallenge(userToken, walletId, message = 'Unlock EZwallet') {
   const res = await fetch('/api/wallet', {
     method: 'POST',
@@ -66,7 +66,7 @@ export async function signMessageChallenge(userToken, walletId, message = 'Unloc
   return data.challengeId
 }
 
-// Email OTP: gửi mã về email + trả { otpToken, deviceToken, deviceEncryptionKey } cho sdk.verifyOtp().
+// Email OTP: mails the code + returns { otpToken, deviceToken, deviceEncryptionKey } for sdk.verifyOtp().
 export async function createEmailToken(deviceId, email) {
   const res = await fetch('/api/session', {
     method: 'POST',
@@ -89,8 +89,8 @@ export async function initializeWallet(userToken) {
   return data
 }
 
-// Đảm bảo có địa chỉ ví: nếu localStorage thiếu (Circle provision chậm lúc tạo ví),
-// tự lấy lại từ userToken rồi lưu. Ví KHÔNG cần USDC vẫn có địa chỉ để nhận tiền.
+// Guarantee a wallet address: if localStorage is missing it (Circle provisioning lags at wallet creation),
+// fetch it again from the userToken and store it. A wallet needs NO USDC to have an address for receiving.
 export async function ensureWalletAddress() {
   let addr = localStorage.getItem('ez_wallet_addr')
   if (addr) return addr
@@ -122,14 +122,14 @@ export async function getWalletAddress(userToken) {
   }
 }
 
-// userToken Circle chỉ sống ~1 tiếng — ngắn hơn nhiều phiên sử dụng thực tế của
-// người dùng lớn tuổi (mở app, đi làm việc khác, quay lại gửi tiền). Token hết hạn
-// khiến W3S SDK từ chối NGAY TRƯỚC KHI hiện màn PIN → "userToken had expired",
-// người dùng chỉ thấy bị đá ra mà không hiểu vì sao. Gọi hàm này trước MỌI thao
-// tác cần ký PIN (gửi tiền, đổi PIN) để luôn có token mới — Circle cho tạo token
-// mới bất cứ lúc nào chỉ cần userId (= email), không cần mật khẩu.
-// Đổi refreshToken (Circle trả lúc social login) lấy userToken mới. Dùng cho user Google —
-// họ không có userId=email nên không tạo token mới bằng createSession được.
+// A Circle userToken only lives ~1 hour - far shorter than a real usage session for an
+// older user (open the app, go do something else, come back and send money). An expired token
+// makes the W3S SDK refuse RIGHT BEFORE showing the PIN screen → "userToken had expired",
+// and the user just gets thrown out with no idea why. Call this before ANY action
+// that needs a PIN signature (sending, changing the PIN) so the token is always fresh - Circle allows minting
+// a new one at any time given only the userId (= email), no password required.
+// Trade the refreshToken (returned by Circle at social login) for a new userToken. Used for Google users -
+// they have no userId=email, so they cannot mint a token with createSession.
 export async function refreshSocialToken(userToken, refreshToken, deviceId) {
   const res = await fetch('/api/session', {
     method: 'POST',
@@ -146,7 +146,7 @@ export async function refreshSession() {
   const email = localStorage.getItem('ez_email')
   const fallback = { userToken: localStorage.getItem('ez_user_token'), encryptionKey: localStorage.getItem('ez_encryption_key') }
 
-  // Luồng EMAIL: tạo token mới bằng userId = email (Circle cho tạo bất cứ lúc nào).
+  // EMAIL flow: mint a new token with userId = email (Circle allows it any time).
   if (email) {
     try {
       const { userToken, encryptionKey } = await createSession(email)
@@ -158,9 +158,9 @@ export async function refreshSession() {
     }
   }
 
-  // Luồng GOOGLE (không có email → dùng refreshToken + deviceId đã lưu lúc login).
-  // Đây là fix gốc lỗi "Đổi PIN: Forbidden": userToken PIN sống 60' mà trước đây user Google
-  // không có cách làm mới → hết hạn → 403. Giờ đổi refreshToken lấy token mới trước khi ký PIN.
+  // GOOGLE flow (no email → use the refreshToken + the deviceId saved at login).
+  // This is the root fix for the "Change PIN: Forbidden" error: the PIN userToken lives 60', and Google users
+  // previously had no way to refresh it → expiry → 403. Now the refreshToken buys a new token before PIN signing.
   const refreshToken = localStorage.getItem('ez_refresh_token')
   const deviceId = localStorage.getItem('ez_google_deviceId')
   if (refreshToken && deviceId) {
@@ -169,29 +169,29 @@ export async function refreshSession() {
       if (r?.userToken) {
         localStorage.setItem('ez_user_token', r.userToken)
         if (r.encryptionKey) localStorage.setItem('ez_encryption_key', r.encryptionKey)
-        if (r.refreshToken) localStorage.setItem('ez_refresh_token', r.refreshToken)  // Circle rotate → lưu bản mới
+        if (r.refreshToken) localStorage.setItem('ez_refresh_token', r.refreshToken)  // Circle rotates it → store the new one
         return { userToken: r.userToken, encryptionKey: r.encryptionKey || fallback.encryptionKey }
       }
     } catch {
-      // refreshToken hết hạn (14 ngày) / lỗi mạng → dùng token cũ, để lỗi thật lộ ra ở bước execute
+      // refreshToken expired (14 days) / network error → keep the old token and let the real error surface at execute
     }
   }
   return fallback
 }
 
-// Mint token MỚI có ĐẢM BẢO — KHÁC refreshSession (hàm kia im lặng trả token cũ khi createSession
-// lỗi → gốc lỗi 155104). Dùng để THỬ LẠI khi Circle báo token hết hạn. Mint hỏng → throw ra ngoài
-// (để caller cho đăng nhập lại), KHÔNG nuốt lỗi.
+// GUARANTEED fresh token - UNLIKE refreshSession (which silently returns the old token when createSession
+// fails → the root of error 155104). Used to RETRY when Circle reports an expired token. A failed mint throws out
+// (so the caller can send the user back to login) and is NOT swallowed.
 export async function forceFreshSession() {
   if (MOCK) return { userToken: 'mock-token', encryptionKey: 'mock-key' }
   const email = localStorage.getItem('ez_email')
   let s
   if (email) {
-    s = await createSession(email)   // { userToken, encryptionKey } — throw nếu lỗi
+    s = await createSession(email)   // { userToken, encryptionKey } - throws on error
   } else {
     const refreshToken = localStorage.getItem('ez_refresh_token')
     const deviceId = localStorage.getItem('ez_google_deviceId')
-    if (!refreshToken || !deviceId) throw new Error('no-session')   // thiếu dữ liệu mint → đăng nhập lại
+    if (!refreshToken || !deviceId) throw new Error('no-session')   // not enough to mint → back to login
     const r = await refreshSocialToken(localStorage.getItem('ez_user_token'), refreshToken, deviceId)
     if (r.refreshToken) localStorage.setItem('ez_refresh_token', r.refreshToken)
     s = { userToken: r.userToken, encryptionKey: r.encryptionKey }
@@ -201,8 +201,8 @@ export async function forceFreshSession() {
   return s
 }
 
-// Circle báo token phiên hết hạn/không hợp lệ: 155103 (không thấy token), 155104 (hết hạn),
-// 155105 (không hợp lệ). Lỗi từ SDK có .code (số); lỗi từ /api/* ném new Error(message) → dò chữ.
+// Circle reporting an expired/invalid session token: 155103 (token not found), 155104 (expired),
+// 155105 (invalid). SDK errors carry a numeric .code; errors from /api/* throw new Error(message) → match the text.
 export function isTokenExpiredError(e) {
   const code = e?.code ?? e?.error?.code
   if ([155103, 155104, 155105].includes(code)) return true
@@ -210,10 +210,10 @@ export function isTokenExpiredError(e) {
   return /155103|155104|155105|token had expired|usertoken is invalid/.test(msg)
 }
 
-// KIT_KEY di chuyển lên server-side (Cloudflare Worker env var)
-// Browser chỉ gọi /api/swap, Worker xử lý Circle Stablecoin Kit API
+// KIT_KEY moved server-side (a Cloudflare Worker env var)
+// The browser only calls /api/swap, and the Worker talks to the Circle Stablecoin Kit API
 
-// MOCK: quy đổi ước tính theo MOCK_RATES (USD mỗi 1 đơn vị): amountOut = amountIn·rateIn/rateOut
+// MOCK: estimate the conversion from MOCK_RATES (USD per unit): amountOut = amountIn·rateIn/rateOut
 function mockSwapOut(tokenIn, tokenOut, amountIn) {
   const rIn = MOCK_RATES[tokenIn] ?? 1, rOut = MOCK_RATES[tokenOut] ?? 1
   return String((Number(amountIn) * rIn / rOut).toFixed(6))
@@ -229,7 +229,7 @@ export async function estimateSwap({ walletAddress, tokenIn, tokenOut, amountIn 
   return res.json()
 }
 
-// userToken truyền vào từ refreshSession() (đừng đọc thẳng localStorage — token 60' có thể chết)
+// The userToken is passed in from refreshSession() (do not read localStorage directly - a 60' token may be dead)
 export async function executeSwap({ userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn }) {
   if (MOCK) return { challengeId: 'mock-challenge', amountOut: mockSwapOut(tokenIn, tokenOut, amountIn) }
   const res = await fetch('/api/swap', {
@@ -254,35 +254,35 @@ export async function resetPinChallenge(userToken) {
   return data.challengeId
 }
 
-// ⚠️ Mã lỗi Circle mà iframe GIỮ modal cho user nhập/sửa lại (KHÔNG đóng).
-// Nếu ta reject promise ở các lỗi này rồi điều hướng đi → khi user nhập ĐÚNG lại,
-// iframe (vẫn nổi trên cùng) bắn onComplete success NHƯNG promise đã reject → mất kết quả
-// → user bị "văng ra ngoài" dù nhập đúng. Đây LÀ root cause bug PIN.
-// → Bỏ qua các lỗi này (để iframe tự cho thử lại); CHỈ settle khi THÀNH CÔNG hoặc lỗi TERMINAL.
-// (Nguồn: đọc source @circle-fin/w3s-pw-web-sdk messageHandler — onError KHÔNG remove iframe.)
+// ⚠️ Circle error codes where the iframe KEEPS the modal open for the user to correct themselves (it does NOT close).
+// If we reject the promise on these and navigate away → when the user then enters the RIGHT value,
+// the iframe (still on top) fires onComplete success BUT the promise is already rejected → the result is lost
+// → the user is "thrown out" despite entering it correctly. This IS the root cause of the PIN bug.
+// → Ignore these errors (let the iframe handle the retry); ONLY settle on SUCCESS or a TERMINAL error.
+// (Source: reading @circle-fin/w3s-pw-web-sdk messageHandler - onError does NOT remove the iframe.)
 const RETRYABLE_CODES = new Set([
-  155112, // incorrectUserPin — nhập sai PIN, iframe cho nhập lại
-  155703, // pinCodeNotMatched — 2 lần nhập PIN (tạo mới) không khớp
-  155704, // insecurePinCode — PIN quá yếu, chọn lại
-  155115, // incorrectSecurityAnswers — sai câu trả lời bảo mật
-  155705, // hintsMatchAnswers — gợi ý trùng câu trả lời
+  155112, // incorrectUserPin - wrong PIN, the iframe allows a retry
+  155703, // pinCodeNotMatched - the 2 PIN entries (when creating one) do not match
+  155704, // insecurePinCode - PIN too weak, pick another
+  155115, // incorrectSecurityAnswers - wrong security answers
+  155705, // hintsMatchAnswers - the hint matches the answer
 ])
 
-// ⚠️⚠️ RANH GIỚI LỖI CIRCLE — ĐỌC TRƯỚC KHI SỬA (xác định 2026-08-04, đọc source SDK):
-// Lỗi Circle chia LÀM 2 LOẠI, chỉ 1 loại mình dịch được:
+// ⚠️⚠️ THE CIRCLE ERROR BOUNDARY - READ BEFORE CHANGING ANYTHING (established 2026-08-04 by reading the SDK source):
+// Circle errors come in TWO KINDS, and only one of them is ours to word:
 //
-//   (a) Lỗi VẼ TRONG IFRAME (RETRYABLE_CODES bên trên: sai PIN, sai câu trả lời...) — iframe
-//       `pw-auth.circle.com` tự hiện chữ đỏ rồi cho nhập lại, KHÔNG đóng, KHÔNG bắn ra ngoài.
-//       Chữ đó là của Circle, TIẾNG ANH, KHÔNG ĐỔI ĐƯỢC: interface `Localizations` có ĐÚNG 16
-//       field (đọc `node_modules/@circle-fin/w3s-pw-web-sdk/dist/src/types.d.ts:498`), không
-//       field nào cho chữ lỗi; thứ duy nhất tên "error" là `errorInfo` trong `Resources` và nó
-//       là ICON ảnh. Đây là giới hạn THẬT của Circle — đừng đi tìm cách dịch nữa.
+//   (a) Errors DRAWN INSIDE THE IFRAME (RETRYABLE_CODES above: wrong PIN, wrong answers...) - the
+//       `pw-auth.circle.com` iframe shows its own red text and allows a retry, does NOT close and does NOT surface anything.
+//       That text is Circle's, in ENGLISH, and CANNOT BE CHANGED: the `Localizations` interface has EXACTLY 16
+//       fields (see `node_modules/@circle-fin/w3s-pw-web-sdk/dist/src/types.d.ts:498`), none of them for error
+//       text; the only thing named "error" is `errorInfo` in `Resources`, and that is an image ICON. This is a REAL
+//       Circle limitation - stop looking for a way to reword it.
 //
-//   (b) Lỗi TERMINAL (PIN khoá, token hết hạn...) — iframe ĐÓNG, lỗi bắn về đây, MÌNH TỰ VẼ ra
-//       màn hình. Loại này DỊCH ĐƯỢC → map theo `err.code` bên dưới.
+//   (b) TERMINAL errors (PIN locked, token expired...) - the iframe CLOSES, the error surfaces here, and WE draw it
+//       on screen. These we CAN word → mapped by `err.code` below.
 //
-// Map theo MÃ SỐ, KHÔNG dò chữ tiếng Anh (`/lock/i` như bản cũ): nếu Circle localize message
-// hoặc đổi câu chữ thì dò chữ sẽ câm, còn mã số thì ổn định.
+// Mapped by NUMERIC CODE, never by matching English text (`/lock/i` as the old version did): if Circle localises the
+// message or rewords it, text matching goes silent, whereas the codes are stable.
 const ERROR_BY_CODE = {
   155119: 'Too many incorrect PIN attempts. Your wallet is temporarily locked – please try again in a few minutes.',
   155120: 'Too many incorrect answers. Temporarily locked – please try again in a few minutes.',
@@ -300,9 +300,9 @@ const ERROR_BY_CODE = {
   155706: 'Network error. Check your connection and try again.',
 }
 
-// Lỗi Circle → câu hiển thị cho user, theo ngôn ngữ app. Mã lạ (ngoài bảng) → đành lấy message
-// gốc của Circle (tiếng Anh) còn hơn nuốt mất thông tin; hết cách thì câu chung chung.
-// DÙNG HÀM NÀY ở mọi chỗ catch lỗi Circle, đừng đọc thẳng `e.message` nữa.
+// A Circle error → the sentence shown to the user. An unknown code (not in the table) → fall back to Circle's own
+// message rather than swallowing the information; failing that, a generic sentence.
+// USE THIS FUNCTION everywhere a Circle error is caught, never read `e.message` directly.
 export function circleErrorMessage(e) {
   const known = ERROR_BY_CODE[e?.code ?? e?.error?.code]
   if (known) return known
@@ -310,19 +310,19 @@ export function circleErrorMessage(e) {
 }
 
 export function executeChallenge(sdk, userToken, encryptionKey, challengeId) {
-  if (MOCK) return Promise.resolve()   // mock: bỏ qua bước ký PIN, coi như thành công
+  if (MOCK) return Promise.resolve()   // mock: skip PIN signing, treat it as a success
   return new Promise((resolve, reject) => {
     sdk.setAuthentication({ userToken, encryptionKey })
     sdk.execute(challengeId, (err, result) => {
       if (err) {
-        // Log MỌI lỗi Circle kèm MÃ SỐ. Không có dòng này thì lỗi retryable (sai PIN) bị nuốt
-        // im lặng ở dưới → không có cách nào biết Circle thật sự gửi mã gì, phải đoán mò
-        // (đã mất 3 vòng deploy vì đoán, 08-04). Giữ lại vĩnh viễn: rẻ, và là thứ duy nhất
-        // nhìn được vào iframe cross-origin.
+        // Log EVERY Circle error WITH ITS CODE. Without this line, retryable errors (wrong PIN) are swallowed
+        // silently below → there is no way to know which code Circle actually sends, leaving you guessing
+        // (3 deploy cycles were lost to guessing, 08-04). Keep it forever: it is cheap, and it is the only
+        // window into a cross-origin iframe.
         console.error('[Circle challenge]', 'code=', err?.code, '| retryable=', RETRYABLE_CODES.has(err?.code), '|', err?.message || err?.error?.message, err)
-        if (RETRYABLE_CODES.has(err.code)) return   // để iframe cho user thử lại, đừng settle
-        // Lỗi terminal → gắn sẵn câu tiếng Việt vào .message (caller cứ hiện .message như cũ).
-        // 155119 = PIN bị khoá: giữ cờ .locked cho caller nào cần phân biệt.
+        if (RETRYABLE_CODES.has(err.code)) return   // let the iframe offer a retry, do not settle
+        // A terminal error → attach the human sentence to .message (callers keep showing .message as before).
+        // 155119 = PIN locked: keep the .locked flag for callers that need to tell it apart.
         return reject(Object.assign(new Error(circleErrorMessage(err)), {
           code: err.code,
           locked: err.code === 155119 || err.code === 155120,

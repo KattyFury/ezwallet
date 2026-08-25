@@ -3,32 +3,32 @@ import { useNav } from '../nav'
 import { refreshSession, forceFreshSession, isTokenExpiredError, getSDK, executeChallenge, signMessageChallenge, circleErrorMessage } from '../circle'
 import logoLong from '../../design/logo.svg'
 
-// KHOÁ MỞ VÍ bằng chính PIN Circle. Vào màn là TỰ bật iframe PIN của Circle NGAY — KHÔNG hiện thêm
-// màn "Enter your PIN" riêng của dự án (user chốt 2026-07-15: bỏ màn PIN dự án, click đăng nhập chỉ
-// thấy PIN của Circle). Trong lúc bật PIN chỉ hiện logo (nền sạch). User HỦY/lỗi mới hiện nút thử lại.
+// WALLET UNLOCK using the Circle PIN itself. Entering the screen opens Circle's PIN iframe IMMEDIATELY - there is
+// NO separate project-made "Enter your PIN" screen (user decision 2026-07-15: drop the project PIN screen, tapping
+// sign-in shows only Circle's PIN). While it opens, only the logo shows (clean background). A CANCEL/error reveals the retry button.
 export default function PinGate() {
   const { navigate, params } = useNav()
   const next = params?.next || 'HomeSend'
   const [error, setError] = useState('')
-  const [busy, setBusy] = useState(true)   // mặc định busy = đang bật PIN Circle → chưa hiện UI dự án
+  const [busy, setBusy] = useState(true)   // busy by default = opening the Circle PIN → no project UI yet
   const tried = useRef(false)
 
-  // 1 lượt mở khoá: lấy token → tạo challenge ký message rỗng → bật PIN Circle. forceFresh=true =
-  // BẮT mint token mới (dùng khi lượt trước dính 155104 "token hết hạn").
+  // One unlock round: get a token → create a challenge signing an empty message → open the Circle PIN. forceFresh=true =
+  // FORCE minting a new token (used when the previous round hit 155104 "token expired").
   async function attemptUnlock(forceFresh) {
     const { userToken, encryptionKey } = forceFresh ? await forceFreshSession() : await refreshSession()
     const walletId = localStorage.getItem('ez_wallet_id')
-    // Xin nonce TRƯỚC khi ký: một lượt PIN này vừa mở khoá app, vừa mở phiên sao lưu danh bạ
-    // (auth chữ ký PIN — xem functions/api/sync.js). User KHÔNG phải nhập PIN thêm lần nào.
-    // Không lấy được nonce (chưa bật KV / mạng chậm / lỗi) → ký câu mặc định, app mở như thường.
+    // Ask for the nonce BEFORE signing: this single PIN round both unlocks the app and opens the contacts backup session
+    // (PIN-signature auth - see functions/api/sync.js). The user NEVER has to enter the PIN a second time.
+    // No nonce (KV not enabled / slow network / error) → sign the default sentence, the app opens as usual.
     const sync = await import('../sync')
       .then(async s => ({ s, m: await s.prepareUnlockMessage() }))
       .catch(() => null)
     const challengeId = await signMessageChallenge(userToken, walletId, sync?.m?.message)
     const result = await executeChallenge(await getSDK(), userToken, encryptionKey, challengeId)
     sessionStorage.setItem('ez_pin_ok', '1')
-    // Sao lưu là tính năng PHỤ: đổi chữ ký lấy token rồi kéo bản sao về đều chạy NỀN, không
-    // await và nuốt mọi lỗi — không được phép giữ user đứng lại ở cửa vào app vì cái sổ danh bạ.
+    // Backup is a SIDE feature: trading the signature for a token and pulling the copy back both run in the
+    // BACKGROUND, not awaited and swallowing every error - a contact list must never hold the user at the front door.
     const signature = result?.data?.signature
     if (sync?.m && signature) {
       sync.s.openSession(sync.m.nonce, signature)
@@ -43,10 +43,10 @@ export default function PinGate() {
     try {
       await attemptUnlock(false)
     } catch (e) {
-      if (e?.code === 155701) { setBusy(false); return }   // user tự hủy nhập PIN → hiện nút thử lại
-      // Token phiên hết hạn/không hợp lệ (155104…): refreshSession có thể đã âm thầm trả token cũ.
-      // Mint token MỚI rồi thử lại 1 lần — đúng khuyến nghị docs Circle. Vẫn hỏng (vd state phiên
-      // thiếu) → về Login SẠCH; đăng nhập lại luôn chạy được (đây là lý do "sign out vào lại hết lỗi").
+      if (e?.code === 155701) { setBusy(false); return }   // user cancelled the PIN themselves → show the retry button
+      // Session token expired/invalid (155104…): refreshSession may have silently handed back the old token.
+      // Mint a NEW token and retry once - exactly what the Circle docs recommend. Still broken (e.g. missing
+      // session state) → back to a CLEAN Login; signing in again always works (this is why "sign out and back in fixes it").
       if (isTokenExpiredError(e)) {
         try {
           await attemptUnlock(true)
@@ -62,7 +62,7 @@ export default function PinGate() {
     }
   }
 
-  // Tự mở màn nhập PIN Circle ngay khi vào (như app ngân hàng).
+  // Open Circle's PIN screen as soon as we arrive (like a banking app).
   useEffect(() => { if (!tried.current) { tried.current = true; unlock() } }, [])
 
   function signOut() {
@@ -72,7 +72,7 @@ export default function PinGate() {
     navigate('Login')
   }
 
-  // Đang bật PIN Circle → chỉ hiện logo (nền sạch), iframe PIN của Circle nổi lên trên.
+  // Circle PIN opening → show only the logo (clean background), Circle's PIN iframe floats above it.
   if (busy) {
     return (
       <div className="screen">
@@ -81,7 +81,7 @@ export default function PinGate() {
     )
   }
 
-  // User đã hủy/lỗi → cho thử lại (chỉ lúc này mới hiện UI + nút).
+  // The user cancelled / hit an error → let them retry (only now do the UI + button appear).
   return (
     <div className="screen">
       <div className="row-1-5 center col" style={{ gap: 16, textAlign: 'center', padding: '0 24px' }}>

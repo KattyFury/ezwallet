@@ -10,50 +10,50 @@ function shortenAddr(addr) {
   return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
 }
 
-// Ký hiệu tiền tệ / tên token dùng font Barlow (--font-condensed); số vẫn Barlow qua .num
+// Currency symbols / token names use Barlow (--font-condensed); numbers stay Barlow via .num
 function Cur({ children }) {
   return <span style={{ fontFamily: 'var(--font-condensed)', fontWeight: 'var(--fw-medium)' }}>{children}</span>
 }
 
 export default function SendConfirm() {
   const { navigate, params } = useNav()
-  // currency = 'USD' (nhãn thân thiện, gửi USDC) hoặc token thật (USDC/EURC/cirBTC) — đến từ SendAmount.
+  // currency = 'USD' (the friendly label, USDC is sent) or a real token (USDC/EURC/cirBTC) - comes from SendAmount.
   const { address, name, amount, memo, currency = 'USD' } = params
-  const [feeUsd, setFeeUsd] = useState(null)      // phí gas thật (USD, null = đang tính)
-  // Tỷ giá riêng cho PHÍ (USD mỗi 1 đơn vị tiền hiển thị — USDC:1, EURC:~1.08)
+  const [feeUsd, setFeeUsd] = useState(null)      // the real gas fee (USD, null = still calculating)
+  // A separate rate for the FEE (USD per unit of the display currency - USDC:1, EURC:~1.08)
   const [feeRates, setFeeRates] = useState({ USDC: 1, EURC: 1.08, VND: 1 / 26300 })
   const [loading, setLoading] = useState(false)
-  const [done, setDone] = useState(false)         // đã gửi thành công → khóa, không gửi lại
-  const [error, setError] = useState('')          // lỗi terminal (hủy/mạng...) hiện tại chỗ
+  const [done, setDone] = useState(false)         // sent successfully → locked, no resending
+  const [error, setError] = useState('')          // a terminal error (cancel/network...) shown in place
 
   useEffect(() => {
-    // getDisplayRates (không phải getUsdRate từng token) — nó gồm cả VND, mà VND không phải token
-    // nên getUsdRate tra TOKENS sẽ không có.
+    // getDisplayRates (not the per-token getUsdRate) - it includes VND, and VND is not a token
+    // so getUsdRate looking through TOKENS would not find it.
     getDisplayRates().then(setFeeRates).catch(() => {})
-    // memo đi qua Memo contract → tốn gas hơn (~110k) so với transfer thường (~65k)
+    // A memo goes through the Memo contract → more gas (~110k) than a plain transfer (~65k)
     estimateFeeUsd(memo && memo.trim() ? 110000 : 65000).then(setFeeUsd).catch(() => setFeeUsd(0))
   }, [memo])
 
-  // USD = USDC (1:1, chỉ khác nhãn hiển thị); USDC/EURC/cirBTC gửi đúng số đã nhập, KHÔNG quy đổi.
-  // VND = tiền pháp định, KHÔNG có trên chain → gửi USDC.
+  // USD = USDC (1:1, only the label differs); USDC/EURC/cirBTC send exactly the amount entered, with NO conversion.
+  // VND = fiat, which does NOT exist on-chain → USDC is sent.
   const token = currency === 'USD' || currency === 'VND' ? 'USDC' : currency
-  // ⚠️⚠️ VND: LẤY LẠI ĐÚNG số token SendAmount đã chốt (params.tokenAmount), TUYỆT ĐỐI KHÔNG quy
-  // đổi lại từ tỷ giá ở màn này. Tỷ giá nhích liên tục (CoinGecko làm mới mỗi 60s) — quy đổi lần
-  // hai thì con số user vừa nhìn thấy ("≈ 19.00 USDC") và con số THẬT SỰ rời ví sẽ khác nhau.
-  // Người dùng phải nhận đúng cái họ đã xác nhận.
+  // ⚠️⚠️ VND: REUSE the exact token amount SendAmount settled on (params.tokenAmount), NEVER re-convert
+  // from the rate on this screen. Rates move constantly (CoinGecko refreshes every 60s) - converting a second
+  // time makes the number the user just saw ("≈ 19.00 USDC") differ from the one that ACTUALLY leaves the wallet.
+  // People must get exactly what they confirmed.
   const sendUnits = currency === 'VND' ? (params.tokenAmount ?? 0) : amount
   const sendAmountStr = token === 'cirBTC' ? sendUnits.toFixed(8) : sendUnits.toFixed(2)
   const mainEl = currency === 'USD' ? <>{displaySymbol('USDC')}{amount}</>
     : currency === 'VND' ? <>{amount.toLocaleString('vi-VN')} <Cur>₫</Cur></>
     : <>{amount} <Cur>{currency}</Cur></>
 
-  // Phí mạng theo TIỀN TỆ MẶC ĐỊNH ở Cài đặt (USDC/EURC/VND)
+  // Network fee in the DEFAULT CURRENCY from Settings (USDC/EURC/VND)
   const displayCur = getDisplayCurrency()
   function feeEl() {
     if (feeUsd === null) return 'Calculating...'
     const v = feeUsd / (feeRates[displayCur] || 1)
-    // Ngưỡng "quá nhỏ để hiện" phải theo SỐ LẺ của tiền tệ: $0.01 với USD, nhưng VND không có số
-    // lẻ nên ngưỡng là 1 ₫ — dùng chung 0.01 thì phí 500 ₫ vẫn bị hiện thành "< 0,01 ₫" (vô nghĩa).
+    // The "too small to show" threshold must follow the currency's DECIMALS: $0.01 for USD, but VND has no
+    // decimals so its threshold is 1 ₫ - a shared 0.01 would render a 500 ₫ fee as "< 0.01 ₫" (meaningless).
     const dec = decimalsOfCurrency(displayCur)
     const min = 10 ** -dec
     return v < min ? `< ${fmtDisplay(min * (feeRates[displayCur] || 1), displayCur, feeRates)}`
@@ -61,14 +61,14 @@ export default function SendConfirm() {
   }
 
   async function handleConfirm() {
-    if (loading || done) return   // chặn bấm lặp / gửi trùng
+    if (loading || done) return   // block repeat taps / duplicate sends
     setLoading(true); setError('')
-    // idempotencyKey MỚI mỗi lần bấm → nếu lần trước hủy/lỗi, lần này tạo challenge SẠCH.
-    // Chống gửi trùng bằng cờ loading (đang gửi) + done (đã xong), KHÔNG bằng idemKey cố định.
+    // A NEW idempotencyKey on every tap → if the previous attempt was cancelled or failed, this one creates a CLEAN challenge.
+    // Duplicate sends are prevented by the loading flag (sending) + done (finished), NOT by a fixed idemKey.
     const idempotencyKey = crypto.randomUUID()
     try {
-      // Làm mới userToken trước khi gửi — tránh "userToken had expired" nếu
-      // người dùng mở app lâu (userToken Circle chỉ sống ~1 tiếng).
+      // Refresh the userToken before sending - avoids "userToken had expired" when
+      // the app has been open a while (Circle userTokens live ~1 hour).
       const { userToken, encryptionKey } = await refreshSession()
       const walletId = localStorage.getItem('ez_wallet_id')
 
@@ -87,17 +87,17 @@ export default function SendConfirm() {
       const data = await res.json()
       if (data.error) throw new Error(data.error)
 
-      // User ký bằng PIN qua W3S SDK. executeChallenge (circle.js) đã xử lý: nhập SAI PIN
-      // → iframe tự cho nhập lại; nhập ĐÚNG → resolve → chạy tiếp xuống dưới (KHÔNG văng ra).
+      // The user signs with their PIN through the W3S SDK. executeChallenge (circle.js) already handles it: a WRONG PIN
+      // → the iframe lets them retry; the RIGHT PIN → resolve → execution continues below (it does NOT throw out).
       await executeChallenge(await getSDK(), userToken, encryptionKey, data.challengeId)
 
-      setDone(true)   // ký thành công → khóa màn, không cho gửi lại
+      setDone(true)   // signed successfully → lock the screen, no resending
       navigate('SendReceipt', { address, name, amount, memo, currency, tokenAmount: sendUnits, timestamp: Date.now() })
     } catch (e) {
-      // Tới đây CHỈ còn lỗi TERMINAL (hủy PIN / token hết hạn / mạng...) — KHÔNG phải sai PIN
-      // (sai PIN đã được iframe cho nhập lại, không reject). Ở LẠI màn xác nhận để bấm gửi lại.
+      // From here only TERMINAL errors remain (PIN cancelled / token expired / network...) - NOT a wrong PIN
+      // (a wrong PIN is retried inside the iframe and never rejects). STAY on the confirm screen so they can tap send again.
       setLoading(false)
-      if (e?.code === 155701) return   // user tự bấm hủy nhập PIN → im lặng, về màn xác nhận
+      if (e?.code === 155701) return   // the user cancelled the PIN themselves → stay silent, back to the confirm screen
       console.error('[SendConfirm] send failed:', e)
       const reason = circleErrorMessage(e)
       const msg = `Send failed: ${reason}`
@@ -130,8 +130,8 @@ export default function SendConfirm() {
               {mainEl}
             </span>
           </div>
-          {/* VND: nói RÕ số USDC thật sự rời ví — user gõ tiền Việt nhưng thứ chạy trên chain là
-              USDC, giấu đi là đánh lừa. Đây đúng con số đã chốt ở màn trước, không tính lại. */}
+          {/* VND: spell out the real USDC amount leaving the wallet - the user types Vietnamese money but what moves
+              on-chain is USDC, and hiding that is deceptive. This is the number settled on the previous screen, never recomputed. */}
           {currency === 'VND' && (
             <div className="confirm-row">
               <span className="confirm-label">Actually sent</span>

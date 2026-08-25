@@ -10,27 +10,27 @@ import { useFitFontSize } from '../useFitFontSize'
 import { roundHints, fmtHint } from '../roundHint'
 import { addNotif } from '../notif'
 
-// ✅ SWAP execute qua ADAPTER.execute(intent có chữ ký) — đúng cách, adapter settlement ghi
-// có USDC về ví (xem HANDOFF mục SWAP + functions/api/_swapCore.js). VERIFY bằng eth_simulateV1
-// (verify-swap.mjs, 2026-07-04): 2 EURC→USDC, số dư USDC ví TĂNG +3.12254 = khớp Kit estimate.
-// Tắt lại nếu cần: đổi SWAP_ENABLED = false.
+// ✅ SWAP executes through ADAPTER.execute(a signed intent) - the correct path, and adapter settlement records
+// the USDC arriving in the wallet (see the SWAP section of HANDOFF + functions/api/_swapCore.js). VERIFIED with eth_simulateV1
+// (verify-swap.mjs, 2026-07-04): 2 EURC→USDC, the wallet's USDC balance rose +3.12254 = matching the Kit estimate.
+// To switch it off again: set SWAP_ENABLED = false.
 const SWAP_ENABLED = true
 
-// ══ MÀN SWAP — slider % + chip gợi ý + NUMPAD BOTTOM-SHEET ══
-// Đối tượng EZwallet = người mới + người lớn tuổi → mặc định KHÔNG bắt gõ từng chữ số: THANH TRƯỢT
-// chọn % SỐ DƯ ("kéo bao nhiêu % tài sản") + hàng 7 GỢI Ý SỐ CHẴN BẤM ĐƯỢC.
-// BỔ SUNG 07-20 (user yêu cầu, thay chốt "đừng nhét lại Numpad" cũ 07-17): bấm vào SỐ TIỀN ở card
-// "You pay" → numpad TRƯỢT TỪ DƯỚI LÊN (như màn nhập PIN) để gõ số chính xác; gõ tới đâu số + ước
-// tính nhận + slider cập nhật tới đó; bấm "Done"/nền tối để đóng. Slider và chip vẫn giữ nguyên.
-// ⚠️ Mọi thứ tính theo ĐƠN VỊ TOKEN ĐANG PAY, KHÔNG theo USD (user chốt 07-17c). Dòng "~ $xx" dưới
-// số chỉ là quy đổi cho dễ hình dung — ĐỪNG lấy nó làm gốc tính toán.
-// Bản đồ hàng (user giao): 1 tiêu đề · 2-6 You pay/You receive + Rate/Fee · 7 hint · 8 slider ·
-// 9 nút Swap · 10 NavBar.
+// ══ THE SWAP SCREEN - % slider + suggestion chips + a NUMPAD BOTTOM SHEET ══
+// EZwallet's audience = newcomers and older people → by default they are NOT made to type digits: a SLIDER
+// picks a % OF THE BALANCE ("how much of my money") + row 7 offers TAPPABLE ROUND NUMBERS.
+// ADDED 07-20 (user request, overriding the earlier 07-17 "do not bring the numpad back"): tapping the AMOUNT on the
+// "You pay" card → the numpad SLIDES UP FROM THE BOTTOM (like the PIN screen) for exact entry; as you type, the amount, the
+// estimated output and the slider all follow; "Done"/the dim background closes it. The slider and chips are unchanged.
+// ⚠️ Everything is computed in the TOKEN BEING PAID, not in USD (user decision 07-17c). The "~ $xx" line under the
+// amount is only a convenience conversion - do NOT use it as the basis of any calculation.
+// Row map (given by the user): 1 title · 2-6 You pay/You receive + Rate/Fee · 7 hints · 8 slider ·
+// 9 the Swap button · 10 NavBar.
 const SWAP_TOKENS = ['USDC', 'EURC', 'cirBTC']
 const decimalsFor = sym => (sym === 'cirBTC' ? 6 : 2)
 
 function TokenRow({ sym, onClick }) {
-  // Chip to lên cho người già (user chốt 07-20 "cho các yếu tố to lên"): logo 32, chữ 19 (--fs-body)
+  // Chips enlarged for older eyes (user decision 07-20 "make the elements bigger"): logo 32, text 19 (--fs-body)
   return (
     <button onClick={onClick}
       style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid var(--color-gray)', borderRadius: 999, background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'inherit', padding: '5px 12px 5px 6px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)' }}>
@@ -41,9 +41,9 @@ function TokenRow({ sym, onClick }) {
   )
 }
 
-// Popup chọn token — cùng kiểu popup tiền tệ của SendAmount (neo nửa trên).
-// Hiện ĐỦ 3 token (user chốt: đừng ẩn token đang ở phía kia — chọn trùng phía kia
-// thì 2 phía tự đảo cho nhau, selectToken đã xử lý).
+// Token picker popup - the same popup style as SendAmount's currency picker (anchored to the top half).
+// Shows ALL 3 tokens (user decision: do not hide the token selected on the other side - picking the other side's token
+// simply swaps the two sides, which selectToken already handles).
 function TokenPicker({ current, onSelect, onClose }) {
   return (
     <div className="popup-overlay" onClick={onClose}>
@@ -62,16 +62,16 @@ function TokenPicker({ current, onSelect, onClose }) {
 }
 
 export default function Swap() {
-  const { navigate } = useNav()                  // nút Exit hàng 10 → về Service Hub
-  const [fromSym, setFromSym] = useState('EURC') // mặc định: cứu cánh "hết USDC" → đổi token khác VỀ USDC
+  const { navigate } = useNav()                  // the row 10 Exit button → back to Service Hub
+  const [fromSym, setFromSym] = useState('EURC') // default: the "out of USDC" rescue → swap another token INTO USDC
   const [toSym, setToSym] = useState('USDC')
-  const [pct, setPct] = useState(0)              // % SỐ DƯ đang chọn (0-100) — nguồn sự thật duy nhất của số tiền
-  const [snapAmt, setSnapAmt] = useState(null)   // số tiền CHẴN user bấm chọn ở hàng 7 (đơn vị token) — ghi đè pct
+  const [pct, setPct] = useState(0)              // the selected % OF BALANCE (0-100) - the single source of truth for the amount
+  const [snapAmt, setSnapAmt] = useState(null)   // the ROUND amount the user tapped in row 7 (token units) - overrides pct
   const [estAmt, setEstAmt] = useState(null)
-  // SEED TỪ CACHE (07-31 — user báo "swap load chậm"): đo thật RPC Arc lần gọi NGUỘI mất ~3,3s
-  // (các lần sau 130–360ms). Trước đây màn Swap luôn bắt đầu từ {} nên "Available: …" đứng im
-  // vài giây mỗi lần mở, dù màn Gửi vừa đọc xong số dư y hệt. Giờ dùng lại cache tầng module
-  // (_balCache) như HomeSend/HomeReceive: hiện số cũ NGAY, fetch nền cập nhật sau.
+  // SEEDED FROM CACHE (07-31 - the user reported "swap loads slowly"): measured for real, a COLD Arc RPC call takes ~3.3s
+  // (subsequent ones 130-360ms). The Swap screen used to start from {}, so "Available: …" sat frozen for
+  // seconds on every open, even though the Send screen had just read the very same balances. It now reuses the module-level
+  // cache (_balCache) like HomeSend/HomeReceive: show the previous number IMMEDIATELY, refresh in the background.
   const [balances, setBalances] = useState(() => {
     const c = cachedBalances(localStorage.getItem('ez_wallet_addr'))
     return c ? Object.fromEntries(c.map(tk => [tk.symbol, tk.amount])) : {}
@@ -81,54 +81,54 @@ export default function Swap() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [status, setStatus] = useState('')
-  const [success, setSuccess] = useState(false)   // true = vừa swap xong → nút xanh lá báo thành công
+  const [success, setSuccess] = useState(false)   // true = a swap just completed → the button turns green to confirm
   const [picker, setPicker] = useState(null)
-  const [pad, setPad] = useState(false)      // numpad bottom-sheet đang mở
-  const [typed, setTyped] = useState('')     // chuỗi đang gõ trên numpad (hiện live ở card You pay)
-  const padPrev = useRef(null)               // số trước khi mở numpad — nút Back trong sheet khôi phục lại
+  const [pad, setPad] = useState(false)      // the numpad bottom sheet is open
+  const [typed, setTyped] = useState('')     // the string being typed on the numpad (shown live on the You pay card)
+  const padPrev = useRef(null)               // the amount before the numpad opened - the sheet's Back button restores it
   const debounceRef = useRef(null)
 
   const cur = getDisplayCurrency()
   const curSym = displaySymbol(cur)
 
-  // Địa chỉ ví AN TOÀN: seed nhanh từ localStorage, tự khôi phục từ Circle nếu thiếu (giống HomeSend).
-  // Đọc thẳng localStorage như trước → trên PWA mobile ez_wallet_addr có thể vắng → balances rỗng →
-  // overBalance luôn true → nút Swap không sáng.
+  // SAFE wallet address: seeded quickly from localStorage, restored from Circle if missing (same as HomeSend).
+  // Reading localStorage directly, as before → on mobile PWA ez_wallet_addr can be absent → empty balances →
+  // overBalance always true → the Swap button never lights up.
   const [walletAddress, setWalletAddress] = useState(() => localStorage.getItem('ez_wallet_addr'))
   useEffect(() => { if (!walletAddress) ensureWalletAddress().then(a => a && setWalletAddress(a)).catch(() => {}) }, [])
   const walletId = localStorage.getItem('ez_wallet_id')
 
-  // Khả dụng: USDC chừa lại 1 làm phí mạng (gas Arc = USDC) — không cho swap hết
+  // Available: USDC holds 1 back for network fees (Arc gas = USDC) - you cannot swap every last cent
   const hasBal = balances[fromSym] !== undefined
   const available = spendableOf(fromSym, balances[fromSym])
 
-  // ── SỐ TIỀN = % × khả dụng, TRỪ KHI vừa thả tay vào số chẵn (snapAmt) ──
-  // floorTo (không toFixed): toFixed làm tròn LÊN → 100% có thể ra số > số dư → Kit trả "vượt số dư".
+  // ── AMOUNT = % × available, UNLESS a round number was just tapped (snapAmt) ──
+  // floorTo (not toFixed): toFixed rounds UP → 100% can produce more than the balance → the Kit answers "over balance".
   const amountNum = snapAmt !== null ? snapAmt : (hasBal ? floorTo(available * pct / 100, decimalsFor(fromSym)) : 0)
 
-  // ── Quy đổi TIỀN HIỂN THỊ ($/€) ── rate = USD/1 token; tiền hiển thị = usd / rate[cur]
+  // ── Converting to DISPLAY MONEY ($/€) ── rate = USD per token; display money = usd / rate[cur]
   const rateOf = sym => (rates && rates[sym]) || null
   const toDisplay = (tokenAmt, sym) => {
     const r = rateOf(sym), rc = rateOf(cur)
     return r && rc ? (tokenAmt * r) / rc : null
   }
-  // v đang là SỐ ĐƠN VỊ tiền hiển thị (đã chia rate), còn fmtDisplay nhận giá trị USD → nhân
-  // ngược lại rate rồi để fmtDisplay lo ký hiệu/số lẻ/dấu phân cách theo từng tiền tệ (VND khác hẳn).
+  // v is currently a NUMBER OF DISPLAY-CURRENCY UNITS (already divided by the rate), while fmtDisplay expects a USD value → multiply
+  // the rate back in and let fmtDisplay handle the symbol/decimals/separators per currency (VND differs completely).
   const fmtDisp = v => (v === null ? null : fmtDisplay(v * (rateOf(cur) || 1), cur, rates))
 
   const amountDisplay = toDisplay(amountNum, fromSym)
 
-  // ── HÀNG 7: gợi ý số chẵn — theo ĐƠN VỊ TOKEN ĐANG PAY (user chốt 07-17c), KHÔNG theo USD ──
-  // Chip BẤM ĐƯỢC (không phải "Release to use" — user không ưng kiểu đó). Spec 07-17e "hint nhiệt
-  // tình": BỘ BA sàn·sàn+0.5·trần — 7.35 EURC → [7] [7.5] [8]. pct===100 = "đổi hết" → không gợi ý.
+  // ── ROW 7: round-number suggestions - in the TOKEN BEING PAID (user decision 07-17c), NOT in USD ──
+  // The chips are TAPPABLE (not "Release to use" - the user disliked that). Spec 07-17e "be generous with
+  // hints": the TRIO floor·floor+0.5·ceil - 7.35 EURC → [7] [7.5] [8]. pct===100 = "swap everything" → no suggestions.
   const hints = (hasBal && pct < 100 && amountNum > 0 && !loading)
     ? roundHints(amountNum, available, decimalsFor(fromSym)) : []
 
   const overBalance = hasBal && amountNum > available + 1e-9
   const canSwap = SWAP_ENABLED && amountNum > 0 && !overBalance && !loading
 
-  // ⚠️ Đọc hỏng → KHÔNG ghi gì vào balances (giữ "chưa biết" → hiện "…"), đừng để rơi về 0:
-  // 0 giả = "Available: 0" dù ví đang có tiền (bug 07-17). Thử lại sau 3s để tự hồi khi RPC hết nghẽn.
+  // ⚠️ A failed read writes NOTHING into balances (keeping "unknown" → showing "…"), never falling back to 0:
+  // a fake 0 = "Available: 0" while the wallet has money (bug 07-17). Retry after 3s so it recovers once the RPC unclogs.
   function loadBalances() {
     if (!walletAddress) return
     let alive = true, retry
@@ -140,18 +140,18 @@ export default function Swap() {
   }
   useEffect(loadBalances, [walletAddress])
 
-  // Tỷ giá + phí (hiện ở khối Rate/Fee, spec yêu cầu LUÔN hiện)
+  // Rate + fee (shown in the Rate/Fee block, which the spec requires to be ALWAYS visible)
   useEffect(() => { getDisplayRates().then(setRates).catch(() => {}) }, [])
   useEffect(() => { estimateFeeUsd().then(setFeeUsd).catch(() => {}) }, [])
 
-  // Ước tính số nhận (debounce 600ms) — kéo slider bắn liên tục nên PHẢI debounce, kẻo dội API Kit
+  // Estimated output (debounced 600ms) - dragging the slider fires constantly, so it MUST be debounced or it floods the Kit API
   useEffect(() => {
     clearTimeout(debounceRef.current)
     if (!amountNum || amountNum <= 0) { setEstAmt(null); return }
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await estimateSwap({ walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
-        // amountOut = decimal token thật (server đã quy từ base units — estimatedAmount thô là base units, ĐỪNG hiện thẳng)
+        // amountOut = the real token decimal (the server already converted from base units - the raw estimatedAmount is base units, do NOT show it directly)
         if (res?.amountOut) { setEstAmt(res.amountOut); setError('') }
         else if (res?.error) { setEstAmt(null); setError(res.error) }
         else setEstAmt(null)
@@ -162,16 +162,16 @@ export default function Swap() {
 
   function resetAmount() { setPct(0); setSnapAmt(null); setEstAmt(null); setError(''); setTyped('') }
 
-  // ── NUMPAD bottom-sheet: bấm số tiền You pay → mở; gõ tới đâu áp tới đó (snapAmt + kéo pct theo) ──
+  // ── NUMPAD bottom sheet: tap the You pay amount → open it; whatever is typed applies immediately (snapAmt + the slider follows) ──
   function openPad() {
     if (!hasBal || loading) return
     if (success) { setSuccess(false); setStatus('') }
-    padPrev.current = { snapAmt, pct }   // để nút Back hủy được số vừa gõ
-    // Seed chuỗi gõ = số đang chọn (nếu có) để bấm lùi sửa được, không bắt gõ lại từ đầu
+    padPrev.current = { snapAmt, pct }   // so the Back button can discard what was typed
+    // Seed the typed string with the current amount (if any) so backspacing can edit it, instead of retyping from scratch
     setTyped(amountNum > 0 ? String(amountNum) : '')
     setPad(true)
   }
-  function cancelPad() {   // Back: khôi phục số như trước khi mở numpad
+  function cancelPad() {   // Back: restore the amount as it was before the numpad opened
     const p = padPrev.current
     if (p) { setSnapAmt(p.snapAmt); setPct(p.pct) }
     setPad(false)
@@ -189,22 +189,22 @@ export default function Swap() {
       applyTyped(typed === '' ? '0.' : typed + '.')
       return
     }
-    // Chặn số dài vô lý: phần nguyên ≤ 9 chữ số, phần thập phân theo token (2 hoặc 6)
+    // Block absurdly long numbers: at most 9 integer digits, decimals per token (2 or 6)
     const [int = '', dec] = typed.split('.')
     if (dec !== undefined) { if (dec.length >= decimalsFor(fromSym)) return }
     else if (int.length >= 9) return
     applyTyped(typed === '0' ? k : typed + k)
   }
 
-  // Kéo slider → bỏ snap cũ + bỏ trạng thái thành công cũ
+  // Dragging the slider → clear the old snap + clear the old success state
   function onPct(p) {
     if (success) { setSuccess(false); setStatus('') }
     setSnapAmt(null)
     setPct(p)
   }
 
-  // Bấm chip số chẵn → chốt đúng số đó. Số đã là đơn vị token sẵn (roundHints tính theo token)
-  // nên KHÔNG quy đổi gì thêm — chỉ kẹp trần cho chắc, rồi kéo pct về đúng vị trí để thumb khớp.
+  // Tapping a round-number chip → lock in that exact amount. The number is already in token units (roundHints works in tokens)
+  // so NOTHING is converted - just clamp it for safety, then move pct so the thumb lines up.
   function pickHint(tokenAmt) {
     const final = Math.min(tokenAmt, floorTo(available, decimalsFor(fromSym)))
     if (!(final > 0)) return
@@ -212,7 +212,7 @@ export default function Swap() {
     if (available > 0) setPct(Math.max(0, Math.min(100, (final / available) * 100)))
   }
 
-  // Đảo chiều: 180° cho nút (spec) + reset số (số dư 2 token khác nhau → giữ % cũ là vô nghĩa)
+  // Reverse direction: 180° for the button (spec) + reset the amount (the two token balances differ → keeping the old % is meaningless)
   const [flip, setFlip] = useState(0)
   function swapDir() { setFromSym(toSym); setToSym(fromSym); resetAmount(); setFlip(f => f + 180) }
 
@@ -224,27 +224,27 @@ export default function Swap() {
 
   async function handleSwap() {
     setLoading(true); setError(''); setSuccess(false); setStatus('Preparing…')
-    const beforeOut = balances[toSym] || 0   // số dư token NHẬN trước swap → để xác nhận on-chain
+    const beforeOut = balances[toSym] || 0   // the RECEIVING token's balance before the swap → used to confirm on-chain
     try {
-      // Token 60' có thể đã hết hạn giữa phiên → làm mới TRƯỚC khi tạo challenge cần PIN
+      // A 60' token may have expired mid-session → refresh it BEFORE creating a challenge that needs the PIN
       const { userToken, encryptionKey } = await refreshSession()
       const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
       if (res.error) throw new Error(res.error)
       setStatus('Enter PIN...')
       await executeChallenge(await getSDK(), userToken, encryptionKey, res.challengeId)
 
-      // ✅ TRẠNG THÁI 1 — PIN đã ký, lệnh swap ĐÃ GỬI lên Arc ("đề nghị thành công")
-      // 1 THÔNG BÁO DUY NHẤT cho swap (user chốt 07-20: gộp "Swapped..." + "Swap complete·received"
-      // làm một) → "Swapped X EURC to ~Y USDC (complete)". NotifArea KHÔNG thêm thông báo nhận riêng
-      // cho leg vào của swap nữa (đã tắt branch outHashes bên đó).
+      // ✅ STATE 1 - the PIN is signed and the swap has been SUBMITTED to Arc ("successfully requested")
+      // ONE SINGLE NOTIFICATION per swap (user decision 07-20: "Swapped..." + "Swap complete·received" were merged
+      // into one) → "Swapped X EURC to ~Y USDC (complete)". NotifArea no longer adds a separate received notification
+      // for the swap's incoming leg (that outHashes branch is disabled over there).
       const outTxt = res.amountOut ? ` to ~${parseFloat(res.amountOut).toFixed(decimalsFor(toSym))} ${toSym}` : ` to ${toSym}`
       addNotif(`Swapped ${amountNum} ${fromSym}${outTxt} (complete)`, 'sent', null, `swap-${Date.now()}`)   // NotifArea (Home)
       resetAmount()
       setSuccess(true); setStatus('Swap submitted')
       setLoading(false)
 
-      // ✅ TRẠNG THÁI 2 — xác nhận ON-CHAIN (Arc finality <1s, chừa độ trễ RPC): poll tới khi số dư
-      // token NHẬN tăng thì đổi nút thành "Swap successful". Nếu chưa kịp thấy tăng → giữ "Swap submitted".
+      // ✅ STATE 2 - ON-CHAIN confirmation (Arc finality is <1s, leaving room for RPC lag): poll until the RECEIVING
+      // token's balance rises, then switch the button to "Swap successful". If the rise is not seen in time → keep "Swap submitted".
       let confirmed = false
       for (let i = 0; i < 6 && !confirmed; i++) {
         await new Promise(r => setTimeout(r, 1500))
@@ -255,70 +255,70 @@ export default function Swap() {
         } catch {}
       }
       setStatus(confirmed ? 'Swap successful' : 'Swap submitted')
-      setTimeout(() => { setSuccess(false); setStatus('') }, 3500)   // tự ẩn, về lại nút "Swap"
+      setTimeout(() => { setSuccess(false); setStatus('') }, 3500)   // auto-hide, back to the plain "Swap" button
     } catch (e) {
       setLoading(false)
-      if (e?.code === 155701) { setStatus(''); return }  // user tự hủy PIN → im lặng
-      // Swap thất bại → thông báo cùng dạng gộp, đuôi "(failed)" (user chốt 07-20)
+      if (e?.code === 155701) { setStatus(''); return }  // the user cancelled the PIN themselves → stay silent
+      // Swap failed → the same merged notification, ending in "(failed)" (user decision 07-20)
       addNotif(`Swapped ${amountNum} ${fromSym} to ${toSym} (failed)`, 'error', null, `swap-fail-${Date.now()}`)
       const msg = circleErrorMessage(e)
       setError(msg); setStatus('')
     }
   }
 
-  // Card = NỀN XÁM NHẠT, KHÔNG VIỀN, bo góc to (user chốt 07-17c, đúng mockup user gửi).
-  // Trước là viền xám + nền trắng → chìm vào nền trắng của .screen, không tách khối.
-  // Chip token bên trong giữ NỀN TRẮNG → nổi bật trên card xám (không cần thêm viền đậm).
+  // The card = a PALE GREY BACKGROUND, NO BORDER, large corner radius (user decision 07-17c, matching the mockup the user sent).
+  // It used to be a grey border on white → which sank into .screen's white background and did not read as a block.
+  // The token chip inside stays WHITE → standing out on the grey card (no heavy border needed).
   const CARD = { border: 'none', borderRadius: 20, background: 'var(--color-surface)', padding: '14px 16px' }
 
-  // 1 card TỐI GIẢN 3 hàng (user chốt 07-20 "tinh giản để chữ to hơn cho người già"):
-  //   nhãn You pay/receive
-  //   [chip token ▼]  ————————  SỐ TO (bỏ tên token sau số — chip nói rồi)
-  //   Available: xx TOKEN  ————  ~ $quy đổi
-  // Chữ phụ lên --fs-item 17. Số to = base 52, co theo BỀ RỘNG THẬT (useFitFontSize — user chốt
-  // 07-22c: đoán theo số ký tự (amountFontSize cũ) sai vì card share hàng với chip, gõ 7 ký tự
-  // ("1000000") đã tràn thành "100000…" mà không co xuống — giờ đo canvas nên co ĐÚNG luôn vừa khít).
-  // onAmount (chỉ card You pay): bấm vào VÙNG SỐ (cả khoảng trống bên phải chip) → mở numpad.
-  // typing: chuỗi đang gõ trên numpad (null = numpad đóng).
+  // ONE MINIMAL 3-row card (user decision 07-20 "strip it back so the text can be bigger for older users"):
+  //   the You pay/receive label
+  //   [token chip ▼]  ————————  THE BIG NUMBER (the token name after the number was dropped - the chip already says it)
+  //   Available: xx TOKEN  ————  ~ $converted
+  // Secondary text raised to --fs-item 17. The big number = base 52, shrinking by REAL WIDTH (useFitFontSize - user decision
+  // 07-22c: guessing by character count (the old amountFontSize) was wrong because the card shares its row with the chip, so 7 characters
+  // ("1000000") already overflowed into "100000…" without shrinking - measuring on canvas now shrinks it to fit exactly).
+  // onAmount (the You pay card only): tapping the NUMBER AREA (including the empty space right of the chip) → opens the numpad.
+  // typing: the string being typed on the numpad (null = numpad closed).
   function SideCard({ label, sym, onPick, amount, disp, onAmount, typing, balLabel, idle }) {
     const known = amount !== null
     const balKnown = balances[sym] !== undefined
     const isTyping = typing !== null && typing !== undefined
-    // idle (You receive, user chốt 07-23): CHƯA nhập số → không có gì để ước tính → để TRỐNG hẳn.
-    // "…" chỉ dành cho "số chưa đọc được / đang tải" (đã nhập số, chờ estimate) — trước đây hiện
-    // "…" cả lúc idle nhìn như tải mãi không xong + lệch caret to bên You pay.
-    // Bỏ số 0 thập phân thừa (user chốt 07-28: "10.00" vô lý khi số nguyên) — chỉ giữ thập phân KHI CÓ
-    // ("10"→10, "10.50"→10.5, "10.25"→10.25). Chỉ cắt phần sau dấu chấm, KHÔNG đụng số nguyên.
+    // idle (You receive, user decision 07-23): NO amount entered → nothing to estimate → leave it COMPLETELY EMPTY.
+    // "…" is reserved for "not readable yet / loading" (an amount was entered, waiting on the estimate) - it used to show
+    // "…" while idle too, which looked like a load that never finished and sat oddly against the big caret on You pay.
+    // Drop redundant trailing decimal zeros (user decision 07-28: "10.00" is silly for a whole number) - keep decimals ONLY WHEN PRESENT
+    // ("10"→10, "10.50"→10.5, "10.25"→10.25). Only the part after the dot is trimmed, the integer is untouched.
     const trimZeros = s => (s.includes('.') ? s.replace(/0+$/, '').replace(/\.$/, '') : s)
     const amtStr = isTyping ? (typing || '0') : known ? trimZeros(amount.toFixed(decimalsFor(sym))) : idle ? '' : '…'
     const amtColor = overBalance ? 'var(--color-error)'
       : isTyping ? (typing ? 'var(--color-content)' : 'var(--color-faint)')
       : known && amount > 0 ? 'var(--color-content)' : 'var(--color-faint)'
-    // Card CÓ onAmount (You pay) mà CHƯA có số (chưa gõ hoặc số = 0) → ẩn "0.00", chỉ chừa chỗ
-    // cho caret (user chốt 07-22b: "0.00" đứng CẠNH caret nhấp nháy nhìn thừa/rối, chọn 1 trong 2).
-    // Card "You receive" không onAmount → luôn hiện amtStr as-is (0.00 / … / số thật), không đổi.
+    // A card WITH onAmount (You pay) but NO amount yet (nothing typed, or 0) → hide "0.00" and leave room
+    // only for the caret (user decision 07-22b: "0.00" NEXT TO a blinking caret looks redundant and cluttered, pick one).
+    // The "You receive" card has no onAmount → it always shows amtStr as-is (0.00 / … / a real number), unchanged.
     const hasValue = isTyping ? !!typing : known && amount > 0
     const showZero = onAmount && !hasValue
-    // Caret _ CHỈ hiện khi ĐANG GÕ (numpad mở) hoặc ô TRỐNG (tap-hint) — có số rồi thì TẮT
-    // (user chốt 07-28: "10.00_" caret nhấp nháy sau số đã nhập xong nhìn vô lý).
+    // The _ caret appears ONLY WHILE TYPING (numpad open) or when the field is EMPTY (the tap hint) - once there is a number it is OFF
+    // (user decision 07-28: "10.00_" with a caret blinking after a finished number looks nonsensical).
     const showCaret = onAmount && (isTyping || !hasValue)
     const [fitRef, fitSize] = useFitFontSize((showZero ? '' : amtStr) + (showCaret ? '_' : ''), { max: 52, min: 18 })
     return (
       <div style={{ ...CARD, minWidth: 0, height: 'calc(20dvh - 5px)', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
-        {/* Phân cấp đậm nhạt (user chốt 07-17e "quan trọng nhớ bold"): label vai trò card = medium.
-            Card cao 2 HÀNG nên chữ phụ lên --fs-body 19, số to base 52 (user chốt 07-20 to cho người già) */}
+        {/* Weight hierarchy (user decision 07-17e "important things get bold"): the card's role label = medium.
+            The card is 2 ROWS tall, so secondary text goes to --fs-body 19 and the big number to base 52 (user decision 07-20, big for older eyes) */}
         <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>{label}</span>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
           <TokenRow sym={sym} onClick={onPick} />
-          {/* Ô SỐ TIỀN. BỎ MÀU/VIỀN box trắng bọc số (user chốt 07-22: box viền nhìn cứng, số dài
-              dễ tràn ra ngoài khung = xấu) — NHƯNG GIỮ NGUYÊN kích thước box (minHeight 56 + padding
-              2/12) để card KHÔNG THẤP LẠI (bug 07-22d: xoá luôn minHeight/padding làm cả cụm You
-              pay/You receive tụt từ 2 hàng xuống ~1.5 hàng — user chốt lại: 2 hàng/2 hàng/Rate 0.5
-              hàng phải giữ nguyên như cũ, chỉ ẩn màu nền/viền, không đụng kích thước). Thay tín hiệu
-              "bấm được" bằng CARET NHẤP NHÁY đứng sau số (card "You pay" có onAmount). Card "You
-              receive" không có onAmount → không caret, không box, trần hoàn toàn (giữ như cũ).
-              ref={fitRef} đo đúng bề rộng còn lại sau chip để co chữ vừa khít; overflow:hidden là
-              lưới an toàn cuối (chỉ kích hoạt khi số dài hơn cả mức co tối thiểu). */}
+          {/* THE AMOUNT FIELD. The white box's COLOUR/BORDER around the number was REMOVED (user decision 07-22: a bordered box looks rigid and long
+              numbers easily spill outside the frame = ugly) - BUT ITS DIMENSIONS ARE KEPT (minHeight 56 + padding
+              2/12) so the card does NOT get shorter (bug 07-22d: removing minHeight/padding as well dropped the whole You
+              pay/You receive block from 2 rows to ~1.5 - the user re-confirmed: 2 rows/2 rows/Rate 0.5
+              rows must stay exactly as they were, only hide the background/border, never touch the sizing). The "tappable"
+              signal is instead a BLINKING CARET after the number (the "You pay" card has onAmount). The "You
+              receive" card has no onAmount → no caret, no box, completely bare (as before).
+              ref={fitRef} measures the width actually left beside the chip so the text shrinks to fit; overflow:hidden is
+              the last-resort net (it only kicks in when a number is longer than even the smallest size). */}
           <div ref={fitRef} onClick={onAmount} style={{
             flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
             cursor: onAmount ? 'pointer' : 'default',
@@ -330,12 +330,12 @@ export default function Swap() {
             </span>
           </div>
         </div>
-        {/* Hàng phụ = --fs-item 17 ("vừa-nhỏ"), NHỎ HƠN nhãn You pay/receive 19 ("vừa") — user chốt
-            07-21: để 2 cái bằng nhau làm mất phân cấp nặng–nhẹ. Available và ~$ đồng bộ cùng cỡ. */}
+        {/* The secondary row = --fs-item 17 ("medium-small"), SMALLER than the You pay/receive label at 19 ("medium") - user decision
+            07-21: making them equal destroyed the heavy/light hierarchy. Available and ~$ share the same size. */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
           <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {/* balLabel: You receive = "Balance", You pay = null (ẩn — user chốt 07-22f: bỏ dòng
-                Available bên You pay). Số dư chưa đọc được → "…", KHÔNG vẽ 0 (bug 07-17). */}
+            {/* balLabel: You receive = "Balance", You pay = null (hidden - user decision 07-22f: the Available line was
+                dropped from You pay). A balance that cannot be read yet → "…", NEVER a drawn 0 (bug 07-17). */}
             {balLabel ? <>{balLabel}: <span className="num" style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-medium)' }}>
               {balKnown ? `${spendableOf(sym, balances[sym]).toFixed(decimalsFor(sym))} ${sym}` : '…'}
             </span></> : null}
@@ -346,23 +346,23 @@ export default function Swap() {
     )
   }
 
-  // Phí gas Arc THẬT thường < 1 cent → .toFixed(2) ra "$0.00" = nhìn như hỏng/không mất phí.
-  // Phí > 0 mà làm tròn về 0 thì nói thẳng "< $0.01" (trung thực + không doạ người dùng).
-  // ⚠️ Ngưỡng "nhỏ quá để hiện" phải theo SỐ LẺ của từng tiền tệ, đừng ghim 0.01: VND không có
-  // số lẻ nên đơn vị nhỏ nhất là 1 ₫ — ghim 0.01 thì phí 13 ₫ vẫn bị coi là "hiện được" rồi in ra
-  // "13,00 ₫" (VND không ai viết số lẻ). Ký hiệu cũng để fmtDisplay đặt, vì ₫ đứng SAU số.
+  // A real Arc gas fee is usually < 1 cent → .toFixed(2) renders "$0.00" = looks broken, or free.
+  // A fee > 0 that rounds to 0 says "< $0.01" plainly instead (honest, and not alarming).
+  // ⚠️ The "too small to show" threshold must follow EACH CURRENCY's decimals, do not hardcode 0.01: VND has no
+  // decimals so its smallest unit is 1 ₫ - hardcoding 0.01 would treat a 13 ₫ fee as "showable" and print
+  // "13,00 ₫" (nobody writes VND with decimals). The symbol is left to fmtDisplay too, because ₫ goes AFTER the number.
   const feeTxt = (() => {
     if (feeUsd === null) return '…'
     const rc = rateOf(cur) || 1
-    const min = 10 ** -decimalsOfCurrency(cur)      // 0.01 với USD/EUR · 1 với VND
-    const v = feeUsd / rc                            // phí quy về đơn vị tiền đang hiển thị
+    const min = 10 ** -decimalsOfCurrency(cur)      // 0.01 for USD/EUR · 1 for VND
+    const v = feeUsd / rc                            // the fee converted into the display currency
     if (v <= 0) return `~${fmtDisplay(0, cur, rates)}`
     return v < min ? `<${fmtDisplay(min * rc, cur, rates)}` : `~${fmtDisplay(feeUsd, cur, rates)}`
   })()
 
   const estNum = estAmt !== null ? parseFloat(estAmt) : null
   const rateTxt = (() => {
-    // Tỷ giá THẬT từ báo giá Kit khi đã có (gồm cả phí provider); chưa có thì lấy tỷ giá thị trường
+    // The REAL rate from the Kit quote once available (provider fees included); until then, the market rate
     if (estNum && amountNum > 0) return `1 ${fromSym} ~ ${(estNum / amountNum).toFixed(4)} ${toSym}`
     const rf = rateOf(fromSym), rt = rateOf(toSym)
     return rf && rt ? `1 ${fromSym} ~ ${(rf / rt).toFixed(4)} ${toSym}` : '…'
@@ -372,15 +372,15 @@ export default function Swap() {
     <div className="screen">
       {picker && <TokenPicker current={picker === 'from' ? fromSym : toSym} onSelect={sym => selectToken(picker, sym)} onClose={() => setPicker(null)} />}
 
-      {/* Numpad bottom-sheet (user quy hoạch 07-20): trượt từ dưới lên CHIẾM nửa hàng 6 + hàng
-          7-10, nền XÁM + phím TRẮNG, KHÔNG khoảng trắng thừa trên đầu, KHÔNG làm mờ màn chính.
-          Trong sheet: Numpad 30dvh + hàng nút Back/Done 10dvh (khớp vị trí .row10-dual) + đệm 5dvh.
-          Back = hủy số vừa gõ; Done/bấm ra ngoài = giữ số. */}
+      {/* The numpad bottom sheet (user's layout 07-20): slides up TAKING half of row 6 + rows
+          7-10, GREY background + WHITE keys, NO wasted space at the top, and it does NOT dim the main screen.
+          Inside the sheet: numpad 30dvh + the Back/Done button row 10dvh (aligned with .row10-dual) + 5dvh of padding.
+          Back = discard what was typed; Done / tapping outside = keep it. */}
       {pad && (
         <div className="sheet-overlay" onClick={() => setPad(false)}>
           <div className="sheet numpad-gray" onClick={e => e.stopPropagation()}>
-            {/* Đệm xám trên 24px + phím THẤP lại (07-20c: numpad 5.5 phần thay vì 6 — phím cũ quá to),
-                khe 0.5 trước hàng nút; Back/Done GIỮ NGUYÊN biên hàng 9-10 (flex 2 = 85-95dvh). */}
+            {/* 24px of grey padding on top + SHORTER keys (07-20c: numpad 5.5 parts instead of 6 - the old keys were too big),
+                a 0.5 gap before the button row; Back/Done KEEP the row 9-10 edge (flex 2 = 85-95dvh). */}
             <div style={{ flex: 5.5, minHeight: 0, paddingTop: 24 }}>
               <Numpad onKey={onPadKey} showComma />
             </div>
@@ -398,20 +398,20 @@ export default function Swap() {
         Swap
       </div>
 
-      {/* KHU VỰC hàng 2→9 chia 3 KHỐI bằng justify-content:space-between (user chốt 07-20e): 2 khe
-          giữa các khối TỰ ĐỘNG BẰNG NHAU (cụm You-pay/receive ↔ cụm hint+slider ↔ nút Swap), không
-          chỗ nào trống lệch. paddingBottom 2dvh = khớp margin-bottom action-card màn Send/Receive. */}
+      {/* The rows 2→9 AREA is split into 3 BLOCKS with justify-content:space-between (user decision 07-20e): the 2 gaps
+          between blocks are AUTOMATICALLY EQUAL (the You-pay/receive block ↔ the hint+slider block ↔ the Swap button), with no
+          lopsided empty space. paddingBottom 2dvh = matching the action-card margin-bottom on Send/Receive. */}
       <div style={{ gridRow: '2 / 10', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
 
-        {/* KHỐI 1: You pay ⇅ You receive + Fee/Rate */}
+        {/* BLOCK 1: You pay ⇅ You receive + Fee/Rate */}
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
           <SideCard label={'You pay'} sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
             onAmount={openPad} typing={pad ? typed : null} balLabel="Available" />
 
-          {/* Nút đảo chiều — ĐÈ lên khe giữa 2 card, xoay 180° mỗi lần bấm. Vòng tròn GRADIENT BRAND +
-              icon TRẮNG (user chốt 07-29, đảo bản 07-22h nền xanh nhạt/icon xanh đậm) → cùng hệ với
-              .btn-primary/.action-card.primary; shadow .35 theo luật nút gradient. margin -17/-17 trên
-              nút 44px → chiếm 10px trong flow = KHE 10px giữa 2 card; nút bắc cầu qua khe (đè 17px mỗi bên). */}
+          {/* The reverse button - OVERLAPPING the gap between the 2 cards, rotating 180° on each tap. A BRAND GRADIENT circle +
+              a WHITE icon (user decision 07-29, reversing the 07-22h pale-blue/dark-blue-icon version) → same family as
+              .btn-primary/.action-card.primary; shadow .35 per the gradient-button rule. margin -17/-17 on a
+              44px button → it occupies 10px in flow = a 10px GAP between the cards, with the button bridging it (17px over each). */}
           <div style={{ display: 'flex', justifyContent: 'center', margin: '-17px 0', position: 'relative', zIndex: 3 }}>
             <button onClick={swapDir} aria-label={'Reverse direction'}
               style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'var(--grad-brand)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transform: `rotate(${flip}deg)`, transition: 'transform .3s ease' }}>
@@ -421,7 +421,7 @@ export default function Swap() {
 
           <SideCard label={'You receive'} sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} balLabel="Balance" idle={!(amountNum > 0)} />
 
-          {/* Fee + Rate — 1 dòng NHỎ fs-item 17: Rate căn TRÁI · Fee căn PHẢI, số liệu ĐEN cho bật */}
+          {/* Fee + Rate - one SMALL fs-item 17 line: Rate aligned LEFT · Fee aligned RIGHT, the figures in BLACK so they stand out */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 10, padding: '0 16px' }}>
             <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
               Rate: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-medium)' }}>{rateTxt}</span>
@@ -432,14 +432,14 @@ export default function Swap() {
           </div>
         </div>
 
-        {/* KHỐI 2: gợi ý số chẵn (chip) + thanh trượt % — cùng 1 cụm.
-            ⚠️ Hàng chip PHẢI có CHIỀU CAO CỐ ĐỊNH (height 40, không để co theo nội dung): `hints.map`
-            rỗng thì hàng cao 0 → khối 2 thấp đi → space-between đẩy cả cụm trượt xuống mỗi lần hint
-            hiện/tắt (bug user báo 07-21). Chừa sẵn chỗ = vị trí slider ĐỨNG YÊN, chip chỉ mờ/hiện. */}
+        {/* BLOCK 2: round-number chips + the % slider - one group.
+            ⚠️ The chip row MUST have a FIXED HEIGHT (height 40, never sized by its content): when `hints.map` is
+            empty the row collapses to 0 → block 2 shrinks → space-between pushes the whole slider group down every time a hint
+            appears/disappears (bug reported 07-21). Reserving the space = the slider STAYS PUT while the chips merely fade in and out. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1dvh', minWidth: 0 }}>
-          {/* Hàng height 40 CỐ ĐỊNH (slider không nhảy — xem note dưới): có số → chip gợi ý số chẵn;
-              CHƯA chọn số → hàng để TRỐNG (user chốt 07-23: bỏ hint pill "Slide to adjust…", hướng
-              dẫn chuyển XUỐNG NÚT Swap = "Slide or tap here to enter" bấm mở numpad). */}
+          {/* A FIXED height 40 row (so the slider does not jump - see the note below): with an amount → round-number chips;
+              with NO amount chosen → the row stays EMPTY (user decision 07-23: the "Slide to adjust…" hint pill was dropped, the
+              instruction MOVED ONTO THE SWAP BUTTON as "Slide or tap here to enter", which opens the numpad). */}
           <div style={{ height: 40, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0 }}>
             {hints.length ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
@@ -458,34 +458,34 @@ export default function Swap() {
           </div>
         </div>
 
-        {/* KHỐI 3: nút Swap — pill mặc định `.btn` (bo 50, cao 6dvh) ĐỒNG TÂM với action-card
-            Scan QR (Send) / Create QR (Receive) — user chốt 07-21, đảo bản 07-20e (vuông 8dvh làm
-            lệch so với các màn khác). Cách căn: khối này copy y hệt hình học `.action-grid`
-            (`height 8dvh` + `marginBottom 2dvh`, nằm cuối flex space-between của vùng 2/10) → band
-            80→88dvh, nút 6dvh canh giữa band ⇒ TÂM 84dvh = đúng tâm action-card. ĐỪNG thêm
-            paddingBottom cho vùng cha, marginBottom ở đây đã lo phần chừa 2dvh.
-            Nút vẫn là NƠI DUY NHẤT hiện trạng thái. Ưu tiên: lỗi > trạng thái > hint/'Swap'.
-            CHƯA nhập số (user chốt 07-23, thay hint pill cũ ở hàng chip): nút hiện
-            "Slide or tap here to enter" + bấm = mở numpad (openPad) thay vì swap. */}
+        {/* BLOCK 3: the Swap button - the default `.btn` pill (radius 50, height 6dvh) CONCENTRIC with the action-card
+            Scan QR (Send) / Create QR (Receive) - user decision 07-21, reversing the 07-20e version (a square 8dvh looked
+            out of step with the other screens). How it lines up: this block copies the geometry of `.action-grid` exactly
+            (`height 8dvh` + `marginBottom 2dvh`, last in the flex space-between of the 2/10 area) → a band of
+            80→88dvh, with the 6dvh button centred in it ⇒ its CENTRE at 84dvh = exactly the action-card centre. Do NOT add
+            paddingBottom to the parent, the marginBottom here already reserves the 2dvh.
+            The button remains the ONLY place status is shown. Priority: error > status > hint/'Swap'.
+            NO amount entered yet (user decision 07-23, replacing the old hint pill in the chip row): the button reads
+            "Slide or tap here to enter" and tapping it opens the numpad (openPad) instead of swapping. */}
         <div style={{ height: '8dvh', marginBottom: '2dvh', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           {(() => {
-            const needAmount = !error && !status && !(amountNum > 0)   // chưa chọn số → nút = hint mở numpad
-            // 'Swap submitted' (đã gửi, chờ xác nhận) = xanh lá MỜ · 'Swap successful' (token nhận đã
-            // tăng) = xanh lá ĐẦY → phân biệt 2 bước cho khỏi hoang mang (user chốt 07-28, trước cùng màu).
+            const needAmount = !error && !status && !(amountNum > 0)   // no amount chosen → the button becomes the hint that opens the numpad
+            // 'Swap submitted' (sent, awaiting confirmation) = PALE green · 'Swap successful' (the received token balance has
+            // risen) = SOLID green → telling the 2 steps apart avoids confusion (user decision 07-28, they used to share a colour).
             const confirmed = status === 'Swap successful'
             return (
           <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
             style={{
-              // Rộng = 3/4 bề ngang MÀN (user chốt 07-29: mọi nút ĐỨNG ĐƠN ĐỘC cùng 1 cỡ cho đồng bộ —
-              // giống "Hold to show tokens" HomeSend + "Tap to copy" HomeReceive). min(75vw, ...) neo
-              // thẳng vào .screen, không phải % của khung cha đang thụt lề 20px.
+              // Width = 3/4 of the SCREEN width (user decision 07-29: every button STANDING ALONE gets the same size for consistency -
+              // like "Hold to show tokens" on HomeSend + "Tap to copy" on HomeReceive). min(75vw, ...) anchors
+              // straight to .screen, not to a % of the parent frame that is inset 20px.
               width: 'min(75vw, calc(var(--screen-max) * 0.75))', overflow: 'hidden',
               ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
               ...(success ? { opacity: confirmed ? 1 : 0.6 } : null),
             }}
             disabled={needAmount ? (!hasBal || loading) : (!canSwap && !error)}
             onClick={needAmount ? openPad : handleSwap}>
-            {/* Chữ hint = fs-item 17 (luật CỠ CHỮ HINT toàn app — 21 mặc định của .btn bị cắt ellipsis) */}
+            {/* Hint text = fs-item 17 (the app-wide HINT SIZE rule - .btn's default 21 gets ellipsised) */}
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', ...(needAmount ? { fontSize: 'var(--fs-item)' } : null) }}>
               {success && <Icon name="check" size="var(--is-md-lg)" color="var(--color-white)" />}
               {error || status || (needAmount ? 'Slide or tap here to enter' : 'Swap')}
@@ -496,17 +496,17 @@ export default function Swap() {
         </div>
       </div>
 
-      {/* HÀNG 10 = NÚT EXIT, KHÔNG phải NavBar (08-12): Swap giờ mở TỪ Service Hub nên nó không
-          còn tab riêng — phải có đường ra rõ ràng, không để user kẹt trong màn. ĐỎ (user chốt):
-          nút Swap hàng 9 đã là gradient xanh, để Exit xanh nữa là 2 nút nhìn y hệt nhau nằm sát
-          nhau → dễ bấm nhầm. Đỏ + chữ "Exit" cỡ .btn (fs-md-lg 21) để người lớn tuổi thấy ngay.
-          ⚠️ LÀ CHỮ, KHÔNG PHẢI NÚT PILL (user sửa 08-13): bản đầu làm .btn-error = khối gradient đỏ
-          to đùng, nhìn nặng và đá nhau với nút Swap gradient xanh ngay trên. Đúng ý: CHỮ "Exit" đỏ,
-          bold, canh giữa hàng 10 — cùng ngôn ngữ với nhãn chữ của NavBar mà nó vừa thay chỗ.
-          ⚠️ ĐỪNG dùng .row10-single ở màn này: class đó là position:absolute neo tâm 90dvh = VỊ
-          TRÍ HÀNG 9 (nó dành cho màn mà hàng 9 còn trống — About/Language/Security). Hàng 9 của
-          Swap ĐANG CÓ nút "Swap" → dính sát vào nhau. gridRow 10 = ĐÚNG băng 90-100dvh NavBar vừa
-          nhả ra. Vùng chạm phủ CẢ HÀNG (không chỉ bề rộng chữ) cho người lớn tuổi dễ bấm. */}
+      {/* ROW 10 = THE EXIT BUTTON, not the NavBar (08-12): Swap now opens FROM the Service Hub, so it no
+          longer has a tab of its own - it needs an obvious way out, never trapping the user in the screen. RED (user decision):
+          the row 9 Swap button is already a blue gradient, and a blue Exit would make two identical-looking buttons sitting
+          next to each other → easy to mis-tap. Red + the word "Exit" at .btn size (fs-md-lg 21) so older users spot it at once.
+          ⚠️ IT IS TEXT, NOT A PILL BUTTON (user fix 08-13): the first version used .btn-error = a huge red gradient
+          block, which looked heavy and fought with the blue gradient Swap button right above. What was wanted: the word "Exit" in red,
+          bold, centred on row 10 - the same language as the NavBar text labels it replaced.
+          ⚠️ Do NOT use .row10-single on this screen: that class is position:absolute anchored at centre 90dvh = THE
+          ROW 9 POSITION (it is for screens whose row 9 is empty - About/Currency/Security). Swap's row 9 already
+          HAS the "Swap" button → they would end up stuck together. gridRow 10 = exactly the 90-100dvh band the NavBar just
+          vacated. The touch area covers the WHOLE ROW (not just the text width) so older users can hit it easily. */}
       <div className="row-10" style={{ display: 'flex' }}>
         <button onClick={() => navigate('ServiceHub')}
           style={{

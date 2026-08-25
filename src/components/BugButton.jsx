@@ -1,31 +1,31 @@
 import { useState } from 'react'
 import Icon from './Icon'
 
-// ══ NÚT BÁO LỖI (user chốt 2026-08-13) ══
-// Icon 🐛 sát mép PHẢI, canh giữa HÀNG 1 — hiện trên MỌI màn (render 1 lần ở App.jsx, không
-// nhét vào từng màn). Bấm → popup gõ mô tả → POST /api/bug → bắn thẳng vào Telegram chủ dự án.
+// ══ BUG REPORT BUTTON (user decision 2026-08-13) ══
+// A 🐛 icon flush RIGHT, centred on ROW 1 - present on EVERY screen (rendered once in App.jsx, not
+// pasted into each screen). Tap → a popup to describe the problem → POST /api/bug → straight into the owner's Telegram.
 //
-// ⚠️ MÀU XÁM --color-muted-2, ĐỪNG đổi sang xanh/đỏ (user chốt sau khi cân nhắc cả 3):
-//   · xanh brand = màu "bấm cái này đi" của app → nút bug sẽ tranh chỗ với nội dung chính
-//     (số dư, nút Quét QR) trên MỌI màn.
-//   · đỏ = màu lỗi/nguy hiểm (Exit, Sign out, cảnh báo Arc) → chấm đỏ cạnh số dư làm người
-//     lớn tuổi tưởng TIỀN CỦA HỌ đang có vấn đề, trong khi app vẫn chạy bình thường.
-//   xám = đúng ngôn ngữ "công cụ nằm đó, chưa dùng tới" (= icon navbar chưa chọn).
-// Icon TRẦN: không nền, không viền, không đổ bóng — nó KHÔNG phải nút nổi tranh chỗ với nội dung.
+// ⚠️ GREY --color-muted-2, do NOT change it to blue/red (user decision after weighing all 3):
+//   · brand blue = the app's "tap this" colour → the bug button would compete with the main content
+//     (balance, Scan QR button) on EVERY screen.
+//   · red = the error/danger colour (Exit, Sign out, the Arc warning) → a red dot next to the balance makes older
+//     users think THEIR MONEY is in trouble while the app is perfectly fine.
+//   grey = the right language for "a tool sitting there, not needed yet" (= an unselected navbar icon).
+// A BARE icon: no background, no border, no shadow - it is NOT a raised button competing with the content.
 //
-// ⚠️ TUYỆT ĐỐI KHÔNG gom localStorage gửi lên. Chỉ 4 field dưới đây. `ez_user_token` /
-// `ez_encryption_key` / `ez_refresh_token` / `ez_sync_token` lọt ra ngoài là MẤT VÍ.
-// Địa chỉ ví thì gửi: nó là thông tin công khai và không có nó thì không tra được giao dịch lỗi.
+// ⚠️ NEVER bundle localStorage into the report. Only the 4 fields below. Leaking `ez_user_token` /
+// `ez_encryption_key` / `ez_refresh_token` / `ez_sync_token` means LOSING THE WALLET.
+// The wallet address is sent: it is public information, and without it a failed transaction cannot be looked up.
 
-// Chuỗi máy/trình duyệt gọn — KHÔNG bê nguyên userAgent (dài loằng ngoằng, đọc mệt).
+// A compact device/browser string - do NOT ship the raw userAgent (long, rambling, painful to read).
 function deviceInfo() {
   const ua = navigator.userAgent || ''
   const os = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android'
     : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : 'other'
   const br = /CriOS|Chrome/.test(ua) ? 'Chrome' : /FxiOS|Firefox/.test(ua) ? 'Firefox'
     : /Safari/.test(ua) ? 'Safari' : 'other'
-  // standalone = đã thêm vào màn hình chính (PWA) — hành vi share/âm thanh/localStorage khác hẳn
-  // tab Safari thường, nên PHẢI biết khi đọc báo lỗi.
+  // standalone = added to the home screen (PWA) - share/audio/localStorage behaviour differs completely from
+  // an ordinary Safari tab, so a bug report MUST say which it was.
   const pwa = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone
   return `${os} · ${br} · ${window.innerWidth}×${window.innerHeight}${pwa ? ' · PWA' : ''}`
 }
@@ -33,7 +33,7 @@ function deviceInfo() {
 export default function BugButton({ screen }) {
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
-  const [state, setState] = useState('')   // '' | 'sending' | 'sent' | <chuỗi lỗi>
+  const [state, setState] = useState('')   // '' | 'sending' | 'sent' | <an error string>
 
   function close() { setOpen(false); setText(''); setState('') }
 
@@ -54,7 +54,7 @@ export default function BugButton({ screen }) {
       })
       if (r.ok) { setState('sent'); setTimeout(close, 1600); return }
       const d = await r.json().catch(() => ({}))
-      // Nói rõ từng loại hỏng — "có lỗi xảy ra" chung chung thì user báo lại cũng vô ích.
+      // Name each failure precisely - a vague "something went wrong" makes the user's report useless.
       setState(d.error === 'bug-report-disabled' ? 'Bug reporting is not set up yet'
         : d.error === 'rate-limited' ? 'Too many reports – please try again in an hour'
         : 'Could not send, please try again')
@@ -65,8 +65,8 @@ export default function BugButton({ screen }) {
 
   return (
     <>
-      {/* absolute trong khung .app-frame (App.jsx) → neo đúng mép phải của KHUNG APP, không phải
-          mép màn hình. top 5dvh = tâm hàng 1 (10 hàng đều nhau). right 20px = đúng lề .screen. */}
+      {/* absolute inside the .app-frame (App.jsx) → anchored to the right edge of the APP FRAME, not the
+          screen edge. top 5dvh = the centre of row 1 (10 equal rows). right 20px = exactly the .screen margin. */}
       <button onClick={() => setOpen(true)} aria-label={'Report a bug'}
         style={{
           position: 'absolute', top: '5dvh', right: 20, transform: 'translateY(-50%)', zIndex: 50,
@@ -80,13 +80,13 @@ export default function BugButton({ screen }) {
         <div className="popup-overlay" onClick={close}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
             <div className="popup-title">Report a bug</div>
-            {/* DANH SÁCH ĐÁNH SỐ những thứ gửi kèm (user chốt 08-13, bản thứ 3).
-                Đường đi: liệt kê 1 câu dài → user chê "yêu cầu lắm thế?" → rút còn 1 dòng → user
-                muốn LIỆT KÊ LẠI nhưng dạng danh sách đánh số cho dễ soi. Danh sách dễ đọc hơn hẳn
-                câu dài nhồi 4 mệnh đề. `paddingLeft` phải khai tay: reset ở index.css dòng 96 xoá
-                sạch margin/padding của mọi thẻ, không có nó thì số thứ tự bị cắt mất. */}
-            {/* lineHeight 1.3 (không phải 1.45): trên màn nhỏ 360×640 popup chạm trần 56dvh và
-                phải cuộn mới thấy nút Gửi. Mỗi 0.1 lineHeight ở đây đổi được ~6px chiều cao. */}
+            {/* A NUMBERED LIST of what gets attached (user decision 08-13, third revision).
+                The road here: one long listing sentence → the user objected ("why so demanding?") → cut to one line → the user
+                wanted the LISTING BACK but as a numbered list for easy scanning. A list reads far better than
+                one long sentence stuffed with 4 clauses. `paddingLeft` must be declared by hand: the reset at index.css line 96 strips
+                margin/padding from every element, and without it the numbers get clipped. */}
+            {/* lineHeight 1.3 (not 1.45): on a small 360×640 screen the popup hits the 56dvh ceiling and
+                the Send button needs scrolling to reach. Every 0.1 of lineHeight here is worth ~6px of height. */}
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', lineHeight: 1.3 }}>
               This report will include:
               <ol style={{ paddingLeft: 20 }}>
@@ -100,9 +100,9 @@ export default function BugButton({ screen }) {
             <textarea
               className="address-input" autoFocus value={text} maxLength={1000}
               onChange={e => setText(e.target.value)}
-              // minHeight 72 (hạ từ 96): thêm danh sách 5 gạch đầu dòng là popup chạm trần
-              // max-height 56dvh của .popup-card → phải CUỘN mới thấy nút Gửi (đo 08-13).
-              // 72px vẫn đủ 3 dòng gõ, gõ dài hơn thì ô tự cuộn bên trong.
+              // minHeight 72 (down from 96): adding the 5-item list pushed the popup into the
+              // max-height 56dvh ceiling of .popup-card → the Send button needed SCROLLING to reach (measured 08-13).
+              // 72px still fits 3 typed lines, and longer text scrolls inside the field.
               style={{ fontSize: 'var(--fs-body)', minHeight: 72, resize: 'none', lineHeight: 1.35, fontFamily: 'inherit' }}
             />
             {state && state !== 'sending' && (

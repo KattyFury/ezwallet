@@ -7,8 +7,8 @@ const ROWS = [
   ['.', '0', 'BACK'],
 ]
 
-// showComma (tên cũ) = hiện phím THẬP PHÂN. Dùng dấu CHẤM '.' (không phải phẩy) — khớp chuẩn
-// en-US đã dùng xuyên suốt app (toLocaleString('en-US',...), $1.50 chứ không phải $1,50).
+// showComma (legacy name) = show the DECIMAL key. Uses a DOT '.' (not a comma) - matching the
+// en-US convention used throughout the app (toLocaleString('en-US',...), $1.50 and not $1,50).
 export default function Numpad({ onKey, showComma = false, disabled = false }) {
   return (
     <div className={`numpad${disabled ? ' disabled' : ''}`}>
