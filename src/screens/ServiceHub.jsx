@@ -10,7 +10,7 @@ import { t } from '../i18n'
 const SERVICES = [
   { id: 'swap', icon: 'exchange', label: 'Đổi tiền',        screen: 'Swap' },
   { id: 'pig',  icon: 'pig',      label: 'Heo đất',         screen: null },
-  { id: 'dca',  icon: 'dca',      label: 'Đầu tư định kỳ',  screen: null },
+  { id: 'luckypot', icon: 'luckypot', label: 'LuckyPot',    screen: null },
 ]
 
 export default function ServiceHub() {

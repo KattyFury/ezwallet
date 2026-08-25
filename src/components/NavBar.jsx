@@ -3,7 +3,7 @@ import Icon from './Icon'
 import { t } from '../i18n'
 
 // Tab 1 = SERVICE HUB (08-12), thay tab Swap cũ: Swap giờ là 1 trong nhiều dịch vụ (Swap ·
-// Piggy Bank · DCA) nên navbar trỏ vào TRANG CHỦ dịch vụ, không trỏ thẳng 1 dịch vụ nữa.
+// Piggy Bank · LuckyPot) nên navbar trỏ vào TRANG CHỦ dịch vụ, không trỏ thẳng 1 dịch vụ nữa.
 // → Màn Swap KHÔNG còn tab riêng ⇒ hàng 10 của nó là nút Exit (về ServiceHub), không phải NavBar.
 const TABS = [
   { id: 'ServiceHub',  label: 'Dịch vụ', icon: 'hub' },

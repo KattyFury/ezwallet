@@ -1,14 +1,13 @@
 // Icon dùng chung — nhúng SVG (currentColor) → recolor bằng prop color / màu chữ cha.
 // SVG đã chuẩn hóa: viewBox 100x100, stroke/fill = currentColor, width/height 100%.
-// ⚠️ 07-29 (kiểm toán): 7 icon KHÔNG màn nào render đã BỎ IMPORT ở đây cho nhẹ bundle —
-// back · facebook · google · hint · left · right · swap. FILE .svg VẪN CÒN trong `icon/`
+// ⚠️ 07-29 (kiểm toán): 8 icon KHÔNG màn nào render đã BỎ IMPORT ở đây cho nhẹ bundle —
+// back · dca · facebook · google · hint · left · right · swap. FILE .svg VẪN CÒN trong `icon/`
 // (tranh của user, không xoá). Cần dùng lại: thêm 1 dòng import + 1 tên vào ICONS là xong.
 import add from '../../icon/add.svg?raw'
 import bug from '../../icon/bug.svg?raw'
 import check from '../../icon/check.svg?raw'
 import clock from '../../icon/clock.svg?raw'
 import copy from '../../icon/copy.svg?raw'
-import dca from '../../icon/dca.svg?raw'
 import down from '../../icon/down.svg?raw'
 import down2 from '../../icon/down2.svg?raw'
 import download from '../../icon/download.svg?raw'
@@ -18,6 +17,7 @@ import globe from '../../icon/globe.svg?raw'
 import hub from '../../icon/hub.svg?raw'
 import human from '../../icon/human.svg?raw'
 import info from '../../icon/info.svg?raw'
+import luckypot from '../../icon/luckypot.svg?raw'
 import mail from '../../icon/mail.svg?raw'
 import menu from '../../icon/menu.svg?raw'
 import option from '../../icon/option.svg?raw'
@@ -34,12 +34,14 @@ import up from '../../icon/up.svg?raw'
 import warning from '../../icon/warning.svg?raw'
 import x from '../../icon/x.svg?raw'
 
-// ⚠️ dca · exchange · pig = viewBox 200×200 (mọi icon khác 100×100). CỐ Ý — user vẽ gấp đôi vì
+// ⚠️ luckypot · exchange · pig = viewBox 200×200 (mọi icon khác 100×100). CỐ Ý — user vẽ gấp đôi vì
 // 3 icon này hiện TO trong Service Hub, nên nét mảnh hơn tương đối là đúng ý đồ. ĐỪNG "chuẩn hoá"
 // về 100×100 hay nhân đôi stroke-width. Hiển thị không ảnh hưởng: width/height = 100%, viewBox tự scale.
+// ⚠️ luckypot là icon MÀU SẴN (vàng #FFCC00 + xanh lá #16A34A + nét đen) — CỐ Ý giữ nguyên bản vẽ
+// của user, KHÔNG đổi sang currentColor. Hệ quả: prop `color` không tác dụng lên icon này.
 const ICONS = {
-  add, bug, check, clock, copy, dca, down, down2, download, erase, exchange, globe, hub,
-  human, info, mail, menu, option, out, pencil, pig, qr, right2, scan, share, shield, trade, up, warning, x,
+  add, bug, check, clock, copy, down, down2, download, erase, exchange, globe, hub,
+  human, info, luckypot, mail, menu, option, out, pencil, pig, qr, right2, scan, share, shield, trade, up, warning, x,
 }
 
 export default function Icon({ name, size = 24, color, style, className }) {

@@ -37,7 +37,7 @@ const EN = {
   // 'Đổi tiền' → 'Swap' đã có ở khối HomeSend bên trên, đừng khai lại.
   'Service Hub': 'Service Hub',
   'Heo đất': 'Piggy Bank',
-  'Đầu tư định kỳ': 'Dollar-Cost Averaging',   // ⚠️ "Averaging" (danh động từ = tên chiến lược DCA), KHÔNG phải "Average"
+  'LuckyPot': 'LuckyPot',   // TÊN RIÊNG như 'Service Hub' — giữ nguyên ở mọi ngôn ngữ, nhưng VẪN phải khai key cho `npm run check-lang`
   'Thoát': 'Exit',
   // SendAmount / SendConfirm / SendReceipt
   'Gửi tiền': 'Send money',
