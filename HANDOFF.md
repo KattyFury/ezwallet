@@ -14,14 +14,15 @@
 
 - **One branch only: `main`.** Every WIP branch has been merged and deleted. Everyone works on `main`. Latest commit `dbce9bd`.
 - **Production runs:** **ENGLISH + USD/EUR ONLY.** Vietnamese and Chinese were **REMOVED FROM THE PROJECT ENTIRELY on 08-25** - the i18n layer is gone, not merely switched off (see section 2). The whole repo, comments and documents included, is English now; the only file still holding Vietnamese is `.env.txt`, which is gitignored.
-- **🔴 SWAP IS DOWN** - `No route available`, an error on the Circle/LI.FI side rather than in our code. **Read the red block at the top of section 4 BEFORE trying to fix anything.** Unchanged since 08-13; re-measure before assuming anything.
-- **New in session 08-25:** the LuckyPot tile · the i18n layer removed · the whole codebase translated · 2 notification bugs fixed (dust amounts showing 0.00, long text cut off) · `Available Network: Arc Testnet` in the hint block · a `Balance:` line on the Send screen. Details in the table at the top of section 9.
+- **🟢 SWAP IS BACK UP** - the user tested it live on a deploy 08-25 and it went through with no `331001`. See section 4 for the outage history (kept in case it returns).
+- **New in session 08-25 (part 1):** the LuckyPot tile · the i18n layer removed · the whole codebase translated · 2 notification bugs fixed (dust amounts showing 0.00, long text cut off) · `Available Network: Arc Testnet` in the hint block · a `Balance:` line on the Send screen. Details in the table at the top of section 9.
+- **New in session 08-25 (part 2, UI polish batch):** a 24h price-change triangle (▲/▼, tap for a popup) next to each token's amount on the Send tab · the network line reworded to `Current Available Network: Arc Testnet` · the Paste/Scan QR/Contacts hint titles are no longer tap-navigable (they were sending people to random screens) · the Scan QR caption now says "Scan Arc Testnet QRs only" · Security's icon is a new hexagon shield (`icon/shield.svg` replaced, same filename) · Menu's Currency entry + its screen title are now "Language & Currency" · the Send screen's `Balance:` line moved from beside "Send to" down to the blank space below the note field. Details in the table at the top of section 9.
 - **CI is live** (`.github/workflows/ci.yml`): every push to `main` runs `npm test` + `npm run build` on Node 22. All 3 runs on 08-25 were green.
 - **In progress:** the success sound (`src/sound.js` is written but **not wired into the app**) - sections 7c + 9A. This is the first thing to pick up.
 - **Who does what:**
   - **LongDC** → the multi-language work is on hold: the i18n layer was removed 08-25, so adding a language now means designing it again from scratch (see section 2).
   - **User + Claude** → refining the UX/UI.
-- **Still pending, needs a human:** send the message to Circle support (4 questions already drafted in the chat history, not yet sent) · **nothing from session 08-25 has been touched on a real device yet** - the deploy checklist for it is at the end of section 9.
+- **Still pending, needs a human:** the message to Circle support was sent 08-25 (swap recovered on its own before a reply came back, so no answer is being chased any more) · **nothing from session 08-25 has been touched on a real device yet** - the deploy checklist for it is at the end of section 9.
 
 > ⚠️ **`DECK-DESIGN-SPEC.md` in the repo IS OUT OF DATE** (user confirmed 08-04) - the real deck now lives in the **YouTube video + the Canva deck** linked above, not in that .md file. **Do not use it as a source when writing introductory content, and do not spend time updating it** until the user decides whether to keep it. It stays in the repo (not deleted) because it still holds a few Brand Voice decisions. `PITCH.md` was rewritten in English on 08-25 and its facts were refreshed at the same time.
 
@@ -130,12 +131,13 @@ or is it making them adapt to crypto?". Anything that drifts from that: stop and
 
 ## 4. Swap - how it works (⚠️ real money, read carefully)
 
-> 🔴 **STATUS 2026-08-13: SWAP IS DOWN - `No route available` (331001), AN ERROR ON THE CIRCLE/LI.FI SIDE, NOT IN OUR CODE.**
-> Measured on production: **every pair, every amount returns 331001** - 0.01 / 0.1 / 0.5 / 1 / 10 EURC→USDC · 10 USDC→EURC · 10 USDC→cirBTC.
-> **The reasoning (reusable next time):** if it were about *amounts being too small*, large amounts would work → it is not that. If it were *our code*, the real-money swap on 07-18 would not have worked → not that either. `331001` is LI.FI's **ROUTING** code (LI.FI being the router underneath the Circle Stablecoin Kit), meaning **it cannot find a swap route on Arc Testnet** - most likely the testnet pools have been drained of liquidity.
+> 🟢 **STATUS 2026-08-25: SWAP IS BACK UP** - the user tested it live on a deploy ("test swap rồi, êm" = tested, smooth) and it went through with no `331001`. The Circle/LI.FI-side routing outage described below (2026-08-13 → 2026-08-25) resolved itself; nobody touched `swap.js`/`_swapCore.js`/`circle.js` to fix it. The user had already drafted questions for Circle support and sent them during the outage - no reply needed any more, the issue is moot.
+> **History, kept for the next outage (the same 331001 error may return):**
+> 🔴 STATUS 2026-08-13: SWAP WAS DOWN - `No route available` (331001), AN ERROR ON THE CIRCLE/LI.FI SIDE, NOT IN OUR CODE.
+> Measured on production: **every pair, every amount returned 331001** - 0.01 / 0.1 / 0.5 / 1 / 10 EURC→USDC · 10 USDC→EURC · 10 USDC→cirBTC.
+> **The reasoning (reusable next time):** if it were about *amounts being too small*, large amounts would work → it is not that. If it were *our code*, the real-money swap on 07-18 would not have worked → not that either. `331001` is LI.FI's **ROUTING** code (LI.FI being the router underneath the Circle Stablecoin Kit), meaning **it cannot find a swap route on Arc Testnet** - most likely the testnet pools were drained of liquidity, and they were refilled/re-routed by 08-25.
 > The 3 core swap files (`swap.js` · `_swapCore.js` · `circle.js`) **have not been touched since 05-08**. The 08-12/08-13 changes in `Swap.jsx` only replaced the NavBar with the Exit text - no logic was touched.
-> ⚠️ One thing is not fully certain: the measurements used the **dummy wallet address** `0x0000…0001`. To be 100% sure, measure again with the user's real wallet (though 331001 is a routing error, not a balance error).
-> **Do NOT go and edit swap code when you see this error** - re-measure the 3 pairs above first; all 3 failing means it is on Circle's side and there is nothing to do but wait.
+> **If `331001` returns:** re-measure the 3 pairs above first with `verify-swap.mjs` (eth_simulateV1, costs nothing) before touching any code - all 3 failing again means it is on Circle's side, same as before.
 
 
 **The flow (`functions/api/_swapCore.js` - the core shared by swap.js + dev-server):**
@@ -401,6 +403,28 @@ A **grey** 🐛 icon (`--color-muted-2`) flush right, centred on **row 1**, pres
 ---
 
 ## 9. What comes next
+
+### 📒 WHAT SESSION 2026-08-25 (PART 2, UI POLISH BATCH) DID
+
+| # | Work | Written up in |
+|---|---|---|
+| 1 | **Swap confirmed working again** - the user tested a real swap on a deploy, no `331001`. The Circle support questions were sent (no reply needed any more, the outage resolved itself) | 4 |
+| 2 | **24h price-change indicator**: a small green/red triangle after each token's amount on the Send tab, tap → a popup with the exact % and "Value changed from X to Y". Backed by CoinGecko's `usd_24h_change` (added to the existing `simple/price` call in `chain.js:fetchPrices` - no extra request) · `TOKENS`/`getTokenBalances` now also return `change24h` per token · hidden when the move is under 0.005% (USDC/EURC barely move, by design) | HomeSend.jsx, chain.js |
+| 3 | **Home hint block reworded**: `Available Network: Arc Testnet` → `Current Available Network: Arc Testnet` (user request) | NotifArea.jsx |
+| 4 | **The Paste / Scan QR / Contacts hint titles on the Send tab are no longer tappable** - the user reported they navigated to "random" places; the row-9 buttons below already do the same job, so the `onClick` on the hint labels was simply dropped | HomeSend.jsx |
+| 5 | **Scan QR caption reworded**: "Scan crypto wallet QRs only" → "Scan Arc Testnet QRs only" (matches the network-lock wording used elsewhere) | QRScanner.jsx |
+| 6 | **Security's icon replaced** with a new hexagon shield drawing from `D:\Files\Claude\Icons\shield.svg`, normalised on import (stroke `black`→`currentColor`, as the header comment in `Icon.jsx` prescribes) - same filename `icon/shield.svg`, so no code change needed elsewhere | icon/shield.svg |
+| 7 | **Menu's "Currency" entry + the screen's own title became "Language & Currency"** (user request - the name should say what the screen still half-implies even though the language picker itself is gone) | MenuScreen.jsx, Currency.jsx |
+| 8 | **Send screen: the `Balance:` line moved** from beside "Send to" (added just last session, 9A above) down into the blank space right below the note field - the user found the original grouping "hơi xấu" (a bit ugly). "Send to" now stands alone where the pair used to be | SendAmount.jsx |
+
+**Decisions the user settled this session (do NOT ask again):**
+- `- 08-25: hint-block titles (Paste/Scan QR/Contacts) are plain text, not links` - reason: they duplicated the row-9 buttons and just added a second, confusing way to navigate.
+- `- 08-25: Currency screen is named "Language & Currency"` - reason: kept as the umbrella name even with only a currency picker inside, in case language ever returns there.
+- `- 08-25: the 24h change arrow hides below a 0.005% move` - reason: USDC/EURC barely move day to day: an arrow that "moves" on noise would mislead rather than inform.
+
+**Verification:** `npm run build` OK · `npm test` 16/16 · a Playwright pass on the mock at 390×844 and 375×812 (HomeSend token list + the price-change popup, Menu, Language & Currency, Send money with the relocated Balance line) - no console errors on any screen. The Scan QR camera cannot be exercised headless (`getUserMedia` fails in that environment, an existing limitation, not a regression), so its 3-line caption was verified by reading the source instead of a screenshot.
+
+---
 
 ### 📒 WHAT SESSION 2026-08-25 DID (8 commits, `f467b6d` → `dbce9bd`)
 

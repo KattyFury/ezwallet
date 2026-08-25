@@ -11,7 +11,7 @@ import { useNav } from '../nav'
 const ITEMS = [
   { id: 'TxHistory',  icon: 'clock', label: 'Transaction history' },
   { id: 'Security',   icon: 'shield', label: 'Security' },
-  { id: 'Currency',   icon: 'globe', label: 'Currency' },   // split off Security 08-04; the Language part dropped 08-25
+  { id: 'Currency',   icon: 'globe', label: 'Language & Currency' },   // split off Security 08-04; the Language part dropped 08-25, label reworded 08-25
   { id: 'About',      icon: 'info',  label: 'About' },
 ]
 

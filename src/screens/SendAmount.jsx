@@ -154,25 +154,11 @@ export default function SendAmount() {
       {/* The Send-to / amount / note block - one flex column centred over rows 2-5. gap 4dvh (user decision
           07-22c: 2dvh felt cramped, a little more air - still one block, not scattered). */}
       <div style={{ gridRow: '2 / 6', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4dvh', minWidth: 0 }}>
-        {/* Balance + Send to = ONE 2-line group (user request 08-25). They share a small 6px gap instead of the
-            block's 4dvh so they read as one unit; adding Balance as a separate flex child would have put 4dvh
-            between two lines that belong together.
-            ⚠️ This costs the pixel-perfect alignment with CreateQR documented in HANDOFF section 6: the extra line
-            makes this centred block taller, so the amount/caret now sits ~14px higher here than on CreateQR. The
-            two screens still share the same structure and gaps - only the amount row no longer starts at the same y. */}
-        <div className="center col" style={{ gap: 6 }}>
-          <div className="center" style={{ gap: 6 }}>
-            <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)' }}>Balance:</span>
-            <span className="num" style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>
-              {balanceStr}
-            </span>
-          </div>
-          <div className="center" style={{ gap: 6 }}>
-            <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)' }}>Send to:</span>
-            <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>
-              {name || shortenAddr(address)}
-            </span>
-          </div>
+        <div className="center" style={{ gap: 6 }}>
+          <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)' }}>Send to:</span>
+          <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>
+            {name || shortenAddr(address)}
+          </span>
         </div>
 
         <div className="center col" style={{ gap: 6 }}>
@@ -223,6 +209,15 @@ export default function SendAmount() {
             style={{ flexShrink: 0, width: 52, height: 52, borderRadius: 10, border: 'none', background: 'var(--color-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="option" size="var(--is-md-lg)" color="var(--color-muted)" />
           </button>
+        </div>
+
+        {/* Balance - moved here 08-25 (user report: grouped with "Send to" up top looked messy) into the blank
+            space right below the note field, so the original block above keeps its layout unchanged. */}
+        <div className="center" style={{ gap: 6 }}>
+          <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)' }}>Balance:</span>
+          <span className="num" style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>
+            {balanceStr}
+          </span>
         </div>
       </div>
 

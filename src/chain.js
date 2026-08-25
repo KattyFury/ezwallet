@@ -1,6 +1,6 @@
 import { createPublicClient, http, decodeEventLog, parseAbiItem } from 'viem'
 import { defineChain } from 'viem'
-import { MOCK, MOCK_AMOUNTS, MOCK_RATES } from './mock'
+import { MOCK, MOCK_AMOUNTS, MOCK_RATES, MOCK_CHANGE_24H } from './mock'
 // The chain id is declared in qr.js (a module that does NOT depend on viem) so screens that only draw/read QRs - ShowQR,
 // SavedQRList - can use it without pulling all of viem into their chunk. ONE source of truth: changing chains means
 // editing exactly one place over there, and this file follows.
@@ -59,6 +59,7 @@ export function isFaucetAddress(addr) {
 }
 
 let priceCache = {}
+let priceCache24h = {}   // symbol -> % change in the last 24h (CoinGecko usd_24h_change), for the token-list arrow
 let lastFetch = 0
 
 // ── Module-level cache: switching screens (Send↔Receive↔Menu) shows the number IMMEDIATELY, with no "..." flash.
@@ -69,7 +70,7 @@ let _ratesCache = null  // the most recent { USDC, EURC, cirBTC }
 // MOCK MODE: build fake balances from TOKENS + MOCK_AMOUNTS (no RPC reads).
 function mockBalances() {
   return TOKENS
-    .map(t => { const amount = MOCK_AMOUNTS[t.symbol] || 0; return { ...t, amount, usd: amount * (MOCK_RATES[t.symbol] ?? t.usdRate) } })
+    .map(t => { const amount = MOCK_AMOUNTS[t.symbol] || 0; return { ...t, amount, usd: amount * (MOCK_RATES[t.symbol] ?? t.usdRate), change24h: MOCK_CHANGE_24H[t.symbol] ?? null } })
     .filter(t => t.amount > 0)
 }
 
@@ -89,10 +90,13 @@ async function fetchPrices() {
     const ids = TOKENS.filter(t => t.cgId).map(t => t.cgId).join(',')
     // +vnd: ask for the VND price IN THE SAME request (do not add a second one - CoinGecko's
     // free tier is strictly rate limited, and the app already calls this every 60s).
-    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,vnd`)
+    // include_24hr_change: the 24h % move, for the up/down indicator on the token list (user request 08-25) -
+    // same request, no extra call.
+    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,vnd&include_24hr_change=true`)
     const data = await res.json()
     TOKENS.forEach(t => {
       if (t.cgId && data[t.cgId]?.usd != null) priceCache[t.symbol] = data[t.cgId].usd
+      if (t.cgId && data[t.cgId]?.usd_24h_change != null) priceCache24h[t.symbol] = data[t.cgId].usd_24h_change
     })
     priceCache['USDC'] = 1  // pinned: USDC = exactly $1 (do not let CoinGecko's ~0.9998 skew it)
     // VND is stored as "USD per 1 VND" to MATCH every other rate (rates[cur] = USD per unit),
@@ -163,7 +167,7 @@ export async function getTokenBalances(walletAddress) {
   const out = TOKENS.map((token, i) => {
     const amount = amounts[i]
     const rate = prices[token.symbol] ?? token.usdRate
-    return { ...token, amount, usd: amount * rate }   // the USD value (NOT rounded - the cents matter)
+    return { ...token, amount, usd: amount * rate, change24h: priceCache24h[token.symbol] ?? null }   // the USD value (NOT rounded - the cents matter)
   })
   _balCache[walletAddress.toLowerCase()] = out   // only reached when all 3 tokens were genuinely read
   return out

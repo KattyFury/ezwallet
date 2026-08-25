@@ -46,7 +46,7 @@ export default function Currency() {
   return (
     <div className="screen">
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        Currency
+        Language & Currency
       </div>
 
       {/* GREY BOX, 1 ROW (row 2) - it used to be 2 rows, Language + Currency, and Language was dropped 08-25

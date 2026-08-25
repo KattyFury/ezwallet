@@ -117,7 +117,7 @@ function HintBlock({ lines }) {
     // line. Tightened to 6px/12px + gap 3 so 4 lines fit. Do NOT loosen it again without removing a line.
     <div style={{ background: 'var(--color-white)', border: '1.5px solid var(--color-brand)', borderRadius: 12, padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: 3, fontSize: NOTIF_FS, color: 'var(--color-brand)', textAlign: 'left' }}>
       <div style={{ minWidth: 0, lineHeight: 1.35, color: 'var(--color-error)', fontWeight: 'var(--fw-semibold)' }}>
-        Available Network: Arc Testnet
+        Current Available Network: Arc Testnet
       </div>
       {lines.map((h, i) => (
         <div key={i} style={{ minWidth: 0, lineHeight: 1.35 }}>

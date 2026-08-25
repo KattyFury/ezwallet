@@ -17,6 +17,8 @@ const ADAPTER = '0xBBD70b01a1CAbc96d5b7b129Ae1AAabdf50dd40b'   // Swap Adapter (
 // Fake balances by symbol (in real token units). USD conversion uses MOCK_RATES.
 export const MOCK_AMOUNTS = { USDC: 127.66, EURC: 84.20, cirBTC: 0.01542 }
 export const MOCK_RATES = { USDC: 1, EURC: 1.08, cirBTC: 65000 }
+// Fake 24h % change (for the token-list arrow, user request 08-25) - stablecoins barely move, cirBTC does.
+export const MOCK_CHANGE_24H = { USDC: 0.01, EURC: -0.02, cirBTC: 2.35 }
 
 // Fake transaction history - SHAPED like ArcScan tokentx (from/to/value base units/tokenSymbol/tokenDecimal/
 // contractAddress/timeStamp/hash). A swap = 2 rows with the SAME hash (1 out + 1 in) so TxHistory reads it as a swap.
