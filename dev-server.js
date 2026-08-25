@@ -1,7 +1,7 @@
-// Dev server local (Windows) — proxy các action Circle API mà Vite gọi qua /api/*.
-// KHÔNG dùng `wrangler pages dev` trên Windows (lỗi "write EOF" — xem HANDOFF).
-// Import TRỰC TIẾP handler thật trong functions/api/*.js (KHÔNG copy-paste) → logic
-// local và Cloudflare deploy luôn khớp nhau, không có chuyện quên đồng bộ tay.
+// Local dev server (Windows) - proxies the Circle API actions that Vite calls through /api/*.
+// Do NOT use `wrangler pages dev` on Windows (the "write EOF" error - see HANDOFF).
+// It imports the REAL handlers from functions/api/*.js DIRECTLY (no copy-paste) → local logic
+// and the Cloudflare deploy always match, with no hand-syncing to forget.
 import { createServer } from 'node:http'
 import { readFileSync } from 'node:fs'
 import * as session from './functions/api/session.js'
@@ -13,9 +13,9 @@ import * as bug from './functions/api/bug.js'
 
 const PORT = 8787
 
-// KV GIẢ cho local (Cloudflare KV chỉ có trên deploy): đủ API `get`/`put`/`delete` mà sync.js dùng.
-// `expirationTtl` được tôn trọng thật (nonce/token phiên có hạn) để luồng auth chữ ký PIN ở local
-// cư xử giống deploy. Dữ liệu nằm trong RAM → restart dev-server là mất, đúng ý: local chỉ để thử luồng.
+// A FAKE KV for local use (Cloudflare KV only exists on a deploy): enough of the `get`/`put`/`delete` API for sync.js.
+// `expirationTtl` is genuinely honoured (nonces/session tokens expire) so the PIN-signature auth flow behaves
+// locally like it does on a deploy. The data lives in RAM → restarting dev-server clears it, which is the point: local is only for trying flows.
 const fakeKV = (() => {
   const m = new Map()
   return {
@@ -47,7 +47,7 @@ function loadEnv() {
   return env
 }
 const env = loadEnv()
-if (!env.API_KEY) console.warn('[dev-server] thiếu API_KEY trong .env.txt — luồng cần Circle API sẽ lỗi')
+if (!env.API_KEY) console.warn('[dev-server] API_KEY missing from .env.txt - any flow needing the Circle API will fail')
 
 const ROUTES = {
   '/api/session': session,
@@ -85,10 +85,10 @@ const server = createServer(async (req, res) => {
     res.writeHead(r.status, Object.fromEntries(r.headers))
     res.end(text)
   } catch (e) {
-    console.error('[dev-server] lỗi:', e)
+    console.error('[dev-server] error:', e)
     res.writeHead(500, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' })
     res.end(JSON.stringify({ error: e.message }))
   }
 })
 
-server.listen(PORT, () => console.log(`[dev-server] proxy Circle API tại http://localhost:${PORT}`))
+server.listen(PORT, () => console.log(`[dev-server] proxying the Circle API at http://localhost:${PORT}`))

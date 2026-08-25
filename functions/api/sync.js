@@ -1,62 +1,62 @@
 // ══════════════════════════════════════════════════════════════════════════════
-// SAO LƯU DANH BẠ + KHO QR lên Cloudflare KV (2026-07-29, user chốt "làm KV tạm")
+// CONTACTS + QR LIBRARY BACKUP to Cloudflare KV (2026-07-29, user decision "do it with KV for now")
 //
-// VÌ SAO CẦN: `ez_contacts`/`ez_saved_qrs` chỉ nằm ở localStorage → mất khi đổi máy,
-// đổi browser, xoá dữ liệu website, ĐỔI DOMAIN (vừa gặp khi sang ezwallet.cash), và
-// Safari xoá localStorage sau 7 ngày không tương tác (PWA add-to-home-screen thì được miễn).
-// Ví và tiền KHÔNG liên quan (nằm ở Circle + on-chain) — đây chỉ là sổ danh bạ.
+// WHY IT IS NEEDED: `ez_contacts`/`ez_saved_qrs` live only in localStorage → lost on a new machine,
+// a different browser, clearing site data, or a DOMAIN CHANGE (which just happened moving to ezwallet.cash), and
+// Safari clears localStorage after 7 days without interaction (a PWA added to the home screen is exempt).
+// The wallet and the money are NOT involved (they live at Circle + on-chain) - this is only the address book.
 //
-// ══ AUTH = CHỮ KÝ PIN (2026-08-06) — đã TRẢ nợ kỹ thuật 07-29 ══
-// BẢN CŨ dùng `userToken` của Circle làm cửa vào, mà `/api/session` cấp userToken CHỈ CẦN
-// BIẾT EMAIL → ai biết email của một user là đọc/ghi được sổ danh bạ của họ. Đó là lý do
-// tính năng này bị để TẮT suốt (chưa tạo KV binding) chứ không phải quên bật.
+// ══ AUTH = PIN SIGNATURE (2026-08-06) - the 07-29 technical debt is PAID OFF ══
+// THE OLD VERSION used Circle's `userToken` as the door, and `/api/session` issues a userToken KNOWING ONLY
+// THE EMAIL → anyone who knows a user's email could read/write their address book. That is why this
+// feature was left OFF the whole time (no KV binding created), not because anyone forgot to enable it.
 //
-// BẢN NÀY bỏ userToken hẳn. Cửa vào là CHỮ KÝ của chính ví đó:
-//   1. `nonce`   → server phát 1 nonce dùng-một-lần (TTL 5') + câu chữ cần ký.
-//   2. PinGate   → user nhập PIN, Circle MPC ký câu đó (EIP-191, không gas, không lên chain).
-//                  Đây là PIN user VẪN PHẢI nhập để mở app → KHÔNG thêm bước nào cho user.
-//   3. `session` → server recover địa chỉ TỪ CHỮ KÝ (viem), tiêu nonce, cấp token phiên (TTL 24h).
-//   4. pull/push → mang token phiên. Khoá KV vẫn là ĐỊA CHỈ VÍ nên KHÔNG đổi schema,
-//                  dữ liệu đã sao lưu bằng bản cũ đọc lại được nguyên vẹn.
-// Biết email giờ VÔ DỤNG: không có PIN thì Circle không ký, không ký thì không có địa chỉ.
-// Địa chỉ cũng KHÔNG còn lấy qua Circle nữa — nó rơi ra từ chữ ký, không ai khai hộ được.
+// THIS VERSION drops userToken entirely. The door is a SIGNATURE from the wallet itself:
+//   1. `nonce`   → the server issues a single-use nonce (TTL 5') + the sentence to sign.
+//   2. PinGate   → the user enters their PIN and Circle MPC signs that sentence (EIP-191, no gas, never on chain).
+//                  This is the PIN the user HAS TO enter to open the app anyway → NO extra step for them.
+//   3. `session` → the server recovers the address FROM THE SIGNATURE (viem), burns the nonce, issues a session token (TTL 24h).
+//   4. pull/push → carry the session token. The KV key is still the WALLET ADDRESS, so the schema is UNCHANGED and
+//                  data backed up by the old version reads back intact.
+// Knowing the email is now USELESS: no PIN means Circle does not sign, and no signature means no address.
+// The address is no longer obtained through Circle either - it falls out of the signature, and nobody can declare it for you.
 //
-// GIỮ NGUYÊN từ v1 (vẫn cần):
-//  1. WHITELIST field: chỉ ghi id/name/address (danh bạ) + id/amount/currency/name/createdAt
-//     (QR). ẢNH AVATAR KHÔNG BAO GIỜ LÊN SERVER (ảnh thật của người trong gia đình = PII
-//     nặng nhất, và cũng là phần nặng nhất về dung lượng) — avatar ở lại máy.
-//  2. Chặn nhồi rác: giới hạn 128KB/tài khoản + 500 danh bạ + 200 QR.
+// KEPT FROM v1 (still needed):
+//  1. FIELD WHITELIST: only id/name/address (contacts) + id/amount/currency/name/createdAt
+//     (QRs) are written. AVATAR IMAGES NEVER GO TO THE SERVER (real photos of family members = the heaviest
+//     PII there is, and also the heaviest payload) - avatars stay on the device.
+//  2. Junk guard: a limit of 128KB per account + 500 contacts + 200 QRs.
 //
-// CHƯA TẠO KV BINDING thì endpoint trả 503 `sync-disabled` và client tự im lặng bỏ qua →
-// app chạy y như cũ, KHÔNG lỗi. Tạo binding: Cloudflare → Workers & Pages → ezwallet →
-// Settings → Bindings → KV namespace, Variable name = `EZ_SYNC`, RỒI DEPLOY LẠI
-// (Pages chỉ áp binding cho deployment MỚI).
+// WITH NO KV BINDING the endpoint returns 503 `sync-disabled` and the client silently skips →
+// the app behaves exactly as before, with NO error. To create the binding: Cloudflare → Workers & Pages → ezwallet →
+// Settings → Bindings → KV namespace, Variable name = `EZ_SYNC`, THEN REDEPLOY
+// (Pages only applies bindings to NEW deployments).
 // ══════════════════════════════════════════════════════════════════════════════
 import { recoverMessageAddress } from 'viem';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
 
-// 128KB là CHỐT CHẶN CUỐI, không phải mốc thường gặp: 500 danh bạ + 200 QR "sạch" chỉ ~95KB.
-// Nó tồn tại vì `id` được giữ nguyên như client gửi (không ràng buộc kiểu) — nhồi chuỗi dài vào
-// `id` là đường duy nhất làm phình KV. Có test khoá cả 2 hướng: test/sync.test.mjs.
+// 128KB is the LAST-RESORT CAP, not a number anyone normally approaches: 500 contacts + 200 "clean" QRs is only ~95KB.
+// It exists because `id` is kept exactly as the client sent it (no type constraint) - stuffing a long string into
+// `id` is the only way to bloat KV. There are tests locking down both directions: test/sync.test.mjs.
 const MAX_BYTES = 128 * 1024;
 const MAX_CONTACTS = 500;
 const MAX_QRS = 200;
 
-// Nonce sống 5' (đủ cho người già gõ PIN chậm, ngắn để cửa sổ replay hẹp).
-// Token phiên sống 24h ở server, nhưng client giữ trong sessionStorage nên thực tế chết
-// cùng phiên app — mở app lại là qua PinGate, ký lại, token mới.
+// The nonce lives 5' (long enough for an older person typing a PIN slowly, short enough to keep the replay window narrow).
+// The session token lives 24h on the server, but the client keeps it in sessionStorage, so in practice it dies
+// with the app session - reopening the app goes through PinGate, signs again, and gets a new token.
 const NONCE_TTL = 300;
 const SESSION_TTL = 86400;
 
 const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: JSON_HEADERS });
 
-// Câu chữ đem ký. LUÔN dựng lại ở server từ nonce — KHÔNG nhận chuỗi message do client gửi
-// (nhận chuỗi client gửi = cho phép ký sẵn một câu khác rồi đem sang đây dùng lại).
-// Giữ nguyên chữ "Unlock EZwallet" vì đây đúng là cái PIN đang mở khoá app.
+// The sentence to be signed. ALWAYS rebuilt on the server from the nonce - NEVER accept a message string sent by the client
+// (accepting the client's string would allow pre-signing a different sentence and replaying it here).
+// The wording "Unlock EZwallet" is kept because that is genuinely the PIN unlocking the app.
 const messageFor = (nonce) => `Unlock EZwallet. Nonce: ${nonce}`;
 
-// Chỉ giữ ĐÚNG các field cần thiết — chặn client (kể cả bản sau này) đẩy avatar/field lạ lên KV.
+// Keep ONLY the necessary fields - stopping any client (including a future version) from pushing avatars or unknown fields into KV.
 function clean(payload) {
   const contacts = (Array.isArray(payload?.contacts) ? payload.contacts : [])
     .slice(0, MAX_CONTACTS)
@@ -76,26 +76,26 @@ function clean(payload) {
 
 export async function onRequestPost(ctx) {
   const kv = ctx.env.EZ_SYNC;
-  if (!kv) return json({ error: 'sync-disabled' }, 503);   // chưa tạo KV binding → app bỏ qua, không lỗi
+  if (!kv) return json({ error: 'sync-disabled' }, 503);   // no KV binding yet → the app skips this, no error
 
   let body; try { body = await ctx.request.json(); } catch { return json({ error: 'bad json' }, 400); }
   const { action } = body;
 
-  // ── 1. Phát nonce ──────────────────────────────────────────────────────────
-  // Không cần auth: nonce một mình vô giá trị, phải có chữ ký của ví mới đổi ra được token.
+  // ── 1. Issue a nonce ───────────────────────────────────────────────────────
+  // No auth needed: a nonce alone is worthless, it takes a wallet signature to turn it into a token.
   if (action === 'nonce') {
     const nonce = crypto.randomUUID();
     await kv.put(`nonce:${nonce}`, '1', { expirationTtl: NONCE_TTL });
     return json({ nonce, message: messageFor(nonce) });
   }
 
-  // ── 2. Đổi chữ ký lấy token phiên ──────────────────────────────────────────
+  // ── 2. Trade a signature for a session token ───────────────────────────────
   if (action === 'session') {
     const { nonce, signature } = body;
     if (typeof nonce !== 'string' || typeof signature !== 'string') return json({ error: 'nonce + signature required' }, 400);
 
-    // Nonce phải do CHÍNH server này phát và chưa ai tiêu. Tiêu xong xoá ngay → chữ ký cũ
-    // bắt được cũng không dùng lại được lần hai.
+    // The nonce must have been issued by THIS server and not yet spent. It is deleted as soon as it is spent → an old captured
+    // signature cannot be used a second time.
     const pending = await kv.get(`nonce:${nonce}`);
     if (!pending) return json({ error: 'bad-nonce' }, 401);
     await kv.delete(`nonce:${nonce}`);
@@ -110,17 +110,17 @@ export async function onRequestPost(ctx) {
 
     const token = crypto.randomUUID();
     await kv.put(`sess:${token}`, addr.toLowerCase(), { expirationTtl: SESSION_TTL });
-    // Trả kèm địa chỉ vừa recover (là ví của CHÍNH người gọi, không phải bí mật) để client tự
-    // đối chiếu với `ez_wallet_addr`. Lệch nhau = chuẩn ký của Circle khác giả định EIP-191 ở đây
-    // → client vứt token, sao lưu nằm im. Thà TẮT còn hơn ghi dữ liệu vào nhầm khoá.
+    // The recovered address is returned too (it is the CALLER's own wallet, not a secret) so the client can compare it
+    // with `ez_wallet_addr`. A mismatch means Circle's signing convention differs from the EIP-191 assumption here
+    // → the client throws the token away and backup stays idle. Better OFF than writing data under the wrong key.
     return json({ token, address: addr.toLowerCase(), expiresIn: SESSION_TTL });
   }
 
-  // ── 3. Đọc/ghi, phải có token phiên ────────────────────────────────────────
+  // ── 3. Read/write, session token required ──────────────────────────────────
   const { token } = body;
   if (typeof token !== 'string' || !token) return json({ error: 'token required' }, 400);
   const addr = await kv.get(`sess:${token}`);
-  if (!addr) return json({ error: 'bad-token' }, 401);   // sai token hoặc phiên hết hạn → client ký lại
+  if (!addr) return json({ error: 'bad-token' }, 401);   // wrong token or expired session → the client signs again
   const key = `bak:${addr}`;
 
   if (action === 'pull') {

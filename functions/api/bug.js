@@ -1,37 +1,37 @@
 // ══════════════════════════════════════════════════════════════════════════════
-// BÁO LỖI → TELEGRAM (2026-08-13, user chốt)
+// BUG REPORT → TELEGRAM (2026-08-13, user decision)
 //
-// Nút 🐛 ở góc phải hàng 1 (mọi màn) → popup gõ mô tả → POST vào đây → bắn thẳng vào
-// Telegram của chủ dự án.
+// The 🐛 button in the top-right of row 1 (every screen) → a popup to describe the problem → POST here → straight into
+// the project owner's Telegram.
 //
-// ⚠️ BOT KHÔNG CHẠY NỀN, KHÔNG CẦN VPS. Nó không nghe, không poll, không có webhook —
-// chỉ là một DANH TÍNH để gửi tin. Mỗi lần có người bấm nút, hàm này gọi ĐÚNG 1 lệnh
-// fetch tới api.telegram.org rồi kết thúc. (Khác hẳn mấy bot TemBro trên VPS phải bật 24/7.)
+// ⚠️ THE BOT DOES NOT RUN IN THE BACKGROUND AND NEEDS NO VPS. It does not listen, poll, or have a webhook -
+// it is only an IDENTITY for sending messages. Each time someone taps the button, this function makes EXACTLY 1
+// fetch to api.telegram.org and ends. (Completely unlike the TemBro bots on the VPS that must run 24/7.)
 //
-// ⚠️ KHÔNG DÙNG parse_mode. Nội dung do user gõ tự do — bật Markdown/HTML là chữ của họ
-// thành cú pháp định dạng, gãy tin nhắn (dấu * _ ` < >) hoặc chèn được thẻ. Text thuần thì
-// không phải escape gì cả, cũng không có đường chèn.
+// ⚠️ DO NOT USE parse_mode. The content is typed freely by the user - turning on Markdown/HTML makes their words
+// into formatting syntax, breaking the message (* _ ` < >) or allowing tags to be injected. Plain text needs
+// no escaping and offers no injection path.
 //
-// ⚠️ WHITELIST FIELD (giống luật của sync.js): chỉ đọc đúng mấy field liệt kê dưới đây từ
-// body. TUYỆT ĐỐI không có đường nào để token/khoá lọt ra — client cũng KHÔNG được gom
-// localStorage gửi lên. `ez_user_token` / `ez_encryption_key` / `ez_refresh_token` /
-// `ez_sync_token` mà ra ngoài là MẤT VÍ.
+// ⚠️ FIELD WHITELIST (the same rule as sync.js): only the fields listed below are read from the
+// body. There is ABSOLUTELY no path for a token/key to leak - and the client must NOT collect
+// localStorage and send it either. `ez_user_token` / `ez_encryption_key` / `ez_refresh_token` /
+// `ez_sync_token` getting out means LOSING THE WALLET.
 //
-// CHƯA CẤU HÌNH TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID → trả 503 `bug-report-disabled`,
-// client hiện "chưa cấu hình" và app chạy bình thường — y hệt cách sync.js xử lý khi
-// chưa có KV binding. Đặt biến: Cloudflare → Workers & Pages → ezwallet → Settings →
-// Variables (đánh dấu Encrypt), RỒI DEPLOY LẠI.
+// WITHOUT TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID configured → returns 503 `bug-report-disabled`,
+// the client shows "not configured" and the app runs normally - exactly how sync.js behaves when
+// there is no KV binding. To set them: Cloudflare → Workers & Pages → ezwallet → Settings →
+// Variables (tick Encrypt), THEN REDEPLOY.
 // ══════════════════════════════════════════════════════════════════════════════
 
 const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
 
-// Cắt độ dài + ép kiểu chuỗi. Telegram giới hạn 4096 ký tự/tin; cắt sớm ở đây để một
-// người không nhồi được cả quyển sách vào Telegram của chủ dự án.
+// Truncate and coerce to string. Telegram allows 4096 characters per message; truncating early here stops one
+// person from dumping a whole book into the owner's Telegram.
 const clip = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
 
-// Chặn dội tin: mỗi IP tối đa 5 lần/giờ. Dùng KV EZ_SYNC đã có sẵn.
-// ⚠️ CHƯA CÓ KV thì BỎ QUA việc chặn chứ KHÔNG chặn hết — thà nhận spam còn hơn khoá nhầm
-// người đang thật sự cần báo lỗi (đây là kênh duy nhất họ kêu cứu được).
+// Flood guard: at most 5 reports per IP per hour, using the KV EZ_SYNC that already exists.
+// ⚠️ WITH NO KV, SKIP the guard rather than blocking everything - better to take spam than to lock out
+// someone who genuinely needs to report a bug (this is their only way to shout for help).
 const RATE_MAX = 5, RATE_WINDOW = 3600;
 
 async function overRateLimit(kv, ip) {
@@ -64,15 +64,15 @@ export async function onRequestPost(ctx) {
     return new Response(JSON.stringify({ error: 'rate-limited' }), { status: 429, headers: JSON_HEADERS });
   }
 
-  // ── CHỈ 5 FIELD NÀY, không hơn ──
+  // ── THESE 5 FIELDS ONLY, nothing more ──
   const screen = clip(body.screen, 40) || '?';
-  const wallet = /^0x[0-9a-fA-F]{40}$/.test(body.wallet || '') ? body.wallet : '(chưa đăng nhập)';
+  const wallet = /^0x[0-9a-fA-F]{40}$/.test(body.wallet || '') ? body.wallet : '(not signed in)';
   const device = clip(body.device, 200) || '?';
   const version = clip(body.version, 40) || '?';
 
-  // ⚠️ Locale 'en-GB' CHỨ KHÔNG PHẢI 'vi-VN': cả hai đều ra ngày/tháng/năm, nhưng vi-VN đặt GIỜ
-  // TRƯỚC NGÀY ("15:14:44 13/8/2026" — đọc rất ngược). en-GB cho "13/08/2026, 15:14" đúng thứ tự
-  // quen thuộc. Múi giờ vẫn ghim Việt Nam vì server Cloudflare chạy ở đâu cũng có thể.
+  // ⚠️ Locale 'en-GB' AND NOT 'vi-VN': both give day/month/year, but vi-VN puts the TIME
+  // BEFORE THE DATE ("15:14:44 13/8/2026" - reads backwards). en-GB gives "13/08/2026, 15:14" in the familiar
+  // order. The timezone stays pinned to Vietnam because a Cloudflare server can be anywhere.
   const when = new Date().toLocaleString('en-GB', {
     timeZone: 'Asia/Ho_Chi_Minh',
     day: '2-digit', month: '2-digit', year: 'numeric',
@@ -81,11 +81,11 @@ export async function onRequestPost(ctx) {
   const text = [
     '🐛 EZwallet bug report',
     '',
-    `Màn:  ${screen}`,
-    `Ví:   ${wallet}`,
-    `Máy:  ${device}`,
-    `Bản:  ${version}`,
-    `Lúc:  ${when}`,
+    `Screen:  ${screen}`,
+    `Wallet:  ${wallet}`,
+    `Device:  ${device}`,
+    `Version: ${version}`,
+    `Time:    ${when}`,
     '',
     '─────────────',
     message,
@@ -98,7 +98,7 @@ export async function onRequestPost(ctx) {
       body: JSON.stringify({ chat_id: chatId, text, disable_web_page_preview: true }),
     });
     const d = await r.json();
-    // Telegram trả 200 kèm ok:false khi sai chat_id / bot bị chặn — phải đọc `ok`, đừng tin mỗi status.
+    // Telegram returns 200 with ok:false for a wrong chat_id / a blocked bot - you must read `ok`, never trust the status alone.
     if (!d.ok) {
       return new Response(JSON.stringify({ error: 'telegram-failed', detail: d.description || '' }), { status: 502, headers: JSON_HEADERS });
     }

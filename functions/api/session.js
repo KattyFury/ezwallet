@@ -16,8 +16,8 @@ export async function onRequestPost(ctx) {
   const apiKey = ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY;
   const body = await ctx.request.json();
 
-  // Social login: làm mới userToken bằng refreshToken (userToken sống 60') — cho user Google,
-  // vì họ KHÔNG có userId=email để tạo token mới như luồng email. Spec Circle:
+  // Social login: refresh the userToken with the refreshToken (a userToken lives 60') - for Google users,
+  // because they have NO userId=email to mint a new token with, as the email flow does. Circle spec:
   // POST /v1/w3s/users/token/refresh · header X-User-Token · body {idempotencyKey, refreshToken, deviceId}.
   if (body.action === 'refreshSocial') {
     const { userToken, refreshToken, deviceId } = body;
@@ -37,7 +37,7 @@ export async function onRequestPost(ctx) {
     }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
   }
 
-  // Social login: tạo device token
+  // Social login: create a device token
   if (body.action === 'socialToken') {
     const { deviceId } = body;
     const res = await fetch(`${CIRCLE_API}/users/social/token`, {
@@ -53,8 +53,8 @@ export async function onRequestPost(ctx) {
     }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
   }
 
-  // Email OTP: gửi mã về email + trả otpToken/deviceToken/deviceEncryptionKey cho SDK verifyOtp.
-  // Circle gửi email qua SMTP đã khai trong Console. Spec: POST /v1/w3s/users/email/token {deviceId,email}.
+  // Email OTP: mail the code + return otpToken/deviceToken/deviceEncryptionKey for the SDK's verifyOtp.
+  // Circle sends the email through the SMTP configured in the Console. Spec: POST /v1/w3s/users/email/token {deviceId,email}.
   if (body.action === 'emailToken') {
     const { deviceId } = body;
     const em = (body.email || '').toLowerCase().trim();

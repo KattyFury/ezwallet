@@ -1,29 +1,29 @@
-// Lõi swap DÙNG CHUNG cho functions/api/swap.js (Cloudflare) + dev-server.js (Node local).
-// File prefix "_" → Cloudflare Pages KHÔNG route thành endpoint nhưng vẫn import được.
-// Một nguồn sự thật cho phần encode/verify (đoạn dễ mất tiền) — khỏi phải sync tay 2 chỗ.
+// The swap core SHARED by functions/api/swap.js (Cloudflare) + dev-server.js (local Node).
+// The "_" filename prefix → Cloudflare Pages does NOT route it as an endpoint, but it can still be imported.
+// One source of truth for the encode/verify part (the part where money gets lost) - no hand-syncing two copies.
 //
-// CÁCH ĐÚNG gọi swap (S15, mổ từ source SDK @circle-fin/adapter-viem-v2 +
-// provider-stablecoin-service-swap — KHÔNG đoán):
-//   /v1/stablecoinKits/swap trả 1 INTENT CÓ CHỮ KÝ (transaction.executionParams + .signature).
-//   Nộp cho ADAPTER contract: execute(ExecutionParams params, TokenInput[] tokenInputs, bytes sig).
-//   Adapter kéo token vào, chạy instructions, GOM output, GHI CÓ cho beneficiary=ví (settlement).
-//   Ví PIN → chiến lược 'approve': tokenInputs=[{permitType:0,token:tokenIn,amount,permitCalldata:'0x'}]
-//   + approve(tokenIn→adapter, amount) TRƯỚC. Batch [approve, execute] qua Multicall3From = 1 PIN.
-// ⚠️ Bóc instructions chạy tay (cách cũ S11-14) BỎ QUA settlement → USDC kẹt ở adapter, MẤT TIỀN.
+// THE CORRECT WAY to call swap (S15, dissected from the source of @circle-fin/adapter-viem-v2 +
+// provider-stablecoin-service-swap - NOT guessed):
+//   /v1/stablecoinKits/swap returns a SIGNED INTENT (transaction.executionParams + .signature).
+//   Submit it to the ADAPTER contract: execute(ExecutionParams params, TokenInput[] tokenInputs, bytes sig).
+//   The adapter pulls the tokens in, runs the instructions, COLLECTS the output and CREDITS beneficiary=the wallet (settlement).
+//   A PIN wallet → the 'approve' strategy: tokenInputs=[{permitType:0,token:tokenIn,amount,permitCalldata:'0x'}]
+//   + approve(tokenIn→adapter, amount) FIRST. Batching [approve, execute] through Multicall3From = 1 PIN.
+// ⚠️ Unpacking the instructions and running them by hand (the old S11-14 approach) SKIPS settlement → the USDC is stranded in the adapter, MONEY LOST.
 import { encodeFunctionData } from 'viem'
 
 export const CIRCLE_API = 'https://api.circle.com'
 export const ARC_RPC    = 'https://rpc.testnet.arc.network'
 
-// Predeploy trên Arc Testnet. ADAPTER = ADAPTER_CONTRACT_EVM_TESTNET (kitContracts.adapter)
+// A predeploy on Arc Testnet. ADAPTER = ADAPTER_CONTRACT_EVM_TESTNET (kitContracts.adapter)
 // trong @circle-fin/adapter-viem-v2.
 export const ADAPTER        = '0xBBD70b01a1CAbc96d5b7b129Ae1AAabdf50dd40b'
 export const MULTICALL3FROM = '0x522fAf9A91c41c443c66765030741e4AaCe147D0'
 
-// Phí swap của app (user chốt 07-23): 0.1% mỗi swap về ví chủ app. Đây là customFee CHUẨN của
-// Stablecoin Kit (body `config.customFee`, mổ từ source @circle-fin/provider-stablecoin-service-swap
-// — schema createSwapParamsSchema nhận percentageBps 1..10000 + recipientAddress). Circle giữ 10%
-// của phí này, 90% về recipient. Địa chỉ ví nhận là PUBLIC (không phải secret) → hardcode như ADAPTER.
+// The app's swap fee (user decision 07-23): 0.1% of each swap to the owner's wallet. This is the Stablecoin Kit's
+// OFFICIAL customFee (body `config.customFee`, dissected from the source of @circle-fin/provider-stablecoin-service-swap
+// - the createSwapParamsSchema accepts percentageBps 1..10000 + recipientAddress). Circle keeps 10%
+// of that fee, 90% goes to the recipient. The receiving address is PUBLIC (not a secret) → hardcoded like ADAPTER.
 export const FEE_RECIPIENT = '0xEb2D222d28F35fE7BeB5387f8Bc4eBF65f2652F6'
 export const FEE_BPS       = 10   // 10 bps = 0.1%
 
@@ -32,13 +32,13 @@ export const TOKEN_ADDR = {
   EURC:   '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a',
   cirBTC: '0xf0c4a4ce82a5746abaad9425360ab04fbba432bf',
 }
-// ⚠️ Kit nhận amount = SỐ NGUYÊN BASE UNITS (decimal → 400; số nhỏ → "No route"). Client gửi
-// decimal, server quy base units trước khi gọi Kit; quy estimatedAmount ngược lại khi trả.
+// ⚠️ The Kit expects amount = an INTEGER IN BASE UNITS (a decimal → 400; a small number → "No route"). The client sends
+// decimals, the server converts to base units before calling the Kit, and converts estimatedAmount back on the way out.
 export const TOKEN_DEC = { USDC: 6, EURC: 6, cirBTC: 8 }
 export const toBase = (decStr, sym) => BigInt(Math.round(parseFloat(decStr) * 10 ** TOKEN_DEC[sym]))
 export const fromBase = (baseStr, sym) => (Number(baseStr) / 10 ** TOKEN_DEC[sym]).toString()
 
-// IAdapter.execute — ABI copy nguyên từ @circle-fin/adapter-viem-v2 (adapterContractAbi).
+// IAdapter.execute - the ABI copied verbatim from @circle-fin/adapter-viem-v2 (adapterContractAbi).
 const ADAPTER_ABI = [{
   type: 'function', name: 'execute', stateMutability: 'payable', outputs: [],
   inputs: [
@@ -69,7 +69,7 @@ const MULTICALL3_ABI = [{ type: 'function', name: 'aggregate3', stateMutability:
 const BALANCE_OF_ABI = [{ type: 'function', name: 'balanceOf', stateMutability: 'view',
   inputs: [{ name: 'a', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] }]
 
-// Gọi Stablecoin Kit /swap → { ok, status, data }. data.transaction có executionParams + signature.
+// Call the Stablecoin Kit /swap → { ok, status, data }. data.transaction holds executionParams + signature.
 export async function fetchSwapIntent(kitKey, fromAddr, toAddr, walletAddress, amountBase) {
   const res = await fetch(`${CIRCLE_API}/v1/stablecoinKits/swap`, {
     method: 'POST',
@@ -86,13 +86,13 @@ export async function fetchSwapIntent(kitKey, fromAddr, toAddr, walletAddress, a
   return { ok: res.ok, status: res.status, data }
 }
 
-// Dựng callData Multicall3From.aggregate3([approve(tokenIn→ADAPTER, amount), ADAPTER.execute(...)]).
-// Trả { batchData, totalValue, estOut } hoặc { error }.
+// Build the callData for Multicall3From.aggregate3([approve(tokenIn→ADAPTER, amount), ADAPTER.execute(...)]).
+// Returns { batchData, totalValue, estOut } or { error }.
 export function buildSwapBatch(swapData, fromAddr, amountBase) {
   const tx = swapData?.transaction || swapData?.data?.transaction
   const ep = tx?.executionParams
   const signature = tx?.signature
-  if (!ep || !signature) return { error: 'response thiếu executionParams/signature', swapData }
+  if (!ep || !signature) return { error: 'response missing executionParams/signature', swapData }
 
   const executeParams = {
     instructions: ep.instructions.map(i => ({
@@ -103,7 +103,7 @@ export function buildSwapBatch(swapData, fromAddr, amountBase) {
     tokens: ep.tokens.map(t => ({ token: t.token, beneficiary: t.beneficiary })),
     execId: BigInt(ep.execId), deadline: BigInt(ep.deadline), metadata: ep.metadata || '0x',
   }
-  // Same-chain ERC20 (USDC/EURC/cirBTC): value luôn 0 → adapter.execute không cần msg.value.
+  // Same-chain ERC20 (USDC/EURC/cirBTC): value is always 0 → adapter.execute needs no msg.value.
   const totalValue = executeParams.instructions.reduce((a, i) => a + i.value, 0n)
   const tokenInputs = [{ permitType: 0, token: fromAddr, amount: amountBase, permitCalldata: '0x' }]
 
@@ -117,8 +117,8 @@ export function buildSwapBatch(swapData, fromAddr, amountBase) {
   return { batchData, totalValue, estOut }
 }
 
-// eth_simulateV1 bundle [balanceOf(tokenOut) trước, batch, balanceOf(tokenOut) sau] → verdict.
-// Không tốn tiền, không PIN. ok = swap không revert VÀ số dư tokenOut của ví TĂNG.
+// An eth_simulateV1 bundle [balanceOf(tokenOut) before, the batch, balanceOf(tokenOut) after] → a verdict.
+// Costs nothing, needs no PIN. ok = the swap does not revert AND the wallet's tokenOut balance RISES.
 export async function simulateSwap({ kitKey, tokenIn, tokenOut, walletAddress, amountIn }) {
   const fromAddr = TOKEN_ADDR[tokenIn]
   const toAddr   = TOKEN_ADDR[tokenOut]
@@ -130,19 +130,19 @@ export async function simulateSwap({ kitKey, tokenIn, tokenOut, walletAddress, a
   if (built.error) return { error: built.error, detail: built.swapData }
 
   const balOf = (addr) => encodeFunctionData({ abi: BALANCE_OF_ABI, functionName: 'balanceOf', args: [addr] })
-  // Theo dõi thêm ví nhận FEE (07-23): đo cả tokenIn + tokenOut của FEE_RECIPIENT trước/sau
-  // để chứng minh phí 0.1% THẬT SỰ về ví — không tin "đã cấu hình là có".
+  // The FEE wallet is watched too (07-23): measure FEE_RECIPIENT's tokenIn + tokenOut before/after
+  // to prove the 0.1% fee ACTUALLY arrives - never trust "it is configured, so it must work".
   const simBody = {
     jsonrpc: '2.0', id: 1, method: 'eth_simulateV1',
     params: [{
       blockStateCalls: [{ calls: [
-        { to: toAddr,   data: balOf(walletAddress) },   // [0] tokenOut ví user trước
-        { to: fromAddr, data: balOf(FEE_RECIPIENT) },   // [1] tokenIn ví fee trước
-        { to: toAddr,   data: balOf(FEE_RECIPIENT) },   // [2] tokenOut ví fee trước
+        { to: toAddr,   data: balOf(walletAddress) },   // [0] user's tokenOut before
+        { to: fromAddr, data: balOf(FEE_RECIPIENT) },   // [1] fee wallet's tokenIn before
+        { to: toAddr,   data: balOf(FEE_RECIPIENT) },   // [2] fee wallet's tokenOut before
         { from: walletAddress, to: MULTICALL3FROM, data: built.batchData, value: '0x0' },  // [3] swap
-        { to: toAddr,   data: balOf(walletAddress) },   // [4] tokenOut ví user sau
-        { to: fromAddr, data: balOf(FEE_RECIPIENT) },   // [5] tokenIn ví fee sau
-        { to: toAddr,   data: balOf(FEE_RECIPIENT) },   // [6] tokenOut ví fee sau
+        { to: toAddr,   data: balOf(walletAddress) },   // [4] user's tokenOut after
+        { to: fromAddr, data: balOf(FEE_RECIPIENT) },   // [5] fee wallet's tokenIn after
+        { to: toAddr,   data: balOf(FEE_RECIPIENT) },   // [6] fee wallet's tokenOut after
       ] }],
       validation: false, traceTransfers: true, returnFullTransactions: false,
     }, 'latest'],
@@ -153,8 +153,8 @@ export async function simulateSwap({ kitKey, tokenIn, tokenOut, walletAddress, a
   const sim = await simRes.json()
   if (sim.error) return { error: `eth_simulateV1 error: ${sim.error?.message}`, detail: sim.error }
   const calls = sim?.result?.[0]?.calls
-  if (!calls || calls.length < 7) return { error: 'sim: thiếu kết quả calls', detail: sim }
-  const hexToBig = (r) => (r && r !== '0x') ? BigInt(r) : 0n // returnData rỗng khi call revert
+  if (!calls || calls.length < 7) return { error: 'sim: missing call results', detail: sim }
+  const hexToBig = (r) => (r && r !== '0x') ? BigInt(r) : 0n // returnData is empty when a call reverts
   const before = hexToBig(calls[0].returnData)
   const feeInBefore  = hexToBig(calls[1].returnData)
   const feeOutBefore = hexToBig(calls[2].returnData)
@@ -176,7 +176,7 @@ export async function simulateSwap({ kitKey, tokenIn, tokenOut, walletAddress, a
     delta:    fromBase(delta.toString(), tokenOut),
     expected: expected ? fromBase(expected.toString(), tokenOut) : null,
     gasUsed:  swapCall.gasUsed || null,
-    // Phí app về ví FEE_RECIPIENT (tokenIn hoặc tokenOut tuỳ route trừ ở đâu — đo cả 2)
+    // The app fee arriving at FEE_RECIPIENT (in tokenIn or tokenOut depending on where the route deducts it - measure both)
     feeRecipient: FEE_RECIPIENT,
     feeDeltaIn:  fromBase(feeInDelta.toString(),  tokenIn),
     feeDeltaOut: fromBase(feeOutDelta.toString(), tokenOut),

@@ -1,8 +1,8 @@
 // Swap qua Circle Stablecoin Kit REST — endpoint Cloudflare Pages Function.
-// Lõi encode/verify ở ./_swapCore.js (dùng chung với dev-server.js). Xem file đó cho CÁCH ĐÚNG
-// gọi ADAPTER contract (không bóc instructions chạy tay — cách cũ đã MẤT TIỀN).
-// Actions: estimate (quote), simulate (verify eth_simulateV1, không PIN/không tốn tiền),
-// execute (tạo contractExecution challenge → user ký 1 PIN).
+// The encode/verify core lives in ./_swapCore.js (shared with dev-server.js). See that file for THE CORRECT WAY
+// to call the ADAPTER contract (do not unpack the instructions and run them by hand - the old way LOST MONEY).
+// Actions: estimate (a quote), simulate (verify with eth_simulateV1, no PIN and no cost),
+// execute (create a contractExecution challenge → the user signs with one PIN).
 import {
   CIRCLE_API, TOKEN_ADDR, MULTICALL3FROM, toBase, fromBase,
   fetchSwapIntent, buildSwapBatch, simulateSwap,
@@ -42,7 +42,7 @@ export async function onRequestPost(ctx) {
       return new Response(JSON.stringify({ estimate: data?.data || data, amountOut }), { headers: JSON_HEADERS })
     }
 
-    // Cổng verify: chỉ bật swap khi số dư tokenOut của ví TĂNG (HANDOFF: đừng tin tx status=1).
+    // The verify gate: only allow a swap when the wallet's tokenOut balance RISES (HANDOFF: never trust tx status=1).
     if (action === 'simulate') {
       if (!kitKey) return err('KIT_KEY not configured')
       const out = await simulateSwap({ kitKey, tokenIn, tokenOut, walletAddress, amountIn })
@@ -72,7 +72,7 @@ export async function onRequestPost(ctx) {
       const txData = await txRes.json()
       const challengeId = txData?.data?.challengeId
       if (!challengeId) {
-        console.error('[swap] contractExecution không trả challengeId:', txRes.status, JSON.stringify(txData))
+        console.error('[swap] contractExecution returned no challengeId:', txRes.status, JSON.stringify(txData))
         const msg = `${txData?.message || txData?.error?.message || 'no challengeId'} (HTTP ${txRes.status}${txData?.code ? `, code ${txData.code}` : ''})`
         return err(msg, txData)
       }

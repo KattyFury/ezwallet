@@ -1,8 +1,8 @@
 name: CI
 
-# Chạy test + build trên mọi push/PR vào main. Mục đích: người lạ vào repo thấy được
-# "code này có tự kiểm tra", và bản thân mình không push nhầm bản build hỏng lên Pages
-# (Cloudflare auto-deploy từ main — hỏng là hỏng thẳng trên production).
+# Runs tests + a build on every push/PR to main. The point: someone new to the repo can see
+# "this code checks itself", and I cannot push a broken build to Pages by accident
+# (Cloudflare auto-deploys from main - broken means broken straight on production).
 on:
   push:
     branches: [main]

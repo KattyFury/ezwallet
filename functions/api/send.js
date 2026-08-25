@@ -3,9 +3,9 @@ const CIRCLE_API = 'https://api.circle.com/v1/w3s'
 // ERC-20 transfer ABI function signature
 const TRANSFER_SIG = 'transfer(address,uint256)'
 
-// Arc Transaction Memos — predeployed Memo contract (testnet, từ docs.arc.io)
+// Arc Transaction Memos - the predeployed Memo contract (testnet, from docs.arc.io)
 // memo(address target, bytes data, bytes32 memoId, bytes memoData) → forward call qua
-// CallFrom precompile (giữ nguyên msg.sender) + emit Memo event onchain.
+// The CallFrom precompile (preserving msg.sender) + emitting a Memo event on chain.
 const MEMO_CONTRACT = '0x5294E9927c3306DcBaDb03fe70b92e01cCede505'
 const MEMO_SIG = 'memo(address,bytes,bytes32,bytes)'
 
@@ -16,7 +16,7 @@ const TOKEN_CONTRACTS = {
   cirBTC: { address: '0xf0c4a4ce82a5746abaad9425360ab04fbba432bf', decimals: 8 },
 }
 
-// Encode ERC-20 transfer(address,uint256) calldata thủ công (selector + 2 word 32 byte)
+// Encode the ERC-20 transfer(address,uint256) calldata by hand (selector + 2 32-byte words)
 function encodeTransfer(to, amountRaw) {
   const selector = 'a9059cbb'
   const addr = to.toLowerCase().replace(/^0x/, '').padStart(64, '0')
@@ -29,7 +29,7 @@ function utf8ToHex(str) {
   return '0x' + [...bytes].map(b => b.toString(16).padStart(2, '0')).join('')
 }
 
-// memoId: bytes32 ngẫu nhiên để tra cứu lại Memo event sau này
+// memoId: a random bytes32 so the Memo event can be looked up later
 function randomMemoId() {
   const b = crypto.getRandomValues(new Uint8Array(32))
   return '0x' + [...b].map(x => x.toString(16).padStart(2, '0')).join('')
@@ -49,7 +49,7 @@ const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow
 export async function onRequestPost(ctx) {
   const apiKey = ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY
   const { userToken, walletId, toAddress, token, amountDecimal, memo, idempotencyKey } = await ctx.request.json()
-  // idempotencyKey cố định từ client → Circle dedupe, không tạo 2 giao dịch khi gọi lại
+  // A fixed idempotencyKey from the client → Circle dedupes, so a repeated call does not create 2 transactions
   const idemKey = idempotencyKey || crypto.randomUUID()
 
   if (!userToken || !walletId || !toAddress || !token || !amountDecimal) {
@@ -65,7 +65,7 @@ export async function onRequestPost(ctx) {
   const memoText = (memo || '').trim()
   let execBody
   if (memoText) {
-    // Có nội dung → gửi qua Memo contract (Arc Transaction Memos)
+    // With a note → send through the Memo contract (Arc Transaction Memos)
     const transferData = encodeTransfer(toAddress, amountRaw)
     execBody = {
       idempotencyKey: idemKey,
@@ -76,7 +76,7 @@ export async function onRequestPost(ctx) {
       feeLevel: 'MEDIUM',
     }
   } else {
-    // Không nội dung → transfer trực tiếp (đường đã verify on-chain)
+    // Without a note → a direct transfer (the path already verified on chain)
     execBody = {
       idempotencyKey: idemKey,
       walletId,
@@ -91,9 +91,9 @@ export async function onRequestPost(ctx) {
 
   const challengeId = txResp?.data?.challengeId
   if (!challengeId) {
-    // txResp.data thiếu challengeId nghĩa là Circle từ chối request (số dư, tham số, rate-limit...).
-    // Log full response để tra cứu, và trả message thật của Circle thay vì "no challengeId" mù mờ.
-    console.error('[send] contractExecution không trả challengeId:', JSON.stringify(txResp))
+    // A missing challengeId in txResp.data means Circle rejected the request (balance, parameters, rate limit...).
+    // Log the full response for investigation, and return Circle's real message instead of a vague "no challengeId".
+    console.error('[send] contractExecution returned no challengeId:', JSON.stringify(txResp))
     const msg = txResp?.message || txResp?.error?.message || (txResp?.code ? `Circle error ${txResp.code}` : 'no challengeId')
     return new Response(JSON.stringify({ error: msg, detail: txResp }), { status: 500, headers: JSON_HEADERS })
   }
