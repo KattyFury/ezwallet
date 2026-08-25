@@ -12,15 +12,16 @@
 
 ### 📍 WHERE THINGS STAND (end of session 2026-08-25)
 
-- **One branch only: `main`.** Every WIP branch has been merged and deleted. Everyone works on `main`.
-- **Production runs:** **ENGLISH + USD/EUR ONLY.** Vietnamese and Chinese were **REMOVED FROM THE PROJECT ENTIRELY on 08-25** - the i18n layer is gone, not merely switched off (see section 2).
-- **🔴 SWAP IS DOWN** - `No route available`, an error on the Circle/LI.FI side rather than in our code. **Read the red block at the top of section 4 BEFORE trying to fix anything.**
-- **New in session 08-13:** Service Hub (navbar tab 1) · QR locked to the Arc network · a 🐛 bug-report button posting straight to Telegram · the money-received notification is no longer slow. Details in the table at the top of section 9.
-- **In progress:** the success sound (`src/sound.js` is written but **not wired into the app**) - sections 7c + 9A.
+- **One branch only: `main`.** Every WIP branch has been merged and deleted. Everyone works on `main`. Latest commit `dbce9bd`.
+- **Production runs:** **ENGLISH + USD/EUR ONLY.** Vietnamese and Chinese were **REMOVED FROM THE PROJECT ENTIRELY on 08-25** - the i18n layer is gone, not merely switched off (see section 2). The whole repo, comments and documents included, is English now; the only file still holding Vietnamese is `.env.txt`, which is gitignored.
+- **🔴 SWAP IS DOWN** - `No route available`, an error on the Circle/LI.FI side rather than in our code. **Read the red block at the top of section 4 BEFORE trying to fix anything.** Unchanged since 08-13; re-measure before assuming anything.
+- **New in session 08-25:** the LuckyPot tile · the i18n layer removed · the whole codebase translated · 2 notification bugs fixed (dust amounts showing 0.00, long text cut off) · `Available Network: Arc Testnet` in the hint block · a `Balance:` line on the Send screen. Details in the table at the top of section 9.
+- **CI is live** (`.github/workflows/ci.yml`): every push to `main` runs `npm test` + `npm run build` on Node 22. All 3 runs on 08-25 were green.
+- **In progress:** the success sound (`src/sound.js` is written but **not wired into the app**) - sections 7c + 9A. This is the first thing to pick up.
 - **Who does what:**
   - **LongDC** → the multi-language work is on hold: the i18n layer was removed 08-25, so adding a language now means designing it again from scratch (see section 2).
   - **User + Claude** → refining the UX/UI.
-- **Still pending, needs a human:** send the message to Circle support (4 questions already drafted in the chat history, not yet sent).
+- **Still pending, needs a human:** send the message to Circle support (4 questions already drafted in the chat history, not yet sent) · **nothing from session 08-25 has been touched on a real device yet** - the deploy checklist for it is at the end of section 9.
 
 > ⚠️ **`DECK-DESIGN-SPEC.md` in the repo IS OUT OF DATE** (user confirmed 08-04) - the real deck now lives in the **YouTube video + the Canva deck** linked above, not in that .md file. **Do not use it as a source when writing introductory content, and do not spend time updating it** until the user decides whether to keep it. It stays in the repo (not deleted) because it still holds a few Brand Voice decisions. `PITCH.md` was rewritten in English on 08-25 and its facts were refreshed at the same time.
 
@@ -401,7 +402,7 @@ A **grey** 🐛 icon (`--color-muted-2`) flush right, centred on **row 1**, pres
 
 ## 9. What comes next
 
-### 📒 WHAT SESSION 2026-08-25 DID
+### 📒 WHAT SESSION 2026-08-25 DID (8 commits, `f467b6d` → `dbce9bd`)
 
 | # | Work | Written up in |
 |---|---|---|
@@ -424,6 +425,22 @@ A **grey** 🐛 icon (`--color-muted-2`) flush right, centred on **row 1**, pres
 - `Swap.jsx` and `SendAmount.jsx` still carry their own local `decimalsFor()` alongside the new shared `fmtTokenAmount` - out of scope for the bug fix, worth unifying later.
 - The `Balance:` line makes the Send screen's amount row sit ~15px higher than CreateQR's, breaking the pixel alignment those 2 screens had (section 6). Deliberate.
 - The hint block is back to 4 single lines (115px at ≥375px, 138px at 360px) after the network line was shortened, so nothing has to be scrolled to be read. Keep that line SHORT if it is ever reworded - the block shares a fixed-height area with the notifications.
+
+**Decisions the user settled this session (continued):**
+- `- 08-25: the Send screen shows the SPENDABLE balance, not the raw one` - reason: the raw balance would promise money that Continue then refuses. Consequence accepted: Send can read $126.66 while Home reads $127.66.
+- `- 08-25: the network line is a label, not a sentence` - `Available Network: Arc Testnet`, one line at every width.
+
+**🧪 DEPLOY CHECKLIST FOR THIS SESSION (nothing below has been touched on a real device yet).**
+Everything was verified with Playwright on the mock at 390/375/360px, `npm test` 16/16 and a production build - but the mock cannot exercise Circle, the faucet or a real share sheet:
+- [ ] Open `https://ezwallet.cash` on the phone → login + PIN still work (the Circle localisation calls were removed; the PIN screen must come up in Circle's own English, not blank or broken).
+- [ ] Tap the faucet on HomeSend → wait for the payout → the notification must read **`Faucet successful · received 0.000549 cirBTC`** style, NOT `0.00 cirBTC`. This is the exact bug reported; it can only be confirmed with a real faucet payout.
+- [ ] The same notification must show its FULL text over 2 lines with no `…`.
+- [ ] Send screen: the `Balance:` line shows a real number (not a stuck `…`), and it matches what the Continue button accepts - type the exact balance shown and Continue must stay enabled.
+- [ ] Switch the currency chip through USD / USDC / EURC / cirBTC - the Balance line must follow it and never overflow.
+- [ ] Menu → the entry now reads **Currency** (not "Language & Currency") and the screen has one row, with no leftover language picker.
+- [ ] Home hint block: `Available Network: Arc Testnet` on one line, red, above the 3 hint lines.
+- [ ] Nothing anywhere in the app renders Vietnamese or Chinese any more.
+
 
 ### 📒 WHAT SESSION 2026-08-13 DID (9 commits, `c80db30` → `1c348a2`)
 
