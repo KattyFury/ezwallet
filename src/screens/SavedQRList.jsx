@@ -4,7 +4,6 @@ import { QRCodeSVG } from 'qrcode.react'
 import Icon from '../components/Icon'
 import Numpad from '../components/Numpad'
 import { fmtMoney, getDisplayCurrency, displaySymbol } from '../data'
-import { t } from '../i18n'
 import { loadSavedQRs, saveSavedQRs } from '../store'
 import { buildQR } from '../qr'
 
@@ -54,7 +53,7 @@ export default function SavedQRList() {
   return (
     <div className="screen">
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        {t('Kho QR')}
+        QR Storage
       </div>
 
       {/* Vùng QR = BOX XÁM lớn hàng 2-8 (user chốt 07-23, đồng bộ kiểu box History) · lưới 2 CỘT
@@ -108,16 +107,16 @@ export default function SavedQRList() {
           .row10-single Back xanh cũ): Add mở đúng popup thêm QR như ô "+" trong lưới — thêm QR là
           hành động chính của màn nên phải có nút ở hàng 9, không bắt cuộn xuống tìm ô "+". */}
       <div className="row10-dual">
-        <button className="btn btn-secondary" onClick={() => navigate('HomeReceive')}>{t('Quay lại')}</button>
-        <button className="btn btn-primary" onClick={() => setAdding(true)}>{t('Thêm')}</button>
+        <button className="btn btn-secondary" onClick={() => navigate('HomeReceive')}>Back</button>
+        <button className="btn btn-primary" onClick={() => setAdding(true)}>Add</button>
       </div>
 
       {/* Popup thêm QR — chuẩn .popup-card (tâm vùng hàng 2-5, chừa bàn phím nửa dưới) */}
       {adding && (
         <div className="popup-overlay" onClick={resetForm}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
-            <div className="popup-title">{t('Lưu vào kho QR')}</div>
-            <input className="address-input" placeholder={t('Tên (không bắt buộc)')} value={name} onChange={e => setName(e.target.value)} maxLength={30} style={{ fontSize: 'var(--fs-body)' }} />
+            <div className="popup-title">Add to QR Storage</div>
+            <input className="address-input" placeholder={'Name (optional)'} value={name} onChange={e => setName(e.target.value)} maxLength={30} style={{ fontSize: 'var(--fs-body)' }} />
             {/* Label kèm ký hiệu tiền tệ MẶC ĐỊNH của user (user chốt 07-20: USDC→$, EURC→€…) */}
             {/* Ô Amount = KHÔNG phải input (luật bàn phím 07-23) — bấm mở sheet numpad app; blur ô
                 Name trước để bàn phím iPhone hạ xuống rồi numpad mới trồi lên (không chồng nhau).
@@ -133,8 +132,8 @@ export default function SavedQRList() {
               )}
             </div>
             <div className="popup-actions">
-              <button className="btn btn-secondary" onClick={resetForm}>{t('Hủy')}</button>
-              <button className="btn btn-primary" disabled={!(amountNum > 0)} onClick={handleSave}>{t('Lưu')}</button>
+              <button className="btn btn-secondary" onClick={resetForm}>Cancel</button>
+              <button className="btn btn-primary" disabled={!(amountNum > 0)} onClick={handleSave}>Save</button>
             </div>
           </div>
         </div>
@@ -151,8 +150,8 @@ export default function SavedQRList() {
             </div>
             <div style={{ flex: 0.5 }} />
             <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-              <button className="btn btn-secondary" style={{ width: '44%' }} onClick={cancelPad}>{t('Quay lại')}</button>
-              <button className="btn btn-primary" style={{ width: '44%' }} onClick={() => setPad(false)}>{t('Xong')}</button>
+              <button className="btn btn-secondary" style={{ width: '44%' }} onClick={cancelPad}>Back</button>
+              <button className="btn btn-primary" style={{ width: '44%' }} onClick={() => setPad(false)}>Done</button>
             </div>
             <div style={{ flex: 1 }} />
           </div>
@@ -163,10 +162,10 @@ export default function SavedQRList() {
       {pendingDelete && (
         <div className="popup-overlay" onClick={() => setPendingDelete(null)}>
           <div className="popup-card" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-            <div className="popup-title">{t('Xoá QR:')} {pendingDelete.name || fmtMoney(pendingDelete.amount, pendingDelete.currency || 'USD')}</div>
+            <div className="popup-title">{'Delete QR:'} {pendingDelete.name || fmtMoney(pendingDelete.amount, pendingDelete.currency || 'USD')}</div>
             <div className="popup-actions" style={{ marginTop: 4 }}>
-              <button className="btn btn-secondary" onClick={() => setPendingDelete(null)}>{t('Quay lại')}</button>
-              <button className="btn btn-error" onClick={confirmDelete}>{t('Xác nhận')}</button>
+              <button className="btn btn-secondary" onClick={() => setPendingDelete(null)}>Back</button>
+              <button className="btn btn-error" onClick={confirmDelete}>Confirm</button>
             </div>
           </div>
         </div>

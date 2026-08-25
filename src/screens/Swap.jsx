@@ -9,7 +9,6 @@ import { spendableOf, floorTo, getDisplayCurrency, displaySymbol, fmtDisplay, de
 import { useFitFontSize } from '../useFitFontSize'
 import { roundHints, fmtHint } from '../roundHint'
 import { addNotif } from '../notif'
-import { t } from '../i18n'
 
 // ✅ SWAP execute qua ADAPTER.execute(intent có chữ ký) — đúng cách, adapter settlement ghi
 // có USDC về ví (xem HANDOFF mục SWAP + functions/api/_swapCore.js). VERIFY bằng eth_simulateV1
@@ -49,7 +48,7 @@ function TokenPicker({ current, onSelect, onClose }) {
   return (
     <div className="popup-overlay" onClick={onClose}>
       <div className="popup-card" onClick={e => e.stopPropagation()}>
-        <div className="popup-title">{t('Chọn token')}</div>
+        <div className="popup-title">Select token</div>
         {SWAP_TOKENS.map(sym => (
           <button key={sym} onClick={() => { onSelect(sym); onClose() }} className={`btn ${sym === current ? 'btn-primary' : 'btn-secondary'}`}
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
@@ -231,7 +230,7 @@ export default function Swap() {
       const { userToken, encryptionKey } = await refreshSession()
       const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
       if (res.error) throw new Error(res.error)
-      setStatus(t('Nhập PIN...'))
+      setStatus('Enter PIN...')
       await executeChallenge(await getSDK(), userToken, encryptionKey, res.challengeId)
 
       // ✅ TRẠNG THÁI 1 — PIN đã ký, lệnh swap ĐÃ GỬI lên Arc ("đề nghị thành công")
@@ -241,7 +240,7 @@ export default function Swap() {
       const outTxt = res.amountOut ? ` to ~${parseFloat(res.amountOut).toFixed(decimalsFor(toSym))} ${toSym}` : ` to ${toSym}`
       addNotif(`Swapped ${amountNum} ${fromSym}${outTxt} (complete)`, 'sent', null, `swap-${Date.now()}`)   // NotifArea (Home)
       resetAmount()
-      setSuccess(true); setStatus(t('Đã gửi lệnh đổi tiền'))
+      setSuccess(true); setStatus('Swap submitted')
       setLoading(false)
 
       // ✅ TRẠNG THÁI 2 — xác nhận ON-CHAIN (Arc finality <1s, chừa độ trễ RPC): poll tới khi số dư
@@ -387,8 +386,8 @@ export default function Swap() {
             </div>
             <div style={{ flex: 0.5 }} />
             <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
-              <button className="btn btn-secondary" style={{ width: '44%' }} onClick={cancelPad}>{t('Quay lại')}</button>
-              <button className="btn btn-primary" style={{ width: '44%' }} onClick={() => setPad(false)}>{t('Xong')}</button>
+              <button className="btn btn-secondary" style={{ width: '44%' }} onClick={cancelPad}>Back</button>
+              <button className="btn btn-primary" style={{ width: '44%' }} onClick={() => setPad(false)}>Done</button>
             </div>
             <div style={{ flex: 1 }} />
           </div>
@@ -396,7 +395,7 @@ export default function Swap() {
       )}
 
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        {t('Đổi tiền')}
+        Swap
       </div>
 
       {/* KHU VỰC hàng 2→9 chia 3 KHỐI bằng justify-content:space-between (user chốt 07-20e): 2 khe
@@ -406,7 +405,7 @@ export default function Swap() {
 
         {/* KHỐI 1: You pay ⇅ You receive + Fee/Rate */}
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <SideCard label={t('Bạn trả')} sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
+          <SideCard label={'You pay'} sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
             onAmount={openPad} typing={pad ? typed : null} balLabel="Available" />
 
           {/* Nút đảo chiều — ĐÈ lên khe giữa 2 card, xoay 180° mỗi lần bấm. Vòng tròn GRADIENT BRAND +
@@ -414,13 +413,13 @@ export default function Swap() {
               .btn-primary/.action-card.primary; shadow .35 theo luật nút gradient. margin -17/-17 trên
               nút 44px → chiếm 10px trong flow = KHE 10px giữa 2 card; nút bắc cầu qua khe (đè 17px mỗi bên). */}
           <div style={{ display: 'flex', justifyContent: 'center', margin: '-17px 0', position: 'relative', zIndex: 3 }}>
-            <button onClick={swapDir} aria-label={t('Đảo chiều')}
+            <button onClick={swapDir} aria-label={'Reverse direction'}
               style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'var(--grad-brand)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transform: `rotate(${flip}deg)`, transition: 'transform .3s ease' }}>
               <Icon name="trade" size="var(--is-num)" color="var(--color-white)" />
             </button>
           </div>
 
-          <SideCard label={t('Bạn nhận')} sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} balLabel="Balance" idle={!(amountNum > 0)} />
+          <SideCard label={'You receive'} sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} balLabel="Balance" idle={!(amountNum > 0)} />
 
           {/* Fee + Rate — 1 dòng NHỎ fs-item 17: Rate căn TRÁI · Fee căn PHẢI, số liệu ĐEN cho bật */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 10, padding: '0 16px' }}>
@@ -516,7 +515,7 @@ export default function Swap() {
             fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-bold)',
             color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)',
             WebkitTapHighlightColor: 'transparent',
-          }}>{t('Thoát')}</button>
+          }}>Exit</button>
       </div>
     </div>
   )

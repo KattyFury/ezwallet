@@ -4,7 +4,6 @@ import { QRCodeCanvas } from 'qrcode.react'
 import Icon from '../components/Icon'
 import { fmtMoney } from '../data'
 import { saveImageToPhotos, brandedQrCanvas } from '../saveImage'
-import { t } from '../i18n'
 import { loadSavedQRs, saveSavedQRs } from '../store'
 import { buildQR } from '../qr'
 
@@ -41,7 +40,7 @@ export default function ShowQR() {
 
   // Tiêu đề (user chốt 07-20e): mở QR ĐÃ LƯU từ kho (fromStorage) → "QR: <tên>" (bỏ chữ "Storage"
   // cho gọn, tên dài đỡ thiếu chỗ), QR không đặt tên → "QR: Item". Tạo QR mới → "Create receive QR".
-  const title = fromStorage ? `QR: ${name || 'Item'}` : t('Tạo QR nhận tiền')
+  const title = fromStorage ? `QR: ${name || 'Item'}` : 'Create receive QR'
 
   return (
     <div className="screen">
@@ -65,7 +64,7 @@ export default function ShowQR() {
             tận 3 dòng. KHÔNG hạ thẳng xuống --fs-label 15 (cỡ "text phụ" chuẩn): app này cho
             người lớn tuổi, 15px là ranh giới khó đọc. 17 = đúng cỡ khối gợi ý màn Gửi/Nhận. */}
         <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', textAlign: 'center', padding: '0 8px' }}>
-          {t('Cho người gửi quét mã này – hiện chỉ hỗ trợ USDC trên Arc Testnet')}
+          Have the sender scan this code – currently supports only USDC on Arc Testnet
         </span>
         {/* Share = CHỮ XANH + icon, KHÔNG phải nút (user chốt 08-13): không viền, không nền,
             không đổ bóng. Vẫn bấm được — dùng <button> trần cho đúng ngữ nghĩa + bấm bằng phím. */}
@@ -76,7 +75,7 @@ export default function ShowQR() {
           color: 'var(--color-brand)', WebkitTextFillColor: 'var(--color-brand)', WebkitTapHighlightColor: 'transparent',
         }}>
           <Icon name="share" size="var(--is-md-lg)" color="var(--color-brand)" />
-          {t('Chia sẻ')}
+          Share
         </button>
       </div>
 
@@ -85,8 +84,8 @@ export default function ShowQR() {
           "Quay lại" thì không phải; còn Chia sẻ đã chuyển lên thành chữ ở trên).
           Back = về đúng màn vừa tới từ đó (kho QR / màn Nhận). Done = xong hẳn, về màn Nhận. */}
       <div className="row10-dual">
-        <button className="btn btn-secondary" onClick={() => navigate(back)}>{t('Quay lại')}</button>
-        <button className="btn btn-primary" onClick={() => navigate('HomeReceive')}>{t('Xong')}</button>
+        <button className="btn btn-secondary" onClick={() => navigate(back)}>Back</button>
+        <button className="btn btn-primary" onClick={() => navigate('HomeReceive')}>Done</button>
       </div>
     </div>
   )

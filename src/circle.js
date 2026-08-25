@@ -1,6 +1,4 @@
 import { MOCK, MOCK_RATES } from './mock'
-import { applyCircleLocale } from './circleLocalizations'
-import { t } from './i18n'
 
 let sdk = null
 
@@ -15,11 +13,10 @@ async function loadW3SSdk() {
   return m.W3SSdk
 }
 
-// ⚠️⚠️ QUYẾT ĐỊNH (2026-08-04, user chốt — ĐẢO quyết định 2026-07-01 cũ): BẬT setLocalizations cho
-// màn PIN + câu hỏi bảo mật, BÁM THEO ngôn ngữ app (applyCircleLocale đọc getLang()). Quyết định cũ
-// (English thuần) dựa trên giả định SAI là Circle chỉ localize được nửa vời — thực tế localize được
-// gần hết. Cái ĐÚNG của giả định cũ: CHỮ LỖI runtime trong iframe ("The PIN you entered is
-// incorrect...", PIN bị khoá) KHÔNG có field nào trong Localizations → vẫn tiếng Anh, chấp nhận.
+// ⚠️ Circle SDK localization: KHÔNG gọi setLocalizations nữa (bỏ 2026-08-25 cùng lúc gỡ lớp i18n).
+// App chỉ còn tiếng Anh, mà English chính là MẶC ĐỊNH sẵn của Circle → không gọi gì là đúng và gọn nhất
+// (màn PIN + câu hỏi bảo mật tự ra tiếng Anh). Cần làm đa ngôn ngữ lại: xem file circleLocalizations.js
+// trong git history (commit trước bản gỡ i18n) để lấy lại cả bản dịch lẫn cách gọi đúng tham số vị trí.
 // ⚠️ ASYNC (đổi 2026-07-17 khi nạp lười SDK) — MỌI chỗ gọi PHẢI `await getSDK()`.
 // Quên await → truyền Promise vào chỗ chờ SDK thật → PIN chết câm. Đã sửa cả 6 chỗ gọi:
 // EnterEmail(×3), PinGate, Security, SendConfirm, Swap.
@@ -28,7 +25,6 @@ export async function getSDK() {
   if (!sdk) {
     const W3SSdk = await loadW3SSdk()
     sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
-    applyCircleLocale(sdk)
   }
   return sdk
 }
@@ -288,20 +284,20 @@ const RETRYABLE_CODES = new Set([
 // Map theo MÃ SỐ, KHÔNG dò chữ tiếng Anh (`/lock/i` như bản cũ): nếu Circle localize message
 // hoặc đổi câu chữ thì dò chữ sẽ câm, còn mã số thì ổn định.
 const ERROR_BY_CODE = {
-  155119: 'Bạn nhập sai PIN quá nhiều lần. Ví tạm khoá, vui lòng thử lại sau ít phút.',
-  155120: 'Bạn trả lời sai quá nhiều lần. Tạm khoá, vui lòng thử lại sau ít phút.',
-  155109: 'Tài khoản đã bị vô hiệu hoá.',
-  155102: 'Không tìm thấy tài khoản này.',
-  155110: 'Tài khoản chưa đặt mã PIN.',
-  155111: 'Tài khoản chưa đặt câu hỏi bảo mật.',
-  155103: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
-  155104: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
-  155105: 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
-  155130: 'Mã OTP đã hết hạn. Vui lòng lấy mã mới.',
-  155131: 'Mã OTP không hợp lệ.',
-  155133: 'Mã OTP không đúng.',
-  155134: 'Mã OTP không khớp.',
-  155706: 'Lỗi mạng. Kiểm tra kết nối rồi thử lại.',
+  155119: 'Too many incorrect PIN attempts. Your wallet is temporarily locked – please try again in a few minutes.',
+  155120: 'Too many incorrect answers. Temporarily locked – please try again in a few minutes.',
+  155109: 'This account has been disabled.',
+  155102: 'Account not found.',
+  155110: 'This account has no PIN set.',
+  155111: 'This account has no security questions set.',
+  155103: 'Your session has expired. Please sign in again.',
+  155104: 'Your session has expired. Please sign in again.',
+  155105: 'Your session has expired. Please sign in again.',
+  155130: 'The code has expired. Please request a new one.',
+  155131: 'Invalid code.',
+  155133: 'Incorrect code.',
+  155134: 'The code does not match.',
+  155706: 'Network error. Check your connection and try again.',
 }
 
 // Lỗi Circle → câu hiển thị cho user, theo ngôn ngữ app. Mã lạ (ngoài bảng) → đành lấy message
@@ -309,8 +305,8 @@ const ERROR_BY_CODE = {
 // DÙNG HÀM NÀY ở mọi chỗ catch lỗi Circle, đừng đọc thẳng `e.message` nữa.
 export function circleErrorMessage(e) {
   const known = ERROR_BY_CODE[e?.code ?? e?.error?.code]
-  if (known) return t(known)
-  return e?.message || e?.error?.message || (typeof e === 'string' ? e : '') || t('Có lỗi xảy ra')
+  if (known) return known
+  return e?.message || e?.error?.message || (typeof e === 'string' ? e : '') || 'Something went wrong'
 }
 
 export function executeChallenge(sdk, userToken, encryptionKey, challengeId) {

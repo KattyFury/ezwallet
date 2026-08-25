@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import Icon from '../components/Icon'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
-import { t } from '../i18n'
 import { getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency } from '../data'
 import { getDisplayRates, estimateFeeUsd } from '../chain'
 import { getSDK, executeChallenge, refreshSession, circleErrorMessage } from '../circle'
@@ -51,7 +50,7 @@ export default function SendConfirm() {
   // Phí mạng theo TIỀN TỆ MẶC ĐỊNH ở Cài đặt (USDC/EURC/VND)
   const displayCur = getDisplayCurrency()
   function feeEl() {
-    if (feeUsd === null) return t('Đang tính...')
+    if (feeUsd === null) return 'Calculating...'
     const v = feeUsd / (feeRates[displayCur] || 1)
     // Ngưỡng "quá nhỏ để hiện" phải theo SỐ LẺ của tiền tệ: $0.01 với USD, nhưng VND không có số
     // lẻ nên ngưỡng là 1 ₫ — dùng chung 0.01 thì phí 500 ₫ vẫn bị hiện thành "< 0,01 ₫" (vô nghĩa).
@@ -99,9 +98,9 @@ export default function SendConfirm() {
       // (sai PIN đã được iframe cho nhập lại, không reject). Ở LẠI màn xác nhận để bấm gửi lại.
       setLoading(false)
       if (e?.code === 155701) return   // user tự bấm hủy nhập PIN → im lặng, về màn xác nhận
-      console.error('[SendConfirm] gửi thất bại:', e)
+      console.error('[SendConfirm] send failed:', e)
       const reason = circleErrorMessage(e)
-      const msg = `${t('Gửi thất bại:')} ${reason}`
+      const msg = `${'Send failed:'} ${reason}`
       setError(msg)
       addNotif(msg, 'error')
     }
@@ -110,23 +109,23 @@ export default function SendConfirm() {
   return (
     <div className="screen">
       <div className="row-1 center send-title" style={{ justifyContent: 'center' }}>
-        <span>{t('Xác nhận giao dịch')}</span>
+        <span>Confirm transaction</span>
       </div>
 
       <div className="row-2-8 col" style={{ justifyContent: 'center', alignItems: 'stretch', gap: 14 }}>
         <div className="confirm-box">
           <div className="confirm-row">
-            <span className="confirm-label">{t('Gửi đến')}</span>
+            <span className="confirm-label">Send to</span>
             <span className="confirm-value">{name || shortenAddr(address)}</span>
           </div>
           {name && (
             <div className="confirm-row">
-              <span className="confirm-label">{t('Địa chỉ')}</span>
+              <span className="confirm-label">Address</span>
               <span className="confirm-value" style={{ fontSize: 'var(--fs-body)' }}>{shortenAddr(address)}</span>
             </div>
           )}
           <div className="confirm-row">
-            <span className="confirm-label">{t('Số tiền')}</span>
+            <span className="confirm-label">Amount</span>
             <span className="confirm-value num" style={{ fontWeight: 'var(--fw-bold)', color: 'var(--color-brand)' }}>
               {mainEl}
             </span>
@@ -135,7 +134,7 @@ export default function SendConfirm() {
               USDC, giấu đi là đánh lừa. Đây đúng con số đã chốt ở màn trước, không tính lại. */}
           {currency === 'VND' && (
             <div className="confirm-row">
-              <span className="confirm-label">{t('Thực gửi')}</span>
+              <span className="confirm-label">Actually sent</span>
               <span className="confirm-value num" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>
                 {sendAmountStr} USDC
               </span>
@@ -143,12 +142,12 @@ export default function SendConfirm() {
           )}
           {memo && (
             <div className="confirm-row">
-              <span className="confirm-label">{t('Nội dung')}</span>
+              <span className="confirm-label">Note</span>
               <span className="confirm-value">{memo}</span>
             </div>
           )}
           <div className="confirm-row">
-            <span className="confirm-label">{t('Phí mạng')}</span>
+            <span className="confirm-label">Network fee</span>
             <span className="confirm-value num" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>
               {feeEl()}
             </span>
@@ -156,18 +155,18 @@ export default function SendConfirm() {
         </div>
 
         <div className="warning-badge" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <Icon name="warning" size="var(--is-label)" color="var(--color-warning)" />{t('Giao dịch không thể hoàn tác sau khi xác nhận')}
+          <Icon name="warning" size="var(--is-label)" color="var(--color-warning)" />{'This transaction cannot be undone once confirmed'}
         </div>
 
-        {loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>{t('Đang mở xác nhận PIN...')}</span>}
+        {loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>Opening PIN confirmation...</span>}
         {error && !loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</span>}
       </div>
 
       <div className="row-10 row10-dual">
-        <button className="btn btn-secondary" disabled={loading || done} onClick={() => navigate('SendAmount', params)}>{t('Sửa')}</button>
+        <button className="btn btn-secondary" disabled={loading || done} onClick={() => navigate('SendAmount', params)}>Edit</button>
         <button className="btn btn-primary" style={{ flex: 1 }}
           disabled={loading || done} onClick={handleConfirm}>
-          {loading ? t('Đang xử lý...') : t('Xác nhận PIN')}
+          {loading ? 'Processing...' : 'Confirm PIN'}
         </button>
       </div>
     </div>

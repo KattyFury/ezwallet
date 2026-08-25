@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
-import { t } from '../i18n'
 import { isOwnAddress } from '../data'
 
 function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
@@ -37,7 +36,7 @@ export default function PasteAddress() {
   return (
     <div className="screen">
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        {t('Dán địa chỉ để gửi')}
+        Paste address to send
       </div>
 
       <div className="row-3" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 8 }}>
@@ -50,16 +49,16 @@ export default function PasteAddress() {
         />
         {showError && (
           <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>
-            {self ? t('Đây là ví của bạn – không gửi cho chính mình được') : t('Địa chỉ không hợp lệ – bắt đầu bằng 0x, 42 ký tự')}
+            {self ? "That's your own wallet – you can't send to yourself" : 'Invalid address – must start with 0x, 42 chars'}
           </span>
         )}
       </div>
 
       <div className="row-10 row10-dual">
-        <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>{t('Quay lại')}</button>
+        <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>Back</button>
         {/* Ô đã có địa chỉ EVM hợp lệ → nhãn đổi "Paste" → "Confirm" (user chốt 07-23: bấm sẽ đi
             thẳng không đọc clipboard, để nhãn Paste gây lú). handleDan xử lý đúng cả 2 nhánh. */}
-        <button className="btn btn-primary" onClick={handleDan}>{valid ? 'Confirm' : t('Dán')}</button>
+        <button className="btn btn-primary" onClick={handleDan}>{valid ? 'Confirm' : 'Paste'}</button>
       </div>
     </div>
   )

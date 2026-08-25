@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import jsQR from 'jsqr'
 import { useNav } from '../nav'
-import { t } from '../i18n'
 import { isOwnAddress } from '../data'
 // parseQR nằm ở src/qr.js — CHUNG với chỗ vẽ QR, để định dạng chỉ có 1 nguồn sự thật.
 // Trả { wrongChain } khi gặp QR EZwallet của chuỗi KHÁC → phải bắt riêng, KHÔNG được để rơi vào
@@ -15,7 +14,7 @@ export default function QRScanner() {
   const loopRef = useRef(null)
   const fileRef = useRef(null)
   const [error, setError] = useState('')
-  const [hint, setHint] = useState(t('Hướng camera vào mã QR'))
+  const [hint, setHint] = useState('Point the camera at a QR code')
 
   useEffect(() => {
     let stream = null
@@ -32,7 +31,7 @@ export default function QRScanner() {
         await videoRef.current.play().catch(() => {})
         scan()
       } catch {
-        setError(t('Không truy cập được camera – chọn ảnh QR hoặc dán địa chỉ.'))
+        setError('Cannot access camera – pick a QR image or paste an address.')
       }
     }
 
@@ -48,17 +47,17 @@ export default function QRScanner() {
         if (code) {
           const parsed = parseQR(code.data)
           if (parsed?.wrongChain) {
-            setHint(t('QR của mạng khác – ví này chỉ dùng trên Arc'))
+            setHint('QR from another network – this wallet only works on Arc')
           } else if (parsed && isOwnAddress(parsed.address)) {
             // Quét trúng QR NHẬN TIỀN của chính mình (rất dễ xảy ra: QR của mình đang mở ở màn Nhận
             // hoặc trong kho QR). KHÔNG đi tiếp — báo rồi quét tiếp, đừng đưa vào màn nhập tiền.
-            setHint(t('Đây là QR của bạn – quét QR người nhận'))
+            setHint("That's your own QR – scan the recipient's QR")
           } else if (parsed) {
             active = false
             navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount, currency: parsed.currency })
             return
           } else {
-            setHint(t('QR không hợp lệ, thử lại'))
+            setHint('Invalid QR, try again')
           }
         }
       }
@@ -90,15 +89,15 @@ export default function QRScanner() {
         URL.revokeObjectURL(url)
         const code = jsQR(data.data, data.width, data.height)
         const parsed = code ? parseQR(code.data) : null
-        if (parsed?.wrongChain) setHint(t('QR của mạng khác – ví này chỉ dùng trên Arc'))
-        else if (parsed && isOwnAddress(parsed.address)) setHint(t('Đây là QR của bạn – quét QR người nhận'))
+        if (parsed?.wrongChain) setHint('QR from another network – this wallet only works on Arc')
+        else if (parsed && isOwnAddress(parsed.address)) setHint("That's your own QR – scan the recipient's QR")
         else if (parsed) navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount, currency: parsed.currency })
-        else setHint(t('Không tìm thấy mã QR hợp lệ trong ảnh'))
+        else setHint('No valid QR found in the image')
       }
-      img.onerror = () => setHint(t('Không đọc được ảnh'))
+      img.onerror = () => setHint('Could not read the image')
       img.src = url
     } catch {
-      setHint(t('Không đọc được ảnh QR'))
+      setHint('Could not read the QR image')
     }
   }
 
@@ -107,7 +106,7 @@ export default function QRScanner() {
       {/* Hàng 1 = TIÊU ĐỀ màn, đồng bộ mọi sub-screen khác (user chốt 07-29 — trước màn này không có
           tiêu đề, ô quét chiếm luôn hàng 1). */}
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        {t('Quét QR')}
+        Scan QR
       </div>
 
       {/* CỤM (ô vuông quét + 2 dòng chú thích) căn tâm HÀNG 2-7 (user chốt 07-29 — dời xuống nhường
@@ -125,7 +124,7 @@ export default function QRScanner() {
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '0 10px', textAlign: 'center' }}>
               <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>{hint}</span>
               <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>
-                {t('Chưa hỗ trợ QR ngoài đời thật')}<br />{t('Chỉ quét QR ví crypto')}
+                {'Real-life QR codes are not supported yet'}<br />{'Scan crypto wallet QRs only'}
               </span>
             </div>
           </>
@@ -135,10 +134,10 @@ export default function QRScanner() {
       <input ref={fileRef} type="file" accept="image/*" onChange={handlePickImage} style={{ display: 'none' }} />
 
       <div className="row-10 row10-dual">
-        <button className="btn btn-secondary" onClick={() => fileRef.current?.click()}>{t('Ảnh QR')}</button>
+        <button className="btn btn-secondary" onClick={() => fileRef.current?.click()}>QR image</button>
         {/* "Done" chứ KHÔNG phải "Back" (user chốt 07-29): nút XANH = hành động chính/kết thúc,
             gắn chữ Back vào nút xanh nhìn sai vai trò (Back luôn là nút trắng phụ). */}
-        <button className="btn btn-primary" onClick={() => navigate('HomeSend')}>{t('Xong')}</button>
+        <button className="btn btn-primary" onClick={() => navigate('HomeSend')}>Done</button>
       </div>
     </div>
   )

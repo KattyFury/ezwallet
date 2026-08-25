@@ -84,7 +84,7 @@ export async function openSession(nonce, signature) {
     // không khớp giả định EIP-191 ở server → dữ liệu sẽ chui vào nhầm khoá KV. Gặp thì TẮT hẳn
     // sao lưu phiên này (app vẫn chạy bình thường) chứ tuyệt đối không ghi bừa.
     if (res.address && acct() && res.address.toLowerCase() !== acct()) {
-      console.error('[sync] địa chỉ recover từ chữ ký KHÔNG khớp ví đang mở — tắt sao lưu phiên này', res.address, acct())
+      console.error('[sync] address recovered from signature does NOT match the open wallet — disabling backup for this session', res.address, acct())
       return false
     }
     sessionStorage.setItem(TOKEN_KEY, res.token)

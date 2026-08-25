@@ -7,7 +7,6 @@ import { getDisplayCurrency, fmtDisplay } from '../data'
 import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import NotifArea, { NOTIF_FS } from '../components/NotifArea'
-import { t } from '../i18n'
 
 // USDC (trái) và $98.59 (phải) phải CÙNG font + CÙNG màu — dùng chung 1 style object
 // để không lệch (thay vì khai riêng, dễ chỉnh nhầm 1 bên).
@@ -51,7 +50,7 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
         fontWeight: 'var(--fw-medium)', cursor: 'pointer', whiteSpace: 'nowrap',
         WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
       }}
-      aria-label={t('Giữ để xem số lượng token')}
+      aria-label={'Hold to show token amounts'}
     >
       Hold to show tokens
     </button>
@@ -106,10 +105,10 @@ export default function HomeSend() {
           maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
         }}>
         {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>{t('Đang tải...')}</div>
+          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>Loading...</div>
         ) : tokens.length === 0 ? (
           <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>
-            {t('Chưa có token nào')}
+            No tokens yet
           </div>
         ) : (
           <>
@@ -153,9 +152,9 @@ export default function HomeSend() {
           // Mỗi dòng = 1 CÂU đủ nghĩa, từ khoá gạch chân BẤM ĐƯỢC → đi đúng nơi nút cùng tên ở
           // hàng 9 dẫn tới (user chốt 07-21).
           hints={[
-            { label: t('Dán để gửi'), desc: t('Dán địa chỉ ví của người nhận'), onClick: () => navigate('PasteAddress') },
-            { label: t('Quét QR'), desc: t('Quét mã QR của người nhận'), onClick: () => navigate('QRScanner') },
-            { label: t('Danh bạ'), desc: t('Lưu người bạn hay gửi tiền'), onClick: () => navigate('Contacts') },
+            { label: 'Paste', desc: 'Paste a wallet address to send', onClick: () => navigate('PasteAddress') },
+            { label: 'Scan QR', desc: 'Scan a QR code to send', onClick: () => navigate('QRScanner') },
+            { label: 'Contacts', desc: 'Save people you send to often', onClick: () => navigate('Contacts') },
           ]}
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
@@ -164,9 +163,9 @@ export default function HomeSend() {
                 {/* Icon CENTER-TRÁI cả khối 2 dòng (user chốt 07-17) — không dính dòng 1 */}
                 <Icon name="warning" size="var(--is-item)" color="var(--color-warning)" style={{ flexShrink: 0 }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-                  <span style={{ fontSize: NOTIF_FS, color: 'var(--color-content)' }}>{t('Hết USDC để trả phí giao dịch')}</span>
+                  <span style={{ fontSize: NOTIF_FS, color: 'var(--color-content)' }}>Out of USDC for transaction fees</span>
                   <span style={{ fontSize: NOTIF_FS, color: 'var(--color-content)' }}>
-                    {t('Bấm để nhận USDC testnet từ')}{' '}
+                    {'Tap to get testnet USDC from'}{' '}
                     <span style={{ color: 'var(--color-warning)', textDecoration: 'underline' }}>Faucet</span>
                   </span>
                 </div>
@@ -179,9 +178,9 @@ export default function HomeSend() {
       <div className="row-9 action-grid">
         {/* Thứ tự trái→phải: Paste · Scan QR · Contacts (user chốt 07-23: Contacts dùng nhiều
             hơn → bên PHẢI; hint NotifArea cùng thứ tự) */}
-        <button className="action-card" onClick={() => navigate('PasteAddress')}><Icon name="copy" size="var(--is-item)" /><span>{t('Dán để gửi')}</span></button>
-        <button className="action-card primary" onClick={() => navigate('QRScanner')}><Icon name="scan" size="var(--is-item)" color="var(--color-white)" /><span>{t('Quét QR')}</span></button>
-        <button className="action-card" onClick={() => navigate('Contacts')}><Icon name="human" size="var(--is-item)" /><span>{t('Danh bạ')}</span></button>
+        <button className="action-card" onClick={() => navigate('PasteAddress')}><Icon name="copy" size="var(--is-item)" /><span>Paste</span></button>
+        <button className="action-card primary" onClick={() => navigate('QRScanner')}><Icon name="scan" size="var(--is-item)" color="var(--color-white)" /><span>Scan QR</span></button>
+        <button className="action-card" onClick={() => navigate('Contacts')}><Icon name="human" size="var(--is-item)" /><span>Contacts</span></button>
       </div>
 
       <NavBar active="HomeSend" />

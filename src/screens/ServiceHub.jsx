@@ -1,15 +1,14 @@
 import NavBar from '../components/NavBar'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
-import { t } from '../i18n'
 
 // ══ SERVICE HUB — trang chủ các dịch vụ (tab 1 navbar, thay tab Swap cũ) ══
 // Swap không còn là 1 tab riêng mà là 1 Ô trong đây, đứng cạnh các dịch vụ sẽ làm sau.
 // Thêm dịch vụ mới = thêm 1 dòng vào SERVICES, ĐỪNG copy khối JSX ra thành ô thứ 4 rời rạc.
 //   screen : tên màn trong SCREENS (App.jsx). null = chưa làm → ô tự mờ + không bấm được.
 const SERVICES = [
-  { id: 'swap', icon: 'exchange', label: 'Đổi tiền',        screen: 'Swap' },
-  { id: 'pig',  icon: 'pig',      label: 'Heo đất',         screen: null },
+  { id: 'swap', icon: 'exchange', label: 'Swap',        screen: 'Swap' },
+  { id: 'pig',  icon: 'pig',      label: 'Piggy Bank',         screen: null },
   { id: 'luckypot', icon: 'luckypot', label: 'LuckyPot',    screen: null },
 ]
 
@@ -19,7 +18,7 @@ export default function ServiceHub() {
   return (
     <div className="screen">
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        {t('Service Hub')}
+        Service Hub
       </div>
 
       {/* BOX XÁM hàng 2-9 + lưới 2 CỘT bên trong — ĐÚNG hình học màn Kho QR (user chốt 08-12
@@ -66,7 +65,7 @@ export default function ServiceHub() {
                     với icon 56 mà vẫn to hơn hẳn bản 17 cũ. Nhãn dài xuống 2 dòng → KHÔNG
                     whiteSpace:nowrap; lineHeight 1.15 để 2 dòng vẫn gọn. */}
                 <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', textAlign: 'center', lineHeight: 1.15, maxWidth: '100%' }}>
-                  {t(label)}
+                  {label}
                 </span>
               </button>
             )

@@ -4,15 +4,14 @@ import Icon from '../components/Icon'
 import { getTokenBalances, cachedBalances } from '../chain'
 import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
-import { t } from '../i18n'
 
 // ⛔ BỎ 'Service Hub' KHỎI ĐÂY 08-13 (user chốt): nó đã là TAB 1 của NavBar, để thêm 1 cửa nữa
 // trong Menu là 2 đường vào cùng 1 chỗ — thừa với người dùng phổ thông. Vào bằng navbar thôi.
 // (Mục này từng nằm đây dạng disabled từ 07-31 lúc chưa có màn thật.)
 const ITEMS = [
-  { id: 'TxHistory',  icon: 'clock', label: 'Lịch sử giao dịch' },
-  { id: 'Security',   icon: 'shield', label: 'Bảo mật' },
-  { id: 'Language',   icon: 'globe', label: 'Language & Currency' },   // tách lại khỏi Security (08-04, user chốt)
+  { id: 'TxHistory',  icon: 'clock', label: 'Transaction history' },
+  { id: 'Security',   icon: 'shield', label: 'Security' },
+  { id: 'Currency',   icon: 'globe', label: 'Currency' },   // tách khỏi Security 08-04; bỏ phần Ngôn ngữ 08-25
   { id: 'About',      icon: 'info',  label: 'About' },
 ]
 
@@ -44,10 +43,10 @@ export default function MenuScreen() {
       {/* Row 3: Nạp / Rút */}
       <div className="row-3" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
         <button className="btn btn-secondary" style={{ flex: 1, opacity: 0.4 }} disabled>
-          {t('Rút tiền')}
+          Withdraw
         </button>
         <button className="btn btn-primary" style={{ flex: 1 }} onClick={copyAddrThenFaucet}>
-          {t('Nạp tiền')}
+          Deposit
         </button>
       </div>
 
@@ -58,7 +57,7 @@ export default function MenuScreen() {
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
             {/* Icon dẫn đầu = brand blue (ngôn ngữ Swap, user chốt 07-17e); Sign out vẫn đỏ ngữ nghĩa */}
             <Icon name={icon} size="var(--is-md-lg)" color="var(--color-brand)" />
-            <span style={{ flex: 1, fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>{t(label)}</span>
+            <span style={{ flex: 1, fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>{label}</span>
             {!disabled && <Icon name="right2" size="var(--is-md-lg)" color="var(--color-brand)" />}
           </button>
         </div>
@@ -76,7 +75,7 @@ export default function MenuScreen() {
           window.location.reload()
         }}>
           <Icon name="out" size="var(--is-md-lg)" color="var(--color-error)" />
-          <span style={{ flex: 1, fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)' }}>{t('Đăng xuất')}</span>
+          <span style={{ flex: 1, fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)' }}>Sign out</span>
         </button>
       </div>
 

@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNav } from '../nav'
 import { refreshSession, forceFreshSession, isTokenExpiredError, getSDK, executeChallenge, signMessageChallenge, circleErrorMessage } from '../circle'
-import { t } from '../i18n'
 import logoLong from '../../design/logo.svg'
 
 // KHOÁ MỞ VÍ bằng chính PIN Circle. Vào màn là TỰ bật iframe PIN của Circle NGAY — KHÔNG hiện thêm
@@ -90,8 +89,8 @@ export default function PinGate() {
         {error && <div style={{ fontSize: 'var(--fs-body)', color: 'var(--color-error)', maxWidth: 300 }}>{error}</div>}
       </div>
       <div className="row-10 row10-dual">
-        <button className="btn btn-secondary" onClick={signOut}>{t('Đăng xuất')}</button>
-        <button className="btn btn-primary" style={{ flex: 1 }} onClick={unlock}>{t('Mở khoá')}</button>
+        <button className="btn btn-secondary" onClick={signOut}>Sign out</button>
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={unlock}>Unlock</button>
       </div>
     </div>
   )

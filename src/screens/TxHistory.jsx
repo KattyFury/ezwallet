@@ -3,7 +3,6 @@ import { useNav } from '../nav'
 import { getDisplayCurrency, displayNum, displaySymbol } from '../data'
 import { TOKENS, getTxMemo, getDisplayRates, isFaucetAddress } from '../chain'
 import Icon from '../components/Icon'
-import { t } from '../i18n'
 import { loadContacts } from '../store'
 
 const ARCSCAN = 'https://testnet.arcscan.app'
@@ -216,7 +215,7 @@ export default function TxHistory() {
     })
     return m
   })()
-  const emptyMsg = filter === 'send' ? t('Chưa có giao dịch gửi') : filter === 'receive' ? t('Chưa có giao dịch nhận') : t('Chưa có giao dịch nào')
+  const emptyMsg = filter === 'send' ? 'No sent transactions' : filter === 'receive' ? 'No received transactions' : 'No transactions yet'
 
   useEffect(() => {
     if (!walletAddr) { setLoading(false); return }
@@ -251,7 +250,7 @@ export default function TxHistory() {
   return (
     <div className="screen">
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        {t('Lịch sử giao dịch')}
+        Transaction history
       </div>
 
       {/* BOX XÁM chung bao cả lịch sử (user chốt 07-17f "phân ra ranh giới"). Mask mờ đáy nằm ở
@@ -263,7 +262,7 @@ export default function TxHistory() {
         maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
       }}>
         {loading ? (
-          <div style={{ width: '100%', textAlign: 'center', paddingTop: 40, color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>{t('Đang tải...')}</div>
+          <div style={{ width: '100%', textAlign: 'center', paddingTop: 40, color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>Loading...</div>
         ) : filtered.length === 0 ? (
           <div style={{ width: '100%', textAlign: 'center', paddingTop: 40 }}>
             <div style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{emptyMsg}</div>
@@ -289,10 +288,10 @@ export default function TxHistory() {
       <div style={{ gridRow: '9 / 11', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
         {/* Lọc bật = nền trắng + VIỀN XANH (không tô đặc) */}
         <button className="btn btn-secondary" style={{ flex: 1, ...(filter === 'send' ? activeFilter : {}) }}
-          onClick={() => setFilter(f => f === 'send' ? 'all' : 'send')}>{t('Gửi')}</button>
+          onClick={() => setFilter(f => f === 'send' ? 'all' : 'send')}>Send</button>
         <button className="btn btn-secondary" style={{ flex: 1, ...(filter === 'receive' ? activeFilter : {}) }}
-          onClick={() => setFilter(f => f === 'receive' ? 'all' : 'receive')}>{t('Nhận')}</button>
-        <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => navigate('MenuScreen')}>{t('Quay lại')}</button>
+          onClick={() => setFilter(f => f === 'receive' ? 'all' : 'receive')}>Receive</button>
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => navigate('MenuScreen')}>Back</button>
       </div>
 
       {/* Popup chi tiết giao dịch */}
@@ -300,10 +299,10 @@ export default function TxHistory() {
         <div className="popup-overlay" onClick={() => setSelected(null)}>
           {/* display:block — DetailRow tự có padding+border nên KHÔNG dùng gap flex của .popup-card */}
           <div className="popup-card" style={{ display: 'block' }} onClick={e => e.stopPropagation()}>
-            <div className="popup-title" style={{ marginBottom: 8 }}>{t('Chi tiết giao dịch')}</div>
-            <DetailRow label={t('Loại')}>{d.isSend ? t('Đã gửi') : t('Đã nhận')} {d.symbol}</DetailRow>
-            {d.name && <DetailRow label={d.isSend ? t('Người nhận') : t('Người gửi')}>{d.name}</DetailRow>}
-            <DetailRow label={t('Địa chỉ ví')}>
+            <div className="popup-title" style={{ marginBottom: 8 }}>Transaction details</div>
+            <DetailRow label={'Type'}>{d.isSend ? 'Sent' : 'Received'} {d.symbol}</DetailRow>
+            {d.name && <DetailRow label={d.isSend ? 'Recipient' : 'Sender'}>{d.name}</DetailRow>}
+            <DetailRow label={'Wallet address'}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 {shortAddr(d.counter)}
                 <button onClick={() => copyCounter(d.counter)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 0 }}>
@@ -311,19 +310,19 @@ export default function TxHistory() {
                 </button>
               </span>
             </DetailRow>
-            <DetailRow label={t('Số tiền')}>
+            <DetailRow label={'Amount'}>
               <span className="num" style={{ color: d.isSend ? 'var(--color-error)' : 'var(--color-primary)' }}>
                 {d.isSend ? '-' : '+'}{d.amount.toFixed(d.amount < 0.01 ? 6 : 2)} {d.symbol}
               </span>
             </DetailRow>
-            <DetailRow label={t('Quy đổi')}><span className="num">{rates ? `${displaySymbol(cur)}${displayNum(d.usd, cur, rates)}` : '…'}</span></DetailRow>
-            <DetailRow label={t('Thời gian')}>{new Date(selected.timeStamp * 1000).toLocaleString('vi-VN')}</DetailRow>
-            {memoLoading ? <DetailRow label={t('Nội dung')}>{t('Đang tải...')}</DetailRow> : memo ? <DetailRow label={t('Nội dung')}>{memo}</DetailRow> : null}
+            <DetailRow label={'Converted'}><span className="num">{rates ? `${displaySymbol(cur)}${displayNum(d.usd, cur, rates)}` : '…'}</span></DetailRow>
+            <DetailRow label={'Time'}>{new Date(selected.timeStamp * 1000).toLocaleString('vi-VN')}</DetailRow>
+            {memoLoading ? <DetailRow label={'Note'}>Loading...</DetailRow> : memo ? <DetailRow label={'Note'}>{memo}</DetailRow> : null}
             <button className="btn btn-secondary" style={{ width: '100%', marginTop: 14 }}
               onClick={() => window.open(`${ARCSCAN}/tx/${selected.hash}`, '_blank')}>
-              {t('Xem trên ArcScan')}
+              View on ArcScan
             </button>
-            <button className="btn btn-primary" style={{ width: '100%', marginTop: 8 }} onClick={() => setSelected(null)}>{t('Đóng')}</button>
+            <button className="btn btn-primary" style={{ width: '100%', marginTop: 8 }} onClick={() => setSelected(null)}>Close</button>
           </div>
         </div>
       )}

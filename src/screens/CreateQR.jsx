@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useNav } from '../nav'
 import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
-import { t } from '../i18n'
 import { displaySymbol, amountFontSize } from '../data'
 
 // Đồng bộ màn Gửi: USD (nhãn thân thiện, ứng USDC) mặc định + USDC/EURC/cirBTC.
@@ -32,7 +31,7 @@ export default function CreateQR() {
   return (
     <div className="screen">
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        {t('Tạo QR nhận tiền')}
+        Create receive QR
       </div>
 
       {/* ĐỒNG BỘ HÌNH HỌC VỚI SendAmount (user chốt 07-23 "2 màn cùng chức năng phải giống nhau"):
@@ -42,7 +41,7 @@ export default function CreateQR() {
           lệch chuẩn 07-22c); dòng 3 = ô tên QR (chỉ khi từ Kho QR — đứng đúng chỗ ô note bên Gửi). */}
       <div style={{ gridRow: '2 / 6', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4dvh', minWidth: 0 }}>
         <div className="center" style={{ gap: 6 }}>
-          <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>{t('Số tiền muốn nhận')}</span>
+          <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>Amount to receive</span>
         </div>
 
         <div className="center col" style={{ gap: 6 }}>
@@ -61,7 +60,7 @@ export default function CreateQR() {
         {fromLibrary ? (
           <div className="memo-row" style={{ width: '100%' }}>
             <Icon name="pencil" size="var(--is-md-lg)" color="var(--color-muted)" />
-            <input className="memo-input" value={name} onChange={e => setName(e.target.value)} placeholder={t('Đặt tên cho QR')} maxLength={30}
+            <input className="memo-input" value={name} onChange={e => setName(e.target.value)} placeholder={'Name your QR'} maxLength={30}
               onFocus={() => setTypingText(true)} onBlur={() => setTypingText(false)} />
           </div>
         ) : (
@@ -86,17 +85,17 @@ export default function CreateQR() {
 
       {/* Nút [Hủy][Tạo QR] = vị trí chuẩn row10-dual (hàng 9-10) */}
       <div className="row10-dual">
-        <button className="btn btn-secondary" onClick={() => navigate(fromLibrary ? 'SavedQRList' : 'HomeReceive')}>{t('Hủy')}</button>
+        <button className="btn btn-secondary" onClick={() => navigate(fromLibrary ? 'SavedQRList' : 'HomeReceive')}>Cancel</button>
         <button className="btn btn-primary" disabled={amount <= 0}
           onClick={() => navigate('ShowQR', { amount, currency: cur, name: name.trim(), saveToLibrary: fromLibrary, back: fromLibrary ? 'SavedQRList' : 'HomeReceive' })}>
-          {t('Tạo QR')}
+          Create QR
         </button>
       </div>
 
       {showCur && (
         <div className="popup-overlay" onClick={() => setShowCur(false)}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
-            <div className="popup-title">{t('Chọn tiền tệ')}</div>
+            <div className="popup-title">Select currency</div>
             {CURRENCIES.map(c => (
               <button key={c} onClick={() => { setCur(c); setShowCur(false) }}
                 className={`btn ${c === cur ? 'btn-primary' : 'btn-secondary'}`} style={{ width: '100%' }}>{c}</button>

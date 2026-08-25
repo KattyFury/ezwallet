@@ -8,7 +8,6 @@ import NotifArea from '../components/NotifArea'
 import { useNav } from '../nav'
 import { getTokenBalances, cachedBalances } from '../chain'
 import { ensureWalletAddress } from '../circle'
-import { t } from '../i18n'
 import { buildQR } from '../qr'
 
 export default function HomeReceive() {
@@ -94,7 +93,7 @@ export default function HomeReceive() {
         fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', cursor: 'pointer', whiteSpace: 'nowrap',
         WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
       }}>
-        {addrCopied ? t('Đã copy!') : t('Bấm để copy địa chỉ ví của bạn')}
+        {addrCopied ? 'Copied!' : 'Tap to copy your wallet address'}
       </button>
 
       <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
@@ -103,11 +102,11 @@ export default function HomeReceive() {
         {/* pollMs 5s (user chốt 08-13): đây là màn người ta VỪA CHÌA QR RA VÀ ĐANG ĐỨNG CHỜ tiền
             vào → hỏi dày hơn hẳn màn Gửi (15s mặc định). Xem NotifArea. */}
         <NotifArea pollMs={5000} hints={[
-          { label: t('Kho QR'), desc: t('Lưu những QR bạn hay dùng'), onClick: () => navigate('SavedQRList') },
-          { label: t('Tạo QR'), desc: t('Tạo QR để nhận đúng số tiền'), onClick: () => navigate('CreateQR') },
+          { label: 'QR Storage', desc: 'Save your favorite QR codes', onClick: () => navigate('SavedQRList') },
+          { label: 'Create QR', desc: 'Create a QR to receive money', onClick: () => navigate('CreateQR') },
           // "QR + địa chỉ" (user sửa 08-13) — mô tả ĐÚNG 2 thứ gửi đi: ẢNH mã QR (kèm logo +
           // nhãn mạng) và ĐỊA CHỈ dạng text. Xem handleShare phía trên.
-          { label: t('Chia sẻ'), desc: t('Chia sẻ QR + địa chỉ ví của bạn'), onClick: handleShare },
+          { label: 'Share', desc: 'Share your QR + wallet address', onClick: handleShare },
         ]} />
       </div>
 
@@ -116,15 +115,15 @@ export default function HomeReceive() {
       <div className="row-9 action-grid">
         <button className="action-card" onClick={() => navigate('SavedQRList')}>
           <Icon name="download" size="var(--is-item)" />
-          <span>{t('Kho QR')}</span>
+          <span>QR Storage</span>
         </button>
         <button className="action-card primary" onClick={() => navigate('CreateQR')}>
           <Icon name="qr" size="var(--is-item)" color="var(--color-white)" />
-          <span>{t('Tạo QR')}</span>
+          <span>Create QR</span>
         </button>
         <button className="action-card" onClick={handleShare}>
           <Icon name="share" size="var(--is-item)" />
-          <span>{copied ? t('Đã copy!') : t('Chia sẻ')}</span>
+          <span>{copied ? 'Copied!' : 'Share'}</span>
         </button>
       </div>
 

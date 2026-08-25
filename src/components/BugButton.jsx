@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import Icon from './Icon'
-import { t } from '../i18n'
 
 // ══ NÚT BÁO LỖI (user chốt 2026-08-13) ══
 // Icon 🐛 sát mép PHẢI, canh giữa HÀNG 1 — hiện trên MỌI màn (render 1 lần ở App.jsx, không
@@ -22,9 +21,9 @@ import { t } from '../i18n'
 function deviceInfo() {
   const ua = navigator.userAgent || ''
   const os = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android'
-    : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : 'khác'
+    : /Windows/.test(ua) ? 'Windows' : /Mac/.test(ua) ? 'Mac' : 'other'
   const br = /CriOS|Chrome/.test(ua) ? 'Chrome' : /FxiOS|Firefox/.test(ua) ? 'Firefox'
-    : /Safari/.test(ua) ? 'Safari' : 'khác'
+    : /Safari/.test(ua) ? 'Safari' : 'other'
   // standalone = đã thêm vào màn hình chính (PWA) — hành vi share/âm thanh/localStorage khác hẳn
   // tab Safari thường, nên PHẢI biết khi đọc báo lỗi.
   const pwa = window.matchMedia?.('(display-mode: standalone)').matches || window.navigator.standalone
@@ -56,11 +55,11 @@ export default function BugButton({ screen }) {
       if (r.ok) { setState('sent'); setTimeout(close, 1600); return }
       const d = await r.json().catch(() => ({}))
       // Nói rõ từng loại hỏng — "có lỗi xảy ra" chung chung thì user báo lại cũng vô ích.
-      setState(d.error === 'bug-report-disabled' ? t('Chưa cấu hình gửi báo lỗi')
-        : d.error === 'rate-limited' ? t('Bạn đã gửi quá nhiều, thử lại sau 1 giờ')
-        : t('Gửi thất bại, thử lại'))
+      setState(d.error === 'bug-report-disabled' ? 'Bug reporting is not set up yet'
+        : d.error === 'rate-limited' ? 'Too many reports – please try again in an hour'
+        : 'Could not send, please try again')
     } catch {
-      setState(t('Gửi thất bại, thử lại'))
+      setState('Could not send, please try again')
     }
   }
 
@@ -68,7 +67,7 @@ export default function BugButton({ screen }) {
     <>
       {/* absolute trong khung .app-frame (App.jsx) → neo đúng mép phải của KHUNG APP, không phải
           mép màn hình. top 5dvh = tâm hàng 1 (10 hàng đều nhau). right 20px = đúng lề .screen. */}
-      <button onClick={() => setOpen(true)} aria-label={t('Báo lỗi')}
+      <button onClick={() => setOpen(true)} aria-label={'Report a bug'}
         style={{
           position: 'absolute', top: '5dvh', right: 20, transform: 'translateY(-50%)', zIndex: 50,
           background: 'none', border: 'none', padding: 8, cursor: 'pointer', display: 'flex',
@@ -80,7 +79,7 @@ export default function BugButton({ screen }) {
       {open && (
         <div className="popup-overlay" onClick={close}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
-            <div className="popup-title">{t('Báo lỗi')}</div>
+            <div className="popup-title">Report a bug</div>
             {/* DANH SÁCH ĐÁNH SỐ những thứ gửi kèm (user chốt 08-13, bản thứ 3).
                 Đường đi: liệt kê 1 câu dài → user chê "yêu cầu lắm thế?" → rút còn 1 dòng → user
                 muốn LIỆT KÊ LẠI nhưng dạng danh sách đánh số cho dễ soi. Danh sách dễ đọc hơn hẳn
@@ -89,13 +88,13 @@ export default function BugButton({ screen }) {
             {/* lineHeight 1.3 (không phải 1.45): trên màn nhỏ 360×640 popup chạm trần 56dvh và
                 phải cuộn mới thấy nút Gửi. Mỗi 0.1 lineHeight ở đây đổi được ~6px chiều cao. */}
             <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', lineHeight: 1.3 }}>
-              {t('Tin nhắn này sẽ gửi kèm:')}
+              This report will include:
               <ol style={{ paddingLeft: 20 }}>
-                <li>{t('Màn hình bạn bấm Bug Report')}</li>
-                <li>{t('Địa chỉ ví của bạn')}</li>
-                <li>{t('Thiết bị bạn dùng')}</li>
-                <li>{t('Phiên bản app')}</li>
-                <li>{t('Thời gian bạn gửi')}</li>
+                <li>The screen you reported from</li>
+                <li>Your wallet address</li>
+                <li>Your device</li>
+                <li>App version</li>
+                <li>The time you reported</li>
               </ol>
             </div>
             <textarea
@@ -108,13 +107,13 @@ export default function BugButton({ screen }) {
             />
             {state && state !== 'sending' && (
               <span style={{ fontSize: 'var(--fs-label)', color: state === 'sent' ? 'var(--color-primary)' : 'var(--color-error)' }}>
-                {state === 'sent' ? t('Đã gửi, cảm ơn bạn!') : state}
+                {state === 'sent' ? 'Sent – thank you!' : state}
               </span>
             )}
             <div className="popup-actions">
-              <button className="btn btn-secondary" onClick={close}>{t('Hủy')}</button>
+              <button className="btn btn-secondary" onClick={close}>Cancel</button>
               <button className="btn btn-primary" disabled={!text.trim() || state === 'sending'} onClick={send}>
-                {state === 'sending' ? t('Đang gửi...') : t('Gửi')}
+                {state === 'sending' ? 'Sending...' : 'Send'}
               </button>
             </div>
           </div>

@@ -5,7 +5,6 @@ import Icon from '../components/Icon'
 import ErrorToast from '../components/ErrorToast'
 import { getTokenInfo, getDisplayRates, cachedRates } from '../chain'
 import { ensureWalletAddress } from '../circle'
-import { t } from '../i18n'
 import { findContactName } from '../store'
 import { displaySymbol, spendableOf, floorTo } from '../data'
 import { useFitFontSize } from '../useFitFontSize'
@@ -140,14 +139,14 @@ export default function SendAmount() {
       <ErrorToast message={params.sendError} />
 
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        {t('Gửi tiền')}
+        Send money
       </div>
 
       {/* Cụm Send-to / số tiền / note — 1 flex column căn giữa vùng hàng 2-5. gap 4dvh (user chốt
           07-22c: 2dvh quá sát/ngộp, tách ra 1 đoạn nhỏ cho thoáng — vẫn là cụm, chưa rải rạc). */}
       <div style={{ gridRow: '2 / 6', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4dvh', minWidth: 0 }}>
         <div className="center" style={{ gap: 6 }}>
-          <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)' }}>{t('Gửi cho:')}</span>
+          <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)' }}>Send to:</span>
           <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>
             {name || shortenAddr(address)}
           </span>
@@ -169,18 +168,18 @@ export default function SendAmount() {
               stablecoin. Chưa có tỷ giá → báo rõ thay vì để nút Tiếp tục chết câm không lý do. */}
           {isVnd && digits && (
             <span className="num" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)', textAlign: 'center' }}>
-              {vndRate ? `≈ ${tokenAmount.toFixed(2)} USDC` : t('Đang lấy tỷ giá...')}
+              {vndRate ? `≈ ${tokenAmount.toFixed(2)} USDC` : 'Getting exchange rate...'}
             </span>
           )}
           {selfSend ? (
             /* Vào được màn này với ví của chính mình chỉ còn đường Danh bạ — báo NGAY, đừng
                để user gõ xong số tiền mới biết không gửi được. */
             <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>
-              {t('Đây là ví của bạn – không gửi cho chính mình được')}
+              That's your own wallet – you can't send to yourself
             </span>
           ) : overBalance && (
             <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>
-              {t('Số dư không đủ (khả dụng:')} {availableStr})
+              {'Insufficient balance (available:'} {availableStr})
             </span>
           )}
         </div>
@@ -189,7 +188,7 @@ export default function SendAmount() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
           <input
             className="address-input"
-            placeholder={t('Nội dung chuyển khoản (không bắt buộc)')}
+            placeholder={'Transfer note (optional)'}
             value={memo}
             onFocus={() => { onNoteFocus(); setTypingText(true) }}
             onBlur={() => setTypingText(false)}
@@ -197,7 +196,7 @@ export default function SendAmount() {
             maxLength={100}
             style={{ flex: 1, minWidth: 0, height: 52, fontSize: 'var(--fs-md-lg)' }}
           />
-          <button onClick={openNotePopup} aria-label={t('Đặt lời nhắn mặc định')}
+          <button onClick={openNotePopup} aria-label={'Set your default note'}
             style={{ flexShrink: 0, width: 52, height: 52, borderRadius: 10, border: 'none', background: 'var(--color-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Icon name="option" size="var(--is-md-lg)" color="var(--color-muted)" />
           </button>
@@ -233,10 +232,10 @@ export default function SendAmount() {
 
       {/* Nút [Quay lại][Tiếp tục] = vị trí CHUẨN row10-dual (hàng 9-10, canh giữa quanh ranh giới 9/10) */}
       <div className="row10-dual">
-        <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>{t('Quay lại')}</button>
+        <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>Back</button>
         <button className="btn btn-primary" disabled={!canContinue}
           onClick={() => navigate('SendConfirm', { address, name, amount, memo, currency: cur, tokenAmount })}>
-          {t('Tiếp tục')}
+          Continue
         </button>
       </div>
 
@@ -245,13 +244,13 @@ export default function SendAmount() {
       {showNote && (
         <div className="popup-overlay" onClick={() => setShowNote(false)}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
-            <div className="popup-title">{t('Đặt lời nhắn mặc định')}</div>
-            <input className="address-input" placeholder={t('Nhập tại đây')} value={draftNote}
+            <div className="popup-title">Set your default note</div>
+            <input className="address-input" placeholder={'Type here'} value={draftNote}
               onChange={e => setDraftNote(e.target.value)} maxLength={100} autoFocus
               style={{ width: '100%', height: 52, fontSize: 'var(--fs-md-lg)' }} />
             <div className="popup-actions">
-              <button className="btn btn-secondary" onClick={() => setShowNote(false)}>{t('Quay lại')}</button>
-              <button className="btn btn-primary" onClick={saveDefaultNote}>{t('Lưu')}</button>
+              <button className="btn btn-secondary" onClick={() => setShowNote(false)}>Back</button>
+              <button className="btn btn-primary" onClick={saveDefaultNote}>Save</button>
             </div>
           </div>
         </div>
@@ -261,7 +260,7 @@ export default function SendAmount() {
       {showCur && (
         <div className="popup-overlay" onClick={() => setShowCur(false)}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
-            <div className="popup-title">{t('Chọn tiền tệ')}</div>
+            <div className="popup-title">Select currency</div>
             {CURRENCIES.map(c => (
               // Đổi tiền tệ → XOÁ số đang gõ. "50" nghĩa là 50 đô hay 50 đồng là hai chuyện khác
               // hẳn nhau; giữ nguyên số cũ là mời user gửi nhầm gấp hai vạn lần.

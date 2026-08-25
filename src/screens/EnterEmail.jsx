@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
 import { createSession, createEmailToken, getSDK, initializeWallet, executeChallenge, getWalletAddress, circleErrorMessage } from '../circle'
-import { t } from '../i18n'
 
 const DOMAINS = ['@gmail.com', '@yahoo.com', '@icloud.com']
 const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
@@ -138,7 +137,7 @@ export default function EnterEmail() {
   return (
     <div className="screen">
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        {t('Đăng nhập với Email')}
+        Sign in with Email
       </div>
 
       <div className="row-3" style={{ position: 'relative' }}>
@@ -199,9 +198,9 @@ export default function EnterEmail() {
       </div>
 
       <div className="row-10 row10-dual">
-        <button className="btn btn-secondary" onClick={() => navigate('Login')}>{t('Quay lại')}</button>
+        <button className="btn btn-secondary" onClick={() => navigate('Login')}>Back</button>
         <button className="btn btn-primary" disabled={!valid || loading} onClick={handleSubmit}>
-          {loading ? t('Đang xử lý...') : t('Tiếp tục')}
+          {loading ? 'Processing...' : 'Continue'}
         </button>
       </div>
     </div>

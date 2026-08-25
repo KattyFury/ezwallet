@@ -5,7 +5,6 @@ import { fmtMoney } from '../data'
 import { addNotif } from '../notif'
 import { saveImageToPhotos } from '../saveImage'
 import logoLong from '../../design/logo.svg'
-import { t } from '../i18n'
 
 // Icon check XANH LÁ to (thành công) — check.svg đã gồm vòng tròn viền + dấu check
 function CheckIcon() {
@@ -41,7 +40,7 @@ export default function SendReceipt() {
   // Lưu thông báo "đã gửi" để HomeSend hiện. dedupeKey theo timestamp (duy nhất mỗi lần gửi thật)
   // → chống nhân đôi do React.StrictMode gọi effect 2 lần ở dev mode.
   useEffect(() => {
-    addNotif(`${t('Đã gửi')} ${amountText} ${t('cho')} ${to}`, 'sent', null, `sent-${timestamp}`)
+    addNotif(`${'Sent'} ${amountText} ${'to'} ${to}`, 'sent', null, `sent-${timestamp}`)
   }, [])
 
   // Vẽ biên lai ra canvas rồi tải về kho ảnh
@@ -58,7 +57,7 @@ export default function SendReceipt() {
     x.beginPath(); x.arc(W / 2, 90, 44, 0, Math.PI * 2); x.stroke()
     x.beginPath(); x.moveTo(W / 2 - 20, 90); x.lineTo(W / 2 - 6, 105); x.lineTo(W / 2 + 22, 73); x.stroke()
     x.textAlign = 'center'
-    x.fillStyle = '#000000'; x.font = '600 32px sans-serif'; x.fillText(t('Đã gửi thành công'), W / 2, 180)
+    x.fillStyle = '#000000'; x.font = '600 32px sans-serif'; x.fillText('Sent successfully', W / 2, 180)
     x.fillStyle = '#0B53BF'; x.font = '700 52px sans-serif'; x.fillText(amountText, W / 2, 245)
     // các dòng
     let yy = 320
@@ -68,11 +67,11 @@ export default function SendReceipt() {
       x.strokeStyle = '#E5E5EA'; x.lineWidth = 1; x.beginPath(); x.moveTo(50, yy + 22); x.lineTo(W - 50, yy + 22); x.stroke()
       yy += 60
     }
-    row(t('Gửi đến'), to)
+    row('Send to', to)
     if (name && address) row('Address', shortenAddr(address))   // rút gọn; chỉ khi Send to = tên danh bạ
     row('Amount', realAmountText)
-    if (memo) row(t('Nội dung'), memo)
-    row(t('Thời gian'), fmtTime(timestamp))
+    if (memo) row('Note', memo)
+    row('Time', fmtTime(timestamp))
     // Logo EZwallet (branding chuẩn — design/logo.svg, EZ xanh thương hiệu + wallet đen) ở đáy —
     // neo theo ĐÁY canvas, H đã chừa 50px khoảng thở sau dòng cuối (đừng để logo dính divider)
     const lw = 168, lh = lw * 380 / 1160   // tỉ lệ theo logo.svg mới (viewBox 1160×380)
@@ -86,49 +85,49 @@ export default function SendReceipt() {
   return (
     <div className="screen">
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        {t('Biên lai')}
+        Receipt
       </div>
 
       <div className="row-2-8 col center" style={{ gap: 12 }}>
         <CheckIcon />
-        <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>{t('Đã gửi thành công')}</span>
+        <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>Sent successfully</span>
         {/* MỘT span, MỘT font/size/weight — "$2" liền khối */}
         <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
           {amountText}
         </span>
         <div className="confirm-box" style={{ width: '100%' }}>
           <div className="confirm-row">
-            <span className="confirm-label">{t('Gửi đến')}</span>
+            <span className="confirm-label">Send to</span>
             <span className="confirm-value">{to}</span>
           </div>
           {/* Địa chỉ ví RÚT GỌN 0x1234…5678 (user chốt 07-23: không để full, dài xấu). CHỈ hiện khi
               Send to là TÊN danh bạ — không tên thì Send to đã là địa chỉ rút gọn rồi, thêm = trùng. */}
           {name && address ? (
             <div className="confirm-row">
-              <span className="confirm-label">{t('Địa chỉ')}</span>
+              <span className="confirm-label">Address</span>
               <span className="confirm-value num">{shortenAddr(address)}</span>
             </div>
           ) : null}
           <div className="confirm-row">
-            <span className="confirm-label">{t('Số tiền')}</span>
+            <span className="confirm-label">Amount</span>
             <span className="confirm-value num">{realAmountText}</span>
           </div>
           {memo ? (
             <div className="confirm-row">
-              <span className="confirm-label">{t('Nội dung')}</span>
+              <span className="confirm-label">Note</span>
               <span className="confirm-value">{memo}</span>
             </div>
           ) : null}
           <div className="confirm-row">
-            <span className="confirm-label">{t('Thời gian')}</span>
+            <span className="confirm-label">Time</span>
             <span className="confirm-value" style={{ fontSize: 'var(--fs-body)' }}>{fmtTime(timestamp)}</span>
           </div>
         </div>
       </div>
 
       <div className="row-10 row10-dual">
-        <button className="btn btn-secondary" onClick={saveReceipt}>{t('Lưu biên lai')}</button>
-        <button className="btn btn-primary" onClick={() => navigate('HomeSend')}>{t('Xong')}</button>
+        <button className="btn btn-secondary" onClick={saveReceipt}>Save receipt</button>
+        <button className="btn btn-primary" onClick={() => navigate('HomeSend')}>Done</button>
       </div>
     </div>
   )

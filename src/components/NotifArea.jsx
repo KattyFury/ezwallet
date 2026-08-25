@@ -4,7 +4,6 @@ import { useNav } from '../nav'
 import { getNotifs, dismissNotif, addNotif } from '../notif'
 import { isFaucetAddress } from '../chain'
 import { findContactName } from '../store'
-import { t } from '../i18n'
 
 // Phát hiện tiền vào (poll ArcScan) → tạo thông báo "đã nhận" (dùng chung mọi màn có NotifArea)
 // Chống trùng: mỗi tx hash chỉ thông báo MỘT lần (lưu set hash đã thông báo).
@@ -60,7 +59,7 @@ function pollIncoming(after) {
           } else {
             // Hiện TÊN DANH BẠ nếu địa chỉ người gửi đã lưu (đồng bộ thông báo "Đã gửi cho <tên>")
             const fromName = findContactName(tx.from) || `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`
-            addNotif(`${t('Đã nhận')} ${amt} ${symbol} ${t('từ')} ${fromName}`, 'received', tx.hash, `recv-${tx.hash}`)
+            addNotif(`${'Received'} ${amt} ${symbol} ${'from'} ${fromName}`, 'received', tx.hash, `recv-${tx.hash}`)
           }
           markNotified(tx.hash)
         })
@@ -109,7 +108,7 @@ function HintBlock({ lines }) {
     // vào chữ. Nén còn 6px/12px + gap 3 để 4 dòng nằm gọn. ĐỪNG nới lại nếu chưa bỏ bớt dòng.
     <div style={{ background: 'var(--color-white)', border: '1.5px solid var(--color-brand)', borderRadius: 12, padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: 3, fontSize: NOTIF_FS, color: 'var(--color-brand)', textAlign: 'left' }}>
       <div style={{ minWidth: 0, lineHeight: 1.35, color: 'var(--color-error)', fontWeight: 'var(--fw-semibold)' }}>
-        {t('Ví hiện chỉ hỗ trợ Arc Testnet')}
+        This wallet supports Arc Testnet only
       </div>
       {lines.map((h, i) => (
         <div key={i} style={{ minWidth: 0, lineHeight: 1.35 }}>

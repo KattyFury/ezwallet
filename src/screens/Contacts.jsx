@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
-import { t } from '../i18n'
 import { loadContacts, saveContacts } from '../store'
 
 function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
@@ -67,7 +66,7 @@ function AvatarCropper({ src, onCancel, onDone }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-      <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>{t('Chỉnh ảnh')}</div>
+      <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>Adjust photo</div>
       <div
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
         style={{ width: V, height: V, borderRadius: '50%', overflow: 'hidden', position: 'relative', background: '#000', touchAction: 'none', cursor: 'grab' }}
@@ -77,8 +76,8 @@ function AvatarCropper({ src, onCancel, onDone }) {
       </div>
       <input type="range" min={1} max={3} step={0.01} value={zoom} onChange={e => onZoom(parseFloat(e.target.value))} style={{ width: V }} />
       <div style={{ display: 'flex', gap: 8, width: '100%' }}>
-        <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onCancel}>{t('Hủy')}</button>
-        <button className="btn btn-primary" style={{ flex: 1 }} onClick={finish}>{t('Xong')}</button>
+        <button className="btn btn-secondary" style={{ flex: 1 }} onClick={onCancel}>Cancel</button>
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={finish}>Done</button>
       </div>
     </div>
   )
@@ -132,7 +131,7 @@ export default function Contacts() {
   return (
     <div className="screen">
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        {t('Danh bạ')}
+        Contacts
       </div>
 
       {/* BOX XÁM chung cho cả danh sách (user chốt 07-17f: "phân vùng rõ ra cho người ta dễ hình
@@ -140,7 +139,7 @@ export default function Contacts() {
           PFP sát lề trái còn nút option thụt 4px + rãnh scrollbar → user bắt lỗi "lệch trái"). */}
       <div className="row-2-8" style={{ width: '100%', ...(contacts.length ? { background: 'var(--color-surface)', borderRadius: 20, padding: '4px 16px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' } : {}) }}>
         {contacts.length === 0 ? (
-          <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{t('Chưa có danh bạ')}</span>
+          <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>No contacts yet</span>
         ) : (
           <div className="scroll-thin" style={{ overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column' }}>
           {contacts.map(c => {
@@ -168,7 +167,7 @@ export default function Contacts() {
                 </div>
                 <button onClick={() => navigate('SendAmount', { address: c.address, name: c.name })}
                   className="btn btn-primary" style={{ height: 40, minHeight: 40, padding: '0 22px', fontSize: 'var(--fs-item)' }}>
-                  {t('Gửi')}
+                  Send
                 </button>
                 <button onClick={() => openEdit(c)}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 4px', flexShrink: 0, display: 'flex' }}>
@@ -182,10 +181,10 @@ export default function Contacts() {
       </div>
 
       <div className="row-10 row10-dual">
-        <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>{t('Quay lại')}</button>
+        <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>Back</button>
         {/* CHỈ CHỮ, không icon (user chốt 07-29): mọi nút cặp Back/<hành động> trong app đều chữ trần —
             riêng nút này có icon nhìn lạc. */}
-        <button className="btn btn-primary" onClick={openAdd}>{t('Thêm')}</button>
+        <button className="btn btn-primary" onClick={openAdd}>Add</button>
       </div>
 
       <input ref={fileRef} type="file" accept="image/*" onChange={pickFile} style={{ display: 'none' }} />
@@ -198,7 +197,7 @@ export default function Contacts() {
               <AvatarCropper src={picked} onCancel={() => setPicked(null)} onDone={d => { setForm(f => ({ ...f, pfp: d })); setPicked(null) }} />
             ) : (
               <>
-                <div className="popup-title">{form.id ? 'Edit contact' : t('Thêm danh bạ')}</div>
+                <div className="popup-title">{form.id ? 'Edit contact' : 'Add contact'}</div>
                 {/* Vòng thêm PFP dùng CÙNG xám surface với ô nhập bên dưới (user bắt lỗi 07-17f:
                     2 vùng xám khác màu — trước là --color-gray #E5E5EA vs surface #F2F2F7) */}
                 <button onClick={() => fileRef.current?.click()}
@@ -207,7 +206,7 @@ export default function Contacts() {
                     ? <img src={form.pfp} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : <Icon name="add" size={30} color="var(--color-muted)" />}
                 </button>
-                <input className="address-input" placeholder={t('Tên')} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ fontSize: 'var(--fs-body)' }} />
+                <input className="address-input" placeholder={'Name'} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ fontSize: 'var(--fs-body)' }} />
                 <input className="address-input" placeholder="0x..." value={form.addr} onChange={e => setForm(f => ({ ...f, addr: e.target.value }))} style={{ fontSize: 'var(--fs-body)' }} />
                 {/* SỬA: dòng chữ đỏ "Delete contact" (không phải nút — tránh lòi 3 nút), bấm → confirm.
                     margin dọc 14px (user chốt 07-20: cách xa ô địa chỉ trên + cặp Back/Save dưới cho
@@ -220,8 +219,8 @@ export default function Contacts() {
                   </button>
                 )}
                 <div className="popup-actions">
-                  <button className="btn btn-secondary" onClick={closeForm}>{t('Quay lại')}</button>
-                  <button className="btn btn-primary" disabled={!formValid} onClick={handleSave}>{t('Lưu')}</button>
+                  <button className="btn btn-secondary" onClick={closeForm}>Back</button>
+                  <button className="btn btn-primary" disabled={!formValid} onClick={handleSave}>Save</button>
                 </div>
               </>
             )}
@@ -233,11 +232,11 @@ export default function Contacts() {
       {confirmDelete && (
         <div className="popup-overlay" style={{ zIndex: 110 }} onClick={() => setConfirmDelete(false)}>
           <div className="popup-card" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
-            <div className="popup-title">{t('Xoá danh bạ?')}</div>
-            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{t('Không thể hoàn tác.')}</div>
+            <div className="popup-title">Delete contact?</div>
+            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>This can't be undone.</div>
             <div className="popup-actions" style={{ marginTop: 4 }}>
-              <button className="btn btn-secondary" onClick={() => setConfirmDelete(false)}>{t('Quay lại')}</button>
-              <button className="btn btn-error" onClick={handleDelete}>{t('Xoá')}</button>
+              <button className="btn btn-secondary" onClick={() => setConfirmDelete(false)}>Back</button>
+              <button className="btn btn-error" onClick={handleDelete}>Delete</button>
             </div>
           </div>
         </div>

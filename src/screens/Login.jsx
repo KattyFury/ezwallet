@@ -4,8 +4,6 @@ import { useNav } from '../nav'
 import { useState, useEffect, useRef } from 'react'
 import { getCookie, setCookie, deleteCookie } from 'cookies-next'
 import { createSocialToken, initializeWallet, executeChallenge, getWalletAddress, GOOGLE_CLIENT_ID, circleErrorMessage } from '../circle'
-import { applyCircleLocale } from '../circleLocalizations'
-import { t } from '../i18n'
 
 const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
 
@@ -16,8 +14,8 @@ const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
 function googleErrMsg(error) {
   console.error('[GoogleLogin]', error?.code, error, JSON.stringify(error || {}))
   const code = error?.code
-  if (code === 155140) return `Google sign-in bị Circle từ chối (mã 155140). Nguyên nhân gần như chắc chắn: origin "${window.location.origin}" chưa được thêm vào allowlist redirect URI ở Circle Console và/hoặc Authorized origins ở Google Cloud Console (clientId).`
-  if (code === 155706) return 'Lỗi mạng khi xác thực với Circle (mã 155706). Thử lại.'
+  if (code === 155140) return `Google sign-in was rejected by Circle (code 155140). Almost certainly: origin "${window.location.origin}" is missing from the redirect-URI allowlist in Circle Console and/or Authorized origins in Google Cloud Console (clientId).`
+  if (code === 155706) return 'Network error while authenticating with Circle (code 155706). Try again.'
   return circleErrorMessage(error)
 }
 // Config cần cho SDK rehydrate sau redirect — lưu/xóa qua COOKIES (sống qua full page reload
@@ -113,7 +111,6 @@ export default function Login() {
           },
         },
       }, onLoginComplete)
-      applyCircleLocale(sdk)
       sdkRef.current = sdk
       // xin trước cho đỡ trễ lúc bấm nút (không phải lúc restore)
       if (!restoringNow) ensureDeviceId(sdk).catch(() => {})
@@ -130,7 +127,6 @@ export default function Login() {
       if (!sdkRef.current) {
         const { W3SSdk } = await import('@circle-fin/w3s-pw-web-sdk')
         sdkRef.current = new W3SSdk({ appSettings: { appId: APP_ID } })
-        applyCircleLocale(sdkRef.current)
       }
       const sdk = sdkRef.current
       const deviceId = await ensureDeviceId(sdk)
@@ -176,20 +172,20 @@ export default function Login() {
             của .screen nên cùng bề ngang → 80% khớp 80%. KHÔNG ép <br /> nữa: chữ tự xuống dòng
             cho vừa bề ngang đó (câu dài/ngắn theo ngôn ngữ + cỡ chữ vẫn tự vỡ dòng đúng). */}
         <span style={{ width: '80%', fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center' }}>
-          {t('Tạo ví bằng email, gửi nhận tiền một cách dễ dàng')}
+          {'Create a wallet with email, send & receive money easily'}
         </span>
       </div>
 
       {/* Nút Đăng nhập với Email — ở ranh giới hàng 9-10 (giữa row 9/11 = mép dưới, như các màn khác) */}
       <div style={{ gridRow: '9 / 11', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2dvh' }}>
         {restoring && (
-          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>{t('Đang xử lý...')}</span>
+          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>Processing...</span>
         )}
         <button className="btn btn-primary"
           style={{ width: '80%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10 }}
           onClick={() => navigate('EnterEmail')}>
           <Icon name="mail" size="var(--is-md-lg)" />
-          <span style={{ whiteSpace: 'nowrap' }}>{t('Đăng nhập với Email')}</span>
+          <span style={{ whiteSpace: 'nowrap' }}>Sign in with Email</span>
         </button>
       </div>
     </div>
