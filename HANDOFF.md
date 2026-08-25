@@ -409,7 +409,7 @@ A **grey** 🐛 icon (`--color-muted-2`) flush right, centred on **row 1**, pres
 | 2 | **Vietnamese and Chinese removed from the project entirely.** The i18n layer is gone, not merely switched off: `src/i18n.js` + `src/circleLocalizations.js` deleted, 219 `t('...')` calls replaced by plain English, `check-lang` deleted, `Language.jsx` → `Currency.jsx` (currency only, CNY/VND options dropped) | 2 |
 | 3 | **Every comment and document translated to English** - all 46 files under `src/`, `functions/`, `test/`, the CI workflow, the root scripts, `README.md`, `PITCH.md`, `CLAUDE.md` and this file. `.env.txt` was deliberately left alone (gitignored, holds secrets) | - |
 | 4 | **2 notification bugs fixed** (reported by the user): a faucet payout showing "received 0.00 cirBTC" (a hardcoded `toFixed(2)` against cirBTC dust → the new shared `data.js:fmtTokenAmount`), and long notifications being cut off with "…" (the row was pinned to one line → it now wraps) | 7e |
-| 5 | **The network warning now reads "This wallet currently supports Arc Testnet only"** (plus the same "currently" in the QRScanner wrong-network message) - the user wants the wording to leave room for the future | 7b |
+| 5 | **The network line in the hint block became `Available Network: Arc Testnet`** - two passes: the user first asked for "currently" so the sentence would leave room for more networks, then cut it to this label form because the longer sentence wrapped onto 2 lines. It now matches the `Label: value` shape of the 3 hint lines under it and fits one line down to 360px. The QRScanner wrong-network message keeps the sentence form ("this wallet currently only works on Arc") | 7b |
 | 6 | **The CI workflow finally landed** (`.github/workflows/ci.yml`) after switching the git identity to the `KattyFury` account, whose token carries the `workflow` scope | 9 · item 2b |
 
 **Decisions the user settled this session (do NOT ask again):**
@@ -421,7 +421,7 @@ A **grey** 🐛 icon (`--color-muted-2`) flush right, centred on **row 1**, pres
 **Known consequences to keep in mind:**
 - The VND plumbing (`chain.js` rates, `qr.js` parsing, `amountHint.js`) is still in the code but is now UNREACHABLE - nothing can select VND. It was left in place deliberately rather than ripped out on the same day as everything else; delete it in its own session if it is ever confirmed unwanted.
 - `Swap.jsx` and `SendAmount.jsx` still carry their own local `decimalsFor()` alongside the new shared `fmtTokenAmount` - out of scope for the bug fix, worth unifying later.
-- "This wallet currently supports Arc Testnet only" wraps onto 2 lines at ≤390px, and on a 360px screen the hint block now needs scrolling to read its first line. If that matters, the shorter "Currently supports Arc Testnet only" fits on one line at 375px.
+- The hint block is back to 4 single lines (115px at ≥375px, 138px at 360px) after the network line was shortened, so nothing has to be scrolled to be read. Keep that line SHORT if it is ever reworded - the block shares a fixed-height area with the notifications.
 
 ### 📒 WHAT SESSION 2026-08-13 DID (9 commits, `c80db30` → `1c348a2`)
 

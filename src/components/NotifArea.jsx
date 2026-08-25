@@ -102,6 +102,11 @@ export const NOTIF_FS = 'var(--fs-item)'
 // (no nowrap/ellipsis like real notifications, which would cut the meaning off).
 // THE FIRST LINE = THE NETWORK LIMIT (user decision 08-13). HARDCODED here, NOT passed as a prop from the 2 screens:
 // HomeSend and HomeReceive must say exactly the same thing, and two copies drift apart sooner or later.
+// ⚠️ WORDING, settled 08-25 after two passes: "This wallet supports Arc Testnet only" → the user asked for
+// "currently" so the sentence leaves room for more networks → that pushed it onto 2 lines at <=390px, so the
+// user cut it to the current "Available Network: Arc Testnet" - one line everywhere, and it reads as a fact
+// about today rather than a permanent limit. Keep it SHORT: this line shares a fixed-height block with 3 hint
+// lines, and every extra line eats into the notification area.
 // ⚠️ COLOUR: use --color-error (#DC2626, red) and NOT --color-warning (#F59E0B, yellow) -
 // yellow on WHITE only reaches ~2.1:1 contrast, which older users cannot read (the same lesson recorded in
 // section 5 of HANDOFF about white text on yellow). Red on white is ~4.8:1 and is still the app's "important" colour.
@@ -112,7 +117,7 @@ function HintBlock({ lines }) {
     // line. Tightened to 6px/12px + gap 3 so 4 lines fit. Do NOT loosen it again without removing a line.
     <div style={{ background: 'var(--color-white)', border: '1.5px solid var(--color-brand)', borderRadius: 12, padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: 3, fontSize: NOTIF_FS, color: 'var(--color-brand)', textAlign: 'left' }}>
       <div style={{ minWidth: 0, lineHeight: 1.35, color: 'var(--color-error)', fontWeight: 'var(--fw-semibold)' }}>
-        This wallet currently supports Arc Testnet only
+        Available Network: Arc Testnet
       </div>
       {lines.map((h, i) => (
         <div key={i} style={{ minWidth: 0, lineHeight: 1.35 }}>
