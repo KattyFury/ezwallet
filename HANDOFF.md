@@ -1,6 +1,6 @@
 # HANDOFF – EZwallet
 
-**Updated:** 2026-08-25 · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
+**Updated:** 2026-08-30 · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
 
 ### 🔗 THE 4 OFFICIAL LINKS - use this set when introducing the project (user decision 08-04)
 | | |
@@ -10,9 +10,59 @@
 | **Video** | https://youtu.be/UIR4Ee3Wp_Y |
 | **Deck** | https://canva.link/zr3ik84radd39vc |
 
-### 📍 WHERE THINGS STAND (end of session 2026-08-25)
+### 📍 WHERE THINGS STAND (end of session 2026-08-30)
 
-- **One branch only: `main`.** Every WIP branch has been merged and deleted. Everyone works on `main`. Latest commit `dbce9bd`.
+## 🚧 SESSION 2026-08-30: MIGRATING CIRCLE → PRIVY, ON THE `privy` BRANCH
+
+**READ `MIGRATION-PRIVY.md` BEFORE TOUCHING ANY OF THIS.** It holds the plan, the six steps, the
+decisions and the PoC measurements. This section is only the status.
+
+- **`main` is UNTOUCHED and still the Circle build** - it is what runs at ezwallet.cash, and it keeps
+  running there until the Privy version is verified. All the work is on the **`privy`** branch
+  (pushed). Merge to `main` only when steps 3-6 are done and tested on a real device.
+- **WHY the change** (3 reasons, user decision): social login (Circle offers email + PIN only) ·
+  private-key export, which Circle's semi-custodial wallets do not allow · a login UI that can be
+  localised, where Circle's PIN iframe is English-only with no roadmap.
+- **Steps 1 and 2 of 6 are done. Steps 3-6 are not started.**
+  - ✅ **Step 1 - PoC** (in `../ezwallet-privy-poc/`, a throwaway app, delete it when the migration
+    lands). Every answer verified against the real chain, not inferred from the docs: Arc Testnet
+    works as a viem `defineChain` and Privy creates the embedded wallet on first login · a real
+    0.01 USDC transfer went through (RPC check: nonce 1, balance 20 → 19.988972), so Privy signs and
+    broadcasts fine even though Arc uses USDC as its gas token · `exportWallet` works on Arc, so the
+    "Tier 2/3 chains only" worry was unfounded.
+  - ✅ **Step 2 - auth + wallet address.** `src/privy.js` (new) replaces the auth half of
+    `circle.js`; `Login.jsx` lost ~150 lines of dead Circle/Google plumbing; `EnterEmail.jsx` is now
+    two steps, email then OTP code; sign-out calls Privy's `logout()`; `App.jsx` takes the session
+    from Privy instead of `ez_user_token`.
+  - ⬜ **Steps 3-6:** send · swap · sync + the PIN · cleanup (drop `@circle-fin/w3s-pw-web-sdk`,
+    delete `functions/api/session.js` + `wallet.js`, update README/package.json).
+- **⚠️ NOT TESTED YET - THIS IS THE FIRST THING TO DO NEXT.** The code builds, but nobody has run
+  `npm run dev` and actually signed in with an email and an OTP code. Do that before writing anything
+  new.
+- **⚠️ THE PIN GATE IS BYPASSED right now**, deliberately and marked as such in `App.jsx` and
+  `EnterEmail.jsx`. `PinGate.jsx` still signs its unlock message through the Circle SDK, which no
+  longer has a session, so routing through it would dead-end the app. Step 5 rebuilds the PIN.
+- **Privy App ID** (public, ships in the bundle like Circle's did): `cmtenk9en00250blabovll48e`.
+  Overridable with `VITE_PRIVY_APP_ID`.
+- **THE BUNDLE TRAP - do not undo this.** Imported eagerly, `@privy-io/react-auth` puts **777 kB
+  gzip** in front of the first paint against **52 kB** for the Circle build (both measured 08-30) -
+  worse than the 1,668 kB monolith that caused the 2.7s white screen on 4G in July. It pulls in
+  WalletConnect, the Coinbase Wallet SDK, @stripe/crypto, two captcha libraries and four UI kits,
+  none of which this app uses, and `PrivyProvider` references them internally so tree-shaking keeps
+  them. It is therefore lazy-loaded behind `src/PrivyRoot.jsx`, exactly as the Circle SDK was →
+  entry chunk back down to **46 kB gzip**, smaller than the Circle build. If a future change moves
+  `import { PrivyProvider }` back into `main.jsx`, this regression returns silently.
+- **Three SDK traps found by reading `node_modules/@privy-io/react-auth/dist/dts/*.d.ts`** (SDK
+  3.38.0), each of which fails SILENTLY if guessed from the docs: the config key is
+  `embeddedWallets.ethereum.createOnLogin` in 3.x, not `embeddedWallets.createOnLogin` as in 2.x and
+  every tutorial - written the old way the user logs in but never gets a wallet · error codes are the
+  enum VALUES, which differ from the names (`USER_EXITED_AUTH_FLOW` is `'exited_auth_flow'`) ·
+  `sendTransaction` resolves to `{ hash }`, not `{ transactionHash }`.
+
+---
+
+- **Branches: `main` (Circle, production) and `privy` (this migration).** Before 08-30 there was one
+  branch only; every older WIP branch had been merged and deleted. Latest commit on `main`: `7dd9c4f`.
 - **Production runs:** **ENGLISH + USD/EUR ONLY.** Vietnamese and Chinese were **REMOVED FROM THE PROJECT ENTIRELY on 08-25** - the i18n layer is gone, not merely switched off (see section 2). The whole repo, comments and documents included, is English now; the only file still holding Vietnamese is `.env.txt`, which is gitignored.
 - **🟢 SWAP IS BACK UP** - the user tested it live on a deploy 08-25 and it went through with no `331001`. See section 4 for the outage history (kept in case it returns).
 - **New in session 08-25 (part 1):** the LuckyPot tile · the i18n layer removed · the whole codebase translated · 2 notification bugs fixed (dust amounts showing 0.00, long text cut off) · `Available Network: Arc Testnet` in the hint block · a `Balance:` line on the Send screen. Details in the table at the top of section 9.
