@@ -1,31 +1,30 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useLoginWithEmail, useWallets, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
 import { useNav } from '../nav'
-import { createSession, createEmailToken, getSDK, initializeWallet, executeChallenge, getWalletAddress, circleErrorMessage } from '../circle'
+import { privyErrorMessage } from '../privy'
 
 const DOMAINS = ['@gmail.com', '@yahoo.com', '@icloud.com']
-const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
-// ✅ Email OTP: signing in requires the CODE mailed to you → only the mailbox owner gets in (closing the "anyone who
-// types your email is in" hole). Needs SMTP configured in Circle Console (done 2026-07-05). Flag off = back to the old
-// direct-email flow (PIN, NO email verification) if OTP has problems.
-// TESTED (2026-07-05): OTP users sign with the Confirmation UI and have NO PIN → losing the guard against family
-// members + a "Contract Interaction" screen that baffles older users. → TURNED OFF, back to Email+PIN. Re-enable when
-// Circle lets social/OTP use a PIN (or the confirm UI can be customised properly). The OTP code stays, only this flag flips.
-const EMAIL_OTP_ENABLED = false
 
-function getEmailHistory() {
-  try { return JSON.parse(localStorage.getItem('ez_email_history') || '[]') } catch { return [] }
-}
-
-function saveEmailHistory(email) {
-  const hist = getEmailHistory().filter(e => e !== email)
-  hist.unshift(email)
-  localStorage.setItem('ez_email_history', JSON.stringify(hist.slice(0, 5)))
-}
-
+// ══ WHY THIS SCREEN NOW HAS TWO STEPS (2026-08-30, MIGRATION-PRIVY.md) ══
+// The Circle build signed you in from the EMAIL ALONE - typing an address minted a session, with no
+// proof you owned the mailbox. The code for a real OTP flow existed but sat behind
+// `EMAIL_OTP_ENABLED = false`, switched off in 07-05 because Circle's OTP users could not have a PIN
+// (they got a "Contract Interaction" confirmation screen that baffled older users) - so the app
+// traded the security hole for the friendlier screen.
+//
+// Privy removes the trade-off: its email login is ALWAYS a one-time code, and the code arriving in
+// the inbox is what proves ownership - so the hole closes without costing anything, and the PIN is
+// a separate thing we build ourselves in step 5. Hence: step 'email' → step 'code'.
 export default function EnterEmail() {
   const { navigate } = useNav()
+  const { sendCode, loginWithCode } = useLoginWithEmail()
+  const { wallets } = useWallets()
+
+  const [step, setStep] = useState('email')   // 'email' → 'code' → (waiting for the wallet)
   const [email, setEmail] = useState('')
+  const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
+  const [creatingWallet, setCreatingWallet] = useState(false)
   const [error, setError] = useState('')
 
   const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
@@ -37,103 +36,96 @@ export default function EnterEmail() {
 
   function applyDomain(d) { setEmail(e => e + d); setError('') }
 
-  // Once a userToken exists (from OTP): create the wallet (if missing) → challenge (PIN or Approve, Circle's choice) →
-  // fetch the address → into Home. OTP users refresh their token with refreshToken (like Google), and do NOT set ez_email.
-  async function finishOtpLogin(result, emailStr, deviceId) {
-    const { userToken, encryptionKey, refreshToken } = result
-    localStorage.setItem('ez_user_token', userToken)
-    localStorage.setItem('ez_encryption_key', encryptionKey)
-    if (refreshToken) localStorage.setItem('ez_refresh_token', refreshToken)
-    localStorage.setItem('ez_google_deviceId', deviceId)   // device fingerprint - used by refreshSocial
-    localStorage.setItem('ez_google_email', emailStr)      // shown as "Login email"
-    localStorage.setItem('ez_login_method', 'email')
-    localStorage.removeItem('ez_email')                    // avoid the PIN-createSession branch (wrong for OTP users)
-    localStorage.removeItem('ez_wallet_addr'); localStorage.removeItem('ez_wallet_id')
-
-    const walletData = await initializeWallet(userToken)
-    const challengeId = walletData?.data?.challengeId
-    if (challengeId) await executeChallenge(await getSDK(), userToken, encryptionKey, challengeId)
-
-    let info = null
-    for (let i = 0; i < 3 && !info?.address; i++) {
-      info = await getWalletAddress(userToken)
-      if (!info?.address) await new Promise(r => setTimeout(r, 2000))
-    }
-    if (info?.address) localStorage.setItem('ez_wallet_addr', info.address)
-    if (info?.walletId) localStorage.setItem('ez_wallet_id', info.walletId)
-    saveEmailHistory(emailStr)
-    sessionStorage.setItem('ez_pin_ok', '1')   // OTP users have no PIN → skip the PIN gate
+  // The code is signed in but the WALLET is created a beat later (Privy's
+  // `embeddedWallets.ethereum.createOnLogin`, configured in src/privy.js). Going to HomeSend before
+  // the address exists shows an empty wallet with no balance and no receive address, so hold here -
+  // with a message saying why - until it appears. App.jsx writes it into `ez_wallet_addr` for the
+  // rest of the app; this screen only waits for it.
+  const embeddedWallet = getEmbeddedConnectedWallet(wallets)
+  useEffect(() => {
+    if (!creatingWallet || !embeddedWallet?.address) return
+    saveEmailHistory(email.trim())
+    // STEP 2 OF 6: no PIN exists yet, so mark the session unlocked and skip the (still Circle-based)
+    // PIN gate. Step 5 replaces this with the real PIN - see the matching note in App.jsx.
+    sessionStorage.setItem('ez_pin_ok', '1')
     navigate('HomeSend')
-  }
+  }, [creatingWallet, embeddedWallet?.address])
 
-  async function handleSubmit() {
+  async function handleSendCode() {
     if (!valid || loading) return
     setLoading(true); setError('')
-
-    if (EMAIL_OTP_ENABLED) {
-      const em = email.trim()
-      try {
-        const sdk = await getSDK()
-        const deviceId = await sdk.getDeviceId()
-        const { otpToken, deviceToken, deviceEncryptionKey } = await createEmailToken(deviceId, em)
-        // Set the config + callback, then open Circle's hosted OTP screen.
-        sdk.updateConfigs(
-          { appSettings: { appId: APP_ID }, loginConfigs: { deviceToken, deviceEncryptionKey, otpToken } },
-          async (error, result) => {
-            if (error) {
-              if (error?.code === 155701) { setLoading(false); return }   // user cancelled → stay silent
-              setError(circleErrorMessage(error)); setLoading(false); return
-            }
-            if (!result?.userToken) { setLoading(false); return }
-            try { await finishOtpLogin(result, em, deviceId) }
-            catch (e) { setError(circleErrorMessage(e)); setLoading(false) }
-          }
-        )
-        sdk.verifyOtp()   // keep loading=true; the callback above will navigate or raise the error
-      } catch (e) {
-        setError(circleErrorMessage(e)); setLoading(false)
-      }
-      return
-    }
-
-    // ── Old flow (flag off): direct email + PIN, NO email verification ──
     try {
-      localStorage.removeItem('ez_wallet_addr')
-      localStorage.removeItem('ez_wallet_id')
-      const { userToken, encryptionKey } = await createSession(email.trim())
-      localStorage.setItem('ez_user_token', userToken)
-      localStorage.setItem('ez_encryption_key', encryptionKey)
-      localStorage.setItem('ez_email', email.trim())
-      const sdk = await getSDK()
-      const walletData = await initializeWallet(userToken)
-      const challengeId = walletData?.data?.challengeId
-      if (challengeId) await executeChallenge(sdk, userToken, encryptionKey, challengeId)
-
-      const freshSession = await createSession(email.trim())
-      const freshToken = freshSession.userToken
-      localStorage.setItem('ez_user_token', freshToken)
-      localStorage.setItem('ez_encryption_key', freshSession.encryptionKey)
-
-      let walletInfo = null
-      for (let i = 0; i < 3; i++) {
-        walletInfo = await getWalletAddress(freshToken)
-        if (walletInfo?.address) break
-        await new Promise(r => setTimeout(r, 2000))
-      }
-      if (walletInfo?.address) localStorage.setItem('ez_wallet_addr', walletInfo.address)
-      if (walletInfo?.walletId) localStorage.setItem('ez_wallet_id', walletInfo.walletId)
-
-      saveEmailHistory(email.trim())
-      // First time = the PIN was just CREATED (challengeId present) → already authenticated → straight in. Second time on (no challengeId) → the PIN gate.
-      if (challengeId) { sessionStorage.setItem('ez_pin_ok', '1'); navigate('HomeSend') }
-      else navigate('PinGate', { next: 'HomeSend' })
+      await sendCode({ email: email.trim() })
+      setStep('code')
     } catch (e) {
-      setError(circleErrorMessage(e))
+      setError(privyErrorMessage(e))
     } finally {
       setLoading(false)
     }
   }
 
+  async function handleVerifyCode() {
+    if (code.trim().length < 6 || loading) return
+    setLoading(true); setError('')
+    try {
+      await loginWithCode({ code: code.trim() })
+      // Do NOT navigate here: the wallet does not exist yet. The effect above takes over.
+      setCreatingWallet(true)
+    } catch (e) {
+      setError(privyErrorMessage(e))
+      setCode('')
+      setLoading(false)
+    }
+  }
+
+  // ── STEP 2: the code from the inbox ──
+  if (step === 'code') {
+    return (
+      <div className="screen">
+        <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
+          Enter the code
+        </div>
+
+        <div className="row-3" style={{ position: 'relative' }}>
+          <span style={{ position: 'absolute', top: 'calc(50% - 52px)', left: 0, right: 0, textAlign: 'center', fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
+            We sent a 6-digit code to<br />{email.trim()}
+          </span>
+          {/* inputMode/pattern → phones open the NUMBER pad, not the full keyboard. autoComplete
+              one-time-code → iOS and Android offer the code from the SMS/email notification to fill in. */}
+          <input
+            type="text"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            autoComplete="one-time-code"
+            maxLength={6}
+            className="address-input"
+            placeholder="000000"
+            value={code}
+            onChange={e => { setCode(e.target.value.replace(/\D/g, '')); setError('') }}
+            onKeyDown={e => e.key === 'Enter' && handleVerifyCode()}
+            autoFocus
+            style={{ position: 'absolute', top: '50%', left: 0, right: 0, transform: 'translateY(-50%)', height: 52, fontSize: 'var(--fs-title)', textAlign: 'center', letterSpacing: '0.3em' }}
+          />
+          {creatingWallet && (
+            <span style={{ position: 'absolute', top: 'calc(50% + 32px)', left: 0, right: 0, marginTop: 8, textAlign: 'center', fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
+              Creating your wallet...
+            </span>
+          )}
+          {error && !creatingWallet && <span style={{ position: 'absolute', top: 'calc(50% + 32px)', left: 0, marginTop: 8, fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>{error}</span>}
+        </div>
+
+        <div className="row-10 row10-dual">
+          <button className="btn btn-secondary" disabled={creatingWallet}
+            onClick={() => { setStep('email'); setCode(''); setError('') }}>Back</button>
+          <button className="btn btn-primary" disabled={code.length < 6 || loading || creatingWallet} onClick={handleVerifyCode}>
+            {(loading || creatingWallet) ? 'Processing...' : 'Continue'}
+          </button>
+        </div>
+      </div>
+    )
+  }
+
+  // ── STEP 1: the email address (unchanged from the Circle build apart from what the button does) ──
   return (
     <div className="screen">
       <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
@@ -148,7 +140,7 @@ export default function EnterEmail() {
           placeholder="email@example.com"
           value={email}
           onChange={e => { setEmail(e.target.value); setError('') }}
-          onKeyDown={e => e.key === 'Enter' && handleSubmit()}
+          onKeyDown={e => e.key === 'Enter' && handleSendCode()}
           autoFocus
           style={{ position: 'absolute', top: '50%', left: 0, right: 0, transform: 'translateY(-50%)', height: 52, fontSize: 'var(--fs-md-lg)' }}
         />
@@ -199,10 +191,20 @@ export default function EnterEmail() {
 
       <div className="row-10 row10-dual">
         <button className="btn btn-secondary" onClick={() => navigate('Login')}>Back</button>
-        <button className="btn btn-primary" disabled={!valid || loading} onClick={handleSubmit}>
+        <button className="btn btn-primary" disabled={!valid || loading} onClick={handleSendCode}>
           {loading ? 'Processing...' : 'Continue'}
         </button>
       </div>
     </div>
   )
+}
+
+function getEmailHistory() {
+  try { return JSON.parse(localStorage.getItem('ez_email_history') || '[]') } catch { return [] }
+}
+
+function saveEmailHistory(email) {
+  const hist = getEmailHistory().filter(e => e !== email)
+  hist.unshift(email)
+  localStorage.setItem('ez_email_history', JSON.stringify(hist.slice(0, 5)))
 }

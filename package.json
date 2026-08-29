@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@circle-fin/w3s-pw-web-sdk": "^1.1.11",
+    "@privy-io/react-auth": "^3.38.0",
     "cookies-next": "^4.3.0",
     "jsqr": "^1.4.0",
     "qrcode.react": "^4.2.0",

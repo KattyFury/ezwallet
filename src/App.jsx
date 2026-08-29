@@ -1,7 +1,10 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
+import { usePrivy, useWallets, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
 import { NavContext } from './nav'
 import ErrorBoundary from './components/ErrorBoundary'
 import BugButton from './components/BugButton'
+import { MOCK } from './mock'
+import { rememberLogin } from './privy'
 
 // LAZY-LOAD EVERY SCREEN (2026-07-17) - the user: "why is this rubbish app so slow to load".
 // Before: App.jsx imported all 22 screens STATICALLY → Vite bundled EVERYTHING into one 1,668 KB file, and the
@@ -44,18 +47,44 @@ const SCREENS = {
 }
 
 export default function App() {
-  const [nav, setNav] = useState(() => {
-    // Session exists → through the PIN GATE (wallet unlock) before HomeSend, unless this session is already unlocked
-    // (ez_pin_ok - set after verifying the PIN, or right after CREATING the PIN on first login). No session → Login.
-    const hasSession = localStorage.getItem('ez_user_token')
-    if (!hasSession) return { screen: 'Login', params: {} }
-    const unlocked = sessionStorage.getItem('ez_pin_ok')
-    return unlocked ? { screen: 'HomeSend', params: {} } : { screen: 'PinGate', params: { next: 'HomeSend' } }
-  })
+  const { ready, authenticated, user } = usePrivy()
+  const { wallets } = useWallets()
+  // null = not decided yet. The Circle build could pick the first screen SYNCHRONOUSLY, because
+  // "is there a session" was just `localStorage.ez_user_token`. Privy answers that question
+  // asynchronously (it restores a previous visit's session over the network), so there is a moment
+  // where the honest answer is "not known yet" - and drawing Login during it would flash the
+  // sign-in screen at somebody who is already signed in. MOCK keeps the old instant path.
+  const [nav, setNav] = useState(() => (MOCK ? { screen: 'HomeSend', params: {} } : null))
 
   function navigate(screen, params = {}) {
     setNav({ screen, params })
   }
+
+  // Privy IS the session now. This one effect covers both the first decision and every later change
+  // (signing out from MenuScreen flips `authenticated` to false and lands the user back on Login).
+  useEffect(() => {
+    if (MOCK || !ready) return
+    if (!authenticated) {
+      // Keep the user where they are if they are already on a sign-in screen - otherwise tapping
+      // "Sign in with Email" would bounce straight back to Login.
+      setNav(n => (n?.screen === 'Login' || n?.screen === 'EnterEmail') ? n : { screen: 'Login', params: {} })
+      return
+    }
+    // ⚠️ STEP 2 OF 6 - THE PIN GATE IS DELIBERATELY BYPASSED HERE. PinGate.jsx still asks the Circle
+    // SDK to sign its unlock message, and there is no Circle session left to sign with, so routing
+    // through it would dead-end the app. Step 5 rebuilds the PIN on a PIN-derived encryption key
+    // (MIGRATION-PRIVY.md section 1.3) and this goes back to a PinGate branch.
+    setNav(n => n || { screen: 'HomeSend', params: {} })
+  }, [ready, authenticated])
+
+  // Copy the wallet address into the localStorage key ~15 screens read (see src/privy.js). NOT only
+  // a login-time job: Privy also restores the session on a page reload, and the address can arrive a
+  // moment after `authenticated` turns true.
+  const embeddedWallet = getEmbeddedConnectedWallet(wallets)
+  useEffect(() => {
+    if (MOCK || !embeddedWallet?.address) return
+    rememberLogin({ address: embeddedWallet.address, email: user?.email?.address })
+  }, [embeddedWallet?.address, user?.email?.address])
 
   // iOS/Android: when the keyboard opens, the browser SCROLLS the page to reveal the field → the screen/popup
   // "jumps up". Every input in this app is deliberately placed in the TOP HALF (above the keyboard area),
@@ -92,10 +121,15 @@ export default function App() {
       import('./screens/HomeSend'); import('./screens/HomeReceive')
       import('./screens/ServiceHub'); import('./screens/Swap'); import('./screens/MenuScreen')
       import('./screens/SendAmount'); import('./screens/Contacts'); import('./screens/TxHistory')
-      if (import.meta.env.VITE_MOCK !== '1') import('@circle-fin/w3s-pw-web-sdk').catch(() => {})
+      // The Circle SDK used to be prefetched here (~1MB, needed for PIN signing). Privy ships with
+      // the app instead of being pulled in on demand, so there is nothing left to warm up.
     })
     return () => cancel(id)
   }, [])
+
+  // Still waiting on Privy → the same empty .screen frame the Suspense fallback uses, so there is no
+  // white flash and no layout jump when the real first screen appears.
+  if (!nav) return <div className="screen" />
 
   const Screen = SCREENS[nav.screen] || SCREENS['Login']
 
