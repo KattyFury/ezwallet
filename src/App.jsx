@@ -21,7 +21,7 @@ const PasteAddress = lazy(() => import('./screens/PasteAddress'))
 const SendAmount  = lazy(() => import('./screens/SendAmount'))
 const SendConfirm = lazy(() => import('./screens/SendConfirm'))
 const SendReceipt = lazy(() => import('./screens/SendReceipt'))
-const EnterEmail  = lazy(() => import('./screens/EnterEmail'))
+const ProtectWallet = lazy(() => import('./screens/ProtectWallet'))
 const CreateQR    = lazy(() => import('./screens/CreateQR'))
 const ShowQR      = lazy(() => import('./screens/ShowQR'))
 const SavedQRList = lazy(() => import('./screens/SavedQRList'))
@@ -42,7 +42,7 @@ const SCREENS = {
   Login,
   HomeSend, HomeReceive, Swap, ServiceHub, MenuScreen,
   PasteAddress, SendAmount, SendConfirm, SendReceipt,
-  EnterEmail, CreateQR, ShowQR, SavedQRList,
+  ProtectWallet, CreateQR, ShowQR, SavedQRList,
   Contacts, QRScanner,
   TxHistory,
   Currency,
@@ -61,20 +61,16 @@ export default function App() {
   // arrives HERE instead of as a Privy modal - and if nothing answered it, signing would simply
   // hang, or worse, the check would quietly never happen.
   //
-  // For a passkey there is nothing of ours to draw: `init` opens the phone's own fingerprint sheet
-  // and `submit` closes the loop. So the whole "second factor" is one touch, which is the point -
-  // the person this app is for should not have to learn a new ritual to send money to their family.
-  // A user enrolled in sms/totp instead is handed to Privy's own dialog rather than left stuck.
-  const { init: initMfa, submit: submitMfa, promptMfa, cancel: cancelMfa } = useMfa()
+  // `promptMfa()` hands this to PRIVY'S OWN dialog rather than a hand-built one (user decision
+  // 2026-08-30: use Privy's popups, do not re-implement flows Privy already ships). For a passkey
+  // that dialog leads straight to the device's own prompt - Windows Hello, Touch ID, Face ID - so
+  // the whole "second factor" is one touch, which is the point: the person this app is for should
+  // not have to learn a new ritual to send money to their family.
+  const { promptMfa, cancel: cancelMfa } = useMfa()
   useRegisterMfaListener({
-    onMfaRequired: async (methods) => {
+    onMfaRequired: async () => {
       try {
-        if (methods.includes('passkey')) {
-          const opts = await initMfa('passkey')
-          await submitMfa('passkey', opts)
-          return
-        }
-        await promptMfa()   // sms/totp → Privy draws the code entry, we do not rebuild it
+        await promptMfa()
       } catch (e) {
         // Cancelled, wrong, or timed out. Cancel the flow so the pending send rejects and the screen
         // that started it can say so - leaving it open would strand the user on "Sending..." forever.
@@ -99,20 +95,34 @@ export default function App() {
   useEffect(() => {
     if (MOCK || !ready) return
     if (!authenticated) {
-      // Keep the user where they are if they are already on a sign-in screen - otherwise tapping
-      // "Sign in with Email" would bounce straight back to Login.
-      setNav(n => (n?.screen === 'Login' || n?.screen === 'EnterEmail') ? n : { screen: 'Login', params: {} })
+      setNav({ screen: 'Login', params: {} })
       return
     }
     // Straight in. There is no unlock screen any more - the guard is on SIGNING, not on opening the
     // app (see the deleted-PinGate note above the lazy imports).
-    setNav(n => n || { screen: 'HomeSend', params: {} })
+    setNav(n => n?.screen === 'Login' || !n ? { screen: 'HomeSend', params: {} } : n)
   }, [ready, authenticated])
+
+  // ⚠️ DECLARED BEFORE THE EFFECTS THAT USE IT. `const` is in the temporal dead zone until this
+  // line, and a dependency array is evaluated DURING render - so an effect placed above this would
+  // not merely misbehave, it would throw a ReferenceError before the app drew anything.
+  const embeddedWallet = getEmbeddedConnectedWallet(wallets)
+
+  // Offer the fingerprint ONCE, right after signing up, before the wallet is used - so nobody ends up
+  // with an unguarded wallet just because they never opened Security. Only when the wallet actually
+  // exists (the offer is meaningless without one) and only once per session, so tapping "Not now"
+  // does not put them straight back on it.
+  const offeredProtect = useRef(false)
+  useEffect(() => {
+    if (MOCK || !authenticated || !embeddedWallet?.address) return
+    if (offeredProtect.current || (user?.mfaMethods || []).includes('passkey')) return
+    offeredProtect.current = true
+    setNav(n => (n?.screen === 'HomeSend' ? { screen: 'ProtectWallet', params: {} } : n))
+  }, [authenticated, embeddedWallet?.address, user?.mfaMethods])
 
   // Copy the wallet address into the localStorage key ~15 screens read (see src/privy.js). NOT only
   // a login-time job: Privy also restores the session on a page reload, and the address can arrive a
   // moment after `authenticated` turns true.
-  const embeddedWallet = getEmbeddedConnectedWallet(wallets)
   useEffect(() => {
     if (MOCK || !embeddedWallet?.address) return
     rememberLogin({ address: embeddedWallet.address, email: user?.email?.address })

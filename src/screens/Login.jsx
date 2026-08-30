@@ -1,6 +1,6 @@
 import logoLong from '../../design/logo.svg'
 import Icon from '../components/Icon'
-import { useNav } from '../nav'
+import { usePrivy } from '@privy-io/react-auth'
 
 // This screen used to carry ~150 lines of Circle plumbing: a lazy-loaded W3SSdk, a deviceId
 // fingerprint, four cookies to survive the Google OAuth redirect, and an onLoginComplete callback
@@ -14,9 +14,15 @@ import { useNav } from '../nav'
 //   - The wallet-creation dance is handled by `embeddedWallets.ethereum.createOnLogin` in
 //     src/privy.js, so no screen has to orchestrate it any more.
 //
+// SIGN-IN IS PRIVY'S OWN MODAL (user decision 2026-08-30, replacing the earlier plan to wrap the
+// headless hooks in our own screens). `login()` opens it, Privy runs the email + one-time-code flow
+// inside it, and App.jsx notices `authenticated` flip and moves on. The hand-built EnterEmail screen
+// that used to do this - two steps, its own OTP field, its own error wording - is deleted: it was a
+// second implementation of a flow Privy already ships, and every bug in it would have been ours.
+//
 // What is left is what this screen was always FOR: the logo, the promise, and one button.
 export default function Login() {
-  const { navigate } = useNav()
+  const { login } = usePrivy()
 
   return (
     <div className="screen">
@@ -38,9 +44,12 @@ export default function Login() {
 
       {/* The Sign in with Email button - on the row 9-10 boundary (the bottom edge of rows 9/11, like every other screen) */}
       <div style={{ gridRow: '9 / 11', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2dvh' }}>
+        {/* onClick={() => login()}, NOT onClick={login}: React hands the click event to the handler,
+            and `login` treats an argument as its options object (LoginModalOptions | MouseEvent - it
+            does accept a MouseEvent, but wrapping it keeps the intent obvious and survives refactors). */}
         <button className="btn btn-primary"
           style={{ width: '80%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10 }}
-          onClick={() => navigate('EnterEmail')}>
+          onClick={() => login()}>
           <Icon name="mail" size="var(--is-md-lg)" />
           <span style={{ whiteSpace: 'nowrap' }}>Sign in with Email</span>
         </button>

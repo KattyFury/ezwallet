@@ -8,9 +8,8 @@ export default function Security() {
   const { navigate } = useNav()
   const { user } = usePrivy()
   const { exportWallet } = useExportWallet()
-  const { initEnrollmentWithPasskey, unenrollWithPasskey } = useMfaEnrollment()
+  const { showMfaEnrollmentModal } = useMfaEnrollment()
   const [copied, setCopied] = useState(false)
-  const [lockBusy, setLockBusy] = useState(false)
   const [lockStatus, setLockStatus] = useState('')
 
   // ══ THE LOCK ON THE MONEY (2026-08-30, user decision) ══
@@ -27,25 +26,21 @@ export default function Security() {
   // rather than on a device an attacker is holding.
   const passkeyOn = (user?.mfaMethods || []).includes('passkey')
 
-  async function toggleLock() {
-    if (lockBusy) return
-    setLockBusy(true); setLockStatus('')
+  // ⚠️ PRIVY'S OWN MODAL, not a hand-built flow (user decision 2026-08-30). It also handles turning
+  // the lock OFF and adding other methods, so this one call covers the whole screen's worth of
+  // settings. The earlier attempt called `initEnrollmentWithPasskey()` on its own and NOTHING OPENED:
+  // enrollment is two steps in the headless API - init, then submitEnrollmentWithPasskey with the
+  // credential ids - and half a flow silently does nothing at all. Do not go back to that.
+  //
+  // It returns void and reports nothing, so the On/Off state below is read from `user.mfaMethods`,
+  // which updates on its own once Privy has finished.
+  function openLockSettings() {
+    setLockStatus('')
     try {
-      if (passkeyOn) {
-        await unenrollWithPasskey()
-        setLockStatus('Turned off')
-      } else {
-        // Opens the phone's own fingerprint/Face ID sheet. Privy finishes the enrollment itself once
-        // the OS confirms - there is no code for us to submit afterwards.
-        await initEnrollmentWithPasskey()
-        setLockStatus('Turned on')
-      }
-      setTimeout(() => setLockStatus(''), 2500)
+      showMfaEnrollmentModal()
     } catch (e) {
-      setLockStatus(privyErrorMessage(e) || 'Cancelled')
+      setLockStatus(privyErrorMessage(e) || 'Could not open')
       setTimeout(() => setLockStatus(''), 4000)
-    } finally {
-      setLockBusy(false)
     }
   }
   // ⚠️ keyErr is a DEDICATED FLAG, do not go back to sniffing the start of the string (`/^(Error|...)/`)
@@ -120,12 +115,12 @@ export default function Security() {
         </button>
         {/* Deliberately NOT called "passkey", "MFA" or "two-factor" - words that mean nothing to the
             person this app is for. It says what it does: your fingerprint guards your money. */}
-        <button className="menu-item" onClick={toggleLock}>
+        <button className="menu-item" onClick={openLockSettings}>
           <span style={LABEL}>Fingerprint or Face ID</span>
           {lockStatus
-            ? <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-primary)' }}>{lockStatus}</span>
+            ? <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-error)' }}>{lockStatus}</span>
             : <span style={{ ...VALUE, color: passkeyOn ? 'var(--color-primary)' : 'var(--color-muted)' }}>
-                {lockBusy ? '…' : passkeyOn ? 'On' : 'Off'}
+                {passkeyOn ? 'On' : 'Off'}
               </span>}
         </button>
         <button className="menu-item" onClick={handleExportKey}>
