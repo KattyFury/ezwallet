@@ -1,5 +1,5 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
-import { usePrivy, useWallets, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { usePrivy, useWallets, useSignMessage, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
 import { NavContext } from './nav'
 import ErrorBoundary from './components/ErrorBoundary'
 import BugButton from './components/BugButton'
@@ -49,6 +49,7 @@ const SCREENS = {
 export default function App() {
   const { ready, authenticated, user } = usePrivy()
   const { wallets } = useWallets()
+  const { signMessage } = useSignMessage()
   // null = not decided yet. The Circle build could pick the first screen SYNCHRONOUSLY, because
   // "is there a session" was just `localStorage.ez_user_token`. Privy answers that question
   // asynchronously (it restores a previous visit's session over the network), so there is a moment
@@ -86,6 +87,39 @@ export default function App() {
     rememberLogin({ address: embeddedWallet.address, email: user?.email?.address })
   }, [embeddedWallet?.address, user?.email?.address])
 
+  // ── OPEN THE CONTACTS-BACKUP SESSION (moved here from PinGate on 2026-08-30) ──
+  // The backup door is a SIGNATURE from the wallet, not a password: the server hands out a nonce,
+  // the wallet signs it, and the server recovers the address from the signature (functions/api/sync.js).
+  // That design does not care who does the signing, so it survived the migration untouched - but the
+  // PIN entry it used to be folded into is gone for now, so it would never run and the address book
+  // would silently stop syncing.
+  //
+  // Signing is SILENT (`showWalletUIs: false`): the user is not being asked to approve anything they
+  // would understand as an action - this is the app opening its own backup, and nothing on chain
+  // happens. A modal here would be a prompt with no meaning attached to it.
+  //
+  // Entirely in the background and swallowing every error, exactly as before: an address book must
+  // never hold anyone at the door. No KV binding, no network, a refused signature - the app carries
+  // on without backup this session.
+  const syncOpened = useRef(false)
+  useEffect(() => {
+    if (MOCK || !embeddedWallet?.address) return
+    if (syncOpened.current || sessionStorage.getItem('ez_sync_token')) return
+    syncOpened.current = true
+    ;(async () => {
+      try {
+        const sync = await import('./sync')
+        const m = await sync.prepareUnlockMessage()
+        if (!m?.nonce || !m?.message) return
+        const { signature } = await signMessage(
+          { message: m.message },
+          { address: embeddedWallet.address, uiOptions: { showWalletUIs: false } },
+        )
+        if (await sync.openSession(m.nonce, signature)) await sync.pullOnce()
+      } catch {}
+    })()
+  }, [embeddedWallet?.address])
+
   // iOS/Android: when the keyboard opens, the browser SCROLLS the page to reveal the field → the screen/popup
   // "jumps up". Every input in this app is deliberately placed in the TOP HALF (above the keyboard area),
   // so we pin the page scroll at 0 → the field stays visible and the screen does not jump. (Only the PAGE
@@ -100,10 +134,10 @@ export default function App() {
   // no KV binding / network error / MOCK → skipped, and the app never notices. It lives here (app startup) and
   // NOT in the Contacts screen: at this point the user certainly has no screen reading contacts open, so overwriting
   // local data cannot jolt the UI. Merge rules in detail: src/sync.js.
-  // ⚠️ Since 08-06 (PIN-signature auth): the MAIN pull happens in PinGate, right after the user enters the PIN -
-  // because the sync session token only exists after the signing step. This call now only covers a tab RELOAD
-  // (sessionStorage survives → `ez_pin_ok` + `ez_sync_token` already exist, so PinGate is skipped).
-  // With no token, `pullOnce` silently does nothing.
+  // ⚠️ Since 08-30 the FIRST pull happens in the signature effect above, which opens the session.
+  // This one covers a TAB RELOAD, where sessionStorage survived so `ez_sync_token` already exists and
+  // that effect deliberately skips (there is no reason to sign a second time for a session that is
+  // already open). With no token, `pullOnce` silently does nothing.
   useEffect(() => {
     if (!sessionStorage.getItem('ez_sync_token') || !localStorage.getItem('ez_wallet_addr')) return
     import('./sync').then(s => s.pullOnce()).catch(() => {})
