@@ -36,6 +36,12 @@ export const privyConfig = {
   defaultChain: arcTestnet,
   supportedChains: [arcTestnet],
   embeddedWallets: { ethereum: { createOnLogin: 'all-users' } },
+  // EZwallet never connects an outside wallet - the whole premise is that the user does not have one
+  // and should not need one. Left on, Privy still spins up the MetaMask, Coinbase and WalletConnect
+  // connectors, which on Arc produced a console warning on every load ("The configured chains are not
+  // supported by Coinbase Smart Wallet: 5042002") - a permanent piece of noise that would sit in the
+  // log hiding the next real error. Off, the connectors do not initialise at all.
+  externalWallets: { disableAllExternalWallets: true },
 }
 
 // The keys the rest of the app reads. `ez_wallet_id` and `ez_user_token` are deliberately NOT in
