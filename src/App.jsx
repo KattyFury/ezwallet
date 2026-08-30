@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react'
 import { usePrivy, useWallets, useSignMessage, useMfa, useRegisterMfaListener, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
 import { NavContext } from './nav'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -66,19 +66,30 @@ export default function App() {
   // that dialog leads straight to the device's own prompt - Windows Hello, Touch ID, Face ID - so
   // the whole "second factor" is one touch, which is the point: the person this app is for should
   // not have to learn a new ritual to send money to their family.
-  const { promptMfa, cancel: cancelMfa } = useMfa()
-  useRegisterMfaListener({
-    onMfaRequired: async () => {
-      try {
-        await promptMfa()
-      } catch (e) {
-        // Cancelled, wrong, or timed out. Cancel the flow so the pending send rejects and the screen
-        // that started it can say so - leaving it open would strand the user on "Sending..." forever.
-        console.error('[MFA]', e)
-        try { cancelMfa() } catch {}
-      }
-    },
-  })
+  //
+  // ⚠️ THE CALLBACK MUST BE STABLE ACROSS RENDERS. Written the obvious way - an object literal with
+  // an inline arrow, straight into the hook call - it is a BRAND NEW object and a brand new function
+  // on every single render. Privy subscribes to what it is handed, so a fresh callback each render
+  // means unsubscribe/resubscribe on every render, and if that subscription touches state at all the
+  // app renders again and the loop never ends. That is a hard freeze, not slowness, and it is what
+  // "the app keeps crashing" was (2026-08-30).
+  // The fix is the standard one: keep the live functions in a ref, hand the hook ONE callback that
+  // never changes identity, and read the current functions out of the ref when it actually fires.
+  const mfa = useMfa()
+  const mfaRef = useRef(mfa)
+  mfaRef.current = mfa
+  const onMfaRequired = useCallback(async () => {
+    try {
+      await mfaRef.current.promptMfa()
+    } catch (e) {
+      // Cancelled, wrong, or timed out. Cancel the flow so the pending send rejects and the screen
+      // that started it can say so - leaving it open would strand the user on "Sending..." forever.
+      console.error('[MFA]', e)
+      try { mfaRef.current.cancel() } catch {}
+    }
+  }, [])
+  const mfaListener = useMemo(() => ({ onMfaRequired }), [onMfaRequired])
+  useRegisterMfaListener(mfaListener)
   // null = not decided yet. The Circle build could pick the first screen SYNCHRONOUSLY, because
   // "is there a session" was just `localStorage.ez_user_token`. Privy answers that question
   // asynchronously (it restores a previous visit's session over the network), so there is a moment
@@ -125,13 +136,17 @@ export default function App() {
   // ⚠️ EMBEDDED WALLETS ONLY. Privy's MFA guards the key PRIVY holds; it has no say over a MetaMask
   // signature, which MetaMask guards itself with its own password and its own confirm dialog. Showing
   // "protect your money" to a MetaMask user would promise a lock this app cannot fit.
+  // ⚠️ `passkeyOn` IS A BOOLEAN IN THE DEPS, NOT `user.mfaMethods`. That is an ARRAY, and React
+  // compares deps by identity - a fresh array from Privy on each render makes the effect re-run on
+  // EVERY render. Derive the one fact this effect cares about and depend on that instead.
+  const passkeyOn = !!user?.mfaMethods?.includes('passkey')
   const offeredProtect = useRef(false)
   useEffect(() => {
     if (MOCK || !authenticated || !isEmbedded || !activeWallet?.address) return
-    if (offeredProtect.current || (user?.mfaMethods || []).includes('passkey')) return
+    if (offeredProtect.current || passkeyOn) return
     offeredProtect.current = true
     setNav(n => (n?.screen === 'HomeSend' ? { screen: 'ProtectWallet', params: {} } : n))
-  }, [authenticated, isEmbedded, activeWallet?.address, user?.mfaMethods])
+  }, [authenticated, isEmbedded, activeWallet?.address, passkeyOn])
 
   // Copy the wallet address into the localStorage key ~15 screens read (see src/privy.js). NOT only
   // a login-time job: Privy also restores the session on a page reload, and the address can arrive a

@@ -19,10 +19,21 @@ function measureWidth(text, font) {
 // reason. It said 'Barlow, sans-serif' until 2026-08-30, when the app dropped webfonts for the system
 // stack - which is exactly the kind of leftover that keeps working just badly enough not to notice.
 // It now reads --font-condensed straight off the document, so it can never drift from index.css again.
-const measuredFamily = () =>
-  getComputedStyle(document.documentElement).getPropertyValue('--font-condensed').trim() || 'sans-serif'
+//
+// ⚠️ READ ONCE AND CACHED, never per render. `getComputedStyle` forces the browser to recalculate
+// style, and as a default parameter this ran on EVERY render of every screen showing an amount -
+// HomeSend, SendAmount, Swap, the busiest screens in the app. The value cannot change at runtime (it
+// is a static CSS variable), so reading it more than once buys nothing and costs a reflow each time.
+let _family = null
+function measuredFamily() {
+  if (_family === null) {
+    _family = getComputedStyle(document.documentElement).getPropertyValue('--font-condensed').trim() || 'sans-serif'
+  }
+  return _family
+}
 
-export function useFitFontSize(text, { max = 52, min = 16, weight = 300, family = measuredFamily(), buffer = 4 } = {}) {
+export function useFitFontSize(text, { max = 52, min = 16, weight = 300, family, buffer = 4 } = {}) {
+  family = family || measuredFamily()
   const ref = useRef(null)
   const [size, setSize] = useState(max)
 
