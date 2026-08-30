@@ -103,30 +103,43 @@ export default function App() {
     setNav(n => n?.screen === 'Login' || !n ? { screen: 'HomeSend', params: {} } : n)
   }, [ready, authenticated])
 
+  // ══ THE WALLET THE APP IS SHOWING - TWO KINDS, ONE VARIABLE (2026-08-30) ══
+  // Email user  → no wallet of their own, so Privy made them one. That is the app's whole premise.
+  // MetaMask user → came in WITH a wallet, and it is THEIRS. Privy makes them nothing
+  //                 (`createOnLogin: 'users-without-wallets'` in src/privy.js), because handing them
+  //                 a second empty wallet and showing that instead of their real money is nonsense.
+  // Prefer the embedded one when there is one, otherwise take the connected wallet. That order
+  // matters: it keeps email users on exactly the wallet they have always had, and never lets an
+  // injected wallet that happens to be present quietly take over their account.
+  //
   // ⚠️ DECLARED BEFORE THE EFFECTS THAT USE IT. `const` is in the temporal dead zone until this
   // line, and a dependency array is evaluated DURING render - so an effect placed above this would
   // not merely misbehave, it would throw a ReferenceError before the app drew anything.
   const embeddedWallet = getEmbeddedConnectedWallet(wallets)
+  const activeWallet = embeddedWallet || wallets?.[0] || null
+  const isEmbedded = !!embeddedWallet
 
-  // Offer the fingerprint ONCE, right after signing up, before the wallet is used - so nobody ends up
-  // with an unguarded wallet just because they never opened Security. Only when the wallet actually
-  // exists (the offer is meaningless without one) and only once per session, so tapping "Not now"
-  // does not put them straight back on it.
+  // Offer the fingerprint ONCE, right after signing up - so nobody ends up with an unguarded wallet
+  // just because they never opened Security. Only once per session, so "Not now" does not put them
+  // straight back on it.
+  // ⚠️ EMBEDDED WALLETS ONLY. Privy's MFA guards the key PRIVY holds; it has no say over a MetaMask
+  // signature, which MetaMask guards itself with its own password and its own confirm dialog. Showing
+  // "protect your money" to a MetaMask user would promise a lock this app cannot fit.
   const offeredProtect = useRef(false)
   useEffect(() => {
-    if (MOCK || !authenticated || !embeddedWallet?.address) return
+    if (MOCK || !authenticated || !isEmbedded || !activeWallet?.address) return
     if (offeredProtect.current || (user?.mfaMethods || []).includes('passkey')) return
     offeredProtect.current = true
     setNav(n => (n?.screen === 'HomeSend' ? { screen: 'ProtectWallet', params: {} } : n))
-  }, [authenticated, embeddedWallet?.address, user?.mfaMethods])
+  }, [authenticated, isEmbedded, activeWallet?.address, user?.mfaMethods])
 
   // Copy the wallet address into the localStorage key ~15 screens read (see src/privy.js). NOT only
   // a login-time job: Privy also restores the session on a page reload, and the address can arrive a
   // moment after `authenticated` turns true.
   useEffect(() => {
-    if (MOCK || !embeddedWallet?.address) return
-    rememberLogin({ address: embeddedWallet.address, email: user?.email?.address })
-  }, [embeddedWallet?.address, user?.email?.address])
+    if (MOCK || !activeWallet?.address) return
+    rememberLogin({ address: activeWallet.address, email: user?.email?.address })
+  }, [activeWallet?.address, user?.email?.address])
 
   // ── OPEN THE CONTACTS-BACKUP SESSION (moved here from PinGate on 2026-08-30) ──
   // The backup door is a SIGNATURE from the wallet, not a password: the server hands out a nonce,
@@ -139,12 +152,19 @@ export default function App() {
   // would understand as an action - this is the app opening its own backup, and nothing on chain
   // happens. A modal here would be a prompt with no meaning attached to it.
   //
+  // ⚠️ EMBEDDED WALLETS ONLY, and that is a UX decision rather than a technical limit. `showWalletUIs`
+  // is Privy's switch and it has no authority over MetaMask: MetaMask pops its own signature request
+  // regardless. A MetaMask user opening the app would therefore be met, unprompted, by a signature
+  // request for a message they never asked for - which is exactly how a phishing site behaves, and
+  // teaching this app's users to click through those is the last thing it should do. They keep their
+  // contacts locally instead; nothing else about the app changes for them.
+  //
   // Entirely in the background and swallowing every error, exactly as before: an address book must
   // never hold anyone at the door. No KV binding, no network, a refused signature - the app carries
   // on without backup this session.
   const syncOpened = useRef(false)
   useEffect(() => {
-    if (MOCK || !embeddedWallet?.address) return
+    if (MOCK || !isEmbedded || !activeWallet?.address) return
     if (syncOpened.current || sessionStorage.getItem('ez_sync_token')) return
     syncOpened.current = true
     ;(async () => {
@@ -154,12 +174,12 @@ export default function App() {
         if (!m?.nonce || !m?.message) return
         const { signature } = await signMessage(
           { message: m.message },
-          { address: embeddedWallet.address, uiOptions: { showWalletUIs: false } },
+          { address: activeWallet.address, uiOptions: { showWalletUIs: false } },
         )
         if (await sync.openSession(m.nonce, signature)) await sync.pullOnce()
       } catch {}
     })()
-  }, [embeddedWallet?.address])
+  }, [isEmbedded, activeWallet?.address])
 
   // iOS/Android: when the keyboard opens, the browser SCROLLS the page to reveal the field → the screen/popup
   // "jumps up". Every input in this app is deliberately placed in the TOP HALF (above the keyboard area),

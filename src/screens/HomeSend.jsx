@@ -33,7 +33,7 @@ function pctStr(pct) { return (pct > 0 ? '+' : '') + pct.toFixed(2) + '%' }
 const STABLECOINS = ['USDC', 'EURC']
 const isVolatile = symbol => !STABLECOINS.includes(symbol)
 
-// Matches the "Send" button in Contacts.jsx (height 40, fs-item, Barlow medium - .btn) so both come from the same
+// Matches the "Send" button in Contacts.jsx (height 40, fs-item, medium weight - .btn) so both come from the same
 // design system. The width is NOT fixed - it hugs its content.
 // PRESS AND HOLD (not a sticky toggle): by default it shows $ (which everyday users understand);
 // holding reveals the real token amounts; releasing returns to $ - so nobody flips it, forgets, and is left

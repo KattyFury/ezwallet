@@ -12,7 +12,7 @@ function shortenAddr(addr) {
   return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
 }
 
-// Currency symbols / token names use Barlow (--font-condensed); numbers stay Barlow via .num
+// Currency symbols / token names use --font-condensed; numbers use the same via .num
 function Cur({ children }) {
   return <span style={{ fontFamily: 'var(--font-condensed)', fontWeight: 'var(--fw-medium)' }}>{children}</span>
 }

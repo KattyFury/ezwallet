@@ -41,34 +41,30 @@ export const privyConfig = {
     logo: '/logo.png',
     accentColor: '#0B53BF',   // = --color-brand in src/index.css. Keep the two in step.
     walletChainType: 'ethereum-only',
-    // EMAIL FIRST, ON PURPOSE. `showWalletLoginFirst: false` puts the email field at the top of the
-    // modal and MetaMask below it. Someone who already has MetaMask will find it either way; someone
-    // who has never heard of it must not be met with "Connect a wallet" as the opening move - that is
-    // precisely the wall this app exists to remove.
+    // EMAIL FIRST, ON PURPOSE. This puts the email field at the top of the modal and MetaMask below
+    // it. Someone who already has MetaMask will find it either way; someone who has never heard of it
+    // must not be met with "Connect a wallet" as the opening move - that is the wall this app exists
+    // to remove.
     showWalletLoginFirst: false,
     // 'detected_ethereum_wallets', NOT the older 'detected_wallets' - that name still works but is
     // marked deprecated in the SDK's own types (types-Ck8tvlPZ.d.ts:1580).
-    // Listing only these two also keeps Coinbase Wallet out of the modal, which matters beyond tidiness:
-    // its connector does not know Arc and warned on every single load ("The configured chains are not
-    // supported by Coinbase Smart Wallet: 5042002"). Permanent console noise is what the next real
-    // error hides behind.
+    // Listing only these two also keeps Coinbase Wallet out of the modal, which matters beyond
+    // tidiness: its connector does not know Arc and warned on every load ("The configured chains are
+    // not supported by Coinbase Smart Wallet: 5042002").
     walletList: ['metamask', 'detected_ethereum_wallets'],
   },
-  // Email + MetaMask (user decision 2026-08-30). Email creates the embedded wallet for people with no
-  // crypto at all - the app's whole audience. MetaMask lets someone who already has a wallet bring it,
-  // which is mainly useful for testing and for crypto-native visitors.
-  // ⚠️ A MetaMask user gets NO embedded wallet: they signed in WITH a wallet, so `createOnLogin` has
-  // nothing to create. Everything downstream reads the address out of `getEmbeddedConnectedWallet`,
-  // which returns null for them - so they can sign in, and the app will then sit there with no
-  // address. Making that path actually work is a separate job; see HANDOFF.
   loginMethods: ['email', 'wallet'],
   defaultChain: arcTestnet,
   supportedChains: [arcTestnet],
-  embeddedWallets: { ethereum: { createOnLogin: 'all-users' } },
-  // NOTE: no `externalWallets` key. The Coinbase Smart Wallet warning is dealt with by leaving it out
-  // of `walletList` above, not here. The only knob this config offers for it is
-  // `coinbaseWallet.config`, which the SDK's own docs mark experimental and say outright not to use
-  // in production because it pins the wallet to Base Sepolia.
+  // WHO ACTUALLY NEEDS A WALLET MADE FOR THEM (SDK docs: types-Ck8tvlPZ.d.ts:1942):
+  //   users-without-wallets ... only users with nothing linked yet. Someone arriving with MetaMask is
+  //                             skipped, and KEEPS THEIR OWN WALLET - which is the point of offering
+  //                             MetaMask at all.
+  //   all-users ............... would hand a MetaMask user a second, EMPTY Privy wallet on top of the
+  //                             one they already have, and the app would then show them that empty one
+  //                             instead of their real money. Do not use it here.
+  // Email users have no wallet, so they still get one - that is the whole premise of the app.
+  embeddedWallets: { ethereum: { createOnLogin: 'users-without-wallets' } },
 }
 
 // The keys the rest of the app reads. `ez_wallet_id` and `ez_user_token` are deliberately NOT in

@@ -12,7 +12,17 @@ function measureWidth(text, font) {
 // narrower than assumed (e.g. the Swap card shares a row with the token chip) → the number still overflows or
 // gets cut with "…" even at an allowed character count (user 07-22: typing 1000000 still showed "100000…").
 // ref goes on the container (the width the number is ALLOWED to take); returns the LARGEST size `text` fits at.
-export function useFitFontSize(text, { max = 52, min = 16, weight = 300, family = 'Barlow, sans-serif', buffer = 4 } = {}) {
+//
+// ⚠️ `family` MUST MATCH WHAT THE ELEMENT IS ACTUALLY DRAWN IN. This is a real measurement, not a
+// label: canvas.measureText renders in the family it is handed, so a stale value here silently sizes
+// the number against a typeface nobody is looking at, and it overflows or ellipsises for no visible
+// reason. It said 'Barlow, sans-serif' until 2026-08-30, when the app dropped webfonts for the system
+// stack - which is exactly the kind of leftover that keeps working just badly enough not to notice.
+// It now reads --font-condensed straight off the document, so it can never drift from index.css again.
+const measuredFamily = () =>
+  getComputedStyle(document.documentElement).getPropertyValue('--font-condensed').trim() || 'sans-serif'
+
+export function useFitFontSize(text, { max = 52, min = 16, weight = 300, family = measuredFamily(), buffer = 4 } = {}) {
   const ref = useRef(null)
   const [size, setSize] = useState(max)
 
@@ -41,9 +51,10 @@ export function useFitFontSize(text, { max = 52, min = 16, weight = 300, family 
     fit()
     const ro = new ResizeObserver(fit)
     ro.observe(el)
-    // Barlow loads through an ASYNC Google Fonts <link> (index.html) - if canvas measures BEFORE the font
-    // finishes loading, it silently falls back to a system font (different widths) → the computed size is wrong.
-    // Measure once more when the font is ready to self-correct (only affects the very first measurement on entry).
+    // KEPT even though the app no longer loads a webfont (2026-08-30). It cost nothing and it is the
+    // safety net for the day one comes back: a font arriving after the first measurement changes every
+    // width, and without a second pass the number stays sized for the fallback. `document.fonts.check`
+    // on a system stack simply answers true and this never runs.
     if (document.fonts && !document.fonts.check(`${weight} 16px ${family}`)) {
       document.fonts.ready.then(fit)
     }

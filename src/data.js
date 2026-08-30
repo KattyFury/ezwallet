@@ -22,7 +22,7 @@ export function spendableOf(symbol, balance) {
   return symbol === 'USDC' ? Math.max(0, b - GAS_RESERVE_USDC) : b
 }
 
-// Amount font size AUTO-SHRINKS with string length (Barlow is ~0.5em per character) so a long number does NOT overflow or break
+// Amount font size AUTO-SHRINKS with string length (~0.5em per character) so a long number does NOT overflow or break
 // the layout (e.g. typing "0.00000001"). base = the maximum size (px); maxChars = how many characters fit exactly at base;
 // beyond that it shrinks linearly, with a minPx floor so it never becomes unreadable.
 export function amountFontSize(str, base, maxChars, minPx = 20) {

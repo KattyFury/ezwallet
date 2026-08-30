@@ -1,14 +1,23 @@
 ﻿/* ══════════════════════════════════════════════════════════
    DESIGN TOKENS (2026-06-28).
-   FONT (locked): ONE FONT ONLY for the WHOLE APP. Was Barlow from 2026-07-15; changed to INTER on
-   2026-08-30 because sign-in moved inside Privy's modal, which is set in Inter - two typefaces a
-   second apart on the same screen read as two different products. The "one font only" rule itself
-   is unchanged, and so is the type scale: Inter ships the same four weights.
+   FONT (locked): ONE FONT ONLY for the WHOLE APP = THE SYSTEM STACK (user decision 2026-08-30).
+   Barlow from 2026-07-15, briefly Inter the same day, then no webfont at all: the app is drawn in
+   whatever face the device already uses for everything else. Nothing to download, nothing to wait
+   for, no flash of the wrong typeface. Do not reintroduce a webfont without a reason that outweighs
+   all of that.
+   ⚠️ The stack below is CHARACTER-FOR-CHARACTER the one Privy's own UI uses - verified by reading it
+   out of the shipped SDK (node_modules/@privy-io/react-auth/dist/esm/useActiveWallet-*.mjs), not from
+   the docs and not from memory. That is the point: sign-in happens inside Privy's modal, and the app
+   around it must not change typeface the moment that modal closes. Privy loads NO webfont either.
+   Change this stack and the two drift apart.
+   ⚠️ The stack is duplicated across three --font-* variables; change one, change all three.
    The design gets its appeal from HEAVY/LIGHT CONTRAST: Light 300 = hero numbers (balances, amounts), airy;
    400 = body/content; 500 = buttons, items; 600 = titles, emphasis, active.
-   (--fw-bold stays 600. That cap was originally "Barlow 700 is ugly", which no longer applies -
-   Inter 700 is perfectly good - but raising it would rebalance every heading in the app, so it is a
-   deliberate design decision to make on its own, not a side effect of swapping the font.)
+   ⚠️ Weight 300 is now a REQUEST, not a guarantee: a webfont ships every weight, a system face may
+   not have Light and the browser will then synthesise or round it. If the hero balance stops looking
+   airy on some device, that is why - and the fix is a design decision about the weight ramp, not a
+   bug. (--fw-bold stays 600; that cap was "Barlow 700 is ugly", which no longer applies, but raising
+   it would rebalance every heading in the app.)
    COLOURS (locked): the 4 text tiers + the functional colours below.
    FONT SIZES: UNLOCKED - the scale below is a guide, px values may be tuned per place.
    ══════════════════════════════════════════════════════════ */
@@ -56,13 +65,17 @@
   --color-surface:      #F2F2F7; /* tile/card background (iOS systemGray6) */
   --color-surface-2:    #D1D1D6; /* MID GREY (iOS systemGray4) - the NUMPAD PANEL background (user decision 07-22g: the numpad grey was too pale, mid grey makes the white keys pop) */
 
-  /* ── FONT - a single font: INTER. All three variables point at the same family; the old names are
-     kept so no JSX needed editing, which is exactly why swapping the whole app's typeface was a
-     three-line change. The fallback stack matters: Inter is a webfont, and if Google Fonts is slow
-     or blocked the app should fall back to the system UI face rather than to Times. ── */
-  --font-base:      'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;   /* CONTENT: menus, descriptions, hints, notifications, inputs, memos */
-  --font-display:   'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;   /* BRAND: the logo, main screen TITLES */
-  --font-condensed: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;   /* LEGACY NAME: numbers, currency symbols, BUTTONS */
+  /* ── FONT - THE SYSTEM STACK. No webfont at all: nothing to download, nothing to wait for, and no
+     flash of the wrong typeface while it arrives. Each device draws the app in the face it already
+     draws everything else in, which on a phone is also the face its owner has already set their
+     accessibility text size against.
+     The two emoji families at the end are load-bearing, not decoration: without them a system stack
+     can fall through to a monochrome glyph, and this app puts emoji in real content (contact avatars,
+     notes on a transfer).
+     All three variables are the same stack; the old names are kept so no JSX needed editing. ── */
+  --font-base:      system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";   /* CONTENT: menus, descriptions, hints, notifications, inputs, memos */
+  --font-display:   system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";   /* BRAND: the logo, main screen TITLES */
+  --font-condensed: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";   /* LEGACY NAME: numbers, currency symbols, BUTTONS */
 
   /* ── FONT SIZES (a suggested scale - unlocked and tunable) ── */
   --fs-amount:   52px;   /* display weight - large money amounts */

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { usePrivy, useExportWallet, useMfaEnrollment } from '@privy-io/react-auth'
+import { usePrivy, useWallets, useExportWallet, useMfaEnrollment, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
 import { privyErrorMessage } from '../privy'
@@ -7,8 +7,16 @@ import { privyErrorMessage } from '../privy'
 export default function Security() {
   const { navigate } = useNav()
   const { user } = usePrivy()
+  const { wallets } = useWallets()
   const { exportWallet } = useExportWallet()
   const { showMfaEnrollmentModal } = useMfaEnrollment()
+
+  // ⚠️ TWO OF THE ROWS BELOW ONLY EXIST FOR A PRIVY-MADE WALLET, and hiding them is honesty rather
+  // than tidiness. Someone who signed in with MetaMask owns their key already - Privy cannot export
+  // what it never held, and Privy's MFA cannot gate a signature MetaMask makes behind its own
+  // password. Both rows would be buttons that either error or, worse, imply a protection that is not
+  // there. MetaMask users manage all of this in MetaMask, where it actually lives.
+  const isEmbedded = !!getEmbeddedConnectedWallet(wallets)
   const [copied, setCopied] = useState(false)
   const [lockStatus, setLockStatus] = useState('')
 
@@ -103,7 +111,9 @@ export default function Security() {
       {/* SHARED GREY BOX rows 2-4 (Currency was split into its own screen 08-04 - see Currency.jsx);
           no grey separator lines inside the box (old rule kept). Export uses the RIGHT CHEVRON right2
           (the same rule Change PIN followed: it is a row that goes somewhere, not a dropdown). */}
-      <div style={{ gridRow: '2 / 6', background: 'var(--color-surface)', borderRadius: 20, padding: '0 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', minWidth: 0 }}>
+      {/* The box SHRINKS to fit: 4 rows for a Privy wallet, 2 for a MetaMask one. A fixed height with
+          space-evenly would spread two rows over four rows' worth of grey and read as a rendering bug. */}
+      <div style={{ gridRow: isEmbedded ? '2 / 6' : '2 / 4', background: 'var(--color-surface)', borderRadius: 20, padding: '0 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', minWidth: 0 }}>
         <div className="menu-item">
           <span style={LABEL}>Login email</span>
           <span style={VALUE}>{email}</span>
@@ -115,30 +125,36 @@ export default function Security() {
         </button>
         {/* Deliberately NOT called "passkey", "MFA" or "two-factor" - words that mean nothing to the
             person this app is for. It says what it does: your fingerprint guards your money. */}
-        <button className="menu-item" onClick={openLockSettings}>
-          <span style={LABEL}>Fingerprint or Face ID</span>
-          {lockStatus
-            ? <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-error)' }}>{lockStatus}</span>
-            : <span style={{ ...VALUE, color: passkeyOn ? 'var(--color-primary)' : 'var(--color-muted)' }}>
-                {passkeyOn ? 'On' : 'Off'}
-              </span>}
-        </button>
-        <button className="menu-item" onClick={handleExportKey}>
-          <span style={LABEL}>Export private key</span>
-          {keyStatus
-            ? <span style={{ fontSize: 'var(--fs-item)', color: keyErr ? 'var(--color-error)' : 'var(--color-primary)' }}>{keyStatus}</span>
-            : <Icon name="right2" size="var(--is-md-lg)" color="var(--color-brand)" />}
-        </button>
+        {isEmbedded && (
+          <button className="menu-item" onClick={openLockSettings}>
+            <span style={LABEL}>Fingerprint or Face ID</span>
+            {lockStatus
+              ? <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-error)' }}>{lockStatus}</span>
+              : <span style={{ ...VALUE, color: passkeyOn ? 'var(--color-primary)' : 'var(--color-muted)' }}>
+                  {passkeyOn ? 'On' : 'Off'}
+                </span>}
+          </button>
+        )}
+        {isEmbedded && (
+          <button className="menu-item" onClick={handleExportKey}>
+            <span style={LABEL}>Export private key</span>
+            {keyStatus
+              ? <span style={{ fontSize: 'var(--fs-item)', color: keyErr ? 'var(--color-error)' : 'var(--color-primary)' }}>{keyStatus}</span>
+              : <Icon name="right2" size="var(--is-md-lg)" color="var(--color-brand)" />}
+          </button>
+        )}
       </div>
 
       {/* Says WHAT THE KEY IS FOR in the one place the user is looking at it, in the words this app
           uses elsewhere ("your money", not "your funds"). Sitting under the box rather than inside it
-          keeps the three rows evenly spaced, which is the whole point of that space-evenly box. */}
-      <div className="row-6" style={{ display: 'flex', alignItems: 'center' }}>
+          keeps the rows evenly spaced, which is the whole point of that space-evenly box. */}
+      <div className={isEmbedded ? 'row-6' : 'row-4'} style={{ display: 'flex', alignItems: 'center' }}>
         <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', lineHeight: 1.4 }}>
-          {passkeyOn
-            ? 'Your fingerprint is asked for before any money leaves this wallet. Your private key opens this wallet in any other crypto app - never share it.'
-            : 'Turn on Fingerprint or Face ID so nobody else can send money from this wallet. Your private key opens this wallet in any other crypto app - never share it.'}
+          {!isEmbedded
+            ? 'You signed in with your own wallet, so your key and your security settings stay in that wallet - manage them there.'
+            : passkeyOn
+              ? 'Your fingerprint is asked for before any money leaves this wallet. Your private key opens this wallet in any other crypto app - never share it.'
+              : 'Turn on Fingerprint or Face ID so nobody else can send money from this wallet. Your private key opens this wallet in any other crypto app - never share it.'}
         </span>
       </div>
 
