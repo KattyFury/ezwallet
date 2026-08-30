@@ -1,10 +1,13 @@
 import { useState, useEffect, useRef } from 'react'
+import { useSendTransaction } from '@privy-io/react-auth'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
 import PctSlider from '../components/PctSlider'
 import Numpad from '../components/Numpad'
-import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress, circleErrorMessage } from '../circle'
-import { getTokenBalances, getDisplayRates, cachedRates, cachedBalances, estimateFeeUsd } from '../chain'
+import { estimateSwap, executeSwap, ensureWalletAddress } from '../circle'
+import { privyErrorMessage } from '../privy'
+import { MOCK } from '../mock'
+import { getTokenBalances, getDisplayRates, cachedRates, cachedBalances, estimateFeeUsd, arcTestnet } from '../chain'
 import { spendableOf, floorTo, getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency } from '../data'
 import { useFitFontSize } from '../useFitFontSize'
 import { roundHints, fmtHint } from '../roundHint'
@@ -63,6 +66,7 @@ function TokenPicker({ current, onSelect, onClose }) {
 
 export default function Swap() {
   const { navigate } = useNav()                  // the row 10 Exit button → back to Service Hub
+  const { sendTransaction } = useSendTransaction()
   const [fromSym, setFromSym] = useState('EURC') // default: the "out of USDC" rescue → swap another token INTO USDC
   const [toSym, setToSym] = useState('USDC')
   const [pct, setPct] = useState(0)              // the selected % OF BALANCE (0-100) - the single source of truth for the amount
@@ -96,7 +100,8 @@ export default function Swap() {
   // overBalance always true → the Swap button never lights up.
   const [walletAddress, setWalletAddress] = useState(() => localStorage.getItem('ez_wallet_addr'))
   useEffect(() => { if (!walletAddress) ensureWalletAddress().then(a => a && setWalletAddress(a)).catch(() => {}) }, [])
-  const walletId = localStorage.getItem('ez_wallet_id')
+  // (ez_wallet_id was read here for Circle's contractExecution. Privy signs from the ADDRESS, so the
+  // Circle walletId has no meaning any more and the line is gone rather than left unused.)
 
   // Available: USDC holds 1 back for network fees (Arc gas = USDC) - you cannot swap every last cent
   const hasBal = balances[fromSym] !== undefined
@@ -226,14 +231,22 @@ export default function Swap() {
     setLoading(true); setError(''); setSuccess(false); setStatus('Preparing…')
     const beforeOut = balances[toSym] || 0   // the RECEIVING token's balance before the swap → used to confirm on-chain
     try {
-      // A 60' token may have expired mid-session → refresh it BEFORE creating a challenge that needs the PIN
-      const { userToken, encryptionKey } = await refreshSession()
-      const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
+      // /api/swap 'execute' now PREPARES the batch and hands back its calldata; the Stablecoin Kit
+      // call behind it is unchanged (it needs KIT_KEY and stays on the server). Signing moved here.
+      const res = await executeSwap({ walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
       if (res.error) throw new Error(res.error)
-      setStatus('Enter PIN...')
-      await executeChallenge(await getSDK(), userToken, encryptionKey, res.challengeId)
+      setStatus('Swapping…')
+      if (!MOCK) {
+        // ONE signature for the whole thing: Multicall3From batches [approve, adapter.execute], which
+        // is why this is a single send and not two. Privy's own modal is suppressed for the same
+        // reason as on SendConfirm - the user already confirmed on this screen, in this app's words.
+        await sendTransaction(
+          { to: res.to, data: res.data, value: res.value, chainId: arcTestnet.id },
+          { address: walletAddress, uiOptions: { showWalletUIs: false } },
+        )
+      }
 
-      // ✅ STATE 1 - the PIN is signed and the swap has been SUBMITTED to Arc ("successfully requested")
+      // ✅ STATE 1 - the swap has been SUBMITTED to Arc ("successfully requested")
       // ONE SINGLE NOTIFICATION per swap (user decision 07-20: "Swapped..." + "Swap complete·received" were merged
       // into one) → "Swapped X EURC to ~Y USDC (complete)". NotifArea no longer adds a separate received notification
       // for the swap's incoming leg (that outHashes branch is disabled over there).
@@ -258,10 +271,10 @@ export default function Swap() {
       setTimeout(() => { setSuccess(false); setStatus('') }, 3500)   // auto-hide, back to the plain "Swap" button
     } catch (e) {
       setLoading(false)
-      if (e?.code === 155701) { setStatus(''); return }  // the user cancelled the PIN themselves → stay silent
+      const msg = privyErrorMessage(e)
+      if (!msg) { setStatus(''); return }   // the user closed Privy's flow themselves → stay silent
       // Swap failed → the same merged notification, ending in "(failed)" (user decision 07-20)
       addNotif(`Swapped ${amountNum} ${fromSym} to ${toSym} (failed)`, 'error', null, `swap-fail-${Date.now()}`)
-      const msg = circleErrorMessage(e)
       setError(msg); setStatus('')
     }
   }

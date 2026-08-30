@@ -229,13 +229,20 @@ export async function estimateSwap({ walletAddress, tokenIn, tokenOut, amountIn 
   return res.json()
 }
 
-// The userToken is passed in from refreshSession() (do not read localStorage directly - a 60' token may be dead)
-export async function executeSwap({ userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn }) {
-  if (MOCK) return { challengeId: 'mock-challenge', amountOut: mockSwapOut(tokenIn, tokenOut, amountIn) }
+// ⚠️ THIS PREPARES A SWAP, IT NO LONGER EXECUTES ONE (2026-08-30). It returns { to, data, value,
+// amountOut } - the calldata for the [approve, adapter.execute] batch - and the CALLER signs and
+// sends it through Privy. It used to return a challengeId for Circle's PIN iframe, and it no longer
+// needs a userToken or a walletId because there is no Circle session involved in signing.
+//
+// The Stablecoin Kit call behind this endpoint is unchanged and stays on the server: it is Circle's
+// routing product, it has nothing to do with which wallet signs, and its KIT_KEY is a secret.
+// That is also why these two functions stay in circle.js while the auth half of this file goes away.
+export async function executeSwap({ walletAddress, tokenIn, tokenOut, amountIn }) {
+  if (MOCK) return { to: '0x0', data: '0x', value: '0x0', amountOut: mockSwapOut(tokenIn, tokenOut, amountIn) }
   const res = await fetch('/api/swap', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'execute', userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn }),
+    body: JSON.stringify({ action: 'execute', walletAddress, tokenIn, tokenOut, amountIn }),
   })
   return res.json()
 }

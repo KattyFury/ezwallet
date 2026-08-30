@@ -8,17 +8,17 @@ import {
   fetchSwapIntent, buildSwapBatch, simulateSwap,
 } from './_swapCore.js'
 
-const W3S_API = 'https://api.circle.com/v1/w3s'
 const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 const err = (msg, detail, status = 500) =>
   new Response(JSON.stringify({ error: msg, detail }), { status, headers: JSON_HEADERS })
 
 export async function onRequestPost(ctx) {
   try {
-    const apiKey = ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY
+    // API_KEY (the Circle W3S key) is no longer needed here: nothing in this file talks to W3S any
+    // more. KIT_KEY, for the Stablecoin Kit, is the only secret this endpoint still uses.
     const kitKey = ctx.env.KIT_KEY
     const body = await ctx.request.json()
-    const { action, userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn } = body
+    const { action, walletAddress, tokenIn, tokenOut, amountIn } = body
 
     const fromAddr = TOKEN_ADDR[tokenIn]
     const toAddr   = TOKEN_ADDR[tokenOut]
@@ -50,34 +50,31 @@ export async function onRequestPost(ctx) {
       return new Response(JSON.stringify(out), { headers: JSON_HEADERS })
     }
 
+    // ⚠️ THIS NO LONGER EXECUTES ANYTHING - it PREPARES (2026-08-30, the move to Privy).
+    // It used to hand the batch to Circle's contractExecution and return a challengeId for the PIN
+    // iframe to sign. Privy signs in the browser, so the endpoint now returns the calldata and
+    // Swap.jsx sends it. What did NOT change is the part that has to be here: fetching the swap
+    // intent from the Stablecoin Kit needs KIT_KEY, which is a secret and stays server-side.
+    // (The Circle API_KEY is no longer read by this action at all - only KIT_KEY is.)
     if (action === 'execute') {
-      if (!userToken || !walletId || !walletAddress || !fromAddr || !toAddr) {
-        return err('missing params', null, 400)
-      }
+      if (!kitKey) return err('KIT_KEY not configured')
+      if (!walletAddress || !fromAddr || !toAddr) return err('missing params', null, 400)
       const amountBase = toBase(amountIn, tokenIn)
       const intent = await fetchSwapIntent(kitKey, fromAddr, toAddr, walletAddress, amountBase)
       if (!intent.ok) return err(`Stablecoin Kit ${intent.status}: ${intent.data?.message || 'swap failed'}`, intent.data)
       const built = buildSwapBatch(intent.data, fromAddr, amountBase)
       if (built.error) return err(built.error, built.swapData)
 
-      const txRes = await fetch(`${W3S_API}/user/transactions/contractExecution`, {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'X-User-Token': userToken },
-        body: JSON.stringify({
-          idempotencyKey: crypto.randomUUID(),
-          walletId, contractAddress: MULTICALL3FROM, callData: built.batchData,
-          feeLevel: 'MEDIUM',
-        }),
-      })
-      const txData = await txRes.json()
-      const challengeId = txData?.data?.challengeId
-      if (!challengeId) {
-        console.error('[swap] contractExecution returned no challengeId:', txRes.status, JSON.stringify(txData))
-        const msg = `${txData?.message || txData?.error?.message || 'no challengeId'} (HTTP ${txRes.status}${txData?.code ? `, code ${txData.code}` : ''})`
-        return err(msg, txData)
-      }
       const amountOut = built.estOut ? fromBase(built.estOut, tokenOut) : null
-      return new Response(JSON.stringify({ challengeId, batched: true, amountOut }), { headers: JSON_HEADERS })
+      return new Response(JSON.stringify({
+        to: MULTICALL3FROM,
+        data: built.batchData,
+        // BigInt does not survive JSON.stringify, so it goes as a hex string. For same-chain ERC20
+        // swaps it is always 0 (see buildSwapBatch), but it is passed through rather than assumed.
+        value: '0x' + built.totalValue.toString(16),
+        batched: true,
+        amountOut,
+      }), { headers: JSON_HEADERS })
     }
 
     return err('unknown action', null, 400)
