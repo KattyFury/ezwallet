@@ -70,9 +70,10 @@ export default function SendConfirm() {
   // Privy signs in the browser, so this builds the calldata (chain.js) and sends it. functions/api/send.js
   // was deleted with this change - there is nothing left for it to do.
   //
-  // ⚠️ NO PIN IS ASKED FOR HERE YET, and that is a REAL GAP, not an oversight: right now whoever is
-  // holding the unlocked phone can send money. Step 5 of MIGRATION-PRIVY.md puts a PIN back in front
-  // of this call. Do not ship to real users before then.
+  // WHAT GUARDS THIS: if the user turned on Fingerprint/Face ID (Security screen), Privy demands it
+  // before it will sign, and the MFA listener in App.jsx answers that demand with the phone's own
+  // sheet. Nothing to do here - the guard is not this screen's job and must not be reimplemented as
+  // a check of ours, which could be stepped around while Privy's cannot.
   async function handleConfirm() {
     if (loading || done) return   // block repeat taps / duplicate sends
     setLoading(true); setError('')

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
-import { usePrivy, useWallets, useSignMessage, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
+import { usePrivy, useWallets, useSignMessage, useMfa, useRegisterMfaListener, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
 import { NavContext } from './nav'
 import ErrorBoundary from './components/ErrorBoundary'
 import BugButton from './components/BugButton'
@@ -31,7 +31,12 @@ const TxHistory   = lazy(() => import('./screens/TxHistory'))
 const Currency    = lazy(() => import('./screens/Currency'))
 const Security    = lazy(() => import('./screens/Security'))
 const About       = lazy(() => import('./screens/About'))
-const PinGate     = lazy(() => import('./screens/PinGate'))
+// PinGate was DELETED on 2026-08-30. It existed to make the user enter their Circle PIN before the
+// app opened, and that PIN was real: it completed the MPC signature. Privy holds the key in its own
+// secure hardware and gates signing on its session, so there is no local secret a PIN of ours could
+// lock - a rebuilt one would have been a string comparison anyone could step around. The guard moved
+// to where it actually protects something: a fingerprint check in front of SIGNING (see the MFA
+// listener below), not in front of looking at your own balance.
 
 const SCREENS = {
   Login,
@@ -43,13 +48,41 @@ const SCREENS = {
   Currency,
   Security,
   About,
-  PinGate,
 }
 
 export default function App() {
   const { ready, authenticated, user } = usePrivy()
   const { wallets } = useWallets()
   const { signMessage } = useSignMessage()
+
+  // ══ THE FINGERPRINT CHECK IN FRONT OF THE MONEY (2026-08-30) ══
+  // Once the user has turned on Fingerprint/Face ID (Security screen), Privy demands it before
+  // anything uses the wallet's key. Because this app hides Privy's own wallet UIs, that demand
+  // arrives HERE instead of as a Privy modal - and if nothing answered it, signing would simply
+  // hang, or worse, the check would quietly never happen.
+  //
+  // For a passkey there is nothing of ours to draw: `init` opens the phone's own fingerprint sheet
+  // and `submit` closes the loop. So the whole "second factor" is one touch, which is the point -
+  // the person this app is for should not have to learn a new ritual to send money to their family.
+  // A user enrolled in sms/totp instead is handed to Privy's own dialog rather than left stuck.
+  const { init: initMfa, submit: submitMfa, promptMfa, cancel: cancelMfa } = useMfa()
+  useRegisterMfaListener({
+    onMfaRequired: async (methods) => {
+      try {
+        if (methods.includes('passkey')) {
+          const opts = await initMfa('passkey')
+          await submitMfa('passkey', opts)
+          return
+        }
+        await promptMfa()   // sms/totp → Privy draws the code entry, we do not rebuild it
+      } catch (e) {
+        // Cancelled, wrong, or timed out. Cancel the flow so the pending send rejects and the screen
+        // that started it can say so - leaving it open would strand the user on "Sending..." forever.
+        console.error('[MFA]', e)
+        try { cancelMfa() } catch {}
+      }
+    },
+  })
   // null = not decided yet. The Circle build could pick the first screen SYNCHRONOUSLY, because
   // "is there a session" was just `localStorage.ez_user_token`. Privy answers that question
   // asynchronously (it restores a previous visit's session over the network), so there is a moment
@@ -71,10 +104,8 @@ export default function App() {
       setNav(n => (n?.screen === 'Login' || n?.screen === 'EnterEmail') ? n : { screen: 'Login', params: {} })
       return
     }
-    // ⚠️ STEP 2 OF 6 - THE PIN GATE IS DELIBERATELY BYPASSED HERE. PinGate.jsx still asks the Circle
-    // SDK to sign its unlock message, and there is no Circle session left to sign with, so routing
-    // through it would dead-end the app. Step 5 rebuilds the PIN on a PIN-derived encryption key
-    // (MIGRATION-PRIVY.md section 1.3) and this goes back to a PinGate branch.
+    // Straight in. There is no unlock screen any more - the guard is on SIGNING, not on opening the
+    // app (see the deleted-PinGate note above the lazy imports).
     setNav(n => n || { screen: 'HomeSend', params: {} })
   }, [ready, authenticated])
 

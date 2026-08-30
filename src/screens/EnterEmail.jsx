@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { useLoginWithEmail, useWallets, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
+import { usePrivy, useLoginWithEmail, useWallets, useMfaEnrollment, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
 import { useNav } from '../nav'
+import Icon from '../components/Icon'
 import { privyErrorMessage } from '../privy'
 
 const DOMAINS = ['@gmail.com', '@yahoo.com', '@icloud.com']
@@ -17,10 +18,13 @@ const DOMAINS = ['@gmail.com', '@yahoo.com', '@icloud.com']
 // a separate thing we build ourselves in step 5. Hence: step 'email' → step 'code'.
 export default function EnterEmail() {
   const { navigate } = useNav()
+  const { user } = usePrivy()
   const { sendCode, loginWithCode } = useLoginWithEmail()
+  const { initEnrollmentWithPasskey } = useMfaEnrollment()
   const { wallets } = useWallets()
+  const passkeyOn = (user?.mfaMethods || []).includes('passkey')
 
-  const [step, setStep] = useState('email')   // 'email' → 'code' → (waiting for the wallet)
+  const [step, setStep] = useState('email')   // 'email' → 'code' → 'protect' → 'done'
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
   const [loading, setLoading] = useState(false)
@@ -45,11 +49,38 @@ export default function EnterEmail() {
   useEffect(() => {
     if (!creatingWallet || !embeddedWallet?.address) return
     saveEmailHistory(email.trim())
-    // STEP 2 OF 6: no PIN exists yet, so mark the session unlocked and skip the (still Circle-based)
-    // PIN gate. Step 5 replaces this with the real PIN - see the matching note in App.jsx.
     sessionStorage.setItem('ez_pin_ok', '1')
-    navigate('HomeSend')
+    // Straight into the wallet if the lock is already on (signing in again on another device).
+    // Otherwise offer it once, HERE, while the user is still in "setting things up" mode.
+    setStep(passkeyOn ? 'done' : 'protect')
   }, [creatingWallet, embeddedWallet?.address])
+
+  useEffect(() => { if (step === 'done') navigate('HomeSend') }, [step])
+
+  // ══ OFFERING THE LOCK AT SIGN-UP (2026-08-30) ══
+  // Under Circle, creating a PIN was PART of signing up - you could not end up with an unguarded
+  // wallet by accident. Passkeys replaced that PIN (see Security.jsx), and a setting buried in a menu
+  // would mean almost nobody ever turns it on: the default state of a wallet holding real money would
+  // be "anyone holding this phone can send it". So it is offered right here, once, in the flow.
+  //
+  // It is an OFFER, not a wall. A phone with no fingerprint reader, a borrowed device, someone who
+  // just wants to look around first - none of those are reasons to lock a person out of their own
+  // money at the door. Skipping is one tap and Security turns it on later.
+  async function handleProtect() {
+    if (loading) return
+    setLoading(true); setError('')
+    try {
+      await initEnrollmentWithPasskey()
+      setStep('done')
+    } catch (e) {
+      // Cancelling the OS sheet is a normal answer to a question we asked, not a failure - let them
+      // into their wallet rather than trapping them behind a prompt they just declined.
+      const msg = privyErrorMessage(e)
+      if (!msg) { setStep('done'); return }
+      setError(msg)
+      setLoading(false)
+    }
+  }
 
   async function handleSendCode() {
     if (!valid || loading) return
@@ -76,6 +107,36 @@ export default function EnterEmail() {
       setCode('')
       setLoading(false)
     }
+  }
+
+  // ── STEP 3: offer the lock (only reached once, straight after the wallet is created) ──
+  if (step === 'protect' || step === 'done') {
+    return (
+      <div className="screen">
+        <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
+          Protect your money
+        </div>
+
+        <div className="row-2-8 col" style={{ justifyContent: 'center', alignItems: 'center', gap: '3dvh', padding: '0 8px' }}>
+          <Icon name="shield" size="min(28vw, 120px)" color="var(--color-brand)" />
+          {/* Says what it DOES, in the terms the user already understands - their own phone, their own
+              money. No "passkey", no "two-factor", no "MFA": those words explain nothing to the person
+              this app was built for, and a word nobody understands is a word that gets skipped. */}
+          <span style={{ width: '85%', fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center', lineHeight: 1.4 }}>
+            Use your fingerprint or face to approve sending money, so nobody else can send it from
+            your phone.
+          </span>
+          {error && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</span>}
+        </div>
+
+        <div className="row-10 row10-dual">
+          <button className="btn btn-secondary" disabled={loading} onClick={() => setStep('done')}>Not now</button>
+          <button className="btn btn-primary" disabled={loading} onClick={handleProtect}>
+            {loading ? 'Processing...' : 'Turn on'}
+          </button>
+        </div>
+      </div>
+    )
   }
 
   // ── STEP 2: the code from the inbox ──
