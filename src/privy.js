@@ -29,6 +29,19 @@ export const PRIVY_APP_ID = import.meta.env.VITE_PRIVY_APP_ID || 'cmtenk9en00250
 // Written the 2.x way it does not throw - it is simply IGNORED, and the user logs in successfully
 // but never gets a wallet, which looks like a Privy outage rather than a config typo.
 export const privyConfig = {
+  // Privy's modal is the FIRST thing a new user sees now that sign-in happens inside it, so it wears
+  // the app's own logo and brand blue instead of Privy's defaults - otherwise the moment of handing
+  // over an email address happens on a screen that looks like it belongs to a stranger.
+  // ⚠️ A ROOT-RELATIVE PATH, not the absolute https://ezwallet.cash/logo.png. The file is served from
+  // public/, so '/logo.png' resolves against whatever origin the app is on - it works on localhost,
+  // on a preview deploy and in production alike, where the absolute URL would break every one of
+  // those except production. (The absolute URL IS what the Privy DASHBOARD needs, which is a
+  // different thing entirely - see HANDOFF.)
+  appearance: {
+    logo: '/logo.png',
+    accentColor: '#0B53BF',   // = --color-brand in src/index.css:28. Keep the two in step.
+    walletChainType: 'ethereum-only',
+  },
   // Email only, matching what the app offers today. The whole reason for leaving Circle is that
   // more methods become possible ('google', 'apple', 'sms', 'telegram'…) - adding one here plus
   // enabling it in the Privy dashboard is the entire job, but that is a separate, deliberate step.
