@@ -1,8 +1,14 @@
 ﻿/* ══════════════════════════════════════════════════════════
    DESIGN TOKENS (2026-06-28).
-   FONT (locked, 2026-07-15): ONE FONT ONLY = BARLOW for the WHOLE APP (IBM Plex Sans + Barlow Condensed were dropped).
+   FONT (locked): ONE FONT ONLY for the WHOLE APP. Was Barlow from 2026-07-15; changed to INTER on
+   2026-08-30 because sign-in moved inside Privy's modal, which is set in Inter - two typefaces a
+   second apart on the same screen read as two different products. The "one font only" rule itself
+   is unchanged, and so is the type scale: Inter ships the same four weights.
    The design gets its appeal from HEAVY/LIGHT CONTRAST: Light 300 = hero numbers (balances, amounts), airy;
-   400 = body/content; 500 = buttons, items; 600 = titles, emphasis, active. NEVER 700 (Barlow 700 is ugly).
+   400 = body/content; 500 = buttons, items; 600 = titles, emphasis, active.
+   (--fw-bold stays 600. That cap was originally "Barlow 700 is ugly", which no longer applies -
+   Inter 700 is perfectly good - but raising it would rebalance every heading in the app, so it is a
+   deliberate design decision to make on its own, not a side effect of swapping the font.)
    COLOURS (locked): the 4 text tiers + the functional colours below.
    FONT SIZES: UNLOCKED - the scale below is a guide, px values may be tuned per place.
    ══════════════════════════════════════════════════════════ */
@@ -50,15 +56,18 @@
   --color-surface:      #F2F2F7; /* tile/card background (iOS systemGray6) */
   --color-surface-2:    #D1D1D6; /* MID GREY (iOS systemGray4) - the NUMPAD PANEL background (user decision 07-22g: the numpad grey was too pale, mid grey makes the white keys pop) */
 
-  /* ── FONT - a single font: BARLOW (every variable points at Barlow, old names kept so the JSX needs no edits) ── */
-  --font-base:      'Barlow', sans-serif;              /* CONTENT: menus, descriptions, hints, notifications, inputs, memos */
-  --font-display:   'Barlow', sans-serif;              /* BRAND: the logo, main screen TITLES */
-  --font-condensed: 'Barlow', sans-serif;              /* LEGACY NAME: numbers, currency symbols, BUTTONS */
+  /* ── FONT - a single font: INTER. All three variables point at the same family; the old names are
+     kept so no JSX needed editing, which is exactly why swapping the whole app's typeface was a
+     three-line change. The fallback stack matters: Inter is a webfont, and if Google Fonts is slow
+     or blocked the app should fall back to the system UI face rather than to Times. ── */
+  --font-base:      'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;   /* CONTENT: menus, descriptions, hints, notifications, inputs, memos */
+  --font-display:   'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;   /* BRAND: the logo, main screen TITLES */
+  --font-condensed: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;   /* LEGACY NAME: numbers, currency symbols, BUTTONS */
 
   /* ── FONT SIZES (a suggested scale - unlocked and tunable) ── */
-  --fs-amount:   52px;   /* Barlow display - large money amounts */
+  --fs-amount:   52px;   /* display weight - large money amounts */
   --fs-title:    30px;   /* "large size" - page TITLES */
-  --fs-num:      24px;   /* Barlow - numbers in lists (token amounts) */
+  --fs-num:      24px;   /* numbers in lists (token amounts) */
   --fs-md-lg:    21px;   /* "medium-large" - BUTTONS + the slogan + text while TYPING (2px above content) */
   --fs-body:     19px;   /* "medium" - body CONTENT (one step below medium-large) */
   --fs-item:     17px;   /* "medium-small" - list items */
@@ -84,12 +93,12 @@
      E.g. the Login logo = 50% of the screen → min(50vw, calc(var(--screen-max) / 2)). */
   --screen-max: 430px;
 
-  /* Font weights - the heavy/light ramp for Barlow contrast */
+  /* Font weights - the heavy/light ramp the design leans on */
   --fw-light:     300;   /* LIGHT - large hero numbers (balances, amounts): airy, only for BIG text */
   --fw-normal:    400;   /* body, reading content */
   --fw-medium:    500;   /* buttons, list items, labels */
   --fw-semibold:  600;   /* titles, emphasis, active */
-  --fw-bold:      600;   /* LOCKED at 600 - Barlow is never 700 (ugly). Max = semibold */
+  --fw-bold:      600;   /* LOCKED at 600 = semibold. See the note at the top of this file. */
 }
 
 /* ── Reset ── */
@@ -97,7 +106,7 @@
 
 /* FONT FOR FORM CONTROLS - DO NOT REMOVE. Browsers do NOT let button/input/textarea/select inherit
    their parent's font: by default they use a system font (Arial). Any <button>/<input> that forgets to declare
-   fontFamily will show ARIAL in the middle of a Barlow app (e.g. the wallet address on Receive - bug 07-16).
+   fontFamily will show ARIAL in the middle of an Inter app (e.g. the wallet address on Receive - bug 07-16).
    Forcing inherit here = one single source; anywhere that needs a different font can still override it. */
 button, input, textarea, select { font-family: inherit; }
 
@@ -207,9 +216,9 @@ body {
 }
 
 /* ── Buttons ── */
-.screen-title { font-family: var(--font-display); color: var(--color-black); }   /* screen titles = Barlow, BLACK */
+.screen-title { font-family: var(--font-display); color: var(--color-black); }   /* screen titles = BLACK */
 
-/* Every number & currency symbol ($/USDC/EURC/cirBTC) → Barlow (--font-condensed, regular) */
+/* Every number & currency symbol ($/USDC/EURC/cirBTC) → --font-condensed, regular */
 .num { font-family: var(--font-condensed); }
 
 .btn {
