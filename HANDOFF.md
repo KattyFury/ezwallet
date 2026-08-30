@@ -99,8 +99,29 @@ decisions and the PoC measurements. This section is only the status.
   - ❌ **SENDING - LAST SEEN FAILING, THEN FIXED, AND THE FIX IS UNVERIFIED.** It died with the 401
     described above; the flag was removed and it has NOT been retried since. **This is the first
     thing to check.**
+  - ❌ **THE APP WAS FREEZING AND CRASHING, ALSO FIXED AND ALSO UNVERIFIED** - see the React section
+    below. Test in a fresh tab; a page left open through the broken build proves nothing.
   - ❌ Swap end-to-end (only the quote half is proven), signing in with MetaMask, `npm run mock`,
     anything on a real phone.
+
+### ⚠️ THE FREEZE, AND THE SHAPE OF BUG THAT CAUSED IT (2026-08-30)
+
+The app locked up, then crashed repeatedly. Three causes, all introduced during this migration, all
+the SAME SHAPE: **a value that looks constant but is rebuilt on every render.** Worth internalising,
+because Privy's API invites all three.
+
+1. **The freeze itself.** `useRegisterMfaListener` was handed an object literal with an inline arrow,
+   written straight into the hook call. New object *and* new function every render → Privy
+   unsubscribes and resubscribes every render → anything touching state in that path renders again →
+   the loop never ends. Fixed the standard way: live functions in a `ref`, the hook gets ONE callback
+   whose identity never changes. **Never pass a fresh object or closure into a Privy hook.**
+2. `user.mfaMethods` in a dependency array. It is an **array**; React compares deps by identity, so a
+   fresh one each render re-ran the effect every render. Depend on a derived boolean instead.
+3. `useFitFontSize` called `getComputedStyle` as a **default parameter** - forcing a style
+   recalculation on every render of every screen showing an amount (HomeSend, SendAmount, Swap). Now
+   read once and cached.
+
+(2) and (3) on their own are jank. (1) is the difference between a slow app and one that locks up.
 - **Testing runs on `localhost:5173` + `localhost:8787`** (`npm run dev` and `npm run api`, two
   terminals). Sign-in works locally now - Privy has no deployed-origin requirement, unlike the Circle
   SDK - but `http://localhost:5173` has to be in the Privy dashboard's allowed domains.
