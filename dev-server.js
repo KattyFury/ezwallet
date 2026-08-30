@@ -6,7 +6,8 @@ import { createServer } from 'node:http'
 import { readFileSync } from 'node:fs'
 import * as session from './functions/api/session.js'
 import * as wallet from './functions/api/wallet.js'
-import * as send from './functions/api/send.js'
+// send.js was DELETED on 2026-08-30: Privy signs in the browser, so there is no longer a step that
+// needs the API key kept server-side. SendConfirm.jsx builds the calldata and sends it directly.
 import * as swap from './functions/api/swap.js'
 import * as sync from './functions/api/sync.js'
 import * as bug from './functions/api/bug.js'
@@ -52,7 +53,6 @@ if (!env.API_KEY) console.warn('[dev-server] API_KEY missing from .env.txt - any
 const ROUTES = {
   '/api/session': session,
   '/api/wallet': wallet,
-  '/api/send': send,
   '/api/swap': swap,
   '/api/sync': sync,
   '/api/bug': bug,

@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
+import { useSendTransaction } from '@privy-io/react-auth'
 import Icon from '../components/Icon'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
 import { getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency } from '../data'
-import { getDisplayRates, estimateFeeUsd } from '../chain'
-import { getSDK, executeChallenge, refreshSession, circleErrorMessage } from '../circle'
+import { getDisplayRates, estimateFeeUsd, buildTransferCall, arcTestnet } from '../chain'
+import { privyErrorMessage } from '../privy'
+import { MOCK } from '../mock'
 
 function shortenAddr(addr) {
   return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
@@ -17,6 +19,7 @@ function Cur({ children }) {
 
 export default function SendConfirm() {
   const { navigate, params } = useNav()
+  const { sendTransaction } = useSendTransaction()
   // currency = 'USD' (the friendly label, USDC is sent) or a real token (USDC/EURC/cirBTC) - comes from SendAmount.
   const { address, name, amount, memo, currency = 'USD' } = params
   const [feeUsd, setFeeUsd] = useState(null)      // the real gas fee (USD, null = still calculating)
@@ -60,46 +63,53 @@ export default function SendConfirm() {
                    : fmtDisplay(feeUsd, displayCur, feeRates)
   }
 
+  // ══ SENDING, AFTER THE MOVE TO PRIVY (2026-08-30) ══
+  // The Circle version needed four steps and a backend: refresh a userToken that expired every hour,
+  // POST the pieces to /api/send so the Worker could encode them with the API key it held, get a
+  // challengeId back, then open Circle's PIN iframe to finish the signature. All four are gone.
+  // Privy signs in the browser, so this builds the calldata (chain.js) and sends it. functions/api/send.js
+  // was deleted with this change - there is nothing left for it to do.
+  //
+  // ⚠️ NO PIN IS ASKED FOR HERE YET, and that is a REAL GAP, not an oversight: right now whoever is
+  // holding the unlocked phone can send money. Step 5 of MIGRATION-PRIVY.md puts a PIN back in front
+  // of this call. Do not ship to real users before then.
   async function handleConfirm() {
     if (loading || done) return   // block repeat taps / duplicate sends
     setLoading(true); setError('')
-    // A NEW idempotencyKey on every tap → if the previous attempt was cancelled or failed, this one creates a CLEAN challenge.
-    // Duplicate sends are prevented by the loading flag (sending) + done (finished), NOT by a fixed idemKey.
-    const idempotencyKey = crypto.randomUUID()
+    // MOCK (npm run mock): pretend it worked and go to the receipt, exactly as the Circle build did
+    // (executeChallenge returned early on MOCK). Without this the UI-checking mode would try to sign
+    // a real transaction with no session behind it.
+    if (MOCK) {
+      setDone(true)
+      navigate('SendReceipt', { address, name, amount, memo, currency, tokenAmount: sendUnits, timestamp: Date.now(), hash: '0xmocksend' })
+      return
+    }
     try {
-      // Refresh the userToken before sending - avoids "userToken had expired" when
-      // the app has been open a while (Circle userTokens live ~1 hour).
-      const { userToken, encryptionKey } = await refreshSession()
-      const walletId = localStorage.getItem('ez_wallet_id')
+      const from = localStorage.getItem('ez_wallet_addr')
+      if (!from) throw new Error('No wallet address')
+      const { to, data } = buildTransferCall({ token, toAddress: address, amountDecimal: sendAmountStr, memo })
 
-      const res = await fetch('/api/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userToken, walletId,
-          toAddress: address,
-          token,
-          amountDecimal: sendAmountStr,
-          memo,
-          idempotencyKey,
-        }),
-      })
-      const data = await res.json()
-      if (data.error) throw new Error(data.error)
+      const { hash } = await sendTransaction(
+        { to, data, chainId: arcTestnet.id },
+        {
+          address: from,
+          // ⚠️ HIDE PRIVY'S OWN CONFIRMATION MODAL. The user has ALREADY confirmed - that is the entire
+          // screen they are looking at, in this app's words and this app's design. Privy's modal on top
+          // of it would be a second confirmation showing raw calldata, which is exactly the
+          // "Contract Interaction screen that baffles older users" that got Circle's OTP flow switched
+          // off in July. One confirmation, in language the user understands.
+          uiOptions: { showWalletUIs: false },
+        },
+      )
 
-      // The user signs with their PIN through the W3S SDK. executeChallenge (circle.js) already handles it: a WRONG PIN
-      // → the iframe lets them retry; the RIGHT PIN → resolve → execution continues below (it does NOT throw out).
-      await executeChallenge(await getSDK(), userToken, encryptionKey, data.challengeId)
-
-      setDone(true)   // signed successfully → lock the screen, no resending
-      navigate('SendReceipt', { address, name, amount, memo, currency, tokenAmount: sendUnits, timestamp: Date.now() })
+      setDone(true)   // broadcast successfully → lock the screen, no resending
+      navigate('SendReceipt', { address, name, amount, memo, currency, tokenAmount: sendUnits, timestamp: Date.now(), hash })
     } catch (e) {
-      // From here only TERMINAL errors remain (PIN cancelled / token expired / network...) - NOT a wrong PIN
-      // (a wrong PIN is retried inside the iframe and never rejects). STAY on the confirm screen so they can tap send again.
+      // STAY on the confirm screen so they can tap send again.
       setLoading(false)
-      if (e?.code === 155701) return   // the user cancelled the PIN themselves → stay silent, back to the confirm screen
       console.error('[SendConfirm] send failed:', e)
-      const reason = circleErrorMessage(e)
+      const reason = privyErrorMessage(e)
+      if (!reason) return   // the user closed Privy's flow themselves → stay silent
       const msg = `Send failed: ${reason}`
       setError(msg)
       addNotif(msg, 'error')
@@ -158,15 +168,18 @@ export default function SendConfirm() {
           <Icon name="warning" size="var(--is-label)" color="var(--color-warning)" />{'This transaction cannot be undone once confirmed'}
         </div>
 
-        {loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>Opening PIN confirmation...</span>}
+        {loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>Sending your money...</span>}
         {error && !loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</span>}
       </div>
 
       <div className="row-10 row10-dual">
         <button className="btn btn-secondary" disabled={loading || done} onClick={() => navigate('SendAmount', params)}>Edit</button>
+        {/* Said "Confirm PIN" under Circle. There is no PIN in this build (see handleConfirm), and a
+            button naming a step that never happens is worse than a plain one. Step 5 brings the PIN
+            back and this label goes with it. */}
         <button className="btn btn-primary" style={{ flex: 1 }}
           disabled={loading || done} onClick={handleConfirm}>
-          {loading ? 'Processing...' : 'Confirm PIN'}
+          {loading ? 'Sending...' : 'Send'}
         </button>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { createPublicClient, http, decodeEventLog, parseAbiItem } from 'viem'
+import { createPublicClient, http, decodeEventLog, parseAbiItem, encodeFunctionData, parseUnits, stringToHex, toHex } from 'viem'
 import { defineChain } from 'viem'
 import { MOCK, MOCK_AMOUNTS, MOCK_RATES, MOCK_CHANGE_24H } from './mock'
 // The chain id is declared in qr.js (a module that does NOT depend on viem) so screens that only draw/read QRs - ShowQR,
@@ -203,6 +203,56 @@ export async function getTokenInfo(addr, symbol = 'USDC') {
 
 // Read the memo (Arc Transaction Memos) of one transaction from the on-chain Memo event → text
 const MEMO_CONTRACT = '0x5294E9927c3306DcBaDb03fe70b92e01cCede505'
+
+// ══ BUILDING A TRANSFER - moved here from functions/api/send.js on 2026-08-30 ══
+// Under Circle the browser could not build a transaction: it sent the pieces to our Worker, which
+// held the API key and asked Circle to encode and execute them. Privy signs in the browser, so the
+// calldata is built here and the endpoint is gone. It lives in THIS file because this is already the
+// one place that knows token addresses, decimals and the Memo contract - splitting that knowledge
+// across two files is how the two copies drift apart.
+const ERC20_TRANSFER_ABI = [{
+  type: 'function', name: 'transfer', stateMutability: 'nonpayable',
+  inputs: [{ name: 'to', type: 'address' }, { name: 'amount', type: 'uint256' }], outputs: [{ type: 'bool' }],
+}]
+// Arc Transaction Memos: memo() forwards the call through the CallFrom precompile (so msg.sender is
+// still the user, not the Memo contract) and emits a Memo event that getTxMemo reads back later.
+const MEMO_ABI = [{
+  type: 'function', name: 'memo', stateMutability: 'nonpayable',
+  inputs: [
+    { name: 'target', type: 'address' }, { name: 'data', type: 'bytes' },
+    { name: 'memoId', type: 'bytes32' }, { name: 'memoData', type: 'bytes' },
+  ], outputs: [],
+}]
+
+// A random bytes32 so the Memo event can be looked up later
+function randomMemoId() {
+  return toHex(crypto.getRandomValues(new Uint8Array(32)))
+}
+
+// { token: 'USDC', toAddress, amountDecimal: '12.34', memo } → { to, data } ready for sendTransaction.
+// With a note the call goes THROUGH the Memo contract; without one it is a plain transfer straight to
+// the token - the same two paths the Worker had, kept identical so nothing about what lands on chain changes.
+export function buildTransferCall({ token, toAddress, amountDecimal, memo }) {
+  const t = TOKENS.find(x => x.symbol === token)
+  if (!t) throw new Error(`unknown token ${token}`)
+  // ⚠️ parseUnits, NOT `Math.round(parseFloat(x) * 10 ** decimals)` as the Worker did. That went
+  // through a float: 8 decimals of cirBTC is already past the point where a double is exact, so the
+  // amount could land a unit or two off what the user confirmed. parseUnits reads the digits of the
+  // string and never involves a float at all.
+  const amountRaw = parseUnits(String(amountDecimal), t.decimals)
+  const transferData = encodeFunctionData({ abi: ERC20_TRANSFER_ABI, functionName: 'transfer', args: [toAddress, amountRaw] })
+
+  const memoText = (memo || '').trim()
+  if (!memoText) return { to: t.address, data: transferData }
+
+  return {
+    to: MEMO_CONTRACT,
+    data: encodeFunctionData({
+      abi: MEMO_ABI, functionName: 'memo',
+      args: [t.address, transferData, randomMemoId(), stringToHex(memoText)],
+    }),
+  }
+}
 const memoEventAbi = parseAbiItem('event Memo(address indexed sender, address indexed target, bytes32 callDataHash, bytes32 indexed memoId, bytes memo, uint256 memoIndex)')
 // ── MEMOS: REMEMBER THEM FOREVER + QUEUE THEM, DO NOT FIRE ALL AT ONCE (user decision 07-31 "stop spamming") ──
 // Each memo is its own receipt read. The History screen used to fire 30 of them AT ONCE on every open
