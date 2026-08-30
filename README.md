@@ -19,7 +19,7 @@
 
 <table>
 <tr>
-<td align="center" width="50%"><img src="docs/flow-login.gif" width="240" alt="Sign in"><br><sub><b>1 · Sign in with email + PIN</b></sub></td>
+<td align="center" width="50%"><img src="docs/flow-login.gif" width="240" alt="Sign in"><br><sub><b>1 · Sign in with email</b></sub></td>
 <td align="center" width="50%"><img src="docs/flow-send.gif" width="240" alt="Send"><br><sub><b>2 · Send, with a note</b></sub></td>
 </tr>
 <tr>
@@ -79,7 +79,7 @@ just wants to send money to their family.
 
 EZwallet removes the crypto vocabulary from the surface:
 
-- **No seed phrase.** Sign in with an email and a PIN.
+- **No seed phrase.** Sign in with an email, approve payments with your fingerprint.
 - **No separate gas token.** Arc uses USDC as its native gas currency, so a user
   never has to buy a second coin just to move the first one.
 - **Big type, few choices per screen.** Every screen is laid out on a fixed
@@ -90,7 +90,8 @@ EZwallet removes the crypto vocabulary from the surface:
 
 | | |
 |---|---|
-| 🔑 **Email + PIN login** | No seed phrase to write down or lose. Keys are held in Circle's MPC infrastructure; the PIN authorises every signature. |
+| 🔑 **Email login, fingerprint to pay** | No seed phrase to write down or lose. The key is held in Privy's secure hardware; a fingerprint or Face ID is required before anything is signed. |
+| 🗝️ **Your key, if you want it** | Export the private key at any time and open the same wallet in MetaMask or any other app. The wallet is yours whether or not EZwallet still exists. |
 | 💸 **Send with a note** | Attach a short message to a transfer, so the receiver knows what the money is for. |
 | 📷 **Receive by QR** | Show a QR to get paid. Optionally set an exact amount, name it, and keep it in a QR library for reuse. |
 | 🔄 **Swap with a % slider** | Choose how much of your balance to convert by dragging a slider instead of typing decimals. Round-number shortcuts are offered as chips. |
@@ -102,11 +103,11 @@ EZwallet removes the crypto vocabulary from the surface:
 
 | Layer | What it uses |
 |---|---|
-| **Wallet** | [Circle User-Controlled Wallets](https://developers.circle.com/w3s/programmable-wallets) – MPC key management, PIN-based signing (`@circle-fin/w3s-pw-web-sdk`) |
+| **Wallet** | [Privy embedded wallets](https://docs.privy.io) – the key lives in secure hardware, signing is gated by a passkey, and the user can export it (`@privy-io/react-auth`) |
 | **Chain** | [Arc](https://docs.arc.io) L1 testnet (`chainId 5042002`) – **USDC is the native gas token** |
 | **Swap** | Circle Stablecoin Kit, routed through LiFi |
-| **Frontend** | React 18 + Vite 5, `viem` for on-chain reads, `qrcode.react` / `jsqr` for QR |
-| **Backend** | Cloudflare Pages + Pages Functions (`functions/api/*`) – keeps the Circle API key server-side |
+| **Frontend** | React 18 + Vite 5, `viem` for on-chain reads and calldata, `qrcode.react` / `jsqr` for QR |
+| **Backend** | Cloudflare Pages + Pages Functions (`functions/api/*`) – only for what genuinely needs a server: the Stablecoin Kit key, the KV-backed contacts backup, and bug reports. Signing happens in the browser. |
 
 Tokens on Arc Testnet: **USDC**, **EURC**, **cirBTC**. Transfer notes are written
 on-chain through Arc's Memo precompile.
@@ -114,8 +115,8 @@ on-chain through Arc's Memo precompile.
 ## Try it
 
 1. Open **[ezwallet.cash](https://ezwallet.cash)**.
-2. Create a wallet with your **email** – you'll receive a one-time code, then set
-   a 6-digit PIN.
+2. Create a wallet with your **email** – you'll receive a one-time code, then you
+   can turn on fingerprint or Face ID to approve payments.
 3. Get test money: **Menu → Deposit**. This copies your wallet address and opens
    the [Circle faucet](https://faucet.circle.com/) – paste the address there.
 4. Send some to a friend, or have them show you their QR.
@@ -125,7 +126,8 @@ on-chain through Arc's Memo precompile.
 ## Local setup
 
 **Requirements:** Node.js 18+ (developed on Node 22), a
-[Circle console](https://console.circle.com) account for API keys.
+[Privy dashboard](https://dashboard.privy.io) app for the App ID, and a
+[Circle console](https://console.circle.com) account if you want Swap to work.
 
 ```bash
 git clone https://github.com/KattyFury/ezwallet.git
@@ -141,28 +143,28 @@ cp .env.example .env.txt      # .env.txt is gitignored
 
 | Variable | Needed for |
 |---|---|
-| `API_KEY` | Circle Programmable Wallets (login, PIN, send). `CIRCLE_API_KEY` also accepted. |
-| `KIT_KEY` | Circle Stablecoin Kit – only needed for Swap. |
+| `KIT_KEY` | Circle Stablecoin Kit – only needed for Swap. The one secret left; everything else moved into the browser with Privy. |
+| `VITE_PRIVY_APP_ID` | Optional. Your own Privy app instead of the built-in one. Not a secret – it ships in the bundle either way. |
 
 Then run the two processes in **separate terminals**:
 
 ```bash
-npm run api     # Circle API proxy on http://localhost:8787
+npm run api     # Swap/backup/bug-report proxy on http://localhost:8787
 npm run dev     # Vite dev server on http://localhost:5173
 ```
 
 Vite proxies `/api/*` to the local proxy, which mirrors what Cloudflare Pages
 Functions do in production.
 
-> ⚠️ **The Circle Web SDK does not run on `localhost`.** Login, PIN entry and
-> swap can only be exercised on a deployed build. For local UI work use mock
-> mode instead.
+> Signing in and sending money now work on `localhost` – Privy has no
+> deployed-origin requirement, unlike the Circle Web SDK this replaced. Add
+> `http://localhost:5173` to the allowed domains in your Privy dashboard app.
 
-**Mock mode** – full UI with a fake wallet and fake balances, no Circle account
-required:
+**Mock mode** – full UI with a fake wallet and fake balances, no accounts
+required at all:
 
 ```bash
-npm run mock    # skips login/PIN, stubs the API and chain reads
+npm run mock    # skips sign-in, stubs the API and chain reads
 ```
 
 Other scripts:
@@ -178,12 +180,11 @@ Being upfront about what this is not, yet:
 
 - **Testnet only.** Runs on Arc Testnet; balances have no real-world value.
 - **No mainnet deployment.**
-- **English by default.** Vietnamese is fully translated – including Circle's PIN
-  and security-question screens – and selectable under Language & Currency, but the
-  app does not auto-switch on it. A few strings inside Circle's iframe stay English
-  regardless: runtime error messages have no localization field in the SDK, and
-  `common.showPin` is currently ignored (reported to Circle).
-- **Google sign-in is not supported.** Email + PIN only.
+- **English only.** The multi-language layer was removed on 2026-08-25 and adding
+  a language now means designing it again from scratch.
+- **Email sign-in only, for now.** Privy also supports Google, Apple, SMS,
+  Telegram and others; enabling one is a line of config plus a switch in the
+  Privy dashboard, but none are turned on yet.
 - **QR scanning is limited to crypto wallet QR codes.** Real-world QR codes
   (product barcodes, bank QRs, etc.) are not handled.
 - **Not audited.** See [SECURITY.md](./SECURITY.md) for the custody model, the known

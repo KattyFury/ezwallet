@@ -59,6 +59,24 @@ export function savedWalletAddress() {
   return localStorage.getItem(ADDR)
 }
 
+// The Circle version of this fetched the address from Circle when localStorage was empty. Nothing to
+// fetch now: App.jsx writes the address the moment Privy hands over the wallet, so the only thing
+// that can be missing is TIMING - a screen mounting in the gap between "session restored" and
+// "wallet ready" (a phone waking a backgrounded PWA is the usual case). So it waits for the key
+// rather than asking anyone for it, and gives up quietly, exactly as the old one did on failure.
+// Kept as a promise, and kept the name, so the four screens calling it did not need touching.
+export function ensureWalletAddress(timeoutMs = 6000) {
+  const now = savedWalletAddress()
+  if (now) return Promise.resolve(now)
+  return new Promise(resolve => {
+    const started = Date.now()
+    const id = setInterval(() => {
+      const addr = savedWalletAddress()
+      if (addr || Date.now() - started > timeoutMs) { clearInterval(id); resolve(addr || null) }
+    }, 200)
+  })
+}
+
 // Copy what Privy knows into the keys the other screens read. Called from App.jsx whenever the
 // wallet address arrives - which is NOT only at login: Privy restores the session on a page reload
 // too, and the address can land a moment after `authenticated` flips to true.

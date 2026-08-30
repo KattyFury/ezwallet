@@ -5,7 +5,7 @@ import Icon from '../components/Icon'
 import { useNav } from '../nav'
 import { getDisplayCurrency, fmtDisplay } from '../data'
 import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates } from '../chain'
-import { ensureWalletAddress } from '../circle'
+import { ensureWalletAddress } from '../privy'
 import NotifArea, { NOTIF_FS } from '../components/NotifArea'
 
 // USDC (left) and $98.59 (right) must share the SAME font and the SAME colour - one shared style object

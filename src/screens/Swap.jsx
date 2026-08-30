@@ -4,8 +4,8 @@ import { useNav } from '../nav'
 import Icon from '../components/Icon'
 import PctSlider from '../components/PctSlider'
 import Numpad from '../components/Numpad'
-import { estimateSwap, executeSwap, ensureWalletAddress } from '../circle'
-import { privyErrorMessage } from '../privy'
+import { estimateSwap, executeSwap } from '../circle'
+import { ensureWalletAddress, privyErrorMessage } from '../privy'
 import { MOCK } from '../mock'
 import { getTokenBalances, getDisplayRates, cachedRates, cachedBalances, estimateFeeUsd, arcTestnet } from '../chain'
 import { spendableOf, floorTo, getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency } from '../data'
@@ -95,7 +95,7 @@ export default function Swap() {
   const cur = getDisplayCurrency()
   const curSym = displaySymbol(cur)
 
-  // SAFE wallet address: seeded quickly from localStorage, restored from Circle if missing (same as HomeSend).
+  // SAFE wallet address: seeded quickly from localStorage, waited for if missing (same as HomeSend).
   // Reading localStorage directly, as before → on mobile PWA ez_wallet_addr can be absent → empty balances →
   // overBalance always true → the Swap button never lights up.
   const [walletAddress, setWalletAddress] = useState(() => localStorage.getItem('ez_wallet_addr'))

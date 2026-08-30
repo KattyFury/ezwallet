@@ -3,14 +3,16 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "A crypto wallet simple enough for my mom to use – email + PIN, no seed phrase, USDC pays its own gas on Arc.",
+  "description": "A crypto wallet simple enough for my mom to use – email sign-in, fingerprint to send, no seed phrase, USDC pays its own gas on Arc.",
   "keywords": [
     "stablecoin",
     "wallet",
     "usdc",
     "arc",
     "circle",
-    "programmable-wallets",
+    "privy",
+    "embedded-wallets",
+    "passkey",
     "pwa",
     "web3"
   ],
@@ -33,9 +35,7 @@
     "test": "node --test"
   },
   "dependencies": {
-    "@circle-fin/w3s-pw-web-sdk": "^1.1.11",
     "@privy-io/react-auth": "^3.38.0",
-    "cookies-next": "^4.3.0",
     "jsqr": "^1.4.0",
     "qrcode.react": "^4.2.0",
     "react": "^18.3.1",

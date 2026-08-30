@@ -39,10 +39,11 @@ export const MOCK_TX = [
 
 // Seed a fake session → App.jsx sees a session + an unlocked PIN → straight into HomeSend.
 export function seedMockSession() {
-  localStorage.setItem('ez_user_token', 'mock-token')
+  // ez_user_token and ez_wallet_id are gone (2026-08-30): both were Circle concepts - a session token
+  // and a walletId to open challenges against - and Privy has neither. App.jsx skips Privy entirely
+  // in MOCK, so the address is all the app actually needs to draw every screen.
   localStorage.setItem('ez_wallet_addr', MOCK_ADDR)
-  localStorage.setItem('ez_wallet_id', 'mock-wallet')
-  localStorage.setItem('ez_email', 'demo@ezwallet.app')
+  localStorage.setItem('ez_google_email', 'demo@ezwallet.app')
   sessionStorage.setItem('ez_pin_ok', '1')
 }
 
@@ -57,10 +58,9 @@ export function installMockFetch() {
   window.fetch = async (input, init) => {
     const url = typeof input === 'string' ? input : (input?.url || '')
     if (url.includes('arcscan.app') && url.includes('tokentx')) return jsonRes({ result: MOCK_TX })
-    // /api/send is gone (2026-08-30): sending no longer goes through the network at all, so there is
-    // nothing here to intercept. SendConfirm.jsx has its own MOCK branch that skips the signature.
-    if (url.includes('/api/session')) return jsonRes({ userToken: 'mock-token', encryptionKey: 'mock-key' })
-    if (url.includes('/api/wallet'))  return jsonRes({ address: MOCK_ADDR, walletId: 'mock-wallet' })
+    // /api/send, /api/session and /api/wallet are all gone (2026-08-30). Sending and signing no
+    // longer cross the network at all, and the session is Privy's - so there is nothing left here to
+    // intercept. SendConfirm.jsx and Swap.jsx have their own MOCK branches that skip the signature.
     return orig(input, init)
   }
 }

@@ -4,10 +4,10 @@
 // and the Cloudflare deploy always match, with no hand-syncing to forget.
 import { createServer } from 'node:http'
 import { readFileSync } from 'node:fs'
-import * as session from './functions/api/session.js'
-import * as wallet from './functions/api/wallet.js'
-// send.js was DELETED on 2026-08-30: Privy signs in the browser, so there is no longer a step that
-// needs the API key kept server-side. SendConfirm.jsx builds the calldata and sends it directly.
+// session.js, wallet.js and send.js were all DELETED on 2026-08-30. Each existed for the same
+// reason - to hold the Circle API key somewhere the browser could not see it - and Privy needs no
+// such key: it keeps its own session and signs in the browser. What is left here is what genuinely
+// still needs a server: the Stablecoin Kit (KIT_KEY), the KV-backed backup, and bug reports.
 import * as swap from './functions/api/swap.js'
 import * as sync from './functions/api/sync.js'
 import * as bug from './functions/api/bug.js'
@@ -48,11 +48,11 @@ function loadEnv() {
   return env
 }
 const env = loadEnv()
-if (!env.API_KEY) console.warn('[dev-server] API_KEY missing from .env.txt - any flow needing the Circle API will fail')
+// Warns about KIT_KEY, not API_KEY: since 2026-08-30 nothing here talks to the Circle W3S API, and
+// the Stablecoin Kit key is the only secret the remaining endpoints actually need.
+if (!env.KIT_KEY) console.warn('[dev-server] KIT_KEY missing from .env.txt - swap quotes and swaps will fail')
 
 const ROUTES = {
-  '/api/session': session,
-  '/api/wallet': wallet,
   '/api/swap': swap,
   '/api/sync': sync,
   '/api/bug': bug,

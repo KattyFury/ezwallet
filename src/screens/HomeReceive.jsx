@@ -7,7 +7,7 @@ import Icon from '../components/Icon'
 import NotifArea from '../components/NotifArea'
 import { useNav } from '../nav'
 import { getTokenBalances, cachedBalances } from '../chain'
-import { ensureWalletAddress } from '../circle'
+import { ensureWalletAddress } from '../privy'
 import { buildQR } from '../qr'
 
 export default function HomeReceive() {
