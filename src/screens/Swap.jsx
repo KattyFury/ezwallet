@@ -238,11 +238,13 @@ export default function Swap() {
       setStatus('Swapping…')
       if (!MOCK) {
         // ONE signature for the whole thing: Multicall3From batches [approve, adapter.execute], which
-        // is why this is a single send and not two. Privy's own modal is suppressed for the same
-        // reason as on SendConfirm - the user already confirmed on this screen, in this app's words.
+        // is why this is a single send and not two.
+        // ⚠️ No `uiOptions: { showWalletUIs: false }` - see the long note in SendConfirm.jsx. Short
+        // version: that flag makes Privy try to sign WITHOUT prompting, which a fingerprint-guarded
+        // wallet cannot do, and the whole thing fails with a 401 from wallets/authenticate.
         await sendTransaction(
           { to: res.to, data: res.data, value: res.value, chainId: arcTestnet.id },
-          { address: walletAddress, uiOptions: { showWalletUIs: false } },
+          { address: walletAddress },
         )
       }
 

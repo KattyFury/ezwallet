@@ -90,17 +90,19 @@ export default function SendConfirm() {
       if (!from) throw new Error('No wallet address')
       const { to, data } = buildTransferCall({ token, toAddress: address, amountDecimal: sendAmountStr, memo })
 
+      // ⚠️ DO NOT ADD `uiOptions: { showWalletUIs: false }` BACK HERE. It was there until 2026-08-30
+      // to keep Privy's confirmation modal off the screen - this app has its own confirm screen and a
+      // second one showing raw calldata is exactly the "Contract Interaction screen that baffles older
+      // users" that got Circle's OTP flow switched off in July.
+      // It had to go because it BREAKS SENDING once the fingerprint is on. From the SDK's own docs:
+      // with that flag "the wallet will attempt to sign the transaction WITHOUT PROMPTING the user" -
+      // and a wallet guarded by MFA cannot sign unprompted, so the attempt died as
+      //   POST https://auth.privy.io/api/v1/wallets/authenticate 401
+      // Privy's own flow asks for the fingerprint and then signs. A modal one screen too many is a
+      // papercut; a wallet that cannot send money is not a wallet.
       const { hash } = await sendTransaction(
         { to, data, chainId: arcTestnet.id },
-        {
-          address: from,
-          // ⚠️ HIDE PRIVY'S OWN CONFIRMATION MODAL. The user has ALREADY confirmed - that is the entire
-          // screen they are looking at, in this app's words and this app's design. Privy's modal on top
-          // of it would be a second confirmation showing raw calldata, which is exactly the
-          // "Contract Interaction screen that baffles older users" that got Circle's OTP flow switched
-          // off in July. One confirmation, in language the user understands.
-          uiOptions: { showWalletUIs: false },
-        },
+        { address: from },
       )
 
       setDone(true)   // broadcast successfully → lock the screen, no resending

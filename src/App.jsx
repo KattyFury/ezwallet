@@ -152,6 +152,15 @@ export default function App() {
   // would understand as an action - this is the app opening its own backup, and nothing on chain
   // happens. A modal here would be a prompt with no meaning attached to it.
   //
+  // ⚠️ KNOWN GAP: once the user turns the fingerprint on, this silent signature CANNOT SUCCEED. The
+  // same flag that keeps it quiet also tells Privy to sign without prompting, and an MFA-guarded
+  // wallet may not - so it fails with a 401 from wallets/authenticate and the backup quietly does not
+  // run. That is caught below and the app carries on, contacts simply staying on the device.
+  // Removing the flag is NOT the fix: it would meet the user with a fingerprint prompt the moment
+  // they open the app, for a message they never asked to sign - indistinguishable from a phishing
+  // site. The real fix is to move this to the Contacts screen, where the user has just asked for the
+  // thing the signature is for and a prompt makes sense. Not done yet.
+  //
   // ⚠️ EMBEDDED WALLETS ONLY, and that is a UX decision rather than a technical limit. `showWalletUIs`
   // is Privy's switch and it has no authority over MetaMask: MetaMask pops its own signature request
   // regardless. A MetaMask user opening the app would therefore be met, unprompted, by a signature
