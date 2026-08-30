@@ -36,7 +36,21 @@ decisions and the PoC measurements. This section is only the status.
   "Export private key" · it is OFFERED AT SIGN-UP so the default is not an unguarded wallet, but it
   is an offer, not a wall · **a user who declines it is protected only by access to the phone** -
   this is written plainly in SECURITY.md and must stay written.
-- **Privy's own wallet modals are suppressed** (`uiOptions.showWalletUIs: false`) on send and swap:
+- **🔥 `showWalletUIs: false` BREAKS SENDING ONCE THE FINGERPRINT IS ON. DO NOT PUT IT BACK.**
+  It was on send and swap to keep Privy's confirmation modal off the screen. But the flag does not
+  only hide a modal - per the SDK docs it makes the wallet *"attempt to sign the transaction WITHOUT
+  PROMPTING the user"*, and an MFA-guarded wallet may not sign unprompted. Every send died with
+  `POST auth.privy.io/api/v1/wallets/authenticate 401`. Removed from both paths 2026-08-30. The cost
+  is a second confirmation screen (Privy's, after ours) - accepted: a modal too many is a papercut,
+  a wallet that cannot send money is not a wallet. Removing that extra screen is still open, but it
+  has to be done some other way.
+  ⚠️ The flag is STILL on the silent contacts-backup signature in `App.jsx`, where it now fails the
+  same way - so **contacts backup silently does not run once MFA is on**. Do not "fix" it by removing
+  the flag: that meets the user with a fingerprint prompt for a message they never asked to sign the
+  instant they open the app, which is what a phishing site does. The fix is to move that signature to
+  the Contacts screen, where the user just asked for the thing it is for. NOT DONE.
+- (Historical, kept because the reasoning still applies to any future attempt) the reason the modals
+  were suppressed in the first place:
   the app has its own confirm screen, and Privy's would be a second one showing raw calldata - the
   exact "Contract Interaction screen that baffles older users" that killed Circle's OTP flow in July.
   Because of that, Privy's demand for the fingerprint arrives as a LISTENER in `App.jsx`, not a
@@ -48,9 +62,15 @@ decisions and the PoC measurements. This section is only the status.
     broadcasts fine even though Arc uses USDC as its gas token · `exportWallet` works on Arc, so the
     "Tier 2/3 chains only" worry was unfounded.
   - ✅ **Step 2 - auth + wallet address.** `src/privy.js` (new) replaces the auth half of
-    `circle.js`; `Login.jsx` lost ~150 lines of dead Circle/Google plumbing; `EnterEmail.jsx` is now
-    two steps, email then OTP code; sign-out calls Privy's `logout()`; `App.jsx` takes the session
-    from Privy instead of `ez_user_token`.
+    `circle.js`; `Login.jsx` lost ~150 lines of dead Circle/Google plumbing; sign-out calls Privy's
+    `logout()`; `App.jsx` takes the session from Privy instead of `ez_user_token`.
+    **Later the same day the hand-built sign-in screen was thrown away** (user: use Privy's popups,
+    do not re-implement what Privy ships). `EnterEmail.jsx` is DELETED - `Login.jsx` calls `login()`
+    and Privy's modal runs email + OTP. Same for the fingerprint: `showMfaEnrollmentModal()`.
+    ⚠️ That also FIXED a bug worth remembering: the headless version called
+    `initEnrollmentWithPasskey()` alone and **nothing opened at all**. Headless passkey enrollment is
+    two calls (init, then `submitEnrollmentWithPasskey` with the credential ids) and half a flow fails
+    silently rather than erroring.
   - ✅ **Step 3 - send.** Privy signs in the browser, so `functions/api/send.js` is DELETED. The
     calldata it built moved to `chain.js` (both paths unchanged: a plain transfer, or the Memo
     contract when there is a note). Amounts now go through viem's `parseUnits` instead of
@@ -66,14 +86,49 @@ decisions and the PoC measurements. This section is only the status.
     `functions/api/session.js` + `wallet.js` deleted along with the Circle `API_KEY` they hid ·
     dropped `@circle-fin/w3s-pw-web-sdk` and `cookies-next` · README, SECURITY.md and package.json
     corrected.
-- **⚠️ NOT RUN EVEN ONCE - THIS IS THE FIRST THING TO DO NEXT.** Everything builds and the tests
-  pass, but no one has done `npm run dev`, signed in with an email and a code, turned on the
-  fingerprint, or sent a single test transaction through the UI. Do that before writing anything new.
-  Worth checking specifically: the OTP screen · the "Protect your money" step · that the fingerprint
-  is actually demanded on Send (turn it on, then try to send) · that Swap still works · that
-  `npm run mock` still opens.
+- **WHAT HAS ACTUALLY BEEN RUN, and what has not** (updated 2026-08-30, end of session):
+  - ✅ Signing in with email through Privy's modal - works.
+  - ✅ Turning the fingerprint on (Windows Hello) - works, **but only after enabling Passkey in the
+    Privy dashboard** under Authentication → MFA. Until that switch was flipped, the modal said
+    *"ezwallet does not have any verification methods enabled"* and no amount of code would have
+    helped. **If the fingerprint ever stops appearing, check the dashboard before the code.**
+  - ✅ The backup signature at app open - the dev-server log showed `KV put sess:…`, so the wallet
+    signed and the session opened. (This was BEFORE MFA was switched on - see the `showWalletUIs`
+    warning above; with MFA on it now fails silently.)
+  - ✅ `/api/swap` quotes - a real LiFi route came back (1 EURC → ~3.36 USDC).
+  - ❌ **SENDING - LAST SEEN FAILING, THEN FIXED, AND THE FIX IS UNVERIFIED.** It died with the 401
+    described above; the flag was removed and it has NOT been retried since. **This is the first
+    thing to check.**
+  - ❌ Swap end-to-end (only the quote half is proven), signing in with MetaMask, `npm run mock`,
+    anything on a real phone.
+- **Testing runs on `localhost:5173` + `localhost:8787`** (`npm run dev` and `npm run api`, two
+  terminals). Sign-in works locally now - Privy has no deployed-origin requirement, unlike the Circle
+  SDK - but `http://localhost:5173` has to be in the Privy dashboard's allowed domains.
 - **⚠️ `docs/*.gif` STILL SHOW THE PIN SCREENS.** The three flow GIFs in the README are from the
   Circle build and now show a flow that no longer exists. They need re-recording by a human.
+- **SIGN-IN: EMAIL + METAMASK** (user decision, and it went back and forth - the reasoning matters).
+  Email is FIRST in the modal: someone who already has MetaMask will find it either way, someone who
+  has never heard of it must not be met with "Connect a wallet" as the opening move.
+  ⚠️ **`createOnLogin` MUST STAY `'users-without-wallets'`.** With `'all-users'` a MetaMask user is
+  handed a second, EMPTY Privy wallet and the app shows them that instead of their real money.
+  `App.jsx` reads `embeddedWallet || wallets[0]`, preferring the embedded one so an injected wallet
+  can never quietly take over an email user's account.
+  Three things are embedded-wallet-only, and skipping them is honesty, not tidiness: the fingerprint
+  offer (Privy's MFA cannot gate a MetaMask signature), Export private key (Privy never held that
+  key), and the contacts-backup signature (Privy's flag has no authority over MetaMask, so the user
+  would be met by an unexplained signature request on app open - phishing behaviour). Security.jsx
+  hides those rows and shrinks its grey box to 2 rows.
+- **FONT: THE SYSTEM STACK, matching Privy character-for-character** - read out of the shipped SDK
+  (`dist/esm/useActiveWallet-*.mjs`), not the docs. Privy loads **no webfont**. Barlow and the Google
+  Fonts link are gone, along with two preconnects in front of the first paint. Three `--font-*`
+  variables in `index.css`; change one, change all three. `useFitFontSize.js` now reads
+  `--font-condensed` off the document rather than hardcoding a family - that is a live canvas
+  measurement, and a stale value there sizes the balance against a typeface nobody is looking at.
+- **`public/logo.png` is on BOTH branches.** On `main` it is a lone static image nothing references,
+  pushed so `https://ezwallet.cash/logo.png` resolves for the Privy dashboard's branding field.
+  ⚠️ Before it existed that URL returned **HTTP 200 with `text/html`** - Cloudflare Pages serves
+  index.html for any unknown path. **A 200 on this domain does not mean the file is there; check the
+  content-type.**
 - **Privy App ID** (public, ships in the bundle like Circle's did): `cmtenk9en00250blabovll48e`.
   Overridable with `VITE_PRIVY_APP_ID`.
 - **THE BUNDLE TRAP - do not undo this.** Imported eagerly, `@privy-io/react-auth` puts **777 kB
