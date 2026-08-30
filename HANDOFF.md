@@ -23,7 +23,24 @@ decisions and the PoC measurements. This section is only the status.
 - **WHY the change** (3 reasons, user decision): social login (Circle offers email + PIN only) ·
   private-key export, which Circle's semi-custodial wallets do not allow · a login UI that can be
   localised, where Circle's PIN iframe is English-only with no roadmap.
-- **Steps 1 and 2 of 6 are done. Steps 3-6 are not started.**
+- **ALL 6 STEPS ARE CODED (2026-08-30). Nothing has been run yet - see the warning below.**
+  Build is clean, 16/16 tests pass, entry chunk 46 kB gzip.
+- **THE PIN IS GONE, REPLACED BY A FINGERPRINT. Read this before touching security.**
+  The plan assumed we would rebuild the PIN ourselves, encrypting "the secret Privy needs to sign".
+  **There is no such secret.** Circle's PIN was real because it COMPLETED the MPC signature; Privy
+  holds the key in its own secure hardware and gates signing on its session. A PIN of ours could only
+  have been a string comparison anyone bypasses with devtools, or the private key pulled onto the
+  device behind six digits (a million guesses, brute-forceable offline). User chose passkeys.
+  Consequences, all deliberate: `PinGate.jsx` is DELETED (the guard moved from opening the app to
+  signing) · "Change PIN" is gone from Security, replaced by "Fingerprint or Face ID" and
+  "Export private key" · it is OFFERED AT SIGN-UP so the default is not an unguarded wallet, but it
+  is an offer, not a wall · **a user who declines it is protected only by access to the phone** -
+  this is written plainly in SECURITY.md and must stay written.
+- **Privy's own wallet modals are suppressed** (`uiOptions.showWalletUIs: false`) on send and swap:
+  the app has its own confirm screen, and Privy's would be a second one showing raw calldata - the
+  exact "Contract Interaction screen that baffles older users" that killed Circle's OTP flow in July.
+  Because of that, Privy's demand for the fingerprint arrives as a LISTENER in `App.jsx`, not a
+  modal. **If that listener is ever removed, signing hangs or the check silently stops happening.**
   - ✅ **Step 1 - PoC** (in `../ezwallet-privy-poc/`, a throwaway app, delete it when the migration
     lands). Every answer verified against the real chain, not inferred from the docs: Arc Testnet
     works as a viem `defineChain` and Privy creates the embedded wallet on first login · a real
@@ -34,14 +51,29 @@ decisions and the PoC measurements. This section is only the status.
     `circle.js`; `Login.jsx` lost ~150 lines of dead Circle/Google plumbing; `EnterEmail.jsx` is now
     two steps, email then OTP code; sign-out calls Privy's `logout()`; `App.jsx` takes the session
     from Privy instead of `ez_user_token`.
-  - ⬜ **Steps 3-6:** send · swap · sync + the PIN · cleanup (drop `@circle-fin/w3s-pw-web-sdk`,
-    delete `functions/api/session.js` + `wallet.js`, update README/package.json).
-- **⚠️ NOT TESTED YET - THIS IS THE FIRST THING TO DO NEXT.** The code builds, but nobody has run
-  `npm run dev` and actually signed in with an email and an OTP code. Do that before writing anything
-  new.
-- **⚠️ THE PIN GATE IS BYPASSED right now**, deliberately and marked as such in `App.jsx` and
-  `EnterEmail.jsx`. `PinGate.jsx` still signs its unlock message through the Circle SDK, which no
-  longer has a session, so routing through it would dead-end the app. Step 5 rebuilds the PIN.
+  - ✅ **Step 3 - send.** Privy signs in the browser, so `functions/api/send.js` is DELETED. The
+    calldata it built moved to `chain.js` (both paths unchanged: a plain transfer, or the Memo
+    contract when there is a note). Amounts now go through viem's `parseUnits` instead of
+    `Math.round(parseFloat(x) * 10**decimals)`, which went through a float and could land a unit or
+    two off what the user confirmed at cirBTC's 8 decimals.
+  - ✅ **Step 4 - swap.** `/api/swap` 'execute' PREPARES rather than executes: it returns the
+    calldata and `Swap.jsx` signs it. The Stablecoin Kit call behind it is untouched - that half was
+    never Circle-the-wallet, it needs KIT_KEY, and it does not care who signs.
+  - ✅ **Step 5 - the fingerprint + contacts backup.** Backup signs through Privy from `App.jsx` now
+    (it used to be folded into the PIN entry, which no longer exists; the sync endpoint itself was
+    already signature-based and needed no changes).
+  - ✅ **Step 6 - cleanup.** `circle.js` is down from ~330 lines to ~45 (swap only) ·
+    `functions/api/session.js` + `wallet.js` deleted along with the Circle `API_KEY` they hid ·
+    dropped `@circle-fin/w3s-pw-web-sdk` and `cookies-next` · README, SECURITY.md and package.json
+    corrected.
+- **⚠️ NOT RUN EVEN ONCE - THIS IS THE FIRST THING TO DO NEXT.** Everything builds and the tests
+  pass, but no one has done `npm run dev`, signed in with an email and a code, turned on the
+  fingerprint, or sent a single test transaction through the UI. Do that before writing anything new.
+  Worth checking specifically: the OTP screen · the "Protect your money" step · that the fingerprint
+  is actually demanded on Send (turn it on, then try to send) · that Swap still works · that
+  `npm run mock` still opens.
+- **⚠️ `docs/*.gif` STILL SHOW THE PIN SCREENS.** The three flow GIFs in the README are from the
+  Circle build and now show a flow that no longer exists. They need re-recording by a human.
 - **Privy App ID** (public, ships in the bundle like Circle's did): `cmtenk9en00250blabovll48e`.
   Overridable with `VITE_PRIVY_APP_ID`.
 - **THE BUNDLE TRAP - do not undo this.** Imported eagerly, `@privy-io/react-auth` puts **777 kB

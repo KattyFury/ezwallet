@@ -40,7 +40,14 @@ Không có user thật ngoài founder, không cần lo migrate ví cũ, có th�
    app đều không đụng được vào key lúc đó.
    **Cần verify trong PoC:** docs Privy ghi export chỉ available cho "Tier 2/3 chains" – Arc là
    custom chain, cần chắc chắn nó rơi vào tier được hỗ trợ export, không chỉ tier hỗ trợ ký thường.
-3. **PIN vs MFA – đã quyết: giữ PIN, không dùng Passkey/TOTP/SMS của Privy.**
+3. ~~**PIN vs MFA – đã quyết: giữ PIN, không dùng Passkey/TOTP/SMS của Privy.**~~
+   **❌ ĐẢO NGƯỢC 2026-08-30 khi bắt tay code. Giả định bên dưới SAI.** Mục này viết rằng PIN sẽ mã
+   hoá "secret/token cần để gọi hàm ký của Privy" — **không tồn tại secret nào như vậy.** PIN của
+   Circle là thật vì nó HOÀN THÀNH chữ ký MPC; Privy giữ key trong phần cứng bảo mật của họ và gác
+   việc ký bằng session của chính họ. PIN tự build chỉ có thể là (a) so chuỗi bằng `if`, ai mở
+   devtools cũng qua, hoặc (b) kéo private key về máy rồi khoá sau 6 chữ số — 1 triệu khả năng, dò
+   offline được. **Đã đổi sang Passkey (vân tay/Face ID)** — xem mục 1c. Phần gạch ngang dưới đây
+   giữ lại để biết vì sao từng chọn sai.
    Privy không có PIN số trong hệ MFA (chỉ Passkey/TOTP/SMS), nên "giữ PIN" nghĩa là tự build:
    - `PinGate.jsx` giữ vai trò unlock app lúc mở lên (như hiện tại).
    - Thêm PIN-prompt component dùng lại được, bắt nhập lại **trước khi `SendConfirm.jsx` gọi
@@ -98,6 +105,31 @@ native = `19.988972302` (18 decimals), ERC20 `0x3600...` = `19.988972` (6 decima
 `0x3600...` chính là native balance nhìn ở góc 6 số lẻ. → **Đừng cộng 2 số này lại** ở màn hình số
 dư (sẽ thành gấp đôi tiền), và đừng hiện "phí gas" như một loại tiền khác với USDC người dùng đang
 giữ.
+
+---
+
+## 1c. QUYẾT ĐỊNH BẢO MẬT CUỐI CÙNG (2026-08-30) – Passkey thay PIN
+
+**Chọn: Passkey (vân tay / Face ID).** Ba hướng đã cân nhắc:
+
+| Hướng | Bảo mật | Vì sao loại / chọn |
+|---|---|---|
+| **Passkey** ✅ | Thật. Key không rời phần cứng Privy, sai thì server Privy chặn | **CHỌN.** Với người già còn dễ hơn PIN: không phải nhớ gì, chạm 1 cái |
+| PIN mã hoá key ở máy | Thật nhưng yếu | Key mã hoá nằm trong trình duyệt; PIN 6 số = 1 triệu khả năng, dò offline. API `getWalletPrivateKey` còn `@experimental` |
+| PIN chỉ là cổng UI | Không có | Mở devtools là qua. Gọi nó là "PIN" tức là hứa nhiều hơn thứ nó cho |
+
+**Hệ quả đã làm:**
+- `PinGate.jsx` **XOÁ**. Cổng chuyển từ *mở app* sang *ký giao dịch* — xem số dư của chính mình
+  chưa bao giờ cần khoá.
+- Security: bỏ "Change PIN", thêm **"Fingerprint or Face ID"** + **"Export private key"**.
+- **Mời bật ngay lúc đăng ký** (bước `protect` trong `EnterEmail.jsx`) — nếu chỉ để trong menu thì
+  hầu như không ai bật, tức mặc định của một cái ví có tiền thật là "ai cầm máy cũng gửi được".
+  Nhưng là **lời mời, không phải bức tường**: máy không có cảm biến, máy mượn, hoặc chỉ muốn xem
+  trước — đều không phải lý do để khoá người ta khỏi tiền của chính họ ngay cửa.
+- Chữ trên màn hình: **"Fingerprint or Face ID"**, tuyệt đối không dùng "passkey"/"MFA"/"2FA" —
+  từ mà người đọc không hiểu là từ bị bỏ qua.
+- Privy đòi passkey qua **listener trong `App.jsx`** (vì app tắt UI của Privy). **Gỡ listener đó
+  thì ký sẽ treo, hoặc tệ hơn là cổng bảo mật im lặng biến mất.**
 
 ---
 
