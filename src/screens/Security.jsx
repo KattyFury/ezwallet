@@ -3,6 +3,7 @@ import { usePrivy, useWallets, useExportWallet, useMfaEnrollment, getEmbeddedCon
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
 import { privyErrorMessage } from '../privy'
+import { useSetupPin, pinErrorMessage } from '../pinSigner'
 
 export default function Security() {
   const { navigate } = useNav()
@@ -81,12 +82,33 @@ export default function Security() {
     }
   }
 
-  // ⚠️ "Change PIN" USED TO BE THE THIRD ROW HERE and was removed on 2026-08-30, on purpose.
-  // It called Circle (resetPinChallenge → executeChallenge), and with the move to Privy there is no
-  // Circle session left for it to use, so the row could only ever show a red error. There is also no
-  // PIN to change yet: step 5 of MIGRATION-PRIVY.md builds ours - a PIN that derives an encryption
-  // key rather than being string-compared - and this row comes back then, pointing at that.
-  // Leaving a dead button on the Security screen of a wallet is worse than leaving a gap.
+  // ══ SET/CHANGE PIN (2026-09-04) - the row comes back, pointing at the REAL thing ══
+  // Not the Circle-era row this replaces (removed 08-30 - it called a Circle session that no longer
+  // exists). This PIN is real: dual-approval via Privy's key quorum (see pinSigner.js/pin.js) - a
+  // server-held authorization key must co-sign alongside this wallet's own key, so a PIN entered here
+  // actually gates money leaving the wallet, unlike the old string-compare one.
+  // `ez_pin_is_set` is OUR OWN local flag, not something Privy tracks - it only affects the row's
+  // label ("Set" vs "Change"), never a security decision (the server is the only source of truth for
+  // whether a PIN hash actually exists).
+  const { setupPin } = useSetupPin()
+  const [pinStatus, setPinStatus] = useState('')
+  const [pinErr, setPinErr] = useState(false)
+  const [pinIsSet, setPinIsSet] = useState(() => localStorage.getItem('ez_pin_is_set') === '1')
+  async function handleSetupPin() {
+    setPinStatus('Verifying...'); setPinErr(false)
+    try {
+      const address = localStorage.getItem('ez_wallet_addr')
+      await setupPin(address)
+      localStorage.setItem('ez_pin_is_set', '1')
+      setPinIsSet(true)
+      setPinStatus('PIN set'); setTimeout(() => setPinStatus(''), 2500)
+    } catch (e) {
+      const msg = pinErrorMessage(e)
+      if (!msg) { setPinStatus(''); return }   // the user closed a prompt themselves → stay silent
+      setPinStatus(msg); setPinErr(true)
+      setTimeout(() => { setPinStatus(''); setPinErr(false) }, 4000)
+    }
+  }
 
   const email = localStorage.getItem('ez_google_email') || localStorage.getItem('ez_email') || '…'
   const walletAddr = localStorage.getItem('ez_wallet_addr') || '…'
@@ -113,7 +135,7 @@ export default function Security() {
           (the same rule Change PIN followed: it is a row that goes somewhere, not a dropdown). */}
       {/* The box SHRINKS to fit: 4 rows for a Privy wallet, 2 for a MetaMask one. A fixed height with
           space-evenly would spread two rows over four rows' worth of grey and read as a rendering bug. */}
-      <div style={{ gridRow: isEmbedded ? '2 / 6' : '2 / 4', background: 'var(--color-surface)', borderRadius: 20, padding: '0 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', minWidth: 0 }}>
+      <div style={{ gridRow: isEmbedded ? '2 / 7' : '2 / 4', background: 'var(--color-surface)', borderRadius: 20, padding: '0 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', minWidth: 0 }}>
         <div className="menu-item">
           <span style={LABEL}>Login email</span>
           <span style={VALUE}>{email}</span>
@@ -136,6 +158,14 @@ export default function Security() {
           </button>
         )}
         {isEmbedded && (
+          <button className="menu-item" onClick={handleSetupPin}>
+            <span style={LABEL}>{pinIsSet ? 'Change PIN' : 'Set up PIN'}</span>
+            {pinStatus
+              ? <span style={{ fontSize: 'var(--fs-item)', color: pinErr ? 'var(--color-error)' : 'var(--color-primary)' }}>{pinStatus}</span>
+              : <Icon name="right2" size="var(--is-md-lg)" color="var(--color-brand)" />}
+          </button>
+        )}
+        {isEmbedded && (
           <button className="menu-item" onClick={handleExportKey}>
             <span style={LABEL}>Export private key</span>
             {keyStatus
@@ -148,7 +178,7 @@ export default function Security() {
       {/* Says WHAT THE KEY IS FOR in the one place the user is looking at it, in the words this app
           uses elsewhere ("your money", not "your funds"). Sitting under the box rather than inside it
           keeps the rows evenly spaced, which is the whole point of that space-evenly box. */}
-      <div className={isEmbedded ? 'row-6' : 'row-4'} style={{ display: 'flex', alignItems: 'center' }}>
+      <div className={isEmbedded ? 'row-7' : 'row-4'} style={{ display: 'flex', alignItems: 'center' }}>
         <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', lineHeight: 1.4 }}>
           {!isEmbedded
             ? 'You signed in with your own wallet, so your key and your security settings stay in that wallet - manage them there.'

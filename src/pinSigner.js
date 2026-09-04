@@ -15,7 +15,7 @@
 // A wrong PIN loops back to step 3 with the server's own attempts-left message shown on the sheet;
 // the server enforces the real lockout (429 after 4 tries/5min), this is just presentation.
 // ══════════════════════════════════════════════════════════════════════════════
-import { usePrivy, useAuthorizationSignature } from '@privy-io/react-auth'
+import { usePrivy, useAuthorizationSignature, useSignMessage } from '@privy-io/react-auth'
 import { requestPin } from './pinGate'
 import { PRIVY_APP_ID, privyErrorMessage } from './privy'
 
@@ -92,6 +92,33 @@ export function usePinSigner() {
 // generateAuthorizationSignature() are Privy SDK errors (privyErrorMessage's table - cancelling the
 // passkey prompt, etc.), errors from the /api/pin round-trip carry OUR OWN codes above. Unknown codes
 // fall through to privyErrorMessage last, same "log it, don't guess a sentence" behaviour it already has.
+// ══ SETTING (or changing) THE PIN ITSELF - a different, cheaper proof than `sign` above ══
+// No dual-approval needed here: nothing moves money, so a plain wallet signature (personal_sign,
+// same EIP-191 pattern sync.js already uses for the contacts backup) is enough proof "this is really
+// the wallet owner". Mirrors functions/api/pin.js's nonce → session → set exactly.
+export function useSetupPin() {
+  const { signMessage } = useSignMessage()
+
+  async function setupPin(address) {
+    const nonceRes = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'nonce' }) })
+    const { nonce, message } = await nonceRes.json()
+    // No `uiOptions: { showWalletUIs: false }` - same reason as everywhere else in this app: it
+    // breaks the moment passkey MFA is on.
+    const { signature } = await signMessage({ message }, { address })
+    const sessRes = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'session', nonce, signature }) })
+    const sess = await sessRes.json()
+    if (!sessRes.ok || !sess.token) throw Object.assign(new Error(sess.error || 'session-failed'), { code: sess.error })
+
+    const pin = await requestPin({ mode: 'set' })   // PinGateHost handles the enter→confirm loop itself
+    const setRes = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set', token: sess.token, pin }) })
+    const d = await setRes.json()
+    if (!setRes.ok) throw Object.assign(new Error(d.error || 'set-failed'), { code: d.error })
+    return true
+  }
+
+  return { setupPin }
+}
+
 export function pinErrorMessage(e) {
   if (e?.message === 'cancelled') return ''   // the user closed the PIN sheet themselves - say nothing
   const code = e?.code
