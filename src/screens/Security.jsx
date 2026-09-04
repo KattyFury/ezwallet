@@ -3,8 +3,7 @@ import { usePrivy, useWallets, useExportWallet, useMfaEnrollment, getEmbeddedCon
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
 import { privyErrorMessage } from '../privy'
-import { useSetupPin, usePinSigner, pinErrorMessage } from '../pinSigner'
-import { arcTestnet } from '../chain'
+import { useSetupPin, pinErrorMessage } from '../pinSigner'
 
 export default function Security() {
   const { navigate } = useNav()
@@ -12,7 +11,6 @@ export default function Security() {
   const { wallets } = useWallets()
   const { exportWallet } = useExportWallet()
   const { showMfaEnrollmentModal } = useMfaEnrollment()
-  const { signWithPin } = usePinSigner()
 
   // ⚠️ TWO OF THE ROWS BELOW ONLY EXIST FOR A PRIVY-MADE WALLET, and hiding them is honesty rather
   // than tidiness. Someone who signed in with MetaMask owns their key already - Privy cannot export
@@ -112,29 +110,6 @@ export default function Security() {
     }
   }
 
-  // ══ TEMPORARY TEST (2026-09-04) - remove this whole block after verifying ══
-  // The earlier owner-reassignment attempt on the EXISTING wallet was refused outright by Privy's
-  // client SDK ("Wallet ownership updates are not supported") - a deliberate guardrail, not something
-  // to work around. This tests the real dual-approval mechanism instead on a FRESH wallet
-  // (0xA6c573647012D5A6AAb32CdB9911C5aCc3398790) created server-side with the quorum as owner FROM
-  // CREATION, so no reassignment/guardrail is involved at all. It has no funds, so an
-  // insufficient-funds error back is the expected SUCCESS signal here - it means the PIN check and
-  // both signatures were accepted, and the chain only stopped at "nothing to send".
-  const TEST_WALLET = '0xA6c573647012D5A6AAb32CdB9911C5aCc3398790'
-  const TEST_WALLET_ID = 'iha9ln1q0etk016i7sqghrtx'   // known from creation - see the commit that made it
-  const [testStatus, setTestStatus] = useState('')
-  async function handleTestSign() {
-    setTestStatus('Signing...')
-    try {
-      // walletId passed explicitly: this wallet was created via the server API, so it does not show
-      // up in user.linkedAccounts the way a normal login-created wallet does - see pinSigner.js.
-      const { hash } = await signWithPin({ to: TEST_WALLET, data: '0x', chainId: arcTestnet.id, address: TEST_WALLET, walletId: TEST_WALLET_ID })
-      setTestStatus('Unexpected success, hash: ' + hash)
-    } catch (e) {
-      setTestStatus((e.code || e.message || 'error') + ': ' + (pinErrorMessage(e) || e.message))
-    }
-  }
-
   const email = localStorage.getItem('ez_google_email') || localStorage.getItem('ez_email') || '…'
   const walletAddr = localStorage.getItem('ez_wallet_addr') || '…'
   const shortAddr = walletAddr !== '…' ? walletAddr.slice(0, 10) + '...' + walletAddr.slice(-6) : '…'
@@ -212,24 +187,6 @@ export default function Security() {
               : 'Turn on Fingerprint or Face ID so nobody else can send money from this wallet. Your private key opens this wallet in any other crypto app - never share it.'}
         </span>
       </div>
-
-      {/* TEMPORARY - remove this whole row after the test. Deliberately ugly/unstyled so nobody
-          mistakes it for a real feature.
-          Privy's client SDK refused to sign the earlier owner-reassignment attempt outright
-          ("Wallet ownership updates are not supported") - a deliberate guardrail, not a format bug.
-          So this tests the REAL mechanism against a FRESH wallet created server-side with the quorum
-          as owner FROM CREATION (no reassignment needed, no guardrail hit): a self-send of 0 value on
-          the empty test wallet 0xA6c573647012D5A6AAb32CdB9911C5aCc3398790. It has no funds, so the
-          expected SUCCESS signal here is an insufficient-funds error - anything OTHER than an
-          authorization/signature error means the PIN + dual-approval chain itself is proven correct. */}
-      {isEmbedded && (
-        <div className="row-9" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <button onClick={handleTestSign} style={{ background: '#ffe27a', border: '1px solid #333', borderRadius: 8, padding: '6px 10px', fontSize: 12 }}>
-            🔧 TEST: sign on the fresh dual-approval wallet
-          </button>
-          {testStatus && <span style={{ fontSize: 11, wordBreak: 'break-all' }}>{testStatus}</span>}
-        </div>
-      )}
 
       <div className="row-10 row10-single">
         <button className="btn btn-primary" onClick={() => navigate('MenuScreen')}>Back</button>

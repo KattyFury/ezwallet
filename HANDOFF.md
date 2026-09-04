@@ -1,6 +1,6 @@
 # HANDOFF – EZwallet
 
-**Updated:** 2026-09-05 (the new 12-column Figma grid is in on the 4 main screens) · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
+**Updated:** 2026-09-05 (new Figma grid + all nine PIN defects fixed and tested) · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
 
 ## ⚠️ READ THIS FIRST - PIN feature is built, blocked on ONE Privy account-level step
 
@@ -147,6 +147,86 @@ file instead.
 | **GitHub** | https://github.com/KattyFury/ezwallet |
 | **Video** | https://youtu.be/UIR4Ee3Wp_Y |
 | **Deck** | https://canva.link/zr3ik84radd39vc |
+
+## 🛠️ SESSION 2026-09-05 (part 2): REVIEWED THE PIN FEATURE AND FIXED ALL NINE DEFECTS
+
+A review of the 09-04 PIN work (`23a4429..c1aa080`) found nine defects. All nine are fixed, and
+`test/pin.test.mjs` (new, 10 cases) pins six of them down. **The tests were verified to actually
+fail**: with the two new guards commented out, exactly those two regression cases go red.
+
+- **🔴 THE FEATURE WAS DEAD ON ARRIVAL, and not for the reason the old handoff gives.**
+  `pinSigner.js` read the wallet id from `user.linkedAccounts[].id` in the browser. Privy documents
+  `Wallet.id` as **"Null if the wallet is not delegated"**
+  (`react-auth/dist/dts/types-Ck8tvlPZ.d.ts:1008`) and this app never delegates - confirmed live, the
+  account's wallets return `delegated: false`. So the lookup returned null for every user and **every
+  PIN-gated Send and Swap threw `no-wallet-id` before the PIN sheet ever opened.** The old comment
+  cited that exact type file but stopped reading one sentence too early.
+  **Fix:** the server resolves it - `GET /v1/wallets?address=…` with `PRIVY_APP_SECRET` returns the id
+  without delegation. New `wallet-id` action; the client fetches it before signing. Verified against
+  the real API: the founder's address returns `uihroi7x6jthz2f7bsvcdyzh`.
+- **🔴 The PIN and the wallet being signed for were unrelated inputs.** `sign` checked the PIN against
+  a client-supplied `address` while taking the wallet from the client's `requestPayload.url`, with
+  nothing tying them together - so a caller could register their own address + PIN and aim the
+  server's quorum half at someone else's wallet. Privy would still refuse the transfer (the victim's
+  own signature is the other half), but the PIN would be defeated in precisely the case it exists for:
+  a stolen device where the key is available and only the PIN is not. **Fix:** the id is re-derived
+  from the address the PIN was checked against, and a mismatching URL is a 403.
+- **🔴 Every signed request was replayable forever** (no expiry, no nonce on the user's signature).
+  **Fix:** the signature's hash is recorded and re-presenting it is a 409. It is burned only after the
+  PIN passes, so a typo does not cost the user a fresh passkey prompt (there is a test for that).
+- **🟠 Any stranger's keypair could open a session** and write permanent, TTL-less `pinhash:` records
+  into the `EZ_SYNC` namespace shared with contacts backup and bug reports. **Fix:** the recovered
+  address must be a wallet of this Privy app.
+- **🟠 `Login.jsx` reopened the sign-in modal over a user who had just signed in.** A child's effects
+  flush before its parent's, so on the render where `authenticated` flips true this ran before
+  App.jsx could navigate away - and the manual sign-in button had been deleted, so there was no way
+  out. **Fix:** an `authenticated` guard. This is the same shape as the 09-04 freeze.
+- **🟠 `pinGate.js` could hang a Send forever.** With no host mounted (ErrorBoundary replacing the
+  tree) `pending` was set with nothing able to resolve it, and every later PIN request in that session
+  then rejected with "already pending". **Fix:** reject immediately if there is no listener, and
+  reject any in-flight request when the host unmounts.
+- **🟠 `setupPin` asked for a signature on unvalidated data** - an unchecked nonce response meant a
+  503 led to prompting the user's fingerprint to sign the string `"undefined"`. **Fix:** check the
+  response first.
+- **🟡 The lockout counter is not atomic** and cannot be: Workers KV has no atomic increment, so
+  parallel requests all read the same count. Mitigated with `cacheTtl: 0` and **documented honestly in
+  the code** - what actually slows a brute force is PBKDF2 at 100k iterations per guess. A Durable
+  Object is the real fix and is noted as such; do not describe the counter as a hard lock.
+- **🟡 The temporary yellow test button in `Security.jsx` is deleted** (with its now-unused
+  `arcTestnet`/`usePinSigner` imports). It could never have worked: it signed for `TEST_WALLET` while
+  PINs are only ever stored under `ez_wallet_addr`, so it would always have come back `pin-not-set` -
+  worth knowing, since the 09-04 handoff treats its "stuck on Signing…" as an unexplained mystery.
+
+### ⚠️ THE OLD "READ THIS FIRST" BLOCKER IS DESCRIBED WRONGLY - RE-CHECK IT BEFORE ACTING
+Read live from Privy's API on 09-05, not from memory:
+- The founder's wallet `uihroi7x6jthz2f7bsvcdyzh` **DOES have an `owner_id`**: `tzaph36jf5851ik6bvcf0qs3`.
+  The section below says it "has no `owner_id` set". That is no longer true.
+- That quorum is **`authorization_threshold: 1`, `authorization_keys: []`, `user_ids: [the founder]`**
+  - i.e. Privy's default 1-of-1 owner quorum, the user alone.
+- The PIN quorum `p1loakdgs7wvd40loha4pf70` ("ezwallet-pin-dual-approval") is correctly built:
+  threshold 2, one server authorization key + the founder.
+- **⇒ There may be a path nobody tried: instead of reassigning the WALLET to a different quorum (which
+  Privy's client SDK refuses outright), UPDATE THE QUORUM THE WALLET ALREADY POINTS AT** - raise
+  `tzaph36jf5851ik6bvcf0qs3` to threshold 2 and add the server's authorization key. No ownership
+  change is involved, so the "Wallet ownership updates are not supported" guardrail should not apply.
+  **NOT DONE - it needs the user's go-ahead**: it takes effect immediately and every send from that
+  wallet then requires the PIN flow. Lower risk than the old note implies, though, because
+  **ezwallet.cash does not use Privy at all** (see below).
+
+### 📍 ezwallet.cash WAS NEVER AT RISK FROM ANY OF THIS (checked 09-05)
+`main` is unchanged since 08-30 (`7ca39e5`), Cloudflare's production branch is `main`, and every
+recent deployment is a **preview** of `privy`. More to the point, **prod still runs CIRCLE**
+(`src/circle.js`, `@circle-fin/w3s-pw-web-sdk`; there is no `src/privy.js` on `main`), so no Privy
+account change can reach it. The warning elsewhere in this file that reassigning the wallet "would
+make sending fail for everyone, including on main/prod" was written assuming prod had already moved
+to Privy. It has not.
+
+### 🧪 HOW TO TEST THIS BRANCH
+- **Live site for the branch: https://privy.ezwallet.pages.dev** - a stable alias Cloudflare Pages
+  already rebuilds on every push to `privy`. **Passkey only works here**, not on localhost.
+- **Local: `npm run dev` (port 5173) + `npm run api` (8787).** ⚠️ **It must be 5173** - Privy's CSP
+  `frame-ancestors` lists `http://localhost:5173` and nothing else, so any other port makes the
+  sign-in iframe fail to frame with no useful error.
 
 ## 🎨 SESSION 2026-09-05: THE NEW 12-COLUMN FIGMA GRID IS IN, ON THE 4 MAIN SCREENS
 

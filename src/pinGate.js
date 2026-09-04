@@ -16,9 +16,16 @@ let listener = null  // set by PinGateHost when it mounts
 // instead of the caller having to reach back into PinGateHost's own state.
 export function requestPin({ mode, error } = {}) {
   if (pending) return Promise.reject(new Error('a PIN request is already pending'))
+  // ⚠️ NO LISTENER = FAIL NOW, DO NOT PARK THE PROMISE (2026-09-05).
+  // `listener?.(pending)` used to swallow the "nobody is mounted" case: `pending` stayed set with
+  // nothing on screen able to resolve it, so the caller (a Send waiting on its PIN) hung FOREVER -
+  // and because `pending` was still truthy, every later requestPin() in that session rejected with
+  // "already pending" too. One missing host poisoned PIN entry for the whole session. It is reachable
+  // in practice: ErrorBoundary replacing the tree unmounts PinGateHost while a Send is in flight.
+  if (!listener) return Promise.reject(Object.assign(new Error('pin-ui-unavailable'), { code: 'pin-ui-unavailable' }))
   return new Promise((resolve, reject) => {
     pending = { mode, error, resolve, reject }
-    listener?.(pending)
+    listener(pending)
   })
 }
 
@@ -42,4 +49,10 @@ export function rejectPin(reason) {
 // PinGateHost registers itself here once, at mount, so requestPin() can wake it up even though it
 // lives in a different module (no React context needed for something this small - the same
 // "imperative singleton" shape App.jsx's MFA listener already uses via a ref).
-export function _registerPinGateListener(fn) { listener = fn }
+export function _registerPinGateListener(fn) {
+  listener = fn
+  // Unregistering (the host unmounting) with a request still in flight: reject it instead of leaving
+  // the caller waiting on a sheet that no longer exists. Same reasoning as the guard in requestPin -
+  // the pending slot must never outlive the UI that can clear it.
+  if (!fn && pending) rejectPin(Object.assign(new Error('pin-ui-unavailable'), { code: 'pin-ui-unavailable' }))
+}

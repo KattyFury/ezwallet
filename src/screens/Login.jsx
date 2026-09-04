@@ -25,7 +25,7 @@ import { usePrivy, useModalStatus } from '@privy-io/react-auth'
 // position:fixed at the full viewport. The logo and the promise stay here anyway, and Privy's box
 // carries NO logo of its own (appearance.logo is '' in src/privy.js), so the mark is on screen once.
 export default function Login() {
-  const { login } = usePrivy()
+  const { login, authenticated } = usePrivy()
 
   // OPEN IT WITHOUT BEING ASKED, AND DO NOT LET IT BE CLOSED (user decision 2026-09-04). Arriving at
   // a sign-in screen and having to press "sign in" before being allowed to sign in is a step carrying
@@ -40,12 +40,19 @@ export default function Login() {
   // ⚠️ `isOpen` IS THE ONLY DEPENDENCY, and `login` is deliberately NOT one. Privy hands back a fresh
   // function identity on renders, and an effect that calls `login()` and depends on `login` is the
   // render loop that froze this app on 08-30, in a new place. The ref holds the live one.
+  // ⚠️ `authenticated` IS A GUARD, NOT DECORATION (added 2026-09-05).
+  // Without it this effect also fired on the SUCCESSFUL sign-in: Privy closes its own modal the
+  // moment login completes, `isOpen` flips false, and this reopened it. React flushes a CHILD's
+  // effects before its parent's, so on the render where `authenticated` becomes true this ran before
+  // App.jsx's navigation effect had swapped Login out - i.e. the modal was reliably reopened over a
+  // user who had just got in, with no sign-in button left to escape through (it was deleted on
+  // 09-04). Reopening a login modal in a loop is also precisely the shape of the 09-04 freeze.
   const { isOpen } = useModalStatus()
   const loginRef = useRef(login)
   loginRef.current = login
   useEffect(() => {
-    if (!isOpen) loginRef.current()
-  }, [isOpen])
+    if (!isOpen && !authenticated) loginRef.current()
+  }, [isOpen, authenticated])
 
   return (
     <div className="screen">

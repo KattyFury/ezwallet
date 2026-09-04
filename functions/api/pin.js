@@ -9,14 +9,21 @@
 // transaction - there is no client-side gate to step around.
 //
 // THE FLOW (docs.privy.io/recipes/wallets/two-of-two-server-in-the-loop):
+//   0. Client asks this server for its own wallet id (`wallet-id`), because the browser SDK cannot
+//      produce one - see walletIdForAddress below for the proof and the history.
 //   1. Client builds a `requestPayload` (the exact Privy wallet-RPC call it wants to make) and signs
 //      it with the user's OWN key via `useAuthorizationSignature()` - this happens automatically
 //      through Privy's existing MFA listener in App.jsx if passkey is on, untouched by this file.
 //   2. Client POSTs { address, pin, requestPayload, userSignature } here.
-//   3. THIS server checks the PIN (hash comparison, rate-limited), and only if it is right, signs the
-//      SAME requestPayload with the authorization key held in PRIVY_AUTH_KEY - producing the second,
-//      server-side signature.
+//   3. THIS server checks the PIN (hash comparison, rate-limited), re-derives the wallet id FROM the
+//      address it just checked the PIN against, and refuses if the client's signed URL names a
+//      different wallet. Only then does it sign the SAME requestPayload with the authorization key
+//      held in PRIVY_AUTH_KEY - producing the second, server-side signature.
 //   4. This server calls Privy's REST API directly with BOTH signatures and relays the result.
+//
+// ⚠️ EVERY REQUEST IS SINGLE-USE. The user's signature covers the transfer with no expiry and no
+// nonce of its own, so a captured pair would otherwise replay the same payment forever; its hash is
+// recorded and re-presenting it is a 409. See the replay-guard note in the `sign` branch.
 //
 // `set`/`nonce`/`session` (changing the PIN itself) reuse sync.js's exact nonce → wallet-signature →
 // session-token pattern, under a SEPARATE key prefix (`pinnonce:`/`pinsess:`) so the two features
@@ -75,6 +82,41 @@ function constantTimeEqual(a, b) {
 // endpoint would be an open proxy that signs+forwards whatever URL a caller supplies.
 const WALLET_RPC_URL = /^https:\/\/api\.privy\.io\/v1\/wallets\/[a-zA-Z0-9]+\/rpc$/;
 
+// ══ ADDRESS → PRIVY WALLET ID, RESOLVED ON THE SERVER (2026-09-05) ══
+// This exists because the CLIENT CANNOT GET THE WALLET ID AT ALL. `Wallet.id` in the browser SDK is
+// documented as "Null if the wallet is not delegated" (react-auth/dist/dts/types-Ck8tvlPZ.d.ts:1008)
+// and this app never delegates - verified live: the account's wallets come back `delegated: false`.
+// So the previous client-side `user.linkedAccounts[].id` lookup returned null for EVERY user and
+// every PIN-gated Send/Swap threw `no-wallet-id`. The server, holding PRIVY_APP_SECRET, gets the id
+// fine from the same account - confirmed against the real API, not assumed.
+//
+// It is ALSO the security fix: `sign` used to take the wallet id from the client (inside
+// requestPayload.url) while checking the PIN against a SEPARATE client-supplied `address`, with
+// nothing tying the two together. Anyone could register their own address + PIN and then ask for the
+// server's quorum half aimed at SOMEONE ELSE'S wallet. Privy would still refuse the transfer (the
+// victim's own signature is the other half), but the PIN would have been defeated in exactly the
+// scenario it exists for: a stolen device where the wallet key is available and only the PIN is not.
+// Now the id is derived FROM the address the PIN was checked against, and the client's URL has to
+// match it.
+async function walletIdForAddress(ctx, address) {
+  const auth = `Basic ${btoa(`${PRIVY_APP_ID}:${ctx.env.PRIVY_APP_SECRET}`)}`;
+  const res = await fetch(`https://api.privy.io/v1/wallets?address=${encodeURIComponent(address)}`, {
+    headers: { Authorization: auth, 'privy-app-id': PRIVY_APP_ID },
+  });
+  if (!res.ok) return null;
+  const data = await res.json().catch(() => null);
+  // Match the address again here rather than trusting the query filter: a future API change that
+  // widened the filter must not silently hand back a different wallet's id.
+  const hit = (data?.data || []).find(w => w?.address?.toLowerCase() === address.toLowerCase());
+  return hit?.id || null;
+}
+
+// SHA-256 hex, used to key the replay guard on the user's signature without storing the signature.
+async function sha256Hex(str) {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return toHex(new Uint8Array(buf));
+}
+
 export async function onRequestPost(ctx) {
   const kv = ctx.env.EZ_SYNC;
   if (!kv) return json({ error: 'pin-disabled' }, 503);
@@ -99,9 +141,34 @@ export async function onRequestPost(ctx) {
     let addr;
     try { addr = await recoverMessageAddress({ message: messageFor(nonce), signature }); } catch { return json({ error: 'bad-signature' }, 401); }
     if (!addr) return json({ error: 'bad-signature' }, 401);
+    // ⚠️ THE RECOVERED ADDRESS MUST BE A WALLET OF THIS PRIVY APP (2026-09-05).
+    // Recovery proves the caller controls the key it signed with - which is sound, and is all SIWE
+    // ever proves - but it says nothing about that wallet having anything to do with EZwallet. Any
+    // stranger with any keypair could mint a session and, through `set`, write a permanent (no TTL,
+    // because a PIN has to outlive a session) `pinhash:` record into the EZ_SYNC namespace this app
+    // shares with the contacts backup and bug reports. Unbounded free writes into shared storage.
+    // Requiring the address to be one of the app's own wallets closes it with a lookup we now do
+    // anyway, and costs a real user nothing.
+    if (!ctx.env.PRIVY_APP_SECRET) return json({ error: 'pin-signing-disabled' }, 503);
+    if (!(await walletIdForAddress(ctx, addr))) return json({ error: 'not-an-app-wallet' }, 403);
     const token = crypto.randomUUID();
     await kv.put(`pinsess:${token}`, addr.toLowerCase(), { expirationTtl: SESSION_TTL });
     return json({ token, address: addr.toLowerCase() });
+  }
+
+  // ── 2b. Address → Privy wallet id, so the client can BUILD the request it is about to sign ──
+  // Needed because the browser SDK cannot supply it (see walletIdForAddress above). Deliberately
+  // takes only an address and no token: a wallet id is an opaque handle, NOT a credential - it is
+  // useless without BOTH authorization signatures, and the address it maps from is public on-chain
+  // data anyway. Guarding it behind a session would cost every Send an extra wallet-signature prompt
+  // (a passkey tap) to protect something that is not a secret.
+  if (action === 'wallet-id') {
+    if (!ctx.env.PRIVY_APP_SECRET) return json({ error: 'pin-signing-disabled' }, 503);
+    const { address } = body;
+    if (!/^0x[0-9a-fA-F]{40}$/.test(address || '')) return json({ error: 'bad-address' }, 400);
+    const walletId = await walletIdForAddress(ctx, address);
+    if (!walletId) return json({ error: 'wallet-not-found' }, 404);
+    return json({ walletId });
   }
 
   // ── 3. Set/overwrite the PIN, session token required ──
@@ -130,8 +197,28 @@ export async function onRequestPost(ctx) {
     }
 
     const addrKey = address.toLowerCase();
+
+    // ── REPLAY GUARD ──
+    // The user's signature covers the transfer and nothing else - no expiry, no nonce - so a captured
+    // { requestPayload, userSignature } pair could be POSTed here again and again, and each replay
+    // moved the money again. Privy has no idea it is a repeat; the payload is byte-identical and
+    // legitimately signed. Recording the signature (hashed - there is no reason to store the real one)
+    // makes it strictly single-use. The TTL matches the session lifetime: after 24h the user's own
+    // signature is long stale and Privy's nonce handling refuses it anyway.
+    // ⚠️ Do NOT move this check after the PIN check - a replayer already knows the PIN is right,
+    // because they captured a request that succeeded.
+    const sigKey = `usedsig:${await sha256Hex(userSignature)}`;
+    if (await kv.get(sigKey)) return json({ error: 'replayed-request' }, 409);
+
+    // ── LOCKOUT ──
+    // ⚠️ HONEST LIMIT: Workers KV has no atomic increment, so N requests fired in parallel all read
+    // the same counter and each sees "0 fails". `cacheTtl: 0` skips the edge cache and at least stops
+    // a STALE read being served for up to a minute, but it does not make this atomic - only a Durable
+    // Object would, and that is a binding this project does not have yet. What actually holds the
+    // line meanwhile is PBKDF2 at 100k iterations (~100ms of CPU per guess, per request) plus the
+    // 6-digit space; the counter is a speed bump, not the wall. Do not describe it as a hard lock.
     const failKey = `pinfail:${addrKey}`;
-    const fails = parseInt((await kv.get(failKey)) || '0', 10);
+    const fails = parseInt((await kv.get(failKey, { cacheTtl: 0 })) || '0', 10);
     if (fails >= LOCK_MAX) return json({ error: 'pin-locked', retryAfterSec: LOCK_WINDOW }, 429);
 
     const rec = await kv.get(`pinhash:${addrKey}`);
@@ -143,6 +230,21 @@ export async function onRequestPost(ctx) {
       return json({ error: 'wrong-pin', attemptsLeft: Math.max(0, LOCK_MAX - fails - 1) }, 401);
     }
     await kv.delete(failKey);
+
+    // ── THE PIN AND THE WALLET MUST BE THE SAME WALLET ──
+    // The PIN was just checked against `addrKey`. Resolve THAT address to its Privy wallet id and
+    // require the client's signed URL to name exactly it. Without this the two halves of the request
+    // were unrelated: PIN for one address, signature aimed at another wallet's RPC endpoint.
+    const walletId = await walletIdForAddress(ctx, addrKey);
+    if (!walletId) return json({ error: 'wallet-not-found' }, 404);
+    if (requestPayload.url !== `https://api.privy.io/v1/wallets/${walletId}/rpc`) {
+      return json({ error: 'wallet-mismatch' }, 403);
+    }
+
+    // Burn the signature BEFORE relaying. If the relay then fails the user simply re-signs; the
+    // alternative - recording it after a success - leaves a window where two concurrent replays both
+    // pass the check and both spend.
+    await kv.put(sigKey, '1', { expirationTtl: SESSION_TTL });
 
     let serverSignature;
     try {

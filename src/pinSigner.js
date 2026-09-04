@@ -15,7 +15,7 @@
 // A wrong PIN loops back to step 3 with the server's own attempts-left message shown on the sheet;
 // the server enforces the real lockout (429 after 4 tries/5min), this is just presentation.
 // ══════════════════════════════════════════════════════════════════════════════
-import { usePrivy, useAuthorizationSignature, useSignMessage } from '@privy-io/react-auth'
+import { useAuthorizationSignature, useSignMessage } from '@privy-io/react-auth'
 import { requestPin } from './pinGate'
 import { PRIVY_APP_ID, privyErrorMessage } from './privy'
 
@@ -30,29 +30,44 @@ const PIN_ERROR_BY_CODE = {
   'bad-request-payload': 'Something went wrong preparing this transaction. Please try again.',
   'privy-unreachable': 'Network error. Check your connection and try again.',
   'privy-failed': 'The transaction was rejected. Please try again.',
+  // Added 2026-09-05 alongside the server-side wallet-id lookup and the replay guard. Each one is a
+  // state a real user can actually reach, so each gets a sentence rather than falling through to the
+  // generic Privy table - "wallet-mismatch" in particular must never read like a network blip.
+  'no-wallet-id': 'Could not find your wallet. Please try again.',
+  'wallet-not-found': 'Could not find your wallet. Please try again.',
+  'wallet-mismatch': 'This request does not match your wallet. Please start again.',
+  'replayed-request': 'That transaction was already submitted. Please start again.',
+  'not-an-app-wallet': 'This wallet is not an EZwallet wallet.',
+  'nonce-failed': 'Could not start PIN setup. Please try again.',
 }
 
 export function usePinSigner() {
-  const { user } = usePrivy()
   const { generateAuthorizationSignature } = useAuthorizationSignature()
 
-  // The wallet's internal Privy ID (needed for the /v1/wallets/{id}/rpc URL) lives only on
-  // user.linkedAccounts, NOT on the ConnectedWallet objects useWallets() returns - checked directly
-  // against node_modules/@privy-io/react-auth/dist/dts/types-Ck8tvlPZ.d.ts (`Wallet.id`), not guessed.
-  function walletIdFor(address) {
-    const acc = user?.linkedAccounts?.find(
-      a => a.type === 'wallet' && a.address?.toLowerCase() === address.toLowerCase(),
-    )
-    return acc?.id || null
+  // ⚠️ THE WALLET ID COMES FROM THE SERVER, AND HAS TO (2026-09-05).
+  // This used to read `user.linkedAccounts[].id` in the browser. That is null for every user of this
+  // app: Privy documents `Wallet.id` as "Null if the wallet is not delegated"
+  // (react-auth/dist/dts/types-Ck8tvlPZ.d.ts:1008) and this app never delegates - the account's own
+  // wallets come back `delegated: false` from Privy's API. So `walletIdFor()` returned null every
+  // time and EVERY PIN-gated Send and Swap threw `no-wallet-id` before it reached the sheet. The
+  // previous comment cited that same type file but stopped reading at "The server wallet ID of the
+  // wallet" and missed the sentence after it.
+  // The server holds PRIVY_APP_SECRET and gets the id from `GET /v1/wallets?address=...` without
+  // delegation - see functions/api/pin.js. Do not "optimise" this round trip away by going back to
+  // linkedAccounts; there is nothing there to read.
+  async function fetchWalletId(address) {
+    const res = await fetch(PIN_ENDPOINT, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'wallet-id', address }),
+    })
+    const d = await res.json().catch(() => ({}))
+    if (!res.ok || !d.walletId) throw Object.assign(new Error(d.error || 'no-wallet-id'), { code: d.error || 'no-wallet-id' })
+    return d.walletId
   }
 
-  // `walletId` override exists for the one temporary test button in Security.jsx (2026-09-04) - a
-  // wallet created via the server API doesn't show up in `user.linkedAccounts` the same way a
-  // normally-created one does, so the lookup above finds nothing for it even though the wallet is
-  // real and signable. Every real call site leaves this unset and goes through walletIdFor(address).
-  async function signWithPin({ to, data, value, chainId, address, walletId: walletIdOverride }) {
-    const walletId = walletIdOverride || walletIdFor(address)
-    if (!walletId) throw new Error('no-wallet-id')
+  async function signWithPin({ to, data, value, chainId, address }) {
+    const walletId = await fetchWalletId(address)
 
     const requestPayload = {
       version: 1,
@@ -105,7 +120,15 @@ export function useSetupPin() {
 
   async function setupPin(address) {
     const nonceRes = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'nonce' }) })
-    const { nonce, message } = await nonceRes.json()
+    const nonceBody = await nonceRes.json().catch(() => ({}))
+    // ⚠️ CHECK THE RESPONSE BEFORE USING IT. Unchecked, a 503 (KV binding missing) or any other
+    // failure left `message` undefined and this went straight on to ask the user - and their
+    // fingerprint - to sign the literal string "undefined". A signature prompt is the most expensive
+    // thing this app can ask for; never raise one on data that was never validated.
+    if (!nonceRes.ok || !nonceBody.nonce || !nonceBody.message) {
+      throw Object.assign(new Error(nonceBody.error || 'nonce-failed'), { code: nonceBody.error || 'nonce-failed' })
+    }
+    const { nonce, message } = nonceBody
     // No `uiOptions: { showWalletUIs: false }` - same reason as everywhere else in this app: it
     // breaks the moment passkey MFA is on.
     const { signature } = await signMessage({ message }, { address })
