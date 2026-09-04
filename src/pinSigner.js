@@ -46,8 +46,12 @@ export function usePinSigner() {
     return acc?.id || null
   }
 
-  async function signWithPin({ to, data, value, chainId, address }) {
-    const walletId = walletIdFor(address)
+  // `walletId` override exists for the one temporary test button in Security.jsx (2026-09-04) - a
+  // wallet created via the server API doesn't show up in `user.linkedAccounts` the same way a
+  // normally-created one does, so the lookup above finds nothing for it even though the wallet is
+  // real and signable. Every real call site leaves this unset and goes through walletIdFor(address).
+  async function signWithPin({ to, data, value, chainId, address, walletId: walletIdOverride }) {
+    const walletId = walletIdOverride || walletIdFor(address)
     if (!walletId) throw new Error('no-wallet-id')
 
     const requestPayload = {

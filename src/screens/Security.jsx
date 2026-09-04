@@ -121,11 +121,14 @@ export default function Security() {
   // insufficient-funds error back is the expected SUCCESS signal here - it means the PIN check and
   // both signatures were accepted, and the chain only stopped at "nothing to send".
   const TEST_WALLET = '0xA6c573647012D5A6AAb32CdB9911C5aCc3398790'
+  const TEST_WALLET_ID = 'iha9ln1q0etk016i7sqghrtx'   // known from creation - see the commit that made it
   const [testStatus, setTestStatus] = useState('')
   async function handleTestSign() {
     setTestStatus('Signing...')
     try {
-      const { hash } = await signWithPin({ to: TEST_WALLET, data: '0x', chainId: arcTestnet.id, address: TEST_WALLET })
+      // walletId passed explicitly: this wallet was created via the server API, so it does not show
+      // up in user.linkedAccounts the way a normal login-created wallet does - see pinSigner.js.
+      const { hash } = await signWithPin({ to: TEST_WALLET, data: '0x', chainId: arcTestnet.id, address: TEST_WALLET, walletId: TEST_WALLET_ID })
       setTestStatus('Unexpected success, hash: ' + hash)
     } catch (e) {
       setTestStatus((e.code || e.message || 'error') + ': ' + (pinErrorMessage(e) || e.message))
