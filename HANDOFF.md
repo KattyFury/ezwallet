@@ -148,6 +148,22 @@ file instead.
 | **Video** | https://youtu.be/UIR4Ee3Wp_Y |
 | **Deck** | https://canva.link/zr3ik84radd39vc |
 
+## ▶️ NEXT SESSION - START HERE (written 2026-09-05 evening)
+
+1. **Delete the stray key quorum `agd77lp7ay8s4t6p6pucxipk` in the Privy Dashboard** (details below,
+   under "WHAT A KEY QUORUM UPDATE ACTUALLY COSTS"). Harmless but untidy, and the API cannot do it.
+2. **Test whether Privy's CLIENT SDK will sign a key-quorum update.** Everything else is blocked on
+   this one unknown. It refuses *wallet ownership* updates outright; a *quorum* update is a different
+   endpoint and may well be allowed. If it is, the PIN becomes real by raising `tzaph36…` to
+   threshold 2 + the server key - no wallet reassignment, no guardrail.
+3. **Then do the end-to-end test that has never been run:** set a PIN, then a real Arc Testnet send
+   from `privy.ezwallet.pages.dev` (not localhost - Privy needs a real origin, and passkey needs HTTPS).
+4. Still open from before: contacts backup does not run (it was removed on 09-04 to fix the freeze and
+   needs to move to the Contacts screen), and the sign-in screen is paused for a design pass with two
+   undecided questions - see the 09-04 section.
+5. Not restyled to the new Figma grid yet: the ~15 sub-screens. See `DESIGN-GRID-390.md` rules 1-6,
+   and the open question there about whether Menu's dividers should spread to the other lists.
+
 ## 🛠️ SESSION 2026-09-05 (part 2): REVIEWED THE PIN FEATURE AND FIXED ALL NINE DEFECTS
 
 A review of the 09-04 PIN work (`23a4429..c1aa080`) found nine defects. All nine are fixed, and
@@ -212,6 +228,43 @@ Read live from Privy's API on 09-05, not from memory:
   **NOT DONE - it needs the user's go-ahead**: it takes effect immediately and every send from that
   wallet then requires the PIN flow. Lower risk than the old note implies, though, because
   **ezwallet.cash does not use Privy at all** (see below).
+
+### 🔑 WHAT A KEY QUORUM UPDATE ACTUALLY COSTS - measured 09-05, start here tomorrow
+`owner_id` on a wallet is **the id of the key quorum that must authorize anything that wallet does** -
+not "who owns the money". It is the unlocking rule: how many signatures, and whose.
+- Founder's wallet → quorum `tzaph36jf5851ik6bvcf0qs3`: `threshold 1`, `authorization_keys: []`,
+  `user_ids: [founder]` ⇒ **"the founder's own signature alone is enough"**, Privy's default.
+- The PIN quorum `p1loakdgs7wvd40loha4pf70` ("ezwallet-pin-dual-approval"): `threshold 2`, one server
+  authorization key + the founder ⇒ **"both, or nothing"**. That second signature is the one the
+  server only produces when the PIN is right - which is what makes this PIN real rather than a
+  client-side string compare.
+- ⇒ **Until the wallet points at a 2-of-2 quorum, the PIN protects nothing.** The code is correct now;
+  the lock it guards is still open.
+
+**The SDK does support changing a quorum** (`keyQuorums._update(id, { authorization_threshold,
+public_keys, user_ids })`, `node/resources/key-quorums.d.ts:199`) - so "update the quorum the wallet
+already points at" instead of "repoint the wallet" is a real option, and it involves no ownership
+change, so the client-SDK guardrail should not apply.
+
+**⚠️ BUT: create is cheap, change is not.** Measured directly against the API today:
+- `POST /v1/key_quorums` → **works with the app secret alone**.
+- `PATCH` / `DELETE /v1/key_quorums/{id}` → **401 `Missing privy-authorization-signature header`**.
+  A quorum can only be changed by *its own members signing*.
+- ⇒ Changing `tzaph36…` needs a signature from **the founder's own wallet in the browser**, since
+  that quorum's only member is the founder and it holds no authorization keys. That is a
+  client-side step, not something this server can do alone. Whether Privy's client SDK will sign a
+  key-quorum update (it refuses *wallet ownership* updates) is **UNTESTED - test that first tomorrow**,
+  because the whole plan depends on it.
+- ⇒ It also means the change is **not freely reversible**: once the quorum is 2-of-2, undoing it
+  needs both signatures. The server key is in `.env.txt`, so it is recoverable, but do not treat it
+  as a one-click experiment.
+
+**🧹 MESS LEFT BEHIND, please delete from the Privy Dashboard:** key quorum
+**`agd77lp7ay8s4t6p6pucxipk`**, display name `ezwallet-TEST-DELETEME`. Created 09-05 to test the
+reversibility question above. It is **inert** - threshold 1, owns no wallet, nothing references it -
+but it **cannot be deleted through the API**: its one authorization key was generated in a throwaway
+process and never saved, and DELETE demands a signature from that key. Lesson for next time: never
+create a quorum with a key you have not written down first.
 
 ### 📍 ezwallet.cash WAS NEVER AT RISK FROM ANY OF THIS (checked 09-05)
 `main` is unchanged since 08-30 (`7ca39e5`), Cloudflare's production branch is `main`, and every
