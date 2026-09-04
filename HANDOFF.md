@@ -227,6 +227,16 @@ to Privy. It has not.
 - **Local: `npm run dev` (port 5173) + `npm run api` (8787).** ⚠️ **It must be 5173** - Privy's CSP
   `frame-ancestors` lists `http://localhost:5173` and nothing else, so any other port makes the
   sign-in iframe fail to frame with no useful error.
+- **⚠️ `PRIVY_APP_SECRET` + `PRIVY_AUTH_KEY` were MISSING from Cloudflare's PREVIEW environment**, so
+  every PIN endpoint answered 503 `pin-signing-disabled` on the deploy while working fine locally
+  (dev-server.js reads `.env.txt`). Added as secrets on 09-05 with the user's go-ahead; **env-var
+  changes only take effect on a NEW build**, so the deployment had to be retried afterwards.
+  Verified live on `privy.ezwallet.pages.dev`: `wallet-id` returns `uihroi7x6jthz2f7bsvcdyzh`, an
+  unknown address 404s, `nonce` works (so `EZ_SYNC` is bound), a junk session is 401.
+  **Security note to keep in mind: Cloudflare's `preview` environment is shared by EVERY branch**, so
+  any branch pushed to this repo can now co-sign with the server authorization key. That is fine for
+  a solo repo; it would not be if outside contributors could push.
+  Production still has neither key - correct, because `main` is the Circle build and has no PIN flow.
 
 ## 🎨 SESSION 2026-09-05: THE NEW 12-COLUMN FIGMA GRID IS IN, ON THE 4 MAIN SCREENS
 
