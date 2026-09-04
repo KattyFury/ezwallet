@@ -35,6 +35,7 @@
     "test": "node --test"
   },
   "dependencies": {
+    "@privy-io/node": "^0.34.0",
     "@privy-io/react-auth": "^3.38.0",
     "jsqr": "^1.4.0",
     "qrcode.react": "^4.2.0",

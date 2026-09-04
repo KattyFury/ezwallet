@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react'
-import { useSendTransaction } from '@privy-io/react-auth'
 import Icon from '../components/Icon'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
 import { getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency } from '../data'
 import { getDisplayRates, estimateFeeUsd, buildTransferCall, arcTestnet } from '../chain'
-import { privyErrorMessage } from '../privy'
+import { usePinSigner, pinErrorMessage } from '../pinSigner'
 import { MOCK } from '../mock'
 
 function shortenAddr(addr) {
@@ -19,7 +18,7 @@ function Cur({ children }) {
 
 export default function SendConfirm() {
   const { navigate, params } = useNav()
-  const { sendTransaction } = useSendTransaction()
+  const { signWithPin } = usePinSigner()
   // currency = 'USD' (the friendly label, USDC is sent) or a real token (USDC/EURC/cirBTC) - comes from SendAmount.
   const { address, name, amount, memo, currency = 'USD' } = params
   const [feeUsd, setFeeUsd] = useState(null)      // the real gas fee (USD, null = still calculating)
@@ -90,20 +89,14 @@ export default function SendConfirm() {
       if (!from) throw new Error('No wallet address')
       const { to, data } = buildTransferCall({ token, toAddress: address, amountDecimal: sendAmountStr, memo })
 
-      // ⚠️ DO NOT ADD `uiOptions: { showWalletUIs: false }` BACK HERE. It was there until 2026-08-30
-      // to keep Privy's confirmation modal off the screen - this app has its own confirm screen and a
-      // second one showing raw calldata is exactly the "Contract Interaction screen that baffles older
-      // users" that got Circle's OTP flow switched off in July.
-      // It had to go because it BREAKS SENDING once the fingerprint is on. From the SDK's own docs:
-      // with that flag "the wallet will attempt to sign the transaction WITHOUT PROMPTING the user" -
-      // and a wallet guarded by MFA cannot sign unprompted, so the attempt died as
-      //   POST https://auth.privy.io/api/v1/wallets/authenticate 401
-      // Privy's own flow asks for the fingerprint and then signs. A modal one screen too many is a
-      // papercut; a wallet that cannot send money is not a wallet.
-      const { hash } = await sendTransaction(
-        { to, data, chainId: arcTestnet.id },
-        { address: from },
-      )
+      // PIN dual-approval (2026-09-04), NOT sendTransaction() any more - a quorum-owned wallet's own
+      // key can only produce HALF the required signatures. signWithPin() signs with the user's key
+      // (Privy's existing fingerprint listener in App.jsx still fires here untouched if passkey is
+      // on), then asks for the PIN and gets the server's other half - see src/pinSigner.js.
+      // The old `uiOptions: { showWalletUIs: false }` warning that used to live here no longer
+      // applies: that flag belonged to sendTransaction()'s options, which this screen does not call
+      // any more at all.
+      const { hash } = await signWithPin({ to, data, chainId: arcTestnet.id, address: from })
 
       setDone(true)   // broadcast successfully → lock the screen, no resending
       navigate('SendReceipt', { address, name, amount, memo, currency, tokenAmount: sendUnits, timestamp: Date.now(), hash })
@@ -111,8 +104,8 @@ export default function SendConfirm() {
       // STAY on the confirm screen so they can tap send again.
       setLoading(false)
       console.error('[SendConfirm] send failed:', e)
-      const reason = privyErrorMessage(e)
-      if (!reason) return   // the user closed Privy's flow themselves → stay silent
+      const reason = pinErrorMessage(e)
+      if (!reason) return   // the user closed Privy's flow / the PIN sheet themselves → stay silent
       const msg = `Send failed: ${reason}`
       setError(msg)
       addNotif(msg, 'error')

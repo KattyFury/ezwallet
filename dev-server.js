@@ -11,6 +11,7 @@ import { readFileSync } from 'node:fs'
 import * as swap from './functions/api/swap.js'
 import * as sync from './functions/api/sync.js'
 import * as bug from './functions/api/bug.js'
+import * as pin from './functions/api/pin.js'
 
 const PORT = 8787
 
@@ -51,11 +52,13 @@ const env = loadEnv()
 // Warns about KIT_KEY, not API_KEY: since 2026-08-30 nothing here talks to the Circle W3S API, and
 // the Stablecoin Kit key is the only secret the remaining endpoints actually need.
 if (!env.KIT_KEY) console.warn('[dev-server] KIT_KEY missing from .env.txt - swap quotes and swaps will fail')
+if (!env.PRIVY_AUTH_KEY || !env.PRIVY_APP_SECRET) console.warn('[dev-server] PRIVY_AUTH_KEY/PRIVY_APP_SECRET missing from .env.txt - PIN signing will 503 (set/nonce/session still work, they only need KV)')
 
 const ROUTES = {
   '/api/swap': swap,
   '/api/sync': sync,
   '/api/bug': bug,
+  '/api/pin': pin,
 }
 
 const server = createServer(async (req, res) => {

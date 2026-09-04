@@ -3,6 +3,7 @@ import { usePrivy, useWallets, useMfa, useRegisterMfaListener, getEmbeddedConnec
 import { NavContext } from './nav'
 import ErrorBoundary from './components/ErrorBoundary'
 import BugButton from './components/BugButton'
+import PinGateHost from './components/PinGateHost'
 import { MOCK } from './mock'
 import { rememberLogin } from './privy'
 
@@ -232,6 +233,10 @@ export default function App() {
           {/* The bug-report button shows on EVERY screen, Login/PinGate included - errors are most likely exactly when
               you cannot get into the app, and blocking it there would silence the case that most needs reporting. */}
           <BugButton screen={nav.screen} />
+          {/* Mounted ONCE, same reasoning as BugButton above: a PIN prompt can fire from any screen that
+              signs (SendConfirm, Swap, later Security) - see pinGate.js/PinGateHost.jsx. Renders nothing
+              until something calls requestPin(). */}
+          <PinGateHost />
         </div>
       </ErrorBoundary>
     </NavContext.Provider>

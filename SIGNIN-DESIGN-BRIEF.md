@@ -94,11 +94,43 @@ isn't starting from a blank assumption of the old screen:
 
 ---
 
+## 3b. NEW BRAND SYSTEM (decided 2026-09-04, NOT YET APPLIED TO CODE)
+
+Recorded here for reference only, per user's explicit choice to hold off implementing it until the
+sign-in screen itself is settled – avoids touching brand color/logo twice. Nothing in `src/` reflects
+this yet; `--color-brand` is still the old solid `#0B53BF`, and `logo.svg`/`design/logo.svg`/favicon
+files are still the old set.
+
+- **Color: the gradient is decorative only, scoped to the logo/icon artwork.** User confirmed
+  2026-09-04: `--color-brand` stays solid `#0B53BF` everywhere it's used today (buttons, nav active
+  state, filters, borders) – NOT replaced app-wide. The vertical gradient `#00C0E8` (top) →
+  `#0B53BF` (bottom) applies only to the logo mark itself (already baked into `logo.svg`/`full.svg`/
+  `icon.svg` as a `linearGradient` fill), not to any UI chrome. No `--color-brand` change needed when
+  this work resumes.
+- **Primary font:** SF Pro (not SF Pro Rounded – that was for the logo specifically, see below).
+  Note from the font discussion earlier: SF Pro is what Apple/Figma now call the unified family
+  (the old separate "SF Pro Display"/"SF Pro Text" naming is gone). This is a system font already
+  covered by the existing `--font-base` stack (`-apple-system` resolves to it on Apple devices) – no
+  webfont download needed for this part.
+- **Logo font:** SF Pro Bold.
+
+### The new logo set – 4 files on the user's Desktop (`C:\Users\Dell\Desktop\`)
+
+| File | Purpose | Checked, 2026-09-04 |
+|---|---|---|
+| `logo.svg` | Mark only, no wordmark | OK – 512×406, gradient top `#00C0E8` → bottom `#0B53BF`, matches spec |
+| `full.svg` | Mark + "wallet" wordmark | OK, but the wordmark is solid black (`fill="black"`), not on the gradient – only the mark itself carries it. Confirm this is intentional before use. |
+| `icon.svg` | Favicon / app icon | OK – 512×512, same mark, same gradient |
+| `pfp.svg` | Future app PFP | **EMPTY – just a white 512×512 rectangle, no artwork.** Needs re-export before this is usable for anything. |
+
+---
+
 ## 4. Layout constants (for matching the app's existing grid, if the new design reuses it)
 
 - Screen frame: `max-width: 430px` (`--screen-max`), a 10-row CSS grid (`.screen`,
   `grid-template-rows: repeat(10, 1fr)`).
-- Brand color: `#0B53BF` (`--color-brand`).
+- Brand color: `#0B53BF` (`--color-brand`) – unchanged, stays solid app-wide (see section 3b: the
+  gradient is logo-only, not a replacement for this).
 - Button/slogan text size: 21px (`--fs-md-lg`).
 - Existing rule (CLAUDE.md): English only, en dash `–` only (never em dash `—`), no
   "grandma"/"stablecoin wallet" phrasing – the settled line is *"A crypto wallet simple enough for

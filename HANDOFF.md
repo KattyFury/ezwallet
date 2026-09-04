@@ -1,6 +1,61 @@
 # HANDOFF – EZwallet
 
-**Updated:** 2026-09-04 · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
+**Updated:** 2026-09-04 (later same day) · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
+
+## 🔐 MANDATORY PIN VIA PRIVY DUAL-APPROVAL - BUILT, PARTIALLY VERIFIED, NOT LIVE YET
+
+Full plan: `C:\Users\Dell\.claude\plans\gentle-jumping-puppy.md` (approved this session). Real
+security decision (`EZWALLET-SIGNIN-DECISIONS.md`): PIN is a MANDATORY baseline for every user,
+using Privy's actual dual-approval mechanism (a server-held authorization key co-signs alongside the
+user's own wallet key) - NOT the old Circle-era fake PIN removed 08-30.
+
+**Done and code-verified:**
+- `functions/api/pin.js` (new) - `nonce`/`session`/`set` (PIN hashing: PBKDF2-SHA256 via Web Crypto,
+  salt+iterations stored per-record) + `sign` (verifies PIN with a 4-attempts/5-min lockout, then
+  co-signs with `PRIVY_AUTH_KEY` and relays to Privy's real REST API). Wired into `dev-server.js`.
+  **Ran a full local end-to-end test** (throwaway wallet, real signature round-trip, wrong-PIN
+  lockout counting down correctly, right-PIN reaching Privy's real API) - the only reason it didn't
+  fully succeed is the test used a fake wallet ID on purpose (Privy correctly returned "Invalid
+  wallet ID"), which is expected until the real wallet is reassigned (see below).
+- `src/pinSigner.js` (`usePinSigner().signWithPin(...)`) + `src/pinGate.js` (imperative
+  `requestPin()` bridge) + `src/components/PinGateHost.jsx` (the actual sheet, mounted once in
+  `App.jsx` next to `<BugButton>`). Matches Figma frames 3/4/5 (fileKey `l26UsgoqIDfvLkrozVLPTq`)
+  pixel-for-pixel - **verified visually via screenshots of every state** (empty, wrong-PIN error,
+  set→confirm transition, PIN mismatch restart), not just "it builds".
+  ⚠️ Caught by that testing, not by inspection: the numpad's digit handler originally read `digits`
+  from a stale render closure, which drops a digit under React 18 batching if two taps land before a
+  re-render (a real risk on a touchscreen 6-digit PIN, not just a test artifact) - fixed to the
+  functional `setState` form + a `useEffect` watching completion, before this was called done.
+- `SendConfirm.jsx` and `Swap.jsx` both now call `signWithPin(...)` instead of `sendTransaction(...)`
+  - a dual-approval wallet's own key can only produce HALF the required signatures, so
+    `useSendTransaction()` cannot be used for these any more at all.
+- **Manual setup done:** P-256 authorization keypair generated locally (PKCS8 format specifically -
+  `@privy-io/node` rejects the SEC1 format `openssl ecparam` produces by default, caught by actually
+  trying it, not by reading the format name). Key quorum created via Privy's real REST API
+  (`p1loakdgs7wvd40loha4pf70` - id kept in `.env.txt`, not a secret itself). Both `PRIVY_AUTH_KEY`
+  and `PRIVY_APP_SECRET` are in `.env.txt` (gitignored).
+
+**Deliberately NOT done yet (staged, per the approved plan):**
+- **The founder's test wallet has NOT been reassigned to the quorum.** Doing that now would make
+  `sendTransaction()`-based sending fail immediately for everyone, including on `main`/prod, before
+  this replacement flow has been tested live - this is the correct order, not a forgotten step.
+  Wallet: `uihroi7x6jthz2f7bsvcdyzh` (address `0x0eE44Ec95898682658Bb3847a854b25D165610D7`), user
+  `did:privy:cmtensenf01gg0dl80n3mhpyq`. Reassign via `PATCH` on the wallet with
+  `owner_id: p1loakdgs7wvd40loha4pf70`, THEN a real Arc Testnet send from a live deploy is the actual
+  end-to-end test (same constraint as every wallet flow in this app - Privy does not run on
+  localhost).
+- No PIN has been SET for any wallet yet (the `set` action works, verified in isolation, but nothing
+  has called it against the real founder wallet).
+- Export wallet (`Security.jsx`) is explicitly OUT of scope for this round - Privy's docs mention a
+  1-of-k quorum config where the server key can export UNILATERALLY, the opposite of the intent here;
+  needs its own read before touching, not blocking Send/Swap.
+- Privy's pricing for dual-approval was not confirmed with their support (not found gated on the
+  public pricing page, judged good enough to proceed on - see the plan file for the reasoning).
+
+**One habit fixed mid-session, worth repeating:** the authorization private key was briefly printed
+into the chat transcript by mistake while generating it - caught immediately, moved to `.env.txt`,
+temp files deleted. Never print a real secret into chat output again; write straight to the gitignored
+file instead.
 
 ### 🔗 THE 4 OFFICIAL LINKS - use this set when introducing the project (user decision 08-04)
 | | |

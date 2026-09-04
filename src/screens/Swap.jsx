@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { useSendTransaction } from '@privy-io/react-auth'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
 import PctSlider from '../components/PctSlider'
 import Numpad from '../components/Numpad'
 import { estimateSwap, executeSwap } from '../circle'
-import { ensureWalletAddress, privyErrorMessage } from '../privy'
+import { ensureWalletAddress } from '../privy'
+import { usePinSigner, pinErrorMessage } from '../pinSigner'
 import { MOCK } from '../mock'
 import { getTokenBalances, getDisplayRates, cachedRates, cachedBalances, estimateFeeUsd, arcTestnet } from '../chain'
 import { spendableOf, floorTo, getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency } from '../data'
@@ -66,7 +66,7 @@ function TokenPicker({ current, onSelect, onClose }) {
 
 export default function Swap() {
   const { navigate } = useNav()                  // the row 10 Exit button → back to Service Hub
-  const { sendTransaction } = useSendTransaction()
+  const { signWithPin } = usePinSigner()
   const [fromSym, setFromSym] = useState('EURC') // default: the "out of USDC" rescue → swap another token INTO USDC
   const [toSym, setToSym] = useState('USDC')
   const [pct, setPct] = useState(0)              // the selected % OF BALANCE (0-100) - the single source of truth for the amount
@@ -239,13 +239,10 @@ export default function Swap() {
       if (!MOCK) {
         // ONE signature for the whole thing: Multicall3From batches [approve, adapter.execute], which
         // is why this is a single send and not two.
-        // ⚠️ No `uiOptions: { showWalletUIs: false }` - see the long note in SendConfirm.jsx. Short
-        // version: that flag makes Privy try to sign WITHOUT prompting, which a fingerprint-guarded
-        // wallet cannot do, and the whole thing fails with a 401 from wallets/authenticate.
-        await sendTransaction(
-          { to: res.to, data: res.data, value: res.value, chainId: arcTestnet.id },
-          { address: walletAddress },
-        )
+        // PIN dual-approval (2026-09-04), NOT sendTransaction() - see the long note in
+        // SendConfirm.jsx / src/pinSigner.js. Short version: a quorum-owned wallet's own key can only
+        // produce half the signatures Privy requires, so sendTransaction() alone cannot sign this.
+        await signWithPin({ to: res.to, data: res.data, value: res.value, chainId: arcTestnet.id, address: walletAddress })
       }
 
       // ✅ STATE 1 - the swap has been SUBMITTED to Arc ("successfully requested")
@@ -273,8 +270,8 @@ export default function Swap() {
       setTimeout(() => { setSuccess(false); setStatus('') }, 3500)   // auto-hide, back to the plain "Swap" button
     } catch (e) {
       setLoading(false)
-      const msg = privyErrorMessage(e)
-      if (!msg) { setStatus(''); return }   // the user closed Privy's flow themselves → stay silent
+      const msg = pinErrorMessage(e)
+      if (!msg) { setStatus(''); return }   // the user closed Privy's flow / the PIN sheet themselves → stay silent
       // Swap failed → the same merged notification, ending in "(failed)" (user decision 07-20)
       addNotif(`Swapped ${amountNum} ${fromSym} to ${toSym} (failed)`, 'error', null, `swap-fail-${Date.now()}`)
       setError(msg); setStatus('')
