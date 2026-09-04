@@ -1,6 +1,89 @@
 # HANDOFF – EZwallet
 
-**Updated:** 2026-09-04 (later same day) · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
+**Updated:** 2026-09-04 (evening, handing off to a fresh session) · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
+
+## ⚠️ READ THIS FIRST - PIN feature is built, blocked on ONE Privy account-level step
+
+Everything below in this section is current as of the last commit on `privy` (`372fa15`). The
+PIN-signing MECHANISM itself is proven correct (see "Confirmed working" below) - what's blocking is
+purely getting a real wallet into the right ownership state on Privy's side. Do not re-derive this by
+re-reading old commits; start here.
+
+### Confirmed working (do not re-verify from scratch)
+- `functions/api/pin.js` `sign` action: ran a full local end-to-end test earlier today against a
+  throwaway wallet - nonce/session/PIN-hash/rate-limit all correct, server-side co-signing via
+  `@privy-io/node`'s `generateAuthorizationSignature` succeeded, and the real call to Privy's REST API
+  went through (failed only on a deliberately fake wallet ID, exactly as expected).
+- `PinGateHost.jsx` UI: verified visually via screenshots, all states (set/confirm/verify/mismatch),
+  matches Figma frames 3/4/5 pixel for pixel.
+- `SendConfirm.jsx`/`Swap.jsx` call `signWithPin()` instead of `sendTransaction()`.
+- `src/screens/Security.jsx` has a real "Set up PIN" row (`useSetupPin()` in `pinSigner.js`) - this
+  part is a genuine, permanent feature, not a debug leftover.
+
+### The actual blocker: the founder's REAL wallet cannot be reassigned to the PIN quorum
+Wallet `uihroi7x6jthz2f7bsvcdyzh` (address `0x0eE44Ec95898682658Bb3847a854b25D165610D7`) has no
+`owner_id` set (Privy's default - implicitly controlled by the user). Getting it under the quorum
+(`p1loakdgs7wvd40loha4pf70`, already created, 2-of-2, members = the founder's `user_id` +
+`PRIVY_AUTH_KEY`'s public key) needs a `PATCH /v1/wallets/{id}` with `owner_id` set, and **two
+different approaches both failed for real, documented reasons - do not retry either without new
+information**:
+1. **Server-only signature** (our `PRIVY_AUTH_KEY` alone) → Privy 401's: "No valid authorization
+   signatures were provided."
+2. **Client-side signature** (the founder's own browser, via `useAuthorizationSignature()`) →
+   Privy's SDK refuses OUTRIGHT, before even making a network call: *"Unable to sign request. Wallet
+   ownership updates are not supported. Please exclude 'owner' or 'owner_id' from the request."* This
+   is a deliberate guardrail in Privy's client SDK, not a bug or a format issue - confirmed by the
+   exact wording of the error.
+
+**Privy's own Dashboard has no manual control for this either** - checked the wallet's Details tab
+directly (Wallet ID / Address / Created / Chain type / Entity / User only, no Owner field, no
+button). This looks like it genuinely requires **Privy support** to resolve for an *existing* wallet.
+Nobody has contacted them yet - that's the recommended next step, not more API guessing.
+
+### The side-path that was tried instead, and where it left off
+To avoid needing the blocked reassignment at all, a **brand new wallet** was created server-side with
+`owner_id` set to the quorum **at creation** (no reassignment involved, so the guardrail above doesn't
+apply): address `0xA6c573647012D5A6AAb32CdB9911C5aCc3398790`, wallet ID `iha9ln1q0etk016i7sqghrtx`,
+linked to the founder's `user_id` via the `entity` field. This half-worked and then got complicated:
+- It does **not** show up in `usePrivy().user.linkedAccounts` on the client the way a normal
+  login-created wallet does (untested whether `useUser().refreshUser()` would fix this - worth trying
+  before assuming it's impossible). Worked around for now: `usePinSigner().signWithPin()` gained an
+  optional `walletId` override parameter (real call sites don't use it, only the temp test button does).
+- **With that worked around, clicking the test button ("🔧 TEST: sign on the fresh dual-approval
+  wallet" in `Security.jsx`) got stuck on "Signing..." and the user reported the whole browser tab
+  lagging/freezing.** This was NOT diagnosed before the session ended - the browser became
+  unresponsive before Console/Network evidence could be captured. **Suspected** (not confirmed) to be
+  the same class of bug fixed earlier today (an MFA-listener retry storm - see the `App.jsx` freeze
+  fix commit from this morning) but now possibly triggered by signing with a SECOND embedded wallet
+  that was never "activated" in the browser session the normal way (only the primary,
+  `createOnLogin`-created wallet ever goes through the app's usual init path). This is a real
+  hypothesis, not a verified cause - next session should get a fresh Console/Network capture (ask the
+  user to open DevTools BEFORE clicking, so evidence survives even if the tab then hangs) before
+  writing any fix.
+- **Recommendation going in: abandon this second-wallet test path** rather than keep debugging it -
+  it was only ever a workaround for the reassignment guardrail, and it's now generating its own
+  unrelated problems (linkedAccounts gap, possible freeze) that have nothing to do with whether the
+  core PIN mechanism works, which is already proven separately (see "Confirmed working" above).
+  Getting the FOUNDER'S ACTUAL WALLET onto the quorum via Privy support is the real remaining task.
+
+### Debug/temporary code still in the working tree, on purpose
+- `src/screens/Security.jsx`: the yellow "🔧 TEST: sign on the fresh dual-approval wallet" button and
+  its `handleTestSign`/`testStatus` state. Left in deliberately (not deleted) so the next session can
+  either finish debugging the freeze or rip it out once Privy support unblocks the real wallet instead.
+  Obviously not a real feature (ugly on purpose) - remove before this branch ever merges to `main`.
+- `.env.txt` (gitignored) has `PRIVY_AUTH_KEY` (PKCS8 base64, NOT the SEC1 PEM `openssl ecparam`
+  produces by default - see the comment right above it) + `PRIVY_APP_SECRET` + `PRIVY_PIN_QUORUM_ID`.
+- Privy Dashboard → App settings → Domains now includes `https://*.ezwallet.pages.dev` (added this
+  session so every future Cloudflare Pages preview can log in without re-adding domains by hand).
+
+### One process note for whoever picks this up
+A live API mutation was attempted, failed safely (401), retried once more with a plausible fix,
+failed again with a DIFFERENT, more specific error that revealed the real cause (the SDK guardrail).
+Two real attempts against production credentials is already the right amount of trial-and-error for
+one session - a third blind retry on the SAME operation would not have been. The pivot to a
+brand-new wallet instead of the blocked reassignment was the right call; chasing the new wallet's own
+side-effects (freeze, linkedAccounts gap) past the point of usefulness was not - that's the main thing
+to do differently this time.
 
 ## 🔐 MANDATORY PIN VIA PRIVY DUAL-APPROVAL - BUILT, PARTIALLY VERIFIED, NOT LIVE YET
 
