@@ -38,7 +38,14 @@ export const privyConfig = {
   // those except production. (The absolute URL IS what the Privy DASHBOARD needs, which is a
   // different thing entirely - see HANDOFF.)
   appearance: {
-    logo: '/logo.png',
+    // NO LOGO INSIDE PRIVY'S BOX (user decision 2026-09-04). The app already shows its logo on the
+    // sign-in screen itself, and repeating it inside the box puts the same mark on screen twice.
+    // ⚠️ THE EMPTY STRING IS LOAD-BEARING - do not "tidy" this key away. The SDK resolves the logo as
+    // `appearance.logo ?? logo_url ?? undefined` (read out of the shipped bundle, context-*.mjs), and
+    // `??` only falls through on null/undefined. Deleting this line therefore does NOT mean "no logo",
+    // it means "whatever logo is set in the Privy DASHBOARD" - which is exactly the surprise this
+    // comment exists to prevent. An empty string stops at the first step and nothing is drawn.
+    logo: '',
     accentColor: '#0B53BF',   // = --color-brand in src/index.css. Keep the two in step.
     walletChainType: 'ethereum-only',
     // EMAIL FIRST, ON PURPOSE. This puts the email field at the top of the modal and MetaMask below

@@ -1,6 +1,6 @@
+import { useEffect, useRef } from 'react'
 import logoLong from '../../design/logo.svg'
-import Icon from '../components/Icon'
-import { usePrivy } from '@privy-io/react-auth'
+import { usePrivy, useModalStatus } from '@privy-io/react-auth'
 
 // This screen used to carry ~150 lines of Circle plumbing: a lazy-loaded W3SSdk, a deviceId
 // fingerprint, four cookies to survive the Google OAuth redirect, and an onLoginComplete callback
@@ -20,9 +20,32 @@ import { usePrivy } from '@privy-io/react-auth'
 // that used to do this - two steps, its own OTP field, its own error wording - is deleted: it was a
 // second implementation of a flow Privy already ships, and every bug in it would have been ours.
 //
-// What is left is what this screen was always FOR: the logo, the promise, and one button.
+// SINCE 2026-09-04 THE MODAL OPENS BY ITSELF, so this screen is mostly what stands BEHIND it - and
+// Privy's overlay covers it and blurs it - measured, not assumed: `#privy-dialog-backdrop` comes back
+// position:fixed at the full viewport. The logo and the promise stay here anyway, and Privy's box
+// carries NO logo of its own (appearance.logo is '' in src/privy.js), so the mark is on screen once.
 export default function Login() {
   const { login } = usePrivy()
+
+  // OPEN IT WITHOUT BEING ASKED, AND DO NOT LET IT BE CLOSED (user decision 2026-09-04). Arriving at
+  // a sign-in screen and having to press "sign in" before being allowed to sign in is a step carrying
+  // no information, and there is nothing behind the modal to escape TO - so the X and a click on the
+  // backdrop lead nowhere and must not work.
+  //
+  // Privy ships no flag for this: `LoginModalOptions` is only loginMethods / prefill / disableSignup /
+  // walletChainType (types-Ck8tvlPZ.d.ts:2709). So the modal is REOPENED whenever it reports itself
+  // closed, which covers every way out at once - the X, the backdrop, Escape - without reaching into
+  // Privy's DOM to hide anything.
+  //
+  // ⚠️ `isOpen` IS THE ONLY DEPENDENCY, and `login` is deliberately NOT one. Privy hands back a fresh
+  // function identity on renders, and an effect that calls `login()` and depends on `login` is the
+  // render loop that froze this app on 08-30, in a new place. The ref holds the live one.
+  const { isOpen } = useModalStatus()
+  const loginRef = useRef(login)
+  loginRef.current = login
+  useEffect(() => {
+    if (!isOpen) loginRef.current()
+  }, [isOpen])
 
   return (
     <div className="screen">
@@ -42,18 +65,9 @@ export default function Login() {
         </span>
       </div>
 
-      {/* The Sign in with Email button - on the row 9-10 boundary (the bottom edge of rows 9/11, like every other screen) */}
-      <div style={{ gridRow: '9 / 11', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2dvh' }}>
-        {/* onClick={() => login()}, NOT onClick={login}: React hands the click event to the handler,
-            and `login` treats an argument as its options object (LoginModalOptions | MouseEvent - it
-            does accept a MouseEvent, but wrapping it keeps the intent obvious and survives refactors). */}
-        <button className="btn btn-primary"
-          style={{ width: '80%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10 }}
-          onClick={() => login()}>
-          <Icon name="mail" size="var(--is-md-lg)" />
-          <span style={{ whiteSpace: 'nowrap' }}>Sign in with Email</span>
-        </button>
-      </div>
+      {/* THE SIGN-IN BUTTON IS GONE (2026-09-04). It was the only thing in rows 9-11, and it had
+          nothing left to do: the modal is already open on arrival and cannot be dismissed, so a button
+          to open it could never be reached, let alone pressed. */}
     </div>
   )
 }
