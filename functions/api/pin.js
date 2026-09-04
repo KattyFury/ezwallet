@@ -176,6 +176,41 @@ export async function onRequestPost(ctx) {
     return json({ hash: data?.data?.hash ?? data?.hash ?? null, raw: data });
   }
 
+  // ── TEMPORARY, ONE-TIME (2026-09-04) - remove after the founder wallet is reassigned to the PIN
+  // quorum. This is a bootstrapping step, not a feature: Privy rejected the same PATCH signed only
+  // with the server's own authorization key (401, "no valid authorization signatures") - docs say
+  // "signatures from the wallet's owner are required by default", and today's implicit owner is the
+  // USER, not any authorization key, so this needs the FOUNDER'S OWN signature, which only their live
+  // browser session can produce. Gated to the one known wallet so this cannot be pointed at anyone
+  // else's wallet even while it exists.
+  if (action === 'assign-owner') {
+    if (!ctx.env.PRIVY_APP_SECRET) return json({ error: 'pin-signing-disabled' }, 503);
+    const { requestPayload, userSignature } = body;
+    const EXPECTED_URL = 'https://api.privy.io/v1/wallets/uihroi7x6jthz2f7bsvcdyzh';
+    const EXPECTED_BODY = JSON.stringify({ owner_id: 'p1loakdgs7wvd40loha4pf70' });
+    if (requestPayload?.url !== EXPECTED_URL || requestPayload?.method !== 'PATCH' || JSON.stringify(requestPayload?.body) !== EXPECTED_BODY) {
+      return json({ error: 'bad-request-payload' }, 400);
+    }
+    if (typeof userSignature !== 'string' || !userSignature) return json({ error: 'user-signature required' }, 400);
+    let privyRes, data;
+    try {
+      privyRes = await fetch(requestPayload.url, {
+        method: 'PATCH',
+        headers: {
+          'privy-app-id': PRIVY_APP_ID,
+          Authorization: `Basic ${btoa(`${PRIVY_APP_ID}:${ctx.env.PRIVY_APP_SECRET}`)}`,
+          'Content-Type': 'application/json',
+          'privy-authorization-signature': userSignature,
+        },
+        body: JSON.stringify(requestPayload.body),
+      });
+      data = await privyRes.json().catch(() => ({}));
+    } catch {
+      return json({ error: 'privy-unreachable' }, 502);
+    }
+    return json({ status: privyRes.status, data }, privyRes.ok ? 200 : 502);
+  }
+
   return json({ error: 'unknown action' }, 400);
 }
 

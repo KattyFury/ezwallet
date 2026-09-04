@@ -1,8 +1,8 @@
 import { useState } from 'react'
-import { usePrivy, useWallets, useExportWallet, useMfaEnrollment, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
+import { usePrivy, useWallets, useExportWallet, useMfaEnrollment, useAuthorizationSignature, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
-import { privyErrorMessage } from '../privy'
+import { privyErrorMessage, PRIVY_APP_ID } from '../privy'
 import { useSetupPin, pinErrorMessage } from '../pinSigner'
 
 export default function Security() {
@@ -11,6 +11,7 @@ export default function Security() {
   const { wallets } = useWallets()
   const { exportWallet } = useExportWallet()
   const { showMfaEnrollmentModal } = useMfaEnrollment()
+  const { generateAuthorizationSignature } = useAuthorizationSignature()
 
   // ⚠️ TWO OF THE ROWS BELOW ONLY EXIST FOR A PRIVY-MADE WALLET, and hiding them is honesty rather
   // than tidiness. Someone who signed in with MetaMask owns their key already - Privy cannot export
@@ -110,6 +111,36 @@ export default function Security() {
     }
   }
 
+  // ══ TEMPORARY, ONE-TIME BOOTSTRAP (2026-09-04) - remove this whole block once clicked once ══
+  // Assigns this wallet's owner to the PIN quorum. Cannot be done from the Privy dashboard (no such
+  // control exists there, confirmed by checking) or from the server alone (Privy rejected a PATCH
+  // signed only with the server's authorization key - the wallet's CURRENT implicit owner is the
+  // user, and only the user's own live signature satisfies "signatures from the wallet's owner are
+  // required by default"). This is the only place that signature can come from.
+  const [ownerStatus, setOwnerStatus] = useState('')
+  async function handleAssignOwner() {
+    setOwnerStatus('Signing...')
+    try {
+      const requestPayload = {
+        version: 1,
+        method: 'PATCH',
+        url: 'https://api.privy.io/v1/wallets/uihroi7x6jthz2f7bsvcdyzh',
+        headers: { 'privy-app-id': PRIVY_APP_ID },
+        body: { owner_id: 'p1loakdgs7wvd40loha4pf70' },
+      }
+      const { signature } = await generateAuthorizationSignature(requestPayload)
+      const res = await fetch('/api/pin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'assign-owner', requestPayload, userSignature: signature }),
+      })
+      const d = await res.json()
+      setOwnerStatus(res.ok ? 'Done! ' + JSON.stringify(d.data) : 'Failed: ' + JSON.stringify(d))
+    } catch (e) {
+      setOwnerStatus('Error: ' + (pinErrorMessage(e) || e.message))
+    }
+  }
+
   const email = localStorage.getItem('ez_google_email') || localStorage.getItem('ez_email') || '…'
   const walletAddr = localStorage.getItem('ez_wallet_addr') || '…'
   const shortAddr = walletAddr !== '…' ? walletAddr.slice(0, 10) + '...' + walletAddr.slice(-6) : '…'
@@ -187,6 +218,17 @@ export default function Security() {
               : 'Turn on Fingerprint or Face ID so nobody else can send money from this wallet. Your private key opens this wallet in any other crypto app - never share it.'}
         </span>
       </div>
+
+      {/* TEMPORARY - remove this whole row once clicked once successfully. Deliberately ugly/unstyled
+          so nobody mistakes it for a real feature. */}
+      {isEmbedded && (
+        <div className="row-9" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <button onClick={handleAssignOwner} style={{ background: '#ffe27a', border: '1px solid #333', borderRadius: 8, padding: '6px 10px', fontSize: 12 }}>
+            🔧 ONE-TIME: assign wallet owner to PIN quorum
+          </button>
+          {ownerStatus && <span style={{ fontSize: 11, wordBreak: 'break-all' }}>{ownerStatus}</span>}
+        </div>
+      )}
 
       <div className="row-10 row10-single">
         <button className="btn btn-primary" onClick={() => navigate('MenuScreen')}>Back</button>
