@@ -1,9 +1,10 @@
 import { useState } from 'react'
-import { usePrivy, useWallets, useExportWallet, useMfaEnrollment, useAuthorizationSignature, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
+import { usePrivy, useWallets, useExportWallet, useMfaEnrollment, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
-import { privyErrorMessage, PRIVY_APP_ID } from '../privy'
-import { useSetupPin, pinErrorMessage } from '../pinSigner'
+import { privyErrorMessage } from '../privy'
+import { useSetupPin, usePinSigner, pinErrorMessage } from '../pinSigner'
+import { arcTestnet } from '../chain'
 
 export default function Security() {
   const { navigate } = useNav()
@@ -11,7 +12,7 @@ export default function Security() {
   const { wallets } = useWallets()
   const { exportWallet } = useExportWallet()
   const { showMfaEnrollmentModal } = useMfaEnrollment()
-  const { generateAuthorizationSignature } = useAuthorizationSignature()
+  const { signWithPin } = usePinSigner()
 
   // ⚠️ TWO OF THE ROWS BELOW ONLY EXIST FOR A PRIVY-MADE WALLET, and hiding them is honesty rather
   // than tidiness. Someone who signed in with MetaMask owns their key already - Privy cannot export
@@ -111,33 +112,23 @@ export default function Security() {
     }
   }
 
-  // ══ TEMPORARY, ONE-TIME BOOTSTRAP (2026-09-04) - remove this whole block once clicked once ══
-  // Assigns this wallet's owner to the PIN quorum. Cannot be done from the Privy dashboard (no such
-  // control exists there, confirmed by checking) or from the server alone (Privy rejected a PATCH
-  // signed only with the server's authorization key - the wallet's CURRENT implicit owner is the
-  // user, and only the user's own live signature satisfies "signatures from the wallet's owner are
-  // required by default"). This is the only place that signature can come from.
-  const [ownerStatus, setOwnerStatus] = useState('')
-  async function handleAssignOwner() {
-    setOwnerStatus('Signing...')
+  // ══ TEMPORARY TEST (2026-09-04) - remove this whole block after verifying ══
+  // The earlier owner-reassignment attempt on the EXISTING wallet was refused outright by Privy's
+  // client SDK ("Wallet ownership updates are not supported") - a deliberate guardrail, not something
+  // to work around. This tests the real dual-approval mechanism instead on a FRESH wallet
+  // (0xA6c573647012D5A6AAb32CdB9911C5aCc3398790) created server-side with the quorum as owner FROM
+  // CREATION, so no reassignment/guardrail is involved at all. It has no funds, so an
+  // insufficient-funds error back is the expected SUCCESS signal here - it means the PIN check and
+  // both signatures were accepted, and the chain only stopped at "nothing to send".
+  const TEST_WALLET = '0xA6c573647012D5A6AAb32CdB9911C5aCc3398790'
+  const [testStatus, setTestStatus] = useState('')
+  async function handleTestSign() {
+    setTestStatus('Signing...')
     try {
-      const requestPayload = {
-        version: 1,
-        method: 'PATCH',
-        url: 'https://api.privy.io/v1/wallets/uihroi7x6jthz2f7bsvcdyzh',
-        headers: { 'privy-app-id': PRIVY_APP_ID },
-        body: { owner_id: 'p1loakdgs7wvd40loha4pf70' },
-      }
-      const { signature } = await generateAuthorizationSignature(requestPayload)
-      const res = await fetch('/api/pin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'assign-owner', requestPayload, userSignature: signature }),
-      })
-      const d = await res.json()
-      setOwnerStatus(res.ok ? 'Done! ' + JSON.stringify(d.data) : 'Failed: ' + JSON.stringify(d))
+      const { hash } = await signWithPin({ to: TEST_WALLET, data: '0x', chainId: arcTestnet.id, address: TEST_WALLET })
+      setTestStatus('Unexpected success, hash: ' + hash)
     } catch (e) {
-      setOwnerStatus('Error: ' + (pinErrorMessage(e) || e.message))
+      setTestStatus((e.code || e.message || 'error') + ': ' + (pinErrorMessage(e) || e.message))
     }
   }
 
@@ -219,14 +210,21 @@ export default function Security() {
         </span>
       </div>
 
-      {/* TEMPORARY - remove this whole row once clicked once successfully. Deliberately ugly/unstyled
-          so nobody mistakes it for a real feature. */}
+      {/* TEMPORARY - remove this whole row after the test. Deliberately ugly/unstyled so nobody
+          mistakes it for a real feature.
+          Privy's client SDK refused to sign the earlier owner-reassignment attempt outright
+          ("Wallet ownership updates are not supported") - a deliberate guardrail, not a format bug.
+          So this tests the REAL mechanism against a FRESH wallet created server-side with the quorum
+          as owner FROM CREATION (no reassignment needed, no guardrail hit): a self-send of 0 value on
+          the empty test wallet 0xA6c573647012D5A6AAb32CdB9911C5aCc3398790. It has no funds, so the
+          expected SUCCESS signal here is an insufficient-funds error - anything OTHER than an
+          authorization/signature error means the PIN + dual-approval chain itself is proven correct. */}
       {isEmbedded && (
         <div className="row-9" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-          <button onClick={handleAssignOwner} style={{ background: '#ffe27a', border: '1px solid #333', borderRadius: 8, padding: '6px 10px', fontSize: 12 }}>
-            🔧 ONE-TIME: assign wallet owner to PIN quorum
+          <button onClick={handleTestSign} style={{ background: '#ffe27a', border: '1px solid #333', borderRadius: 8, padding: '6px 10px', fontSize: 12 }}>
+            🔧 TEST: sign on the fresh dual-approval wallet
           </button>
-          {ownerStatus && <span style={{ fontSize: 11, wordBreak: 'break-all' }}>{ownerStatus}</span>}
+          {testStatus && <span style={{ fontSize: 11, wordBreak: 'break-all' }}>{testStatus}</span>}
         </div>
       )}
 
