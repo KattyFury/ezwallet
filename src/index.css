@@ -353,8 +353,14 @@ body {
   top: 30dvh;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 88%;
-  max-width: 340px;
+  /* 10 OF THE 12 COLUMNS - the SAME width as .pin-card (2026-09-05, DESIGN-GRID-390.md rule 2:
+     a card holding a FORM or a DIALOG sits at the 1-column inset, 325 wide on a 390 board).
+     The PIN sheet is the only dialog the Figma frames actually draw, so it is the reference every
+     other popup follows; this was `88%` capped at 340px, which came out 15px wider than it and made
+     two dialogs in the same app disagree. Screen-anchored, not a % of the parent: the overlay above
+     is position:fixed, so a percentage here would resolve against the VIEWPORT and grow past the
+     app frame on a desktop window. */
+  width: min(83.3333vw, calc(var(--screen-max) * 0.833333));
   max-height: 56dvh;
   overflow-y: auto;
   background: var(--color-white);

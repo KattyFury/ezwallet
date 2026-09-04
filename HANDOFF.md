@@ -1,6 +1,6 @@
 # HANDOFF – EZwallet
 
-**Updated:** 2026-09-04 (evening, handing off to a fresh session) · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
+**Updated:** 2026-09-05 (the new 12-column Figma grid is in on the 4 main screens) · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
 
 ## ⚠️ READ THIS FIRST - PIN feature is built, blocked on ONE Privy account-level step
 
@@ -147,6 +147,55 @@ file instead.
 | **GitHub** | https://github.com/KattyFury/ezwallet |
 | **Video** | https://youtu.be/UIR4Ee3Wp_Y |
 | **Deck** | https://canva.link/zr3ik84radd39vc |
+
+## 🎨 SESSION 2026-09-05: THE NEW 12-COLUMN FIGMA GRID IS IN, ON THE 4 MAIN SCREENS
+
+**Read `DESIGN-GRID-390.md` (new, repo root) before touching any layout.** It holds every measured
+coordinate from Figma frames 1-10 plus the six rules derived for the screens Figma has NOT drawn.
+
+- **The file was redrawn on a 390×844 board with a 12-column grid (32.5px columns).** Frames 1-7, 9
+  and 10 are detailed; **Frame 8 does not exist** (the file jumps 7 → 9), and `04-Swap`,
+  `07-PasteAddress` … `20-About` are still bare placeholder rectangles - they are meant to be built
+  in code from the rules, which is what the doc is for.
+- **⚠️ 390 IS THE DRAWING FRAME, NOT A LOCK (user decision 09-05).** `--screen-max` STAYS 430 and the
+  app keeps flexing. So a column is a PERCENTAGE (1 col = 8.3333%), never 32.5px, and a row is dvh
+  (1 row = 10dvh - the existing `.screen` 10-row grid already IS the vertical half of this grid).
+  Verified across 360/390/430/500: nav tab 90/97.5/107.5/107.5, card 320/350/390/390, no overflow.
+- **What actually changed:** ServiceHub redrawn to frame 10 (three full-width horizontal cards, icon
+  left + title + description right, replacing the 2-column square tiles - the descriptions and the
+  labels *Exchange*/*PigSave* are content that exists only in the frame) · the Home cards moved up to
+  15.62dvh and **Receive gained the card it never had** (its QR floated on white) · the action row
+  re-measured to **94.31 / 127.7 / 94.31 with a 16.84 gap**, the centre card now bigger in BOTH
+  directions · MenuScreen: frame 9 CONFIRMED the existing row placement to the dvh, so only
+  Deposit/Withdraw swapped sides and the 4 dividers were added · Login + `.pin-card` + `.popup-card`:
+  hardcoded 325/340px became the proportional 10 columns.
+- **⚠️ TWO GRID BUGS FOUND BY MEASURING, and both were app-wide, not cosmetic:**
+  1. **A fixed-height grid item STRETCHES the ten tracks.** `repeat(10, 1fr)` is really
+     `minmax(auto, 1fr)`, so the tall Home card pushed rows 2-5 to 94.94px and squeezed rows
+     1/6/7/8/10 to 75.95 - the navbar row lost 8px. **Every screen in the app is laid out on those
+     rows being equal.** The Home cards are `position: absolute` instead, which is what their exact
+     dvh coordinates mean anyway. Do not put a fixed-height item back into those tracks.
+  2. **Overlapping rows create a SECOND COLUMN.** An auto-placed item that would overlap one already
+     placed is moved to the next column instead, and the implicit column is born there - the balance
+     was exiled into a 133px column 2 and the whole screen skewed. Fixed app-wide with
+     **`.screen > * { grid-column: 1 / 2; }`**. The **`/ 2` is load-bearing**: a bare `1` leaves the
+     END line `auto`, which for an ABSOLUTE child resolves to the container's PADDING edge, giving a
+     lopsided 20→390 containing block. With `1 / 2` it is the real column-1 area (20→370), so
+     `left/right: 0` = the app's 20px margins.
+- **Verified at 390×844 with Playwright** (not "it should work"): ten equal 84.39px rows · action
+  cards 94.3/127.7/94.3 with all three centres at **cy=709**, the concentric invariant in §6 intact ·
+  Home card at x=20 w=350 against Figma's 19.97/350.06 · popup at x=32.5 w=325 = frame 2/3's card
+  exactly · no horizontal overflow, no page errors. `npm run build` clean, `npm test` 16/16.
+- **🔴 ONE THING DELIBERATELY NOT DONE, needs the user:** frame 7 labels the centre Receive button
+  **"Custom QR"**; the code says **"Create QR"**. §6 lists that hint/button text as *settled* and
+  "do not edit it yourself", and the frame carries the label as **two overlapping duplicate text
+  nodes** (`14:692` + `14:834`) - which reads as an edit in progress, not a decision. Renaming the
+  button also forces the NotifArea hint to change (§6: a hint's label MUST match its button).
+- **Not done:** the ~15 sub-screens beyond the 4 main ones were NOT restyled. Frame 9 showed the
+  existing 10-row system already IS this grid, so they comply structurally; what is genuinely open is
+  whether Menu's new dividers should spread to the other lists - **TxHistory has an explicit
+  contrary decision in §6 ("NO grey separator lines") and no frame of its own**, so nothing was
+  inferred onto it.
 
 ## 🚧 SESSION 2026-09-04: FOUND + FIXED THE APP-FREEZE, PAUSED THE SIGN-IN SCREEN FOR A DESIGN PASS
 
