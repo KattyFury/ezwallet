@@ -65,15 +65,30 @@ export default function HomeReceive() {
         <QRCodeCanvas value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" includeMargin />
       </div>
 
-      {/* The QR is anchored to rows 3-5 exactly (user decision 07-19: it used to be 3-6 + paddingBottom "making room" for the
-          address line in row 6 → which pushed the QR off-centre within its 3-row block. Row 6 is now reserved for the
-          address button and no longer overlaps, so the QR centres cleanly inside its 3 rows). */}
-      <div style={{ gridRow: '3 / 6', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0 }}>
+      {/* ⚠️ THE QR NOW SITS ON A CARD (2026-09-05, Figma frame 7): a --color-surface rounded box at
+          15.62dvh → 55dvh, the SAME box as the token list on the Send tab (frame 6 draws them at
+          identical coordinates, x=19.97 w=350.06 y=131.87). Receive had no card at all before - the
+          QR floated on white - so the two tabs did not read as the same screen with different
+          contents. Positioned exactly as HomeSend's box; see the long note there for why the bottom
+          stays on the shared 55dvh line rather than frame 7's own 55.55, AND why this is absolutely
+          positioned rather than a grid item (a fixed-height grid item silently stretches the
+          10-row grid it sits in).
+          The QR stays CENTRED in the box (user decision 07-19: it was once rows 3-6 with a
+          paddingBottom "making room" for the address line, which pushed it off-centre - the address
+          button is absolute and overlaps nothing, so plain centring is correct). */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0, top: '15.62dvh', height: '39.38dvh',
+        background: 'var(--color-surface)', borderRadius: 20,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0,
+      }}>
         {/* ⚠️ No more bare `0x…` addresses (user decision 08-13) - EVM addresses are identical on EVERY
             chain, so a wallet on Ethereum/Base/BSC scanning it sends on the wrong chain and the money is GONE. buildQR wraps
             it in a private scheme + the Arc chainId; see src/qr.js.
             Anyone who needs the plain address (topping up from an exchange or another wallet) taps the copy button under the QR. */}
-        <QRCodeSVG value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" style={{ width: 'min(30dvh, 78vw)', height: 'min(30dvh, 78vw)' }} />
+        {/* 283.45 square on the 390×844 board (Figma frame 7) = 33.58dvh / 72.68vw, up from
+            min(30dvh, 78vw). ⚠️ ShowQR.jsx carries the SAME formula on purpose (HANDOFF §6: "the big
+            QR = the same size as on the Receive screen") - change one, change both. */}
+        <QRCodeSVG value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" style={{ width: 'min(33.58dvh, 72.68vw)', height: 'min(33.58dvh, 72.68vw)' }} />
       </div>
       {/* Address + copy: absolutely positioned at top 55% = the SAME coordinates as the "Hold to show tokens" button on Send
           (user decision 07-17f "all the better") - switching between the 2 tabs, the secondary line stays in one place.

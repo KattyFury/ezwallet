@@ -49,18 +49,31 @@ export default function Login() {
 
   return (
     <div className="screen">
-      {/* Rows 1-5: logo + slogan, centred */}
-      <div className="row-1-5 center col" style={{ gap: '3dvh' }}>
-        {/* 50% OF THE SCREEN WIDTH (user decision 07-17). Do NOT use width:'50%' - that is 50% of the
-            .row-1-5 frame, which is inset 20px each side, giving 175px = 44.9% of the screen. The frame/screen ratio also CHANGES by
-            device, so no fixed % of the frame equals 50% of the screen. Anchor it to the screen directly:
-            .screen = min(100vw, --screen-max) → half the screen = min(50vw, --screen-max / 2). */}
-        <img src={logoLong} alt="ezwallet" style={{ width: 'min(50vw, calc(var(--screen-max) / 2))' }} />
-        {/* EXACTLY as wide as the "Sign in with Email" button (user decision 07-17): the button = width 80% of the
-            gridRow 9/11 frame, and this span = 80% of the .row-1-5 frame - both frames are grid cells in the SAME COLUMN
-            of .screen, so they share a width → 80% matches 80%. No forced <br /> any more: the text wraps by itself
-            to that width (longer/shorter wording and font sizes still break correctly). */}
-        <span style={{ width: '80%', fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center' }}>
+      {/* ROWS 1-5, TOP-ALIGNED TO THE FIGMA COORDINATES (frames 1-2, DESIGN-GRID-390.md).
+          Not centred any more: the frames put this block at a MEASURED height, and centring it in
+          rows 1-5 floated it ~3.7dvh above where it is drawn. Converted with y/844 → dvh:
+            logo    y=180.91 h=55.44  → top 21.43dvh, bottom 28.0dvh
+            tagline y=257.69 h=46     → top 30.53dvh
+          ⇒ paddingTop 21.43dvh and a 2.5dvh gap reproduce both exactly.
+          The tagline sits UNDER Privy's card (which starts at row 4 = 30dvh), so it is only ever
+          visible in frame 1's state - i.e. before the modal paints. That overlap is Figma's, not a
+          mistake: frame 2 shows the card covering it. */}
+      <div className="row-1-5 col" style={{ alignItems: 'center', paddingTop: '21.43dvh', gap: '2.5dvh' }}>
+        {/* 6 OF THE 12 COLUMNS = 50% of the screen (Figma x=97.5 w=195 on a 390 board), which is
+            exactly what this already was (user decision 07-17) - the new grid confirms it rather
+            than changing it. Do NOT use width:'50%' - that is 50% of the .row-1-5 frame, which is
+            inset 20px each side, giving 175px = 44.9% of the screen. The frame/screen ratio also
+            CHANGES by device, so no fixed % of the frame equals 50% of the screen. Anchor it to the
+            screen directly: .screen = min(100vw, --screen-max) → half = min(50vw, --screen-max/2). */}
+        <img src={logoLong} alt="ezwallet" style={{ width: 'var(--col6)', maxWidth: 'min(50vw, calc(var(--screen-max) / 2))' }} />
+        {/* 259.8 / 390 = 66.6% OF THE SCREEN (Figma frames 2-5). This used to be "80% of the frame,
+            to match the Sign in with Email button" - that button was DELETED on 09-04, so the
+            rationale for 80% went with it and the measured width now governs. Screen-anchored for
+            the same reason as the logo above. */}
+        <span style={{
+          width: 'min(66.6vw, calc(var(--screen-max) * 0.666))',
+          fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center',
+        }}>
           {'Create a wallet with email, send & receive money easily'}
         </span>
       </div>

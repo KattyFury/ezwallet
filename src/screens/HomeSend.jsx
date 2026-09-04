@@ -117,11 +117,33 @@ export default function HomeSend() {
     <div className="screen">
       <BalanceHeader totalUsd={totalUsd} loading={loading} />
 
-      {/* Rows 3-5.5 (user decision 07-17f): a GREY surface BOX holding the token list - extended 5dvh further
-          down into half of row 6 (height calc below; the grid does not clip the overhang) so the "Hold to show
-          tokens" button (absolute top 55% = exactly the box's bottom edge) sits NEATLY INSIDE the box. Scrolling + the bottom fade live
-          on the INNER DIV - putting the mask on the box would fade the grey background too and smear it into the white. */}
-      <div className="row-3-5" style={{ background: 'var(--color-surface)', borderRadius: 20, padding: '12px 16px 0', height: 'calc(100% + 5dvh)', minWidth: 0 }}>
+      {/* The GREY surface BOX holding the token list, spanning 15.62dvh → 55dvh.
+          ⚠️ TOP RAISED 2026-09-05 from 20dvh to 15.62dvh, off Figma frame 6 (card y=131.87 on an 844
+          board). It used to be `.row-3-5` (= 20dvh) plus `height: calc(100% + 5dvh)`. The frame tucks
+          the card up directly under the balance, closing the gap that row 3 used to leave.
+          ⚠️ IT IS ABSOLUTE, NOT A GRID ITEM, AND MUST STAY THAT WAY. Its position is now given in
+          exact dvh by the frame, which is the definition of an absolutely-placed element - and the
+          first attempt, a grid item spanning rows 2-6 with a fixed height, BROKE THE 10-ROW GRID
+          ITSELF: `repeat(10, 1fr)` is really `minmax(auto, 1fr)`, so a track grows to fit its
+          content, and the tall card pushed rows 2-5 to 94.94px while rows 1/6/7/8/10 were squeezed
+          to 75.95 (measured). Every screen in the app is laid out on those ten rows being EQUAL, so
+          that regression reached far past this screen - the navbar row alone lost 8px.
+          `.screen` is position:relative, so left/right 0 give the card its 20px inset for FREE - and
+          the reason is worth knowing: an absolutely positioned child of a grid container normally
+          resolves against the container's PADDING box (which would need left/right 20px here), but
+          `.screen > * { grid-column: 1 }` in index.css gives every child a DEFINITE column, and a
+          definite grid position makes the child's containing block that GRID AREA instead - i.e.
+          the content box, already inset by the 20px padding. Measured: left/right 20px put the card
+          at x=40 w=330; left/right 0 put it at x=20 w=350, which is Figma's 19.97/350.06.
+          This is the pattern ShowTokensButton and Receive's address line already use.
+          ⚠️ THE BOTTOM STAYS AT 55dvh, which is 1.7dvh LOWER than frame 6's own 53.34. Deliberate:
+          55dvh is the app-wide "secondary line" both tabs share (HANDOFF §6) - the Hold-to-show-tokens
+          button here and the tap-to-copy line on Receive both sit on it, so nothing jumps when the
+          tabs are switched. Frame 7 draws the Receive card's bottom at 55.55dvh, i.e. the frames
+          disagree with each other by ~2dvh; honouring frame 6 alone would break the shared line for a
+          difference the eye cannot see. Scrolling + the bottom fade live on the INNER DIV - putting
+          the mask on the box would fade the grey background too and smear it into the white. */}
+      <div style={{ position: 'absolute', left: 0, right: 0, top: '15.62dvh', height: '39.38dvh', background: 'var(--color-surface)', borderRadius: 20, padding: '12px 16px 0', minWidth: 0 }}>
         <div className="scroll-thin" style={{
           display: 'flex', flexDirection: 'column', gap: 26, overflowY: 'auto', height: '100%', paddingTop: 2, paddingBottom: 52,
           WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',

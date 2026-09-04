@@ -51,7 +51,9 @@ export default function ShowQR() {
       {/* BIG QR = the same size as the Receive screen's (min(30dvh,78vw)), exactly 3 rows tall (2-3-4). A canvas is used so
           Share can export a PNG; rendered at size 512 then constrained in width for sharpness (user decision 07-20). */}
       <div ref={wrapRef} style={{ gridRow: '2 / 5', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0 }}>
-        <QRCodeCanvas value={qrValue} size={512} level="M" style={{ width: 'min(30dvh, 78vw)', height: 'min(30dvh, 78vw)' }} />
+        {/* Kept EQUAL to the Receive screen's QR (HANDOFF §6), which moved to Figma frame 7's
+            283.45 square = 33.58dvh / 72.68vw on 2026-09-05. Change one, change both. */}
+        <QRCodeCanvas value={qrValue} size={512} level="M" style={{ width: 'min(33.58dvh, 72.68vw)', height: 'min(33.58dvh, 72.68vw)' }} />
       </div>
 
       {/* Row 5 down: the BIG amount (like the main balance) · the caption · the Share text.

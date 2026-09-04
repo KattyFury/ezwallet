@@ -43,19 +43,29 @@ export default function MenuScreen() {
       {/* Rows 1-2: Balance (same as HomeSend / HomeReceive) */}
       <BalanceHeader totalUsd={totalUsd} loading={totalUsd === null} />
 
-      {/* Row 3: Top up / Withdraw */}
+      {/* Row 3: Deposit / Withdraw.
+          ⚠️ ORDER SWAPPED 2026-09-05 to Figma frame 9: DEPOSIT IS ON THE LEFT (x=16.63), Withdraw on
+          the right (x=203.34). It was the other way round. The frame's widths (170.84 / 169.66 inside
+          a ~16.6 outer margin) are what `flex: 1` inside .screen's 20px padding already produces at
+          390 - 170 each - so only the order actually changed here. */}
       <div className="row-3" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <button className="btn btn-secondary" style={{ flex: 1, opacity: 0.4 }} disabled>
-          Withdraw
-        </button>
         <button className="btn btn-primary" style={{ flex: 1 }} onClick={copyAddrThenFaucet}>
           Deposit
         </button>
+        <button className="btn btn-secondary" style={{ flex: 1, opacity: 0.4 }} disabled>
+          Withdraw
+        </button>
       </div>
 
-      {/* Rows 4-7: menu items (4 of them). Anything with `disabled` is dimmed and not tappable. */}
+      {/* Rows 4-7: menu items (4 of them). Anything with `disabled` is dimmed and not tappable.
+          ⚠️ DIVIDERS ADDED 2026-09-05, and this KNOWINGLY REVERSES the "NO grey separator lines in
+          lists/boxes" rule in HANDOFF §6. Figma frame 9 draws four of them, at y=337.6 / 422 / 506.4
+          / 590.8 - which are exactly the row 4/5/6/7 BOTTOM edges (40/50/60/70dvh), so a borderBottom
+          on each item row lands on the frame's lines without positioning anything by hand. The new
+          design is the later instruction; the old rule stands everywhere it was not redrawn.
+          Sign out (row 8) gets none - the frame draws no line under About's successor either. */}
       {ITEMS.map(({ id, icon, label, disabled }, i) => (
-        <div key={id} className={`row-${i + 4}`} style={{ display: 'flex', alignItems: 'center' }}>
+        <div key={id} className={`row-${i + 4}`} style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--color-gray)' }}>
           <button className="menu-item" style={{ width: '100%', opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
             {/* Leading icon = brand blue (the Swap language, user decision 07-17e); Sign out stays red for meaning */}

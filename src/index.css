@@ -106,6 +106,22 @@
      E.g. the Login logo = 50% of the screen → min(50vw, calc(var(--screen-max) / 2)). */
   --screen-max: 430px;
 
+  /* ── THE 12-COLUMN GRID (Figma 2026-09-05, see DESIGN-GRID-390.md) ──
+     The frames are drawn on a 390×844 board with 12 columns of 32.5px and no gutter. 390 is the
+     DRAWING FRAME, NOT A LOCK (user decision 09-05): --screen-max stays 430 and the app keeps
+     flexing, so a column is a PERCENTAGE, never 32.5px. 1 col = 100/12% → 32.5px @390, 35.83 @430.
+     ⚠️ These are widths measured from the SCREEN edge. .screen already carries 20px of padding, so
+     inside a screen a "1 column inset" is --col MINUS that 20px - use --inset-col, not --col.
+     The vertical half of the same grid is the existing .screen `repeat(10, 1fr)`: 1 row = 10dvh.
+     Do NOT hardcode 32.5 / 84.4 anywhere. */
+  --col:   8.3333%;                 /* 1 of 12 columns, as a share of the SCREEN width */
+  --col10: 83.3333%;                /* 10 columns = the sign-in / PIN card + the hero balance */
+  --col6:  50%;                     /* 6 columns  = the logo */
+  --col3:  25%;                     /* 3 columns  = one NavBar tab */
+  /* A "1-column inset" applied INSIDE .screen, which is already inset 20px each side.
+     min(...) mirrors how .screen itself is sized, so this is 12.5px @390 and 15.83px @430. */
+  --inset-col: calc(min(100vw, var(--screen-max)) * 0.083333 - 20px);
+
   /* Font weights - the heavy/light ramp the design leans on */
   --fw-light:     300;   /* LIGHT - large hero numbers (balances, amounts): airy, only for BIG text */
   --fw-normal:    400;   /* body, reading content */
@@ -165,6 +181,25 @@ body {
   overflow: hidden;
   padding: 0 20px;                /* the app-wide left/right margin = 20px (user decision, up from 15) */
 }
+
+/* ⚠️ EVERY DIRECT CHILD IS PINNED TO COLUMN 1 - do NOT remove this rule (added 2026-09-05).
+   .screen declares ONE column, but declaring one column does not stop the grid from CREATING a
+   second: any auto-placed item that would OVERLAP an already-placed item is moved to the next
+   column instead, and the implicit column is born there. Two overlapping rows is now normal on the
+   Home screens - the token/QR card spans rows 2-6 (Figma frames 6/7 tuck it up under the balance)
+   while BalanceHeader spans rows 1-3, so they legitimately share row 2.
+   Without this rule that overlap silently exiled BalanceHeader into a second 133px column and
+   skewed the WHOLE screen: the balance clipped, the navbar squeezed to 257px with its four labels
+   overlapping, the action cards crushed to ~half width. Measured, not theorised.
+   This is the same failure the minmax(0,1fr) note above guards against, reached from the other
+   direction - that one stops a WIDE item stretching the column, this one stops a second column
+   existing at all. Overlapping siblings now simply stack, which is what a one-column screen means.
+   ⚠️ `1 / 2` AND NOT A BARE `1` - both edges must be definite. A bare `1` sets only the START line;
+   the END stays `auto`, which for an ABSOLUTELY POSITIONED child resolves to the grid container's
+   PADDING edge. That gave the Home cards a containing block of 20px→390px (370 wide, lopsided) and
+   `right: 0` then hung 20px off the right of the screen. With `1 / 2` the containing block is the
+   real column-1 area, 20px→370px, so left/right 0 = the app's 20px margins on both sides. */
+.screen > * { grid-column: 1 / 2; }
 
 /* Full-bleed: punch through the 20px padding to touch the edge */
 .full-bleed {
@@ -393,8 +428,12 @@ body {
 }
 .pin-card {
   position: relative;
-  width: 325px;
-  max-width: 88vw;
+  /* 10 OF THE 12 COLUMNS (Figma frames 3-5: x=32.5 w=325 on a 390 board = a 1-column inset each
+     side). Anchored to the SCREEN, not to a parent, for the reason spelled out on the Login logo:
+     this sheet is `position: fixed`, so a percentage would resolve against the viewport and be
+     wrong the moment the viewport is wider than --screen-max. Was a hardcoded 325px until 09-05,
+     which locked the sheet to the 390 drawing frame while the app itself flexes to 430. */
+  width: min(83.3333vw, calc(var(--screen-max) * 0.833333));
   background: var(--color-white);
   border-radius: 30px;
   box-shadow: 0 0 20px rgba(0,0,0,0.32);
@@ -423,10 +462,19 @@ body {
   color: var(--color-black);
   text-align: center;
 }
-.pin-boxes { display: flex; gap: 6px; }
+/* The 6 boxes span x=63→327 on the 390 board = 264 wide = 67.69% OF THE SCREEN (not of the card:
+   the card's 20px padding is absolute and does not scale, so a % of the card drifts). Same
+   screen-anchoring trick as .pin-card above. The boxes then FLEX inside that width, so their
+   38.94×51.85 is exact at 390 and grows with the screen instead of stranding a fixed pixel size. */
+.pin-boxes {
+  display: flex;
+  gap: 6px;
+  width: min(67.69vw, calc(var(--screen-max) * 0.6769));
+}
 .pin-box {
-  width: 38.94px;
-  height: 51.85px;
+  flex: 1;
+  min-width: 0;
+  aspect-ratio: 38.94 / 51.85;   /* Figma frames 3-5, exact */
   border-radius: 10px;
   background: var(--color-gray);   /* #E5E5EA - matches Figma exactly */
   display: flex;
@@ -550,13 +598,22 @@ body {
 }
 
 /* ── Action grid (rows 8–9) ── */
+/* ⚠️ RATIOS AND GAP RE-MEASURED 2026-09-05 off Figma frame 6 (DESIGN-GRID-390.md):
+     side 94.31 · centre 127.7 · side 94.31, inside the 350 available at 390 wide
+     ⇒ the two gaps are (350 - 316.32) / 2 = 16.84, and the centre/side ratio is 127.7/94.31 = 1.354.
+   It was `1fr 1.5fr 1fr` with an 8px gap, which drew the centre card 143 wide instead of 128.
+   With these numbers the tracks come out at exactly 94.31 / 127.7 / 94.31 on a 390 board.
+   align-items:center is what lets the primary card be TALLER than its neighbours (below) while all
+   three stay on ONE centre line - the invariant that keeps Scan QR / Create QR / the Swap button
+   concentric (HANDOFF §6). Do not switch it back to the default `stretch`. */
 .action-grid {
   display: grid;
-  grid-template-columns: 1fr 1.5fr 1fr;
+  grid-template-columns: 1fr 1.354fr 1fr;
+  align-items: center;
   height: 8dvh;
   align-self: end;
   margin-bottom: 2dvh;
-  gap: 8px;
+  gap: 16.84px;
 }
 
 .action-card {
@@ -578,12 +635,18 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);   /* white buttons are raised (user decision 07-22d), a black shadow with no spread */
+  height: 7.2dvh;   /* Figma frame 6: the SIDE cards are 60.77 tall on an 844 board */
 }
 
+/* THE CENTRE CARD IS BIGGER IN BOTH DIRECTIONS - that is how the frame marks it as the primary
+   action, not colour alone: Figma frame 6 gives it 127.7 × 66.73 against the sides' 94.31 × 60.77.
+   The width comes from .action-grid's 1.354fr track; this is the height half (66.73/844 = 7.9dvh).
+   The grid centres all three, so growing this one keeps every centre line equal. */
 .action-card.primary {
   border: none;
   background: var(--grad-brand);
   color: var(--color-white);
+  height: 7.9dvh;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);   /* gradients get a deeper shadow than white buttons, as in .btn-primary */
 }
 
