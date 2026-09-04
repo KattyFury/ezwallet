@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react'
-import { usePrivy, useWallets, useSignMessage, useMfa, useRegisterMfaListener, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
+import { usePrivy, useWallets, useMfa, useRegisterMfaListener, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
 import { NavContext } from './nav'
 import ErrorBoundary from './components/ErrorBoundary'
 import BugButton from './components/BugButton'
@@ -53,7 +53,6 @@ const SCREENS = {
 export default function App() {
   const { ready, authenticated, user } = usePrivy()
   const { wallets } = useWallets()
-  const { signMessage } = useSignMessage()
 
   // ══ THE FINGERPRINT CHECK IN FRONT OF THE MONEY (2026-08-30) ══
   // Once the user has turned on Fingerprint/Face ID (Security screen), Privy demands it before
@@ -156,54 +155,19 @@ export default function App() {
     rememberLogin({ address: activeWallet.address, email: user?.email?.address })
   }, [activeWallet?.address, user?.email?.address])
 
-  // ── OPEN THE CONTACTS-BACKUP SESSION (moved here from PinGate on 2026-08-30) ──
-  // The backup door is a SIGNATURE from the wallet, not a password: the server hands out a nonce,
-  // the wallet signs it, and the server recovers the address from the signature (functions/api/sync.js).
-  // That design does not care who does the signing, so it survived the migration untouched - but the
-  // PIN entry it used to be folded into is gone for now, so it would never run and the address book
-  // would silently stop syncing.
+  // ── THE CONTACTS-BACKUP SIGNATURE IS NOT HERE ANY MORE (removed 2026-09-04) ──
+  // It used to run at app open, signing silently (`showWalletUIs: false`) to open the backup session.
+  // With the fingerprint on, that FROZE THE WHOLE APP - Chrome's "Page Unresponsive", reproduced by
+  // the user on 09-04. The flag tells Privy to sign WITHOUT prompting, an MFA-guarded wallet will not,
+  // so Privy raised MFA-required → the listener above ran `promptMfa()` → which could not show its
+  // dialog for a call that asked for no UI → it failed → cancel → Privy asked again, and round it
+  // went, pinning the main thread. The 08-30 note called this a silent no-op; it is worse than that.
   //
-  // Signing is SILENT (`showWalletUIs: false`): the user is not being asked to approve anything they
-  // would understand as an action - this is the app opening its own backup, and nothing on chain
-  // happens. A modal here would be a prompt with no meaning attached to it.
-  //
-  // ⚠️ KNOWN GAP: once the user turns the fingerprint on, this silent signature CANNOT SUCCEED. The
-  // same flag that keeps it quiet also tells Privy to sign without prompting, and an MFA-guarded
-  // wallet may not - so it fails with a 401 from wallets/authenticate and the backup quietly does not
-  // run. That is caught below and the app carries on, contacts simply staying on the device.
-  // Removing the flag is NOT the fix: it would meet the user with a fingerprint prompt the moment
-  // they open the app, for a message they never asked to sign - indistinguishable from a phishing
-  // site. The real fix is to move this to the Contacts screen, where the user has just asked for the
-  // thing the signature is for and a prompt makes sense. Not done yet.
-  //
-  // ⚠️ EMBEDDED WALLETS ONLY, and that is a UX decision rather than a technical limit. `showWalletUIs`
-  // is Privy's switch and it has no authority over MetaMask: MetaMask pops its own signature request
-  // regardless. A MetaMask user opening the app would therefore be met, unprompted, by a signature
-  // request for a message they never asked for - which is exactly how a phishing site behaves, and
-  // teaching this app's users to click through those is the last thing it should do. They keep their
-  // contacts locally instead; nothing else about the app changes for them.
-  //
-  // Entirely in the background and swallowing every error, exactly as before: an address book must
-  // never hold anyone at the door. No KV binding, no network, a refused signature - the app carries
-  // on without backup this session.
-  const syncOpened = useRef(false)
-  useEffect(() => {
-    if (MOCK || !isEmbedded || !activeWallet?.address) return
-    if (syncOpened.current || sessionStorage.getItem('ez_sync_token')) return
-    syncOpened.current = true
-    ;(async () => {
-      try {
-        const sync = await import('./sync')
-        const m = await sync.prepareUnlockMessage()
-        if (!m?.nonce || !m?.message) return
-        const { signature } = await signMessage(
-          { message: m.message },
-          { address: activeWallet.address, uiOptions: { showWalletUIs: false } },
-        )
-        if (await sync.openSession(m.nonce, signature)) await sync.pullOnce()
-      } catch {}
-    })()
-  }, [isEmbedded, activeWallet?.address])
+  // Dropping the flag is NOT the fix either: it would meet the user with a fingerprint prompt the
+  // instant they open the app, for a message they never asked to sign - exactly how a phishing site
+  // behaves. The signature belongs on the Contacts screen, where the user has just asked for the
+  // thing it is for. Until it is put there, backup does not run and contacts stay on the device -
+  // which is where they already were, since this path had not worked since MFA was switched on.
 
   // iOS/Android: when the keyboard opens, the browser SCROLLS the page to reveal the field → the screen/popup
   // "jumps up". Every input in this app is deliberately placed in the TOP HALF (above the keyboard area),

@@ -1,6 +1,6 @@
 # HANDOFF – EZwallet
 
-**Updated:** 2026-08-30 · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
+**Updated:** 2026-09-04 · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
 
 ### 🔗 THE 4 OFFICIAL LINKS - use this set when introducing the project (user decision 08-04)
 | | |
@@ -9,6 +9,56 @@
 | **GitHub** | https://github.com/KattyFury/ezwallet |
 | **Video** | https://youtu.be/UIR4Ee3Wp_Y |
 | **Deck** | https://canva.link/zr3ik84radd39vc |
+
+## 🚧 SESSION 2026-09-04: FOUND + FIXED THE APP-FREEZE, PAUSED THE SIGN-IN SCREEN FOR A DESIGN PASS
+
+- **✅ FIXED AND CONFIRMED BY THE USER: the app froze solid ("Page Unresponsive") right after signing
+  in, once the fingerprint (MFA) was on.** Root cause was the 08-30 contacts-backup signature effect
+  in `App.jsx`: it signed silently (`showWalletUIs: false`), Privy demanded MFA anyway, the MFA
+  listener called `promptMfa()` for a call that asked for no UI, that failed, it retried, and the
+  loop pinned the main thread. The 08-30 notes had called this a silent no-op - it is worse, a hard
+  freeze. **Fix: the whole effect (~40 lines, `signMessage`/`useSignMessage` import included) was
+  removed from `App.jsx`.** Isolated with a real diagnostic (not guesswork): mock mode (no Privy)
+  measured 137 requestAnimationFrame ticks in 3 seconds with the full screen rendering correctly, so
+  the freeze was proven to live in the Privy/MFA path, not the screens. `npm test` 16/16, `npm run
+  build` clean, entry chunk unaffected. **⚠️ Consequence, already true since MFA went on and now
+  simply visible instead of silent: contacts backup does not run.** It still needs to move to the
+  Contacts screen (see the 08-30 note this replaces, same reasoning still holds) - not done this
+  session, deliberately deferred so the freeze fix could ship on its own.
+- **🛑 SIGN-IN SCREEN (`Login.jsx`/`privy.js`): PAUSED MID-EDIT, NOT DONE, NOT VERIFIED IN A REAL
+  BROWSER.** The user asked to redo the sign-in screen (Privy modal opens by itself, cannot be
+  dismissed by X/backdrop/Escape, no in-modal logo). Code for that is drafted and builds/tests pass,
+  but the user then stopped further coding to get a design pass first - **do not assume the current
+  `landingHeader`/`loginMessage` strings in `privy.js` are final, they were mid-edit when work
+  paused.** Two things are genuinely undecided, not just unwritten:
+  1. **Passkey vs PIN for returning users.** 08-30 replaced PIN with Passkey for a real security
+     reason (Privy has no PIN concept; a hand-built one is a bypassable string compare - see section
+     1c of `MIGRATION-PRIVY.md`). The user described the return flow as "PIN" this session, which
+     contradicts that decision. Not resolved - flagged, not silently picked either way.
+  2. **Keep Privy's hosted modal vs hand-build the email/OTP screen.** Confirmed by reading
+     `node_modules/@privy-io/react-auth/dist/dts/types-Ck8tvlPZ.d.ts`: the modal's email-field
+     placeholder and submit-button text are NOT configurable through `PrivyClientConfig` - no such
+     field exists. Wanting different wording there means dropping the hosted modal for a hand-built
+     one using `useLoginWithEmail`, which is the exact rebuild 08-30 rejected ("use Privy's popups,
+     don't re-implement what Privy ships"). Reopening that is fine if it's a real decision, not a
+     side effect of wanting different placeholder text.
+  - **Font is NOT a blocker either way, confirmed by reading Privy's own shipped CSS**
+    (`dist/esm/ui.mjs` + the `*Screen-*.mjs` files): every modal text element is `font-family:
+    inherit` - Privy ships no webfont, it just takes the page's font. Keeping the hosted modal means
+    it already matches whatever `--font-base` is (currently system-ui); a hand-built screen isn't
+    constrained by Privy's font at all. Recommended for the redesign: keep the system-ui stack, not
+    a new webfont - this app already measured a 2.7s white-screen cost from loading Barlow (see the
+    "THE BUNDLE TRAP" note further down) and the audience (elderly, everyday users) needs legibility
+    over brand personality; system-ui also means zero work keeping Privy's modal in sync.
+  - **`SIGNIN-DESIGN-BRIEF.md`** (repo root + copied to the user's Desktop) was written for the
+    user to take into Claude Desktop + Figma before more code changes happen here. It carries the
+    two open questions above, the Privy `appearance` config surface (what's actually configurable),
+    and the app's layout constants (`--screen-max: 430px`, the 10-row grid, `--color-brand`). Read
+    it before touching `Login.jsx`/`privy.js` again - it documents exactly what is and isn't settled.
+- **Not yet done, and not blocked on the design pass:** re-verify the freeze fix in a REAL browser
+  (only mock mode was measured with the diagnostic; the user's earlier repro was on the pre-fix
+  build) · then resume the ORIGINAL unfinished item from 08-30 - sending money, which was fixed for
+  a 401 but never re-tested after that fix.
 
 ### 📍 WHERE THINGS STAND (end of session 2026-08-30)
 
