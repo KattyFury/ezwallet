@@ -39,6 +39,10 @@ const PIN_ERROR_BY_CODE = {
   'replayed-request': 'That transaction was already submitted. Please start again.',
   'not-an-app-wallet': 'This wallet is not an EZwallet wallet.',
   'nonce-failed': 'Could not start PIN setup. Please try again.',
+  'quorum-not-found': 'Could not read your wallet\'s security settings. Please try again.',
+  'payload-mismatch': 'Your wallet\'s security settings changed. Please try again.',
+  'enable-pin-plan-failed': 'Could not prepare PIN protection. Please try again.',
+  'enable-pin-apply-failed': 'Could not turn on PIN protection. Please try again.',
 }
 
 export function usePinSigner() {
@@ -115,6 +119,40 @@ export function usePinSigner() {
 // No dual-approval needed here: nothing moves money, so a plain wallet signature (personal_sign,
 // same EIP-191 pattern sync.js already uses for the contacts backup) is enough proof "this is really
 // the wallet owner". Mirrors functions/api/pin.js's nonce → session → set exactly.
+// ══ MAKING THE PIN LOAD-BEARING (2026-09-05) ══
+// Setting a PIN hash (useSetupPin below) and the wallet actually REQUIRING it are two separate
+// facts. Every embedded wallet is owned, from creation, by Privy's own default 1-of-1 quorum - one
+// signature (the user's alone) is already enough, so until this runs, `signWithPin`'s dual-approval
+// is Privy accepting the user's half and never even asking for the server's. `enableMandatoryPin`
+// closes that gap: it raises the wallet's OWN quorum to 2-of-2 (adds the server's key), which is a
+// QUORUM update, not the WALLET-ownership update Privy's client SDK refuses - see the long comment
+// on buildEnablePinPayload in functions/api/pin.js for why that distinction is what makes this
+// possible at all.
+// ⚠️ NOT WIRED TO ANY BUTTON YET. This raises a real security bar on a real wallet - deliberately
+// left for the user to trigger themselves once ready, not fired automatically by this code.
+export function useEnableMandatoryPin() {
+  const { generateAuthorizationSignature } = useAuthorizationSignature()
+
+  async function enableMandatoryPin(address) {
+    const planRes = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'enable-pin-plan', address }) })
+    const plan = await planRes.json().catch(() => ({}))
+    if (!planRes.ok) throw Object.assign(new Error(plan.error || 'enable-pin-plan-failed'), { code: plan.error || 'enable-pin-plan-failed' })
+    if (plan.alreadyEnabled) return { alreadyEnabled: true }
+
+    // Signs with the wallet's OWN key - sufficient authorization today because the quorum being
+    // changed is still 1-of-1. If passkey MFA is on, Privy's own onMfaRequired listener (App.jsx)
+    // fires here exactly as it does for signWithPin - nothing special to do.
+    const { signature: userSignature } = await generateAuthorizationSignature(plan.payload)
+
+    const applyRes = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'enable-pin-apply', address, requestPayload: plan.payload, userSignature }) })
+    const applied = await applyRes.json().catch(() => ({}))
+    if (!applyRes.ok) throw Object.assign(new Error(applied.error || 'enable-pin-apply-failed'), { code: applied.error || 'enable-pin-apply-failed' })
+    return applied
+  }
+
+  return { enableMandatoryPin }
+}
+
 export function useSetupPin() {
   const { signMessage } = useSignMessage()
 

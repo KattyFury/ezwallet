@@ -29,6 +29,11 @@ const OTHER_ADDRESS = '0xA6c573647012D5A6AAb32CdB9911C5aCc3398790'
 // PKCS8/base64 specifically: @privy-io/node rejects the SEC1 form `openssl ecparam` emits by default.
 const TEST_AUTH_KEY = 'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfgXj1xgh1HkqnFEbADpOV3LTL+GByuq36Mq3mrX5toehRANCAAT5F6lC9/Pz0sk9/GQmJD81/xoK+ZGN63zoMhO2pA6kP694xW0Yr0GR9oiWRbJeUR1w8d2v34n8WNGqUsQ4bIvb'
 
+// ⚠️ MUST MATCH functions/api/pin.js's PRIVY_AUTH_PUBLIC_KEY exactly - it is public (not a secret,
+// see that file's comment), so duplicating it here to assert against is fine, but there is no import
+// to keep the two in sync automatically: if that constant ever changes, this one has to as well.
+const REAL_SERVER_PUBLIC_KEY = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE7nTz1TB+rDpYadopbda0PAP9uHnXId7SBe4DCuW8J8i63S1Btar4n0C1wrKK7SE/qqjKmnE8mq4nrvBeBvz3sw=='
+
 function fakeKV(initial = {}) {
   const m = new Map(Object.entries(initial).map(([k, v]) => [k, { v, exp: 0 }]))
   return {
@@ -44,30 +49,60 @@ function fakeKV(initial = {}) {
   }
 }
 
-// The two Privy endpoints the handler talks to. Only the addresses listed here are "wallets of this
-// app", which is exactly what the not-an-app-wallet guard keys off.
+// The Privy endpoints the handler talks to. Only the addresses listed here are "wallets of this
+// app", which is exactly what the not-an-app-wallet guard keys off. Each wallet's `owner_id` points
+// at its own default quorum in QUORUMS below - Privy's real shape, where every embedded wallet is
+// owned by its own 1-of-1 quorum from creation.
+const MY_QUORUM_ID = 'tzaph36-test'
+const OTHER_QUORUM_ID = 'other-quorum-test'
 const APP_WALLETS = {
-  [me.address.toLowerCase()]: MY_WALLET_ID,
-  [OTHER_ADDRESS.toLowerCase()]: OTHER_WALLET_ID,
+  [me.address.toLowerCase()]: { id: MY_WALLET_ID, owner_id: MY_QUORUM_ID },
+  [OTHER_ADDRESS.toLowerCase()]: { id: OTHER_WALLET_ID, owner_id: OTHER_QUORUM_ID },
 }
-function stubPrivy({ relayOk = true } = {}) {
+// A THROWAWAY server public key, distinct from the real PRIVY_AUTH_PUBLIC_KEY hardcoded in pin.js -
+// these tests exercise the enable-pin LOGIC (idempotence, payload binding, re-derivation) without
+// ever depending on that real constant matching anything.
+const SERVER_PUBLIC_KEY_STUB = 'stub-server-pubkey'
+
+// Real Privy default: every embedded wallet's OWN quorum starts 1-of-1, containing only that user.
+function freshQuorum(userId) {
+  return { authorization_threshold: 1, authorization_keys: [], user_ids: [userId] }
+}
+
+function stubPrivy({ relayOk = true, quorums } = {}) {
   const calls = []
+  const store = quorums || { [MY_QUORUM_ID]: freshQuorum('did:privy:me'), [OTHER_QUORUM_ID]: freshQuorum('did:privy:other') }
   globalThis.fetch = async (url, init) => {
     calls.push({ url: String(url), init })
     const u = String(url)
     if (u.startsWith('https://api.privy.io/v1/wallets?address=')) {
       const addr = decodeURIComponent(u.split('address=')[1]).toLowerCase()
-      const id = APP_WALLETS[addr]
-      return new Response(JSON.stringify({ data: id ? [{ id, address: addr }] : [] }), { status: 200 })
+      const w = APP_WALLETS[addr]
+      return new Response(JSON.stringify({ data: w ? [{ id: w.id, address: addr, owner_id: w.owner_id }] : [] }), { status: 200 })
     }
     if (/\/v1\/wallets\/[a-zA-Z0-9]+\/rpc$/.test(u)) {
       return relayOk
         ? new Response(JSON.stringify({ data: { hash: '0xfeed' } }), { status: 200 })
         : new Response(JSON.stringify({ error: 'nope' }), { status: 400 })
     }
+    const quorumMatch = u.match(/\/v1\/key_quorums\/([^/]+)$/)
+    if (quorumMatch && (!init || init.method === undefined || init.method === 'GET')) {
+      const q = store[quorumMatch[1]]
+      return q ? new Response(JSON.stringify({ id: quorumMatch[1], ...q }), { status: 200 }) : new Response('{}', { status: 404 })
+    }
+    if (quorumMatch && init?.method === 'PATCH') {
+      if (!init.headers['privy-authorization-signature']) return new Response(JSON.stringify({ error: 'Missing privy-authorization-signature header' }), { status: 401 })
+      const body = JSON.parse(init.body)
+      store[quorumMatch[1]] = {
+        authorization_threshold: body.authorization_threshold,
+        authorization_keys: body.public_keys.map(pk => ({ public_key: pk, display_name: null })),
+        user_ids: body.user_ids,
+      }
+      return new Response(JSON.stringify({ id: quorumMatch[1], ...store[quorumMatch[1]] }), { status: 200 })
+    }
     throw new Error('unexpected fetch: ' + u)
   }
-  return calls
+  return { calls, store }
 }
 
 const envWith = (kv = fakeKV(), extra = {}) => ({
@@ -123,7 +158,7 @@ test('a stranger\'s keypair cannot open a session (no free writes into the share
 })
 
 test('the happy path: right PIN → both signatures → Privy relays a hash', async () => {
-  const calls = stubPrivy()
+  const { calls } = stubPrivy()
   const env = envWith()
   await setPin(env, '123456')
   const { status, body } = await jsonOf(await call(env, {
@@ -207,4 +242,76 @@ test('an arbitrary URL cannot be smuggled through the signer', async () => {
   const { status, body } = await jsonOf(await call(env, { action: 'sign', address: me.address, pin: '123456', requestPayload: evil, userSignature: 'evil-sig' }))
   assert.equal(status, 400)
   assert.equal(body.error, 'bad-request-payload')
+})
+
+// ══ enable-pin: making the PIN LOAD-BEARING by raising the wallet's own quorum to 2-of-2 ══
+// Added 2026-09-05 alongside the feature itself. Not wired to any button yet (see HANDOFF.md) - these
+// tests exercise the SERVER LOGIC against a stubbed Privy, independent of whether the client SDK will
+// actually sign a key-quorum PATCH in a real browser, which is a separate, still-open question.
+
+test('enable-pin-plan: a fresh 1-of-1 quorum needs the real server key added, threshold 2', async () => {
+  stubPrivy()
+  const { status, body } = await jsonOf(await call(envWith(), { action: 'enable-pin-plan', address: me.address }))
+  assert.equal(status, 200)
+  assert.equal(body.alreadyEnabled, undefined)
+  assert.equal(body.payload.method, 'PATCH')
+  assert.equal(body.payload.url, 'https://api.privy.io/v1/key_quorums/tzaph36-test')
+  assert.equal(body.payload.body.authorization_threshold, 2)
+  assert.deepEqual(body.payload.body.public_keys, [REAL_SERVER_PUBLIC_KEY])
+  assert.deepEqual(body.payload.body.user_ids, ['did:privy:me'], 'existing membership must be preserved, not replaced')
+})
+
+test('enable-pin-plan: an address this app does not own is a 404', async () => {
+  stubPrivy()
+  const { status, body } = await jsonOf(await call(envWith(), { action: 'enable-pin-plan', address: '0x000000000000000000000000000000000000dEaD' }))
+  assert.equal(status, 404)
+  assert.equal(body.error, 'wallet-not-found')
+})
+
+test('REGRESSION: enable-pin-apply refuses a payload that does not match what the server would build', async () => {
+  stubPrivy()
+  const env = envWith()
+  const { body: plan } = await jsonOf(await call(env, { action: 'enable-pin-plan', address: me.address }))
+  const tampered = { ...plan.payload, body: { ...plan.payload.body, authorization_threshold: 1 } }   // "upgrade" to nothing
+  const { status, body } = await jsonOf(await call(env, { action: 'enable-pin-apply', address: me.address, requestPayload: tampered, userSignature: 'sig' }))
+  assert.equal(status, 409)
+  assert.equal(body.error, 'payload-mismatch')
+})
+
+test('enable-pin-apply: the happy path actually raises the quorum, with the real signature reaching Privy', async () => {
+  const { calls, store } = stubPrivy()
+  const env = envWith()
+  const { body: plan } = await jsonOf(await call(env, { action: 'enable-pin-plan', address: me.address }))
+  const { status, body } = await jsonOf(await call(env, { action: 'enable-pin-apply', address: me.address, requestPayload: plan.payload, userSignature: 'founder-sig' }))
+  assert.equal(status, 200)
+  assert.equal(body.ok, true)
+  assert.equal(store['tzaph36-test'].authorization_threshold, 2, 'the stubbed Privy quorum store must actually be updated')
+  const patch = calls.find(c => c.init?.method === 'PATCH')
+  assert.equal(patch.init.headers['privy-authorization-signature'], 'founder-sig')
+})
+
+test('enable-pin-apply: no signature on the PATCH is a 401 from Privy, relayed as privy-failed', async () => {
+  stubPrivy()
+  const env = envWith()
+  const { body: plan } = await jsonOf(await call(env, { action: 'enable-pin-plan', address: me.address }))
+  const { status, body } = await jsonOf(await call(env, { action: 'enable-pin-apply', address: me.address, requestPayload: plan.payload, userSignature: '' }))
+  assert.equal(status, 400, 'the server itself rejects an empty signature before ever calling Privy')
+  assert.equal(body.error, 'user-signature required')
+})
+
+test('enable-pin-plan: an already-upgraded quorum (server key + threshold 2) is idempotent', async () => {
+  const already = {
+    'tzaph36-test': { authorization_threshold: 2, authorization_keys: [{ public_key: REAL_SERVER_PUBLIC_KEY, display_name: null }], user_ids: ['did:privy:me'] },
+  }
+  stubPrivy({ quorums: already })
+  const { status, body } = await jsonOf(await call(envWith(), { action: 'enable-pin-plan', address: me.address }))
+  assert.equal(status, 200)
+  assert.equal(body.alreadyEnabled, true)
+})
+
+test('REGRESSION: enable-pin never touches the wallet\'s owner_id - only the quorum it already points at', async () => {
+  stubPrivy()
+  const { body: plan } = await jsonOf(await call(envWith(), { action: 'enable-pin-plan', address: me.address }))
+  assert.ok(!('owner_id' in plan.payload.body), 'this must be a QUORUM update, never a WALLET-ownership update')
+  assert.match(plan.payload.url, /\/v1\/key_quorums\//, 'not /v1/wallets/ - a wallet update is what Privy\'s client SDK refuses outright')
 })

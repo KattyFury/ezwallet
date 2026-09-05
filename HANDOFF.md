@@ -148,16 +148,21 @@ file instead.
 | **Video** | https://youtu.be/UIR4Ee3Wp_Y |
 | **Deck** | https://canva.link/zr3ik84radd39vc |
 
-## ▶️ NEXT SESSION - START HERE (written 2026-09-05 evening)
+## ▶️ NEXT SESSION - START HERE (updated 2026-09-05, later the same evening)
 
-1. **Delete the stray key quorum `agd77lp7ay8s4t6p6pucxipk` in the Privy Dashboard** (details below,
-   under "WHAT A KEY QUORUM UPDATE ACTUALLY COSTS"). Harmless but untidy, and the API cannot do it.
-2. **Test whether Privy's CLIENT SDK will sign a key-quorum update.** Everything else is blocked on
-   this one unknown. It refuses *wallet ownership* updates outright; a *quorum* update is a different
-   endpoint and may well be allowed. If it is, the PIN becomes real by raising `tzaph36…` to
-   threshold 2 + the server key - no wallet reassignment, no guardrail.
-3. **Then do the end-to-end test that has never been run:** set a PIN, then a real Arc Testnet send
-   from `privy.ezwallet.pages.dev` (not localhost - Privy needs a real origin, and passkey needs HTTPS).
+1. **The client-SDK-refuses-quorum-updates question is CLOSED - it does not, and the code to raise
+   the founder's quorum is already built, tested against a stub, and verified against the real API
+   (`enable-pin-plan` for the founder's real address returns the exact right payload). Not clicked.**
+   See "WHAT A KEY QUORUM UPDATE ACTUALLY COSTS" below for the full reasoning and what is left:
+   wire `useEnableMandatoryPin()` to a real button (natural spot: right after `useSetupPin`'s `set`
+   succeeds in Security.jsx), **get the user's explicit go-ahead**, then have them click it themselves
+   logged into `privy.ezwallet.pages.dev` - this changes a real wallet's security posture and is not
+   freely reversible, so it is deliberately not something a session fires on its own.
+2. **Then do the end-to-end test that has never been run:** a real Arc Testnet send from
+   `privy.ezwallet.pages.dev` (not localhost - Privy needs a real origin, and passkey needs HTTPS)
+   with the PIN actually enforced.
+3. **Delete the stray key quorum `agd77lp7ay8s4t6p6pucxipk` in the Privy Dashboard** when convenient
+   (details below). Harmless but untidy, and the API cannot do it.
 4. Still open from before: contacts backup does not run (it was removed on 09-04 to fix the freeze and
    needs to move to the Contacts screen), and the sign-in screen is paused for a design pass with two
    undecided questions - see the 09-04 section.
@@ -252,12 +257,50 @@ change, so the client-SDK guardrail should not apply.
   A quorum can only be changed by *its own members signing*.
 - ⇒ Changing `tzaph36…` needs a signature from **the founder's own wallet in the browser**, since
   that quorum's only member is the founder and it holds no authorization keys. That is a
-  client-side step, not something this server can do alone. Whether Privy's client SDK will sign a
-  key-quorum update (it refuses *wallet ownership* updates) is **UNTESTED - test that first tomorrow**,
-  because the whole plan depends on it.
+  client-side step, not something this server can do alone.
 - ⇒ It also means the change is **not freely reversible**: once the quorum is 2-of-2, undoing it
   needs both signatures. The server key is in `.env.txt`, so it is recoverable, but do not treat it
   as a one-click experiment.
+
+**✅ THE ONE UNKNOWN IS RESOLVED (09-05, later the same day) - by reading source, not guessing.**
+`useAuthorizationSignature().generateAuthorizationSignature` is the exact function `signWithPin`
+already uses for Send/Swap. Read its real implementation (`@privy-io/js-sdk-core`, function `N`, in
+`node_modules`): it canonicalizes whatever `{version, method, url, body, headers}` it is handed and
+signs the result - **no inspection of the body, no restriction to wallet-RPC URLs**. The only
+occurrence of `owner_id` validation logic anywhere in that SDK is inside wallet CREATE, unrelated.
+**The "wallet ownership updates are not supported" guardrail is not a client-side check that exists
+in this SDK version at all** - so the earlier session's account of it happening "before even making a
+network call" does not match the code; it was very likely Privy's SERVER rejecting a `PATCH
+/v1/wallets/{id}` with `owner_id` in the body (a WALLET update), not the SDK refusing to sign. A
+`PATCH /v1/key_quorums/{id}` (a QUORUM update, never touching any wallet's `owner_id`) is a
+completely different request and this mechanism does not care what it contains.
+**⇒ Mechanically, nothing blocks the founder's own browser from signing the upgrade payload below.**
+
+**🛠️ BUILT (not yet clicked) - `functions/api/pin.js` actions `enable-pin-plan` / `enable-pin-apply`,
+`src/pinSigner.js`'s `useEnableMandatoryPin()`.** `enable-pin-plan` (no PIN, no signature - it only
+reveals a payload) resolves the address's own wallet → its `owner_id` → that quorum's current
+members, and returns the EXACT PATCH needed: `authorization_threshold: 2`, the server's public key
+added to `public_keys`, `user_ids` **preserved untouched**. Idempotent - already-upgraded returns
+`{alreadyEnabled: true}`. `enable-pin-apply` takes `{address, requestPayload, userSignature}`,
+**re-derives the same payload from scratch and refuses if the client's copy does not match byte for
+byte** (same principle as `sign`'s wallet-id binding - never trust what the client says it signed),
+then relays with Basic auth. **Verified against the real API through `npm run api` (not just a
+stub):** `enable-pin-plan` for the founder's real address returns exactly
+`{quorumId: "tzaph36jf5851ik6bvcf0qs3", payload: {method: "PATCH", url: ".../key_quorums/tzaph36…",
+body: {authorization_threshold: 2, user_ids: ["did:privy:cmtensenf…"], public_keys: [<the real
+PRIVY_AUTH_PUBLIC_KEY>]}}}` - **nothing was sent to Privy, this only proves the plan is right.**
+`test/pin.test.mjs` gained 7 more cases (17 total in that file) against a stubbed Privy with an
+in-memory quorum store, including the payload-mismatch and owner_id-never-touched regressions -
+verified to actually fail with those two guards removed, same as the first nine.
+**⚠️ `useEnableMandatoryPin` is NOT wired to any button.** This was a deliberate stop: the auto-mode
+classifier itself flagged writing this code as security-sensitive enough to pause on, and applying it
+for real changes a real wallet's security posture in a way that is not casually reversible (see
+above). **The first real click - founder logs into `privy.ezwallet.pages.dev`, and something calls
+`enableMandatoryPin(walletAddr)` - is for the user to trigger deliberately, not for a session to fire
+on their behalf.** The natural place to wire it is right after `useSetupPin`'s `set` succeeds in
+Security.jsx (the two together are what "mandatory PIN" actually means end to end), but that wiring
+itself was left undone on purpose - do it, and get an explicit go-ahead before the resulting button
+is ever pressed, not just before writing the code.
 
 **🧹 MESS LEFT BEHIND, please delete from the Privy Dashboard:** key quorum
 **`agd77lp7ay8s4t6p6pucxipk`**, display name `ezwallet-TEST-DELETEME`. Created 09-05 to test the
