@@ -766,3 +766,41 @@ body {
   color: var(--color-black);              /* iOS Safari defaults button text to the accent colour (blue) → force black */
   -webkit-text-fill-color: var(--color-black);
 }
+
+/* ── Privy's own login modal - FORCED CENTERED at every viewport width (2026-09-05) ──
+   Privy's UNCONFIGURED default is responsive: centred/floating on wide screens, a BOTTOM SHEET
+   full-bleed on narrow ones - measured directly against the live deploy, not assumed (Playwright at
+   390×844 vs 1280×900, no code in this repo touches it before this rule; PrivyClientConfig's
+   `appearance` type has NO position/placement field at all - checked exhaustively against
+   node_modules/@privy-io/react-auth/dist/dts/types-Ck8tvlPZ.d.ts, so there is no config knob for
+   this). On a phone, that default bottom sheet gets COVERED BY THE VIRTUAL KEYBOARD the moment the
+   email field is focused - a real, reproducible bug (the viewport height Privy measures does not
+   shrink to exclude the keyboard the way `dvh` does), not a look preference.
+   THE MECHANISM (walked the live DOM, not guessed - and got it wrong once before landing here: an
+   earlier version of this rule targeted #privy-dialog itself, measured no effect, because #privy-
+   dialog turned out to be an ANCESTOR of the flex wrapper, not the item inside it). The actual chain
+   is: #privy-modal-content → a wrapper → a HeadlessUI Dialog.Panel (id `headlessui-dialog-panel-*`,
+   React's useId() suffix - NOT stable across reloads, hence the attribute prefix selector below,
+   not a plain #id) → Privy's fixed, full-viewport flex wrapper (`align-items: flex-end` under its
+   own internal mobile breakpoint, `center` above it, no id of its own - only an unstable
+   styled-components class hash). The Dialog.Panel is the flex ITEM directly inside that wrapper, so
+   `align-self` on IT overrides the parent's `align-items`, at every viewport, without ever
+   selecting the wrapper's own unstable class.
+   ⚠️ REACHING INTO PRIVY'S OWN DOM is normally avoided in this app (see Login.jsx's own comment on
+   not reaching into Privy's DOM to hide the close button) - this is the one deliberate exception,
+   because there is no supported way to configure it at all. */
+[id^="headlessui-dialog-panel-"] {
+  align-self: center !important;
+}
+#privy-modal-content {
+  /* Matches the width Privy's OWN desktop layout already settles on (measured: 360px), with a vw
+     floor so a very narrow phone still gets visible margin on both sides instead of touching glass
+     edge to edge. */
+  width: min(92vw, 360px) !important;
+  max-width: min(92vw, 360px) !important;
+  margin: 0 auto !important;
+  /* Privy's bottom-sheet state only rounds the TOP two corners (flat against the screen edge it is
+     glued to). Centred, it should read as a floating card on every side - matches its own desktop
+     corners (measured: 24px all round). */
+  border-radius: 24px !important;
+}
