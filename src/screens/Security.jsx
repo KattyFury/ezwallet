@@ -3,7 +3,7 @@ import { usePrivy, useWallets, useExportWallet, useMfaEnrollment, getEmbeddedCon
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
 import { privyErrorMessage } from '../privy'
-import { useSetupPin, pinErrorMessage } from '../pinSigner'
+import { useSetupPin, useEnableMandatoryPin, pinErrorMessage } from '../pinSigner'
 
 export default function Security() {
   const { navigate } = useNav()
@@ -91,22 +91,47 @@ export default function Security() {
   // label ("Set" vs "Change"), never a security decision (the server is the only source of truth for
   // whether a PIN hash actually exists).
   const { setupPin } = useSetupPin()
+  // ⚠️ ADDED 2026-09-05, WITH THE USER'S EXPLICIT GO-AHEAD TO WIRE IT UP (not to any earlier
+  // approval - writing this hook itself was paused for exactly that reason, see pinSigner.js and
+  // HANDOFF.md). Setting the PIN HASH and the wallet actually REQUIRING it are two separate facts:
+  // every embedded wallet starts owned by Privy's own 1-of-1 quorum, so without this step the PIN
+  // check the server does is real but never actually demanded - Privy is satisfied by the user's
+  // signature alone and never asks for the server's half. This raises the wallet's OWN quorum to
+  // 2-of-2 (adds the server as a required co-signer) - it is what makes "Set up PIN" a complete,
+  // load-bearing action instead of a check nothing is wired to.
+  const { enableMandatoryPin } = useEnableMandatoryPin()
   const [pinStatus, setPinStatus] = useState('')
   const [pinErr, setPinErr] = useState(false)
   const [pinIsSet, setPinIsSet] = useState(() => localStorage.getItem('ez_pin_is_set') === '1')
   async function handleSetupPin() {
     setPinStatus('Verifying...'); setPinErr(false)
+    const address = localStorage.getItem('ez_wallet_addr')
     try {
-      const address = localStorage.getItem('ez_wallet_addr')
       await setupPin(address)
-      localStorage.setItem('ez_pin_is_set', '1')
-      setPinIsSet(true)
-      setPinStatus('PIN set'); setTimeout(() => setPinStatus(''), 2500)
     } catch (e) {
       const msg = pinErrorMessage(e)
       if (!msg) { setPinStatus(''); return }   // the user closed a prompt themselves → stay silent
       setPinStatus(msg); setPinErr(true)
       setTimeout(() => { setPinStatus(''); setPinErr(false) }, 4000)
+      return
+    }
+    // The hash is genuinely set now, regardless of what happens next - reflect that immediately
+    // rather than waiting on the second step, which asks for a SEPARATE signature (a second prompt).
+    localStorage.setItem('ez_pin_is_set', '1')
+    setPinIsSet(true)
+    setPinStatus('Turning on protection...')
+    try {
+      const result = await enableMandatoryPin(address)
+      setPinStatus(result.alreadyEnabled ? 'PIN set' : 'PIN set - protection is on')
+      setTimeout(() => setPinStatus(''), 2500)
+    } catch (e) {
+      // A PIN hash now exists, but the wallet does not yet REQUIRE the server's half - i.e. the
+      // check is real but not yet enforced. Say so plainly rather than a generic failure: "PIN set"
+      // alone here would be misleading about what protection the user actually has.
+      const msg = pinErrorMessage(e)
+      setPinStatus(msg ? `PIN set, but protection is not on yet: ${msg}` : 'PIN set, but protection is not on yet.')
+      setPinErr(true)
+      setTimeout(() => { setPinStatus(''); setPinErr(false) }, 6000)
     }
   }
 
