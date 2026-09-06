@@ -23,6 +23,7 @@ const SendAmount  = lazy(() => import('./screens/SendAmount'))
 const SendConfirm = lazy(() => import('./screens/SendConfirm'))
 const SendReceipt = lazy(() => import('./screens/SendReceipt'))
 const ProtectWallet = lazy(() => import('./screens/ProtectWallet'))
+const SetupPin    = lazy(() => import('./screens/SetupPin'))
 const CreateQR    = lazy(() => import('./screens/CreateQR'))
 const ShowQR      = lazy(() => import('./screens/ShowQR'))
 const SavedQRList = lazy(() => import('./screens/SavedQRList'))
@@ -43,7 +44,7 @@ const SCREENS = {
   Login,
   HomeSend, HomeReceive, Swap, ServiceHub, MenuScreen,
   PasteAddress, SendAmount, SendConfirm, SendReceipt,
-  ProtectWallet, CreateQR, ShowQR, SavedQRList,
+  ProtectWallet, SetupPin, CreateQR, ShowQR, SavedQRList,
   Contacts, QRScanner,
   TxHistory,
   Currency,
@@ -130,6 +131,27 @@ export default function App() {
   const activeWallet = embeddedWallet || wallets?.[0] || null
   const isEmbedded = !!embeddedWallet
 
+  // ══ THE MANDATORY PIN GATE, RIGHT AFTER LOGIN (2026-09-06, user decision) ══
+  // The user's own words, verbatim: "1. log in = email OTP · 2. Set PIN · 3. Set passkey nếu muốn ·
+  // 4. trang chủ" - PIN is MANDATORY, right after login, before Home; passkey stays OPTIONAL and
+  // comes AFTER, not before. This reorders what shipped on 08-30/09-04, where the passkey offer ran
+  // FIRST and PIN setup was buried as an easy-to-skip Security row - never actually mandatory in the
+  // path a user takes, even though EZWALLET-SIGNIN-DECISIONS.md had already called it a mandatory
+  // baseline. SetupPin.jsx is the screen; this effect only ever places the user on it the FIRST time.
+  // ⚠️ EMBEDDED WALLETS ONLY, same reasoning as the passkey-offer effect below: a MetaMask user's key
+  // is guarded by MetaMask itself, and this app's PIN dual-approval only has a quorum to raise for a
+  // Privy-held key - there is nothing here for a MetaMask user to set up at all.
+  // ⚠️ READS localStorage DIRECTLY IN THE EFFECT BODY, not through a piece of state watching it.
+  // SetupPin.jsx's own button handler navigates onward ITSELF once `completeSetup` resolves (unlike
+  // the passkey offer, whose success can only be detected by watching `user.mfaMethods` change,
+  // because `showMfaEnrollmentModal()` returns void) - so this effect never needs to react to the
+  // flag changing later, only to get the FIRST placement right.
+  useEffect(() => {
+    if (MOCK || !authenticated || !isEmbedded || !activeWallet?.address) return
+    if (localStorage.getItem('ez_pin_is_set') === '1') return
+    setNav(n => (n?.screen === 'HomeSend' ? { screen: 'SetupPin', params: {} } : n))
+  }, [authenticated, isEmbedded, activeWallet?.address])
+
   // Offer the fingerprint ONCE, right after signing up - so nobody ends up with an unguarded wallet
   // just because they never opened Security. Only once per session, so "Not now" does not put them
   // straight back on it.
@@ -139,10 +161,16 @@ export default function App() {
   // ⚠️ `passkeyOn` IS A BOOLEAN IN THE DEPS, NOT `user.mfaMethods`. That is an ARRAY, and React
   // compares deps by identity - a fresh array from Privy on each render makes the effect re-run on
   // EVERY render. Derive the one fact this effect cares about and depend on that instead.
+  // ⚠️ ALSO GATED ON THE PIN ALREADY BEING SET (2026-09-06) - the mandatory PIN screen above must run
+  // FIRST. Without this check here too, a fresh signup would have BOTH effects fire on the same
+  // render (both watching `n?.screen === 'HomeSend'`), and whichever won React's batching would be
+  // accidental, not designed. SetupPin.jsx itself navigates the user on to ProtectWallet once the PIN
+  // is actually set, so this effect no longer needs to be the one that "discovers" that transition.
   const passkeyOn = !!user?.mfaMethods?.includes('passkey')
   const offeredProtect = useRef(false)
   useEffect(() => {
     if (MOCK || !authenticated || !isEmbedded || !activeWallet?.address) return
+    if (localStorage.getItem('ez_pin_is_set') !== '1') return
     if (offeredProtect.current || passkeyOn) return
     offeredProtect.current = true
     setNav(n => (n?.screen === 'HomeSend' ? { screen: 'ProtectWallet', params: {} } : n))

@@ -184,6 +184,37 @@ export function useSetupPin() {
   return { setupPin }
 }
 
+// ══ THE ONE COMPLETE "SET UP PIN" ACTION - hash + enforcement, in one call ══
+// Added 2026-09-05 to back TWO screens that must behave IDENTICALLY: the mandatory SetupPin screen
+// (shown once, right after login, before the user ever reaches Home - user decision 2026-09-06,
+// EZWALLET-SIGNIN-DECISIONS.md's "PIN is mandatory" made literal in the flow itself) and Security's
+// existing "Change PIN" row (the same two steps, run again later to change the PIN or re-assert
+// protection). Extracted here so the sequencing and the exact status wording live in ONE place -
+// before this, Security.jsx had its own copy of this logic; duplicating it into a second screen
+// would have meant two places to keep in sync on every future change.
+export function useCompletePinSetup() {
+  const { setupPin } = useSetupPin()
+  const { enableMandatoryPin } = useEnableMandatoryPin()
+
+  // Sequenced deliberately, not merged into one round trip:
+  //   1. setupPin - sets the PIN hash. On failure, nothing else runs.
+  //   2. The hash is real now regardless of what happens next, so the caller should persist
+  //      ez_pin_is_set / pinIsSet BEFORE step 3, not after - see onHashSet below.
+  //   3. enableMandatoryPin - a SEPARATE signature prompt (a second passkey tap), because it is a
+  //      genuinely different authorization (a quorum PATCH, not the personal_sign step 1 used).
+  // `onHashSet` fires between the two steps so the caller can flip its OWN "hash exists" flag the
+  // moment it becomes true, without waiting on step 3 - a real fact that should not be held hostage
+  // to whether the enforcement step also succeeds.
+  async function completeSetup(address, { onHashSet } = {}) {
+    await setupPin(address)
+    onHashSet?.()
+    const result = await enableMandatoryPin(address)
+    return result   // { alreadyEnabled: true } | { ok: true, quorum: {...} }
+  }
+
+  return { completeSetup }
+}
+
 export function pinErrorMessage(e) {
   if (e?.message === 'cancelled') return ''   // the user closed the PIN sheet themselves - say nothing
   const code = e?.code

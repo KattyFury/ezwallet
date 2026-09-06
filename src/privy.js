@@ -89,6 +89,14 @@ const METHOD = 'ez_login_method'
 const ALL_LOGIN_KEYS = [
   ADDR, EMAIL, METHOD,
   'ez_wallet_id', 'ez_user_token', 'ez_encryption_key', 'ez_refresh_token', 'ez_email',
+  // ⚠️ ADDED 2026-09-06. This one used to be harmless left behind - it only picked the Security
+  // row's label ("Set" vs "Change"). It is NOT harmless any more: App.jsx now gates the MANDATORY
+  // SetupPin screen on it, and a stale '1' from a PREVIOUS account on the same device/browser would
+  // let a brand-new account skip that screen entirely, defeating the whole point of it being
+  // mandatory. Clearing it here does not make anything worse for the single-account case (the
+  // comment on it already called it "never a security decision" - the server's own pinhash record
+  // is the real truth either way) and fixes the multi-account-same-device case for real.
+  'ez_pin_is_set',
 ]
 
 export function savedWalletAddress() {
