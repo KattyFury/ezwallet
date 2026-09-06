@@ -56,10 +56,11 @@ const jwksPublicJwk = { ...(await exportJWK(jwksKeyPair.publicKey)), kid: 'test-
 // signed by the wrong key is actually rejected, not just one that is merely malformed.
 const wrongKeyPair = await generateKeyPair('ES256', { extractable: true })
 
-async function fakeIdentityToken({ userId, address, walletId, signingKey = jwksKeyPair.privateKey }) {
-  const linkedAccounts = JSON.stringify([
-    { type: 'wallet', wallet_client_type: 'privy', id: walletId, address, chain_type: 'ethereum', lv: Math.floor(Date.now() / 1000) },
-  ])
+async function fakeIdentityToken({ userId, address, walletId, email, signingKey = jwksKeyPair.privateKey }) {
+  const now = Math.floor(Date.now() / 1000)
+  const accounts = [{ type: 'wallet', wallet_client_type: 'privy', id: walletId, address, chain_type: 'ethereum', lv: now }]
+  if (email) accounts.push({ type: 'email', address: email, lv: now })
+  const linkedAccounts = JSON.stringify(accounts)
   return new SignJWT({ cr: String(Math.floor(Date.now() / 1000)), guest: 'f', linked_accounts: linkedAccounts })
     .setProtectedHeader({ alg: 'ES256', typ: 'JWT', kid: 'test-key' })
     .setIssuer('privy.io')
@@ -114,6 +115,9 @@ function stubPrivy({ relayOk = true, quorums } = {}) {
     if (u === `https://api.privy.io/v1/apps/${APP_ID}/jwks.json`) {
       return new Response(JSON.stringify({ keys: [jwksPublicJwk] }), { status: 200 })
     }
+    if (u === 'https://api.resend.com/emails') {
+      return new Response(JSON.stringify({ id: 'test-email-id' }), { status: 200 })
+    }
     if (u.startsWith('https://api.privy.io/v1/wallets?address=')) {
       const addr = decodeURIComponent(u.split('address=')[1]).toLowerCase()
       const w = APP_WALLETS[addr]
@@ -148,6 +152,7 @@ const envWith = (kv = fakeKV(), extra = {}) => ({
   EZ_SYNC: kv,
   PRIVY_APP_SECRET: 'test-secret',
   PRIVY_AUTH_KEY: TEST_AUTH_KEY,
+  RESEND_API_KEY: 'test-resend-key',
   ...extra,
 })
 const call = (env, body) => onRequestPost({ env, request: new Request('http://x/api/pin', { method: 'POST', body: JSON.stringify(body) }) })
@@ -160,6 +165,15 @@ const payloadFor = walletId => ({
   headers: { 'privy-app-id': 'test-app' },
   body: { caip2: 'eip155:1', method: 'eth_sendTransaction', chain_type: 'ethereum', params: { transaction: { to: OTHER_ADDRESS } } },
 })
+
+const personalSignPayloadFor = (walletId, message) => ({
+  version: 1,
+  method: 'POST',
+  url: `https://api.privy.io/v1/wallets/${walletId}/rpc`,
+  headers: { 'privy-app-id': 'test-app' },
+  body: { method: 'personal_sign', chain_type: 'ethereum', params: { encoding: 'utf-8', message } },
+})
+const FORGOT_PIN_MESSAGE = 'Verify passkey to reset EZwallet PIN'
 
 // Identity-token → set. The real setup path since 2026-09-06 (PIN-FLOW-SPEC.md §3) - no more
 // nonce/signature/session round trip.
@@ -362,4 +376,111 @@ test('REGRESSION: enable-pin never touches the wallet\'s owner_id - only the quo
   const { body: plan } = await jsonOf(await call(envWith(), { action: 'enable-pin-plan', address: me.address }))
   assert.ok(!('owner_id' in plan.payload.body), 'this must be a QUORUM update, never a WALLET-ownership update')
   assert.match(plan.payload.url, /\/v1\/key_quorums\//, 'not /v1/wallets/ - a wallet update is what Privy\'s client SDK refuses outright')
+})
+
+// ══ forgot-PIN (PIN-FLOW-SPEC.md §4) ══
+
+test('§4.1 happy path: passkey proof → immediate reset, no lock, sign works right away', async () => {
+  stubPrivy()
+  const env = envWith()
+  await setPin(env, '111111')
+  const idToken = await fakeIdentityToken({ userId: 'did:privy:me', address: me.address, walletId: MY_WALLET_ID })
+  const { status: s1, body: proof } = await jsonOf(await call(env, {
+    action: 'forgot-pin-verify-passkey', idToken,
+    requestPayload: personalSignPayloadFor(MY_WALLET_ID, FORGOT_PIN_MESSAGE), userSignature: 'passkey-sig',
+  }))
+  assert.equal(s1, 200)
+  assert.ok(proof.proofToken)
+  const { status: s2 } = await jsonOf(await call(env, { action: 'forgot-pin-apply-passkey', proofToken: proof.proofToken, newPin: '222222' }))
+  assert.equal(s2, 200)
+  // Immediate, no 24h wait: a send with the NEW pin works right now.
+  const { status: s3 } = await jsonOf(await call(env, { action: 'sign', address: me.address, pin: '222222', requestPayload: payloadFor(MY_WALLET_ID), userSignature: 'send-sig' }))
+  assert.equal(s3, 200)
+})
+
+test('REGRESSION: forgot-pin-verify-passkey only accepts the ONE fixed message - not an open signer', async () => {
+  stubPrivy()
+  const env = envWith()
+  const idToken = await fakeIdentityToken({ userId: 'did:privy:me', address: me.address, walletId: MY_WALLET_ID })
+  const { status, body } = await jsonOf(await call(env, {
+    action: 'forgot-pin-verify-passkey', idToken,
+    requestPayload: personalSignPayloadFor(MY_WALLET_ID, 'anything else'), userSignature: 'sig',
+  }))
+  assert.equal(status, 400)
+  assert.equal(body.error, 'bad-request-payload')
+})
+
+test('a proof token can only be spent once', async () => {
+  stubPrivy()
+  const env = envWith()
+  const idToken = await fakeIdentityToken({ userId: 'did:privy:me', address: me.address, walletId: MY_WALLET_ID })
+  const { body: proof } = await jsonOf(await call(env, {
+    action: 'forgot-pin-verify-passkey', idToken,
+    requestPayload: personalSignPayloadFor(MY_WALLET_ID, FORGOT_PIN_MESSAGE), userSignature: 'passkey-sig-2',
+  }))
+  assert.equal((await call(env, { action: 'forgot-pin-apply-passkey', proofToken: proof.proofToken, newPin: '333333' })).status, 200)
+  const { status, body } = await jsonOf(await call(env, { action: 'forgot-pin-apply-passkey', proofToken: proof.proofToken, newPin: '444444' }))
+  assert.equal(status, 401)
+  assert.equal(body.error, 'bad-proof-token')
+})
+
+test('§4.2 happy path: a pending reset blocks sending, right PIN and all, until it is applied', async () => {
+  const { calls } = stubPrivy()
+  const env = envWith()
+  await setPin(env, '111111')
+  const idToken = await fakeIdentityToken({ userId: 'did:privy:me', address: me.address, walletId: MY_WALLET_ID, email: 'me@example.com' })
+  const { status: s1, body: start } = await jsonOf(await call(env, { action: 'forgot-pin-start', idToken, newPin: '222222' }))
+  assert.equal(s1, 200)
+  assert.equal(start.emailSent, true)
+  // The email actually reached Resend, addressed to the VERIFIED email from the token - never a
+  // client-supplied destination - with a cancel link carrying the real token.
+  const mailCall = calls.find(c => c.url === 'https://api.resend.com/emails')
+  const mailBody = JSON.parse(mailCall.init.body)
+  assert.deepEqual(mailBody.to, ['me@example.com'])
+  assert.match(mailBody.html, /cancel-pin-reset\?token=/)
+
+  // REGRESSION: blocked even with the CORRECT old PIN - the lock does not care whether the caller
+  // knows it, only that a reset is pending.
+  const { status: s2, body: blocked } = await jsonOf(await call(env, { action: 'sign', address: me.address, pin: '111111', requestPayload: payloadFor(MY_WALLET_ID), userSignature: 'blocked-sig' }))
+  assert.equal(s2, 423)
+  assert.equal(blocked.error, 'pin-reset-pending')
+
+  // Simulate the 24h window having elapsed: back-date the record directly in the fake KV (there is
+  // no cron worker - `sign` itself applies it lazily on next use, per the file's own comment).
+  const rec = JSON.parse(await env.EZ_SYNC.get(`pinreset:${me.address.toLowerCase()}`))
+  await env.EZ_SYNC.put(`pinreset:${me.address.toLowerCase()}`, JSON.stringify({ ...rec, expiresAt: Date.now() - 1000 }))
+
+  const { status: s3 } = await jsonOf(await call(env, { action: 'sign', address: me.address, pin: '222222', requestPayload: payloadFor(MY_WALLET_ID), userSignature: 'after-window-sig' }))
+  assert.equal(s3, 200, 'the new PIN must now be live')
+  assert.equal(await env.EZ_SYNC.get(`pinreset:${me.address.toLowerCase()}`), null, 'the pending record is consumed once applied')
+})
+
+test('§4.2: "Not me" cancels the pending reset - the OLD pin keeps working', async () => {
+  stubPrivy()
+  const env = envWith()
+  await setPin(env, '111111')
+  const idToken = await fakeIdentityToken({ userId: 'did:privy:me', address: me.address, walletId: MY_WALLET_ID })
+  const { body: start } = await jsonOf(await call(env, { action: 'forgot-pin-start', idToken, newPin: '222222' }))
+  const rec = JSON.parse(await env.EZ_SYNC.get(`pinreset:${me.address.toLowerCase()}`))
+
+  const { status: cancelStatus } = await jsonOf(await call(env, { action: 'forgot-pin-cancel', token: rec.cancelToken }))
+  assert.equal(cancelStatus, 200)
+
+  const { status } = await jsonOf(await call(env, { action: 'sign', address: me.address, pin: '111111', requestPayload: payloadFor(MY_WALLET_ID), userSignature: 'still-old-pin' }))
+  assert.equal(status, 200, 'cancelling must unblock sending again')
+})
+
+test('forgot-pin-cancel: an unknown or already-used token is a 404, not a crash', async () => {
+  stubPrivy()
+  const { status, body } = await jsonOf(await call(envWith(), { action: 'forgot-pin-cancel', token: 'never-issued' }))
+  assert.equal(status, 404)
+  assert.equal(body.error, 'bad-or-expired-token')
+})
+
+test('forgot-pin-start: nothing to forget if no PIN was ever set', async () => {
+  stubPrivy()
+  const idToken = await fakeIdentityToken({ userId: 'did:privy:other', address: OTHER_ADDRESS, walletId: OTHER_WALLET_ID })
+  const { status, body } = await jsonOf(await call(envWith(), { action: 'forgot-pin-start', idToken, newPin: '999999' }))
+  assert.equal(status, 400)
+  assert.equal(body.error, 'pin-not-set')
 })

@@ -32,6 +32,8 @@ const QRScanner   = lazy(() => import('./screens/QRScanner'))
 const TxHistory   = lazy(() => import('./screens/TxHistory'))
 const Currency    = lazy(() => import('./screens/Currency'))
 const Security    = lazy(() => import('./screens/Security'))
+const ForgotPin   = lazy(() => import('./screens/ForgotPin'))
+const CancelPinReset = lazy(() => import('./screens/CancelPinReset'))
 const About       = lazy(() => import('./screens/About'))
 // PinGate was DELETED on 2026-08-30. It existed to make the user enter their Circle PIN before the
 // app opened, and that PIN was real: it completed the MPC signature. Privy holds the key in its own
@@ -49,6 +51,7 @@ const SCREENS = {
   TxHistory,
   Currency,
   Security,
+  ForgotPin,
   About,
 }
 
@@ -238,6 +241,20 @@ export default function App() {
     })
     return () => cancel(id)
   }, [])
+
+  // ⚠️ THE "NOT ME" CANCEL LINK (PIN-FLOW-SPEC.md §4.2) IS PUBLIC - checked BEFORE the `!nav` wait
+  // below, not after. It must render for someone who is signed OUT, on a device that has never seen
+  // this app, clicking a link from their email - waiting on Privy's session restore first would show
+  // them a blank frame forever if they are not logged in on this browser at all. The token in the URL
+  // IS the credential (see functions/api/pin.js's forgot-pin-cancel), same trust model as any email
+  // unsubscribe link, so nothing here depends on `nav`/`authenticated`/anything above.
+  if (window.location.pathname === '/cancel-pin-reset') {
+    return (
+      <Suspense fallback={<div className="screen" />}>
+        <CancelPinReset />
+      </Suspense>
+    )
+  }
 
   // Still waiting on Privy → the same empty .screen frame the Suspense fallback uses, so there is no
   // white flash and no layout jump when the real first screen appears.

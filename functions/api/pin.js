@@ -38,6 +38,7 @@
 // endpoint in this directory.
 // ══════════════════════════════════════════════════════════════════════════════
 import { generateAuthorizationSignature, PrivyClient } from '@privy-io/node';
+import { sendEmail } from './_email.js';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
 const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: JSON_HEADERS });
@@ -65,6 +66,11 @@ const SESSION_TTL = 86400;
 // 6 số đã đủ entropy".
 const LOCK_MAX = 4;
 const LOCK_WINDOW = 300;
+
+// PIN-FLOW-SPEC.md §4.2's 24h "Not me" window on a no-passkey PIN reset. Needed by `sign` (which
+// runs earlier in the file than the forgot-pin actions that create these records) as well as by
+// them, so it lives up here with the other top-level constants, not inline near its main use.
+const RESET_LOCK_SECONDS = 24 * 3600;
 
 // Work factor is stored PER-RECORD (not just here) specifically so it can be bumped later for new
 // PINs without invalidating everyone's existing hash.
@@ -131,13 +137,18 @@ async function walletIdForAddress(ctx, address) {
 // `PrivyClient.users().get({ id_token })` VERIFIES the token cryptographically against Privy's own
 // JWKS (it does not merely decode it - the SDK's own doc: "This verifies the token and parses the
 // payload"), so a forged or expired token is rejected the same way a bad signature used to be.
+// Returns { address, email } - `email` added 2026-09-06 (PIN-FLOW-SPEC.md §4) for the forgot-PIN
+// flow's notification/cancel emails: the destination address is READ FROM THE VERIFIED TOKEN, never
+// taken from the client, so a caller cannot redirect a security email to somewhere they control.
 async function walletAddressFromIdentityToken(ctx, idToken) {
   if (!ctx.env.PRIVY_APP_SECRET) return null;
   const client = new PrivyClient({ appId: PRIVY_APP_ID, appSecret: ctx.env.PRIVY_APP_SECRET });
   let user;
   try { user = await client.users().get({ id_token: idToken }); } catch { return null; }
-  const acc = (user.linked_accounts || []).find(a => a.type === 'wallet' && a.chain_type === 'ethereum');
-  return acc?.address?.toLowerCase() || null;
+  const wallet = (user.linked_accounts || []).find(a => a.type === 'wallet' && a.chain_type === 'ethereum');
+  if (!wallet?.address) return null;
+  const email = (user.linked_accounts || []).find(a => a.type === 'email')?.address || null;
+  return { address: wallet.address.toLowerCase(), email };
 }
 
 // SHA-256 hex, used to key the replay guard on the user's signature without storing the signature.
@@ -246,12 +257,12 @@ export async function onRequestPost(ctx) {
     const { idToken, pin } = body;
     if (!/^\d{6}$/.test(pin || '')) return json({ error: 'pin-must-be-6-digits' }, 400);
     if (typeof idToken !== 'string' || !idToken) return json({ error: 'id-token required' }, 400);
-    const addr = await walletAddressFromIdentityToken(ctx, idToken);
-    if (!addr) return json({ error: 'bad-identity-token' }, 401);
+    const identity = await walletAddressFromIdentityToken(ctx, idToken);
+    if (!identity) return json({ error: 'bad-identity-token' }, 401);
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const hash = await derivePinBits(pin, salt, PBKDF2_ITERATIONS);
-    await kv.put(`pinhash:${addr}`, JSON.stringify({ v: 1, hash: toHex(hash), salt: toHex(salt), iterations: PBKDF2_ITERATIONS }));
-    await kv.delete(`pinfail:${addr}`);   // a freshly-set PIN clears any old lockout
+    await kv.put(`pinhash:${identity.address}`, JSON.stringify({ v: 1, hash: toHex(hash), salt: toHex(salt), iterations: PBKDF2_ITERATIONS }));
+    await kv.delete(`pinfail:${identity.address}`);   // a freshly-set PIN clears any old lockout
     return json({ ok: true });
   }
 
@@ -267,6 +278,23 @@ export async function onRequestPost(ctx) {
     }
 
     const addrKey = address.toLowerCase();
+
+    // ── PENDING RESET (PIN-FLOW-SPEC.md §4.2) - checked FIRST, ahead of everything else ──
+    // A no-passkey forgot-PIN request blocks EVERY send for 24h regardless of PIN correctness - the
+    // whole point is that someone other than the account owner might know (or be guessing) the OLD
+    // PIN during that window. There is no cron worker in this project, so the reset is applied
+    // LAZILY here: if the window has already elapsed by the time anyone next tries to sign, this is
+    // where the new hash actually gets written, before the sign attempt is evaluated against it.
+    const resetRec = await kv.get(`pinreset:${addrKey}`);
+    if (resetRec) {
+      const reset = JSON.parse(resetRec);
+      if (Date.now() < reset.expiresAt) return json({ error: 'pin-reset-pending', availableAt: reset.expiresAt }, 423);
+      // The window has passed - apply it now, then fall through to the normal check using the PIN
+      // the user just typed against the (now-current) new hash.
+      await kv.put(`pinhash:${addrKey}`, JSON.stringify(reset.newHash));
+      await kv.delete(`pinreset:${addrKey}`);
+      await kv.delete(`pinfail:${addrKey}`);
+    }
 
     // ── REPLAY GUARD ──
     // The user's signature covers the transfer and nothing else - no expiry, no nonce - so a captured
@@ -346,6 +374,166 @@ export async function onRequestPost(ctx) {
     }
     if (!privyRes.ok) return json({ error: 'privy-failed', detail: data }, 502);
     return json({ hash: data?.data?.hash ?? data?.hash ?? null, raw: data });
+  }
+
+  // ══ FORGOT PIN (2026-09-06, PIN-FLOW-SPEC.md §4) - two branches, by whether a passkey exists ══
+  // Both derive the address from a VERIFIED identity token, same trust model as `set` - a "forgot
+  // PIN" request must never take an address the client merely claims, or a stranger could reset
+  // anyone's PIN by naming their address.
+
+  // ── §4.1 step 1: prove the passkey is being used RIGHT NOW ──
+  // A `personal_sign` over a FIXED message, relayed through the exact same
+  // generateAuthorizationSignature → server-cosign → Privy-relay pipeline `sign` already uses for
+  // real sends - Privy's own SDK refuses to produce this signature unless MFA is satisfied, and
+  // Privy's REST API independently verifies it belongs to the claimed wallet's registered key when
+  // relayed. "Did Privy accept it" IS the proof; nothing is verified locally that could be spoofed.
+  // The server ALWAYS produces its half for this one fixed message, unconditionally - no PIN check -
+  // because the entire point of this branch is that the PIN is unknown.
+  const FORGOT_PIN_PASSKEY_MESSAGE = 'Verify passkey to reset EZwallet PIN';
+  if (action === 'forgot-pin-verify-passkey') {
+    if (!ctx.env.PRIVY_AUTH_KEY || !ctx.env.PRIVY_APP_SECRET) return json({ error: 'pin-signing-disabled' }, 503);
+    const { idToken, requestPayload, userSignature } = body;
+    if (typeof idToken !== 'string' || !idToken) return json({ error: 'id-token required' }, 400);
+    const identity = await walletAddressFromIdentityToken(ctx, idToken);
+    if (!identity) return json({ error: 'bad-identity-token' }, 401);
+    if (typeof userSignature !== 'string' || !userSignature) return json({ error: 'user-signature required' }, 400);
+    if (!WALLET_RPC_URL.test(requestPayload?.url || '') || requestPayload?.method !== 'POST') {
+      return json({ error: 'bad-request-payload' }, 400);
+    }
+    // Only this ONE fixed message can be relayed here - never an open signer for arbitrary content.
+    if (requestPayload?.body?.method !== 'personal_sign' || requestPayload?.body?.params?.message !== FORGOT_PIN_PASSKEY_MESSAGE) {
+      return json({ error: 'bad-request-payload' }, 400);
+    }
+
+    const sigKey = `usedsig:${await sha256Hex(userSignature)}`;
+    if (await kv.get(sigKey)) return json({ error: 'replayed-request' }, 409);
+
+    const walletId = await walletIdForAddress(ctx, identity.address);
+    if (!walletId) return json({ error: 'wallet-not-found' }, 404);
+    if (requestPayload.url !== `https://api.privy.io/v1/wallets/${walletId}/rpc`) {
+      return json({ error: 'wallet-mismatch' }, 403);
+    }
+
+    await kv.put(sigKey, '1', { expirationTtl: SESSION_TTL });
+
+    let serverSignature;
+    try {
+      serverSignature = generateAuthorizationSignature({ authorizationPrivateKey: ctx.env.PRIVY_AUTH_KEY, input: requestPayload });
+    } catch (e) {
+      console.error('[pin] server signature failed:', e);
+      return json({ error: 'sign-failed' }, 500);
+    }
+
+    let privyRes, data;
+    try {
+      privyRes = await fetch(requestPayload.url, {
+        method: requestPayload.method,
+        headers: {
+          ...requestPayload.headers,
+          'privy-app-id': PRIVY_APP_ID,
+          Authorization: `Basic ${btoa(`${PRIVY_APP_ID}:${ctx.env.PRIVY_APP_SECRET}`)}`,
+          'Content-Type': 'application/json',
+          'privy-authorization-signature': `${userSignature},${serverSignature}`,
+        },
+        body: JSON.stringify(requestPayload.body),
+      });
+      data = await privyRes.json().catch(() => ({}));
+    } catch {
+      return json({ error: 'privy-unreachable' }, 502);
+    }
+    if (!privyRes.ok) return json({ error: 'privy-failed', detail: data }, 502);
+
+    // Privy accepted the signature - passkey re-auth is proven. Issue a SHORT-LIVED, single-use
+    // token for the actual reset (forgot-pin-apply-passkey) rather than trusting the client to
+    // remember "I proved it" - the token IS the proof, not a client-side flag.
+    const proofToken = crypto.randomUUID();
+    await kv.put(`pinproof:${proofToken}`, JSON.stringify({ address: identity.address, email: identity.email }), { expirationTtl: 300 });
+    return json({ ok: true, proofToken });
+  }
+
+  // ── §4.1 step 2: spend the proof, set the new PIN immediately, no lock ──
+  if (action === 'forgot-pin-apply-passkey') {
+    const { proofToken, newPin } = body;
+    if (!/^\d{6}$/.test(newPin || '')) return json({ error: 'pin-must-be-6-digits' }, 400);
+    if (typeof proofToken !== 'string' || !proofToken) return json({ error: 'proof-token required' }, 400);
+    const proofRec = await kv.get(`pinproof:${proofToken}`);
+    if (!proofRec) return json({ error: 'bad-proof-token' }, 401);
+    await kv.delete(`pinproof:${proofToken}`);   // single use
+    const { address: addrKey, email } = JSON.parse(proofRec);
+
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const hash = await derivePinBits(newPin, salt, PBKDF2_ITERATIONS);
+    await kv.put(`pinhash:${addrKey}`, JSON.stringify({ v: 1, hash: toHex(hash), salt: toHex(salt), iterations: PBKDF2_ITERATIONS }));
+    await kv.delete(`pinfail:${addrKey}`);
+    await kv.delete(`pinreset:${addrKey}`);   // clears any stale §4.2 pending request
+
+    // Informational only, no action button - unlike §4.2's cancel email, there is nothing to undo:
+    // by the time this sends, the new PIN is already live. A failed send must not undo it.
+    if (email) {
+      await sendEmail(ctx, {
+        to: email, subject: 'Your EZwallet PIN was changed',
+        text: 'Your EZwallet PIN was just changed using your passkey. If this was not you, your device or passkey may be compromised - review your account immediately.',
+      });
+    }
+    return json({ ok: true });
+  }
+
+  // ── §4.2 step 1: no passkey - register a PENDING reset, cancellable by email for 24h ──
+  // The new PIN is chosen NOW (not after the wait) and only takes EFFECT after 24h - see `sign`'s
+  // own pending-reset check above/below for where it actually gets applied (lazily, on next use,
+  // rather than needing a cron worker this project does not have).
+  if (action === 'forgot-pin-start') {
+    if (!ctx.env.PRIVY_APP_SECRET) return json({ error: 'pin-signing-disabled' }, 503);
+    const { idToken, newPin } = body;
+    if (!/^\d{6}$/.test(newPin || '')) return json({ error: 'pin-must-be-6-digits' }, 400);
+    if (typeof idToken !== 'string' || !idToken) return json({ error: 'id-token required' }, 400);
+    const identity = await walletAddressFromIdentityToken(ctx, idToken);
+    if (!identity) return json({ error: 'bad-identity-token' }, 401);
+    const addrKey = identity.address;
+
+    const existing = await kv.get(`pinhash:${addrKey}`);
+    if (!existing) return json({ error: 'pin-not-set' }, 400);   // nothing to "forget"
+
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const newHash = await derivePinBits(newPin, salt, PBKDF2_ITERATIONS);
+    const cancelToken = crypto.randomUUID();
+    const now = Date.now();
+    const record = {
+      newHash: { hash: toHex(newHash), salt: toHex(salt), iterations: PBKDF2_ITERATIONS },
+      requestedAt: now, expiresAt: now + RESET_LOCK_SECONDS * 1000, cancelToken,
+    };
+    // TTL outlives the lock window by 1h so a check running right at the edge still finds the
+    // record (to apply it) instead of it having already vanished from KV.
+    await kv.put(`pinreset:${addrKey}`, JSON.stringify(record), { expirationTtl: RESET_LOCK_SECONDS + 3600 });
+    await kv.put(`pinresettoken:${cancelToken}`, addrKey, { expirationTtl: RESET_LOCK_SECONDS + 3600 });
+
+    // The origin is read from THIS REQUEST, not hardcoded - so a cancel link generated on a preview
+    // deploy points back at that same preview, and one generated in production points at production.
+    const origin = new URL(ctx.request.url).origin;
+    const cancelUrl = `${origin}/cancel-pin-reset?token=${cancelToken}`;
+    let emailSent = false;
+    if (identity.email) {
+      const mail = await sendEmail(ctx, {
+        to: identity.email, subject: 'EZwallet PIN reset requested',
+        html: `<p>A PIN reset was requested for your EZwallet account. It will take effect in 24 hours.</p><p>If this was not you, <a href="${cancelUrl}">click here to cancel it</a>.</p>`,
+        text: `A PIN reset was requested for your EZwallet account. It will take effect in 24 hours.\n\nIf this was not you, cancel it here: ${cancelUrl}`,
+      });
+      emailSent = mail.ok;
+    }
+    return json({ ok: true, pendingUntil: record.expiresAt, emailSent });
+  }
+
+  // ── §4.2 step 2: the "Not me" link - PUBLIC, no auth. The token itself IS the credential, same as
+  // any email unsubscribe/reset-cancel link; requiring login here would strand someone clicking it
+  // from a different device or a signed-out browser, which is exactly when they need it to work. ──
+  if (action === 'forgot-pin-cancel') {
+    const { token } = body;
+    if (typeof token !== 'string' || !token) return json({ error: 'token required' }, 400);
+    const addrKey = await kv.get(`pinresettoken:${token}`);
+    if (!addrKey) return json({ error: 'bad-or-expired-token' }, 404);
+    await kv.delete(`pinresettoken:${token}`);
+    await kv.delete(`pinreset:${addrKey}`);
+    return json({ ok: true });
   }
 
   // NOTE: an 'assign-owner' action lived here briefly (2026-09-04) to reassign an EXISTING wallet's

@@ -45,32 +45,42 @@ const PIN_ERROR_BY_CODE = {
   'payload-mismatch': 'Your wallet\'s security settings changed. Please try again.',
   'enable-pin-plan-failed': 'Could not prepare PIN protection. Please try again.',
   'enable-pin-apply-failed': 'Could not turn on PIN protection. Please try again.',
+  // PIN-FLOW-SPEC.md §4 - forgot PIN, added 2026-09-06.
+  'forgot-pin-verify-failed': 'Could not verify your passkey. Please try again.',
+  'forgot-pin-apply-failed': 'Could not reset your PIN. Please try again.',
+  'forgot-pin-start-failed': 'Could not start your PIN reset. Please try again.',
+  'bad-proof-token': 'That passkey check expired. Please try again.',
+  'cancel-failed': 'Could not cancel the PIN reset. Please try again.',
+  'bad-or-expired-token': 'That cancellation link is invalid or already used.',
+  'id-token required': 'Please sign in again.',   // the literal error code functions/api/pin.js returns
+}
+
+// ⚠️ THE WALLET ID COMES FROM THE SERVER, AND HAS TO (2026-09-05).
+// This used to read `user.linkedAccounts[].id` in the browser. That is null for every user of this
+// app: Privy documents `Wallet.id` as "Null if the wallet is not delegated"
+// (react-auth/dist/dts/types-Ck8tvlPZ.d.ts:1008) and this app never delegates - the account's own
+// wallets come back `delegated: false` from Privy's API. So `walletIdFor()` returned null every
+// time and EVERY PIN-gated Send and Swap threw `no-wallet-id` before it reached the sheet. The
+// previous comment cited that same type file but stopped reading at "The server wallet ID of the
+// wallet" and missed the sentence after it.
+// The server holds PRIVY_APP_SECRET and gets the id from `GET /v1/wallets?address=...` without
+// delegation - see functions/api/pin.js. Do not "optimise" this round trip away by going back to
+// linkedAccounts; there is nothing there to read.
+// Module-level (not inside a hook) since it touches no hook state - both usePinSigner and
+// useForgotPin need it.
+async function fetchWalletId(address) {
+  const res = await fetch(PIN_ENDPOINT, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'wallet-id', address }),
+  })
+  const d = await res.json().catch(() => ({}))
+  if (!res.ok || !d.walletId) throw Object.assign(new Error(d.error || 'no-wallet-id'), { code: d.error || 'no-wallet-id' })
+  return d.walletId
 }
 
 export function usePinSigner() {
   const { generateAuthorizationSignature } = useAuthorizationSignature()
-
-  // ⚠️ THE WALLET ID COMES FROM THE SERVER, AND HAS TO (2026-09-05).
-  // This used to read `user.linkedAccounts[].id` in the browser. That is null for every user of this
-  // app: Privy documents `Wallet.id` as "Null if the wallet is not delegated"
-  // (react-auth/dist/dts/types-Ck8tvlPZ.d.ts:1008) and this app never delegates - the account's own
-  // wallets come back `delegated: false` from Privy's API. So `walletIdFor()` returned null every
-  // time and EVERY PIN-gated Send and Swap threw `no-wallet-id` before it reached the sheet. The
-  // previous comment cited that same type file but stopped reading at "The server wallet ID of the
-  // wallet" and missed the sentence after it.
-  // The server holds PRIVY_APP_SECRET and gets the id from `GET /v1/wallets?address=...` without
-  // delegation - see functions/api/pin.js. Do not "optimise" this round trip away by going back to
-  // linkedAccounts; there is nothing there to read.
-  async function fetchWalletId(address) {
-    const res = await fetch(PIN_ENDPOINT, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'wallet-id', address }),
-    })
-    const d = await res.json().catch(() => ({}))
-    if (!res.ok || !d.walletId) throw Object.assign(new Error(d.error || 'no-wallet-id'), { code: d.error || 'no-wallet-id' })
-    return d.walletId
-  }
 
   async function signWithPin({ to, data, value, chainId, address }) {
     const walletId = await fetchWalletId(address)
@@ -113,14 +123,6 @@ export function usePinSigner() {
   return { signWithPin }
 }
 
-// ONE function for screens to call, regardless of which half of the flow threw: errors from
-// generateAuthorizationSignature() are Privy SDK errors (privyErrorMessage's table - cancelling the
-// passkey prompt, etc.), errors from the /api/pin round-trip carry OUR OWN codes above. Unknown codes
-// fall through to privyErrorMessage last, same "log it, don't guess a sentence" behaviour it already has.
-// ══ SETTING (or changing) THE PIN ITSELF - a different, cheaper proof than `sign` above ══
-// No dual-approval needed here: nothing moves money, so a plain wallet signature (personal_sign,
-// same EIP-191 pattern sync.js already uses for the contacts backup) is enough proof "this is really
-// the wallet owner". Mirrors functions/api/pin.js's nonce → session → set exactly.
 // ══ MAKING THE PIN LOAD-BEARING (2026-09-05) ══
 // Setting a PIN hash (useSetupPin below) and the wallet actually REQUIRING it are two separate
 // facts. Every embedded wallet is owned, from creation, by Privy's own default 1-of-1 quorum - one
@@ -212,6 +214,62 @@ export function useCompletePinSetup() {
   }
 
   return { completeSetup }
+}
+
+// ══ FORGOT PIN (2026-09-06, PIN-FLOW-SPEC.md §4) - two branches, by whether a passkey exists ══
+export function useForgotPin() {
+  const { generateAuthorizationSignature } = useAuthorizationSignature()
+
+  // §4.1: has a passkey - proves it, then resets immediately, no lock. The "prove it" step signs a
+  // FIXED message (never chosen by the caller - the server only ever relays this exact text, see
+  // functions/api/pin.js) through the same wallet-RPC + server-cosign + Privy-relay pipeline
+  // signWithPin already uses for real sends. If passkey MFA is on, Privy's own onMfaRequired
+  // listener (App.jsx) fires here exactly as it does everywhere else - nothing special to do.
+  async function forgotPinWithPasskey(address, newPin) {
+    const idToken = await getIdentityToken()
+    if (!idToken) throw Object.assign(new Error('not-authenticated'), { code: 'not-authenticated' })
+    const walletId = await fetchWalletId(address)
+
+    const requestPayload = {
+      version: 1,
+      method: 'POST',
+      url: `https://api.privy.io/v1/wallets/${walletId}/rpc`,
+      headers: { 'privy-app-id': PRIVY_APP_ID },
+      body: { method: 'personal_sign', chain_type: 'ethereum', params: { encoding: 'utf-8', message: 'Verify passkey to reset EZwallet PIN' } },
+    }
+    const { signature: userSignature } = await generateAuthorizationSignature(requestPayload)
+
+    const verifyRes = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'forgot-pin-verify-passkey', idToken, requestPayload, userSignature }) })
+    const verify = await verifyRes.json().catch(() => ({}))
+    if (!verifyRes.ok || !verify.proofToken) throw Object.assign(new Error(verify.error || 'forgot-pin-verify-failed'), { code: verify.error || 'forgot-pin-verify-failed' })
+
+    const applyRes = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'forgot-pin-apply-passkey', proofToken: verify.proofToken, newPin }) })
+    const applied = await applyRes.json().catch(() => ({}))
+    if (!applyRes.ok) throw Object.assign(new Error(applied.error || 'forgot-pin-apply-failed'), { code: applied.error || 'forgot-pin-apply-failed' })
+    return applied
+  }
+
+  // §4.2: no passkey - registers a 24h-cancellable pending reset. Identity comes from the token,
+  // same as everywhere else in this file - never a client-claimed address.
+  async function forgotPinStart(newPin) {
+    const idToken = await getIdentityToken()
+    if (!idToken) throw Object.assign(new Error('not-authenticated'), { code: 'not-authenticated' })
+    const res = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'forgot-pin-start', idToken, newPin }) })
+    const d = await res.json().catch(() => ({}))
+    if (!res.ok) throw Object.assign(new Error(d.error || 'forgot-pin-start-failed'), { code: d.error || 'forgot-pin-start-failed' })
+    return d   // { ok, pendingUntil, emailSent }
+  }
+
+  return { forgotPinWithPasskey, forgotPinStart }
+}
+
+// The "Not me" cancel link's confirmation page (CancelPinReset.jsx) calls this with NO auth at all -
+// the token in the URL IS the credential, same trust model as any email unsubscribe link.
+export async function cancelPinReset(token) {
+  const res = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'forgot-pin-cancel', token }) })
+  const d = await res.json().catch(() => ({}))
+  if (!res.ok) throw Object.assign(new Error(d.error || 'cancel-failed'), { code: d.error || 'cancel-failed' })
+  return d
 }
 
 export function pinErrorMessage(e) {

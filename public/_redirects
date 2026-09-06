@@ -1,0 +1,7 @@
+# SPA fallback for Cloudflare Pages (2026-09-06, PIN-FLOW-SPEC.md §4.2).
+# Without this, /cancel-pin-reset (the "Not me" email link's landing page - a client-side-only
+# route App.jsx checks via window.location.pathname, not a real static file) 404s, because
+# Cloudflare Pages otherwise only serves an exact-matching asset or index.html for the bare root.
+# Pages Functions (functions/api/*.js) are matched BEFORE _redirects rules by Cloudflare itself, so
+# this catch-all never shadows the real API - no explicit /api/* passthrough needed.
+/*    /index.html   200

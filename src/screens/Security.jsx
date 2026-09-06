@@ -158,7 +158,7 @@ export default function Security() {
           (the same rule Change PIN followed: it is a row that goes somewhere, not a dropdown). */}
       {/* The box SHRINKS to fit: 4 rows for a Privy wallet, 2 for a MetaMask one. A fixed height with
           space-evenly would spread two rows over four rows' worth of grey and read as a rendering bug. */}
-      <div style={{ gridRow: isEmbedded ? '2 / 7' : '2 / 4', background: 'var(--color-surface)', borderRadius: 20, padding: '0 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', minWidth: 0 }}>
+      <div style={{ gridRow: isEmbedded ? (pinIsSet ? '2 / 8' : '2 / 7') : '2 / 4', background: 'var(--color-surface)', borderRadius: 20, padding: '0 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', minWidth: 0 }}>
         <div className="menu-item">
           <span style={LABEL}>Login email</span>
           <span style={VALUE}>{email}</span>
@@ -186,6 +186,13 @@ export default function Security() {
             {pinStatus
               ? <span style={{ fontSize: 'var(--fs-item)', color: pinErr ? 'var(--color-error)' : 'var(--color-primary)' }}>{pinStatus}</span>
               : <Icon name="right2" size="var(--is-md-lg)" color="var(--color-brand)" />}
+          </button>
+        )}
+        {/* Only once a PIN actually exists - nothing to forget otherwise. PIN-FLOW-SPEC.md §4. */}
+        {isEmbedded && pinIsSet && (
+          <button className="menu-item" onClick={() => navigate('ForgotPin')}>
+            <span style={LABEL}>Forgot PIN?</span>
+            <Icon name="right2" size="var(--is-md-lg)" color="var(--color-brand)" />
           </button>
         )}
         {isEmbedded && (
