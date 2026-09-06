@@ -1,73 +1,81 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { usePrivy, useLogout } from '@privy-io/react-auth'
+import logoLong from '../../design/logo.svg'
 import { useNav } from '../nav'
-import Icon from '../components/Icon'
 import { clearLoginData } from '../privy'
 import { useCompletePinSetup, pinErrorMessage } from '../pinSigner'
 
 // ══ THE MANDATORY PIN, RIGHT AFTER LOGIN (2026-09-06, user decision) ══
-// The user's own words for the flow, verbatim: "1. log in = email OTP · 2. Set PIN · 3. Set passkey
-// nếu muốn · 4. trang chủ" - login, then a MANDATORY PIN, THEN an OPTIONAL passkey offer, THEN home.
-// This REORDERS what shipped on 08-30/09-04: back then ProtectWallet (passkey) ran first and PIN
-// setup was buried as an easy-to-skip row inside Security, which never actually made PIN mandatory
-// in the ONBOARDING PATH even though EZWALLET-SIGNIN-DECISIONS.md had already called it a mandatory
-// baseline. This screen is what finally makes that decision literal in the flow itself.
+// The user's own words, verbatim: "1. log in = email OTP · 2. Set PIN · 3. Set passkey nếu muốn ·
+// 4. trang chủ". This is step 2.
 //
-// ⚠️ NO "Not now" HERE - unlike ProtectWallet, which is genuinely optional (its own comment: "an
-// OFFER, not a wall"). The user's flow lists PIN with no skip and calls passkey out separately as
-// "if wanted" - the asymmetry is deliberate, not an oversight to fix later.
-// ⚠️ A "Sign out" escape DOES exist (small text link, not a competing CTA) - a MANDATORY screen with
-// a bug and no way out at all would strand a real user on their own money. Retrying is the intended
-// path; signing out is the fallback for when retrying is not working.
+// ⚠️ CORRECTED 2026-09-06, SAME DAY - the first version of this screen was WRONG: it drew its own
+// full-screen UI (a shield icon, a paragraph, a "Set PIN" button) that exists NOWHERE in the design.
+// The actual PIN entry UI is Figma frames 3/4/5 (fileKey l26UsgoqIDfvLkrozVLPTq) - a centred POPUP
+// over a blurred logo backdrop - and that popup ALREADY EXISTS: `PinGateHost.jsx`, mounted once in
+// App.jsx, matches those exact frames pixel for pixel (verified 09-04). This screen's only job is to
+// (1) show the SAME backdrop Login.jsx shows (the logo + tagline, copied from Login.jsx line for
+// line, not reinvented) and (2) OPEN THAT EXISTING SHEET the moment the screen mounts, no button to
+// press first - the same "ask without being asked" pattern Login.jsx already uses for Privy's own
+// modal, for the same reason: arriving here and having to press something before being allowed to do
+// the one mandatory thing is a step carrying no information.
 //
-// App.jsx routes here whenever the wallet has no PIN hash yet, BEFORE the passkey-offer effect gets
-// a turn (that effect now also checks `ez_pin_is_set` and stays out of the way until this screen is
-// done) - so a fresh signup reaches this screen first.
-//
-// ⚠️ THIS SCREEN NAVIGATES ITSELF ON SUCCESS, unlike ProtectWallet (which can only detect success by
-// WATCHING `user.mfaMethods` change, because `showMfaEnrollmentModal()` returns void with no promise
-// to await). `completeSetup` DOES resolve/reject, so there is a real outcome to act on directly -
-// straight to ProtectWallet if the user has no passkey yet (continuing the mandated order: PIN, then
-// the OPTIONAL passkey offer), or straight to Home if they already have one (returning user whose
-// account somehow reached this screen with a passkey already on - e.g. it existed before this PIN
-// gate shipped). App.jsx's gate effect is therefore only ever responsible for the FIRST placement,
-// not for reacting to the flag changing later.
+// ⚠️ UNDISMISSABLE ON CANCEL ONLY - closing the sheet with its own ✕ just reopens it (matches
+// Login.jsx: there is nothing behind this screen to escape to by dismissing it). But a REAL error
+// (not a cancel) does NOT auto-retry, on purpose: the 09-05 incident that froze the tab solid was
+// exactly a silent retry loop hitting a broken signing path (a stale passkey's server-side
+// verification failing again and again with no pause). Reopening THIS sheet on every failure would
+// risk rebuilding that same shape of bug into the one screen every user must pass through. A real
+// error stops here, shows what happened, and waits for an explicit tap ("Try again") before the
+// sheet opens once more.
 export default function SetupPin() {
   const { navigate } = useNav()
   const { user } = usePrivy()
   const { logout } = useLogout()
   const { completeSetup } = useCompletePinSetup()
-  const [status, setStatus] = useState('')
-  const [err, setErr] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState('')   // '' = sheet is open / about to open; non-empty = stopped
 
-  async function handleSetPin() {
-    setBusy(true); setStatus('Verifying...'); setErr(false)
+  // ⚠️ REFS, NOT STATE - `running` only guards against calling run() twice concurrently (this
+  // component's own StrictMode double-invoke, or the mount-effect racing a manual retry tap), and
+  // `mounted` only stops a stale async call from touching state after unmount. Neither should ever
+  // be a dependency that re-runs anything.
+  const runningRef = useRef(false)
+  const mountedRef = useRef(true)
+  // ⚠️ SET true ON EVERY MOUNT, NOT JUST DECLARED true ONCE - this app runs in React.StrictMode
+  // (main.jsx), which in DEVELOPMENT mounts, cleans up, then mounts again to surface effects that
+  // are not idempotent. Without resetting it here, the FIRST mount's cleanup would leave this false
+  // forever, and every async callback below would silently no-op on the real, second mount -
+  // production is unaffected (StrictMode's double-invoke is dev-only), but local `npm run dev`
+  // testing would look completely stuck for a reason that has nothing to do with the PIN flow itself.
+  useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false } }, [])
+
+  async function run() {
+    if (runningRef.current) return
+    runningRef.current = true
+    setError('')
     const address = localStorage.getItem('ez_wallet_addr')
     try {
       await completeSetup(address, {
-        onHashSet: () => { localStorage.setItem('ez_pin_is_set', '1'); setStatus('Turning on protection...') },
+        onHashSet: () => localStorage.setItem('ez_pin_is_set', '1'),
       })
+      if (!mountedRef.current) return
       const passkeyOn = !!user?.mfaMethods?.includes('passkey')
       navigate(passkeyOn ? 'HomeSend' : 'ProtectWallet')
     } catch (e) {
-      const msg = pinErrorMessage(e)
-      // Unlike Security's "Change PIN" row, there is no pre-existing PIN here to distinguish a
-      // step-1 vs step-2 failure by - a fresh signup has neither yet, so ONE message covers both:
-      // whatever failed, the user is still on this screen and can just press the button again.
-      setStatus(msg || 'Something went wrong. Please try again.')
-      setErr(true)
-    } finally {
-      setBusy(false)
+      if (!mountedRef.current) return
+      runningRef.current = false
+      if (e?.message === 'cancelled') { run(); return }   // the sheet's own ✕ - reopen, no message needed
+      // A real failure - stop and show it, rather than retrying blind.
+      setError(pinErrorMessage(e) || 'Something went wrong. Please try again.')
     }
   }
 
-  // Identical sequence to MenuScreen's "Sign out" - both are needed, neither is enough (see the
-  // comment there): Privy keeps its own session in its own storage, so without `logout()` the
-  // reload below would find the user still signed in and walk them straight back onto this exact
-  // screen. Duplicated rather than shared, matching how MenuScreen itself keeps this inline rather
-  // than as a hook - it is 5 lines, and the two call sites are not likely to drift apart badly
-  // enough to be worth a shared module for it.
+  // Open the sheet the instant this screen mounts - see the file-level comment for why there is no
+  // button gating this first attempt.
+  useEffect(() => { run() }, [])   // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Identical sequence to MenuScreen's "Sign out" (see the comment there): both clearLoginData() and
+  // logout() are needed, neither is enough on its own.
   async function handleSignOut() {
     clearLoginData()
     ;['ez_notifs', 'ez_last_recv_ts'].forEach(k => localStorage.removeItem(k))
@@ -77,41 +85,33 @@ export default function SetupPin() {
 
   return (
     <div className="screen">
-      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
-        Set your PIN
+      {/* Exactly Login.jsx's own backdrop - see that file for the coordinate derivation. Reused
+          verbatim rather than re-measured, because it is the SAME frame family (1/2 for login, 3/4/5
+          for the PIN popup that sits over an identical background). */}
+      <div className="row-1-5 col" style={{ alignItems: 'center', paddingTop: '21.43dvh', gap: '2.5dvh' }}>
+        <img src={logoLong} alt="ezwallet" style={{ width: 'var(--col6)', maxWidth: 'min(50vw, calc(var(--screen-max) / 2))' }} />
       </div>
 
-      <div className="row-2-8 col" style={{ justifyContent: 'center', alignItems: 'center', gap: '3dvh', padding: '0 8px' }}>
-        <Icon name="shield" size="min(28vw, 120px)" color="var(--color-brand)" />
-        {/* Same plain-language register as ProtectWallet - no "dual-approval", no "quorum", no
-            "authorization key": those words explain the MECHANISM, not what the user needs to know. */}
-        <span style={{ width: '85%', fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center', lineHeight: 1.4 }}>
-          Set a 6-digit PIN to protect your money. You'll need it every time you send.
-        </span>
-        {/* Height reserved even when empty, same reasoning as PinGateHost's own error line - the
-            button below must not jump between attempts. */}
-        <div style={{ minHeight: 'calc(var(--fs-item) * 1.3 * 2)', display: 'flex', alignItems: 'center' }}>
-          {status && (
-            <span style={{ fontSize: 'var(--fs-item)', color: err ? 'var(--color-error)' : 'var(--color-muted)', textAlign: 'center' }}>
-              {status}
-            </span>
-          )}
+      {/* Only visible when a REAL error stopped the flow (see the file-level comment on why this
+          does not auto-retry) - otherwise the sheet itself is the whole screen and this stays empty. */}
+      {error && (
+        <div className="row-7-8 col" style={{ alignItems: 'center', justifyContent: 'center', gap: '2dvh', padding: '0 8px' }}>
+          <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</span>
+          <button className="btn btn-primary" style={{ width: 'min(75vw, calc(var(--screen-max) * 0.75))' }} onClick={run}>
+            Try again
+          </button>
         </div>
-        {/* The fallback for a genuinely stuck signature/signing bug, NOT a way to skip the PIN
-            itself - kept small and out of the button row below, which is ONE primary action only
-            (the app-wide row10-single shape), not a place to cram a second, unequal-weight control
-            into a fixed 10dvh band that a button alone already nearly fills. */}
+      )}
+
+      {/* The one real escape, for a genuinely broken signing flow - not a way to skip the PIN
+          itself (there is no "Not now" here, unlike ProtectWallet). Placed low and quiet, matching
+          how little attention it is meant to draw next to the sheet that owns this screen. */}
+      <div className="row-9 center">
         <button type="button" onClick={handleSignOut} style={{
           background: 'none', border: 'none', padding: 4, cursor: 'pointer',
           color: 'var(--color-muted)', fontSize: 'var(--fs-item)', textDecoration: 'underline',
         }}>
           Sign out
-        </button>
-      </div>
-
-      <div className="row-10 row10-single">
-        <button className="btn btn-primary" onClick={handleSetPin} disabled={busy}>
-          {busy ? 'Working...' : 'Set PIN'}
         </button>
       </div>
     </div>
