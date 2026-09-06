@@ -25,18 +25,19 @@
 // nonce of its own, so a captured pair would otherwise replay the same payment forever; its hash is
 // recorded and re-presenting it is a 409. See the replay-guard note in the `sign` branch.
 //
-// `set`/`nonce`/`session` (changing the PIN itself) reuse sync.js's exact nonce → wallet-signature →
-// session-token pattern, under a SEPARATE key prefix (`pinnonce:`/`pinsess:`) so the two features
-// cannot collide. A wallet signature is required to set/change a PIN so a stranger cannot grief a
-// real user's PIN into something the real user doesn't know (Privy's second signature still stops
-// them stealing funds either way, but a locked-out legitimate user is still a real annoyance to avoid).
+// `set` (changing the PIN itself) used to reuse sync.js's nonce → wallet-signature → session-token
+// pattern - removed 2026-09-06 (PIN-FLOW-SPEC.md §3): it made Privy pop its own raw "Sign message"
+// screen (showing the literal nonce) IN FRONT OF the actual PIN-entry sheet, ahead of the one thing
+// the user came here to do. `set` now verifies the caller from a Privy IDENTITY TOKEN instead -
+// every Privy account has exactly one embedded wallet, so the token (already issued at login,
+// verified here against Privy's own JWKS, not merely decoded) proves who is asking just as securely,
+// with no extra signature. See walletAddressFromIdentityToken below.
 //
 // KV: reuses ctx.env.EZ_SYNC (same binding sync.js/bug.js already use - no new binding to configure).
 // WITHOUT PRIVY_AUTH_KEY/PRIVY_APP_SECRET/KV → 503, never a crash, same convention as every other
 // endpoint in this directory.
 // ══════════════════════════════════════════════════════════════════════════════
-import { recoverMessageAddress } from 'viem';
-import { generateAuthorizationSignature } from '@privy-io/node';
+import { generateAuthorizationSignature, PrivyClient } from '@privy-io/node';
 
 const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
 const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: JSON_HEADERS });
@@ -54,8 +55,11 @@ const PRIVY_APP_ID = 'cmtenk9en00250blabovll48e';
 // non-extractable-key dance that buys nothing here.
 const PRIVY_AUTH_PUBLIC_KEY = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE7nTz1TB+rDpYadopbda0PAP9uHnXId7SBe4DCuW8J8i63S1Btar4n0C1wrKK7SE/qqjKmnE8mq4nrvBeBvz3sw==';
 
-const NONCE_TTL = 300;      // same 5' as sync.js - long enough to type a PIN slowly
-const SESSION_TTL = 86400;  // 24h server-side; client keeps it in sessionStorage so it dies with the tab
+// ⚠️ NO LONGER "the set/change-PIN session's lifetime" (that whole mechanism was removed 09-06, see
+// PIN-FLOW-SPEC.md §3) - now only the TTL for `sign`'s replay-guard record (how long a used
+// signature stays remembered). Kept the name and the 24h value rather than renaming/retuning it,
+// since a used signature outliving one calendar day of reuse attempts is still the right window.
+const SESSION_TTL = 86400;
 
 // 4 wrong attempts / 5 minutes, per EZWALLET-SIGNIN-DECISIONS.md - "không cần khoá cứng kiểu ATM vì
 // 6 số đã đủ entropy".
@@ -65,8 +69,6 @@ const LOCK_WINDOW = 300;
 // Work factor is stored PER-RECORD (not just here) specifically so it can be bumped later for new
 // PINs without invalidating everyone's existing hash.
 const PBKDF2_ITERATIONS = 100_000;
-
-const messageFor = (nonce) => `Set EZwallet PIN. Nonce: ${nonce}`;
 
 // ── PIN hashing - Web Crypto only (Cloudflare Workers has no native bcrypt) ──
 async function derivePinBits(pin, salt, iterations) {
@@ -117,6 +119,25 @@ async function walletIdForAddress(ctx, address) {
   // widened the filter must not silently hand back a different wallet's id.
   const hit = (data?.data || []).find(w => w?.address?.toLowerCase() === address.toLowerCase());
   return hit?.id || null;
+}
+
+// ══ IDENTITY TOKEN → WALLET ADDRESS (2026-09-06, PIN-FLOW-SPEC.md §3) ══
+// Replaces the nonce → personal_sign → session-token proof that used to gate set/change-PIN. That
+// proof made Privy pop its OWN raw "Sign message" confirmation screen (showing the literal nonce
+// text) IN FRONT OF the actual PIN-entry sheet - a real signature over a string nobody reads, ahead
+// of the one thing the user came here to do. The spec settles this: every Privy account has exactly
+// one embedded wallet, so Privy's own identity token - already issued at login, already held by the
+// client - proves who is asking just as securely, with no extra signature at all.
+// `PrivyClient.users().get({ id_token })` VERIFIES the token cryptographically against Privy's own
+// JWKS (it does not merely decode it - the SDK's own doc: "This verifies the token and parses the
+// payload"), so a forged or expired token is rejected the same way a bad signature used to be.
+async function walletAddressFromIdentityToken(ctx, idToken) {
+  if (!ctx.env.PRIVY_APP_SECRET) return null;
+  const client = new PrivyClient({ appId: PRIVY_APP_ID, appSecret: ctx.env.PRIVY_APP_SECRET });
+  let user;
+  try { user = await client.users().get({ id_token: idToken }); } catch { return null; }
+  const acc = (user.linked_accounts || []).find(a => a.type === 'wallet' && a.chain_type === 'ethereum');
+  return acc?.address?.toLowerCase() || null;
 }
 
 // SHA-256 hex, used to key the replay guard on the user's signature without storing the signature.
@@ -200,39 +221,11 @@ export async function onRequestPost(ctx) {
   let body; try { body = await ctx.request.json(); } catch { return json({ error: 'bad json' }, 400); }
   const { action } = body;
 
-  // ── 1. Issue a nonce (set/change PIN only) ──
-  if (action === 'nonce') {
-    const nonce = crypto.randomUUID();
-    await kv.put(`pinnonce:${nonce}`, '1', { expirationTtl: NONCE_TTL });
-    return json({ nonce, message: messageFor(nonce) });
-  }
+  // ⚠️ `nonce` / `session` REMOVED 2026-09-06 (PIN-FLOW-SPEC.md §3), along with the `pinnonce:` /
+  // `pinsess:` KV keys they wrote - `set` below verifies the caller from a Privy identity token
+  // instead of a wallet signature. See walletAddressFromIdentityToken's comment for the reasoning.
 
-  // ── 2. Trade a wallet signature for a session token (set/change PIN only) ──
-  if (action === 'session') {
-    const { nonce, signature } = body;
-    if (typeof nonce !== 'string' || typeof signature !== 'string') return json({ error: 'nonce + signature required' }, 400);
-    const pending = await kv.get(`pinnonce:${nonce}`);
-    if (!pending) return json({ error: 'bad-nonce' }, 401);
-    await kv.delete(`pinnonce:${nonce}`);
-    let addr;
-    try { addr = await recoverMessageAddress({ message: messageFor(nonce), signature }); } catch { return json({ error: 'bad-signature' }, 401); }
-    if (!addr) return json({ error: 'bad-signature' }, 401);
-    // ⚠️ THE RECOVERED ADDRESS MUST BE A WALLET OF THIS PRIVY APP (2026-09-05).
-    // Recovery proves the caller controls the key it signed with - which is sound, and is all SIWE
-    // ever proves - but it says nothing about that wallet having anything to do with EZwallet. Any
-    // stranger with any keypair could mint a session and, through `set`, write a permanent (no TTL,
-    // because a PIN has to outlive a session) `pinhash:` record into the EZ_SYNC namespace this app
-    // shares with the contacts backup and bug reports. Unbounded free writes into shared storage.
-    // Requiring the address to be one of the app's own wallets closes it with a lookup we now do
-    // anyway, and costs a real user nothing.
-    if (!ctx.env.PRIVY_APP_SECRET) return json({ error: 'pin-signing-disabled' }, 503);
-    if (!(await walletIdForAddress(ctx, addr))) return json({ error: 'not-an-app-wallet' }, 403);
-    const token = crypto.randomUUID();
-    await kv.put(`pinsess:${token}`, addr.toLowerCase(), { expirationTtl: SESSION_TTL });
-    return json({ token, address: addr.toLowerCase() });
-  }
-
-  // ── 2b. Address → Privy wallet id, so the client can BUILD the request it is about to sign ──
+  // ── Address → Privy wallet id, so the client can BUILD the request it is about to sign ──
   // Needed because the browser SDK cannot supply it (see walletIdForAddress above). Deliberately
   // takes only an address and no token: a wallet id is an opaque handle, NOT a credential - it is
   // useless without BOTH authorization signatures, and the address it maps from is public on-chain
@@ -247,13 +240,14 @@ export async function onRequestPost(ctx) {
     return json({ walletId });
   }
 
-  // ── 3. Set/overwrite the PIN, session token required ──
+  // ── Set/overwrite the PIN - identity token required, no wallet signature any more ──
   if (action === 'set') {
-    const { token, pin } = body;
+    if (!ctx.env.PRIVY_APP_SECRET) return json({ error: 'pin-signing-disabled' }, 503);
+    const { idToken, pin } = body;
     if (!/^\d{6}$/.test(pin || '')) return json({ error: 'pin-must-be-6-digits' }, 400);
-    if (typeof token !== 'string' || !token) return json({ error: 'token required' }, 400);
-    const addr = await kv.get(`pinsess:${token}`);
-    if (!addr) return json({ error: 'bad-token' }, 401);
+    if (typeof idToken !== 'string' || !idToken) return json({ error: 'id-token required' }, 400);
+    const addr = await walletAddressFromIdentityToken(ctx, idToken);
+    if (!addr) return json({ error: 'bad-identity-token' }, 401);
     const salt = crypto.getRandomValues(new Uint8Array(16));
     const hash = await derivePinBits(pin, salt, PBKDF2_ITERATIONS);
     await kv.put(`pinhash:${addr}`, JSON.stringify({ v: 1, hash: toHex(hash), salt: toHex(salt), iterations: PBKDF2_ITERATIONS }));

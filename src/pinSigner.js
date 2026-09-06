@@ -15,7 +15,7 @@
 // A wrong PIN loops back to step 3 with the server's own attempts-left message shown on the sheet;
 // the server enforces the real lockout (429 after 4 tries/5min), this is just presentation.
 // ══════════════════════════════════════════════════════════════════════════════
-import { useAuthorizationSignature, useSignMessage } from '@privy-io/react-auth'
+import { useAuthorizationSignature, getIdentityToken } from '@privy-io/react-auth'
 import { requestPin } from './pinGate'
 import { PRIVY_APP_ID, privyErrorMessage } from './privy'
 
@@ -38,7 +38,9 @@ const PIN_ERROR_BY_CODE = {
   'wallet-mismatch': 'This request does not match your wallet. Please start again.',
   'replayed-request': 'That transaction was already submitted. Please start again.',
   'not-an-app-wallet': 'This wallet is not an EZwallet wallet.',
-  'nonce-failed': 'Could not start PIN setup. Please try again.',
+  // 'nonce-failed' removed 2026-09-06 with the nonce step itself (PIN-FLOW-SPEC.md §3).
+  'not-authenticated': 'Please sign in again.',
+  'bad-identity-token': 'Please sign in again.',
   'quorum-not-found': 'Could not read your wallet\'s security settings. Please try again.',
   'payload-mismatch': 'Your wallet\'s security settings changed. Please try again.',
   'enable-pin-plan-failed': 'Could not prepare PIN protection. Please try again.',
@@ -153,30 +155,25 @@ export function useEnableMandatoryPin() {
   return { enableMandatoryPin }
 }
 
+// ══ SETTING (or changing) THE PIN - NO WALLET SIGNATURE ANY MORE (2026-09-06, PIN-FLOW-SPEC.md §3) ══
+// This used to prove wallet ownership with a nonce → personal_sign → session-token round trip (the
+// same SIWE-style pattern sync.js's contacts backup still uses). That proof is what made Privy pop
+// its own raw "Sign message" screen ("Set EZwallet PIN. Nonce: <uuid>") IN FRONT OF the actual PIN
+// entry sheet - a real signature confirming a string nobody reads, ahead of the thing the user
+// actually came here to do. The spec calls this out by name and settles it: every Privy account has
+// exactly one embedded wallet, so Privy's OWN identity token already proves who is asking, as
+// securely as a fresh signature would - there is nothing a nonce-signature adds here that
+// `getIdentityToken()` (verified SERVER-SIDE against Privy's real JWKS in functions/api/pin.js, not
+// merely decoded) does not already give us. Removing the round trip also removes the ENTIRE
+// pinnonce:/pinsess: KV lifecycle - see pin.js for the server half.
 export function useSetupPin() {
-  const { signMessage } = useSignMessage()
-
-  async function setupPin(address) {
-    const nonceRes = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'nonce' }) })
-    const nonceBody = await nonceRes.json().catch(() => ({}))
-    // ⚠️ CHECK THE RESPONSE BEFORE USING IT. Unchecked, a 503 (KV binding missing) or any other
-    // failure left `message` undefined and this went straight on to ask the user - and their
-    // fingerprint - to sign the literal string "undefined". A signature prompt is the most expensive
-    // thing this app can ask for; never raise one on data that was never validated.
-    if (!nonceRes.ok || !nonceBody.nonce || !nonceBody.message) {
-      throw Object.assign(new Error(nonceBody.error || 'nonce-failed'), { code: nonceBody.error || 'nonce-failed' })
-    }
-    const { nonce, message } = nonceBody
-    // No `uiOptions: { showWalletUIs: false }` - same reason as everywhere else in this app: it
-    // breaks the moment passkey MFA is on.
-    const { signature } = await signMessage({ message }, { address })
-    const sessRes = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'session', nonce, signature }) })
-    const sess = await sessRes.json()
-    if (!sessRes.ok || !sess.token) throw Object.assign(new Error(sess.error || 'session-failed'), { code: sess.error })
+  async function setupPin() {
+    const idToken = await getIdentityToken()
+    if (!idToken) throw Object.assign(new Error('not-authenticated'), { code: 'not-authenticated' })
 
     const pin = await requestPin({ mode: 'set' })   // PinGateHost handles the enter→confirm loop itself
-    const setRes = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set', token: sess.token, pin }) })
-    const d = await setRes.json()
+    const setRes = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set', idToken, pin }) })
+    const d = await setRes.json().catch(() => ({}))
     if (!setRes.ok) throw Object.assign(new Error(d.error || 'set-failed'), { code: d.error })
     return true
   }
@@ -206,7 +203,9 @@ export function useCompletePinSetup() {
   // moment it becomes true, without waiting on step 3 - a real fact that should not be held hostage
   // to whether the enforcement step also succeeds.
   async function completeSetup(address, { onHashSet } = {}) {
-    await setupPin(address)
+    // `address` is only needed for step 3 now - step 1 identifies the caller from their Privy
+    // identity token instead (see useSetupPin above), not from an address anyone could claim.
+    await setupPin()
     onHashSet?.()
     const result = await enableMandatoryPin(address)
     return result   // { alreadyEnabled: true } | { ok: true, quorum: {...} }

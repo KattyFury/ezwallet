@@ -15,11 +15,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { privateKeyToAccount } from 'viem/accounts'
+import { generateKeyPair, exportJWK, SignJWT } from 'jose'   // @privy-io/node's own transitive dependency - not a new one added just for tests
 import { onRequestPost } from '../functions/api/pin.js'
 
 // Fixed test wallets - private keys that appear publicly in every viem/hardhat example, not secrets.
 const me = privateKeyToAccount('0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d')
-const stranger = privateKeyToAccount('0x8b3a350cf5c34c9194ca85829a2df0ec3153be0318b5e2d3348e872092edffba')
 
 const MY_WALLET_ID = 'uihroi7x6jthz2f7bsvcdyzh'
 const OTHER_WALLET_ID = 'iha9ln1q0etk016i7sqghrtx'   // a second real wallet on the same account
@@ -33,6 +33,42 @@ const TEST_AUTH_KEY = 'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgfgXj1xgh1
 // see that file's comment), so duplicating it here to assert against is fine, but there is no import
 // to keep the two in sync automatically: if that constant ever changes, this one has to as well.
 const REAL_SERVER_PUBLIC_KEY = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE7nTz1TB+rDpYadopbda0PAP9uHnXId7SBe4DCuW8J8i63S1Btar4n0C1wrKK7SE/qqjKmnE8mq4nrvBeBvz3sw=='
+
+// ⚠️ MUST MATCH functions/api/pin.js's PRIVY_APP_ID exactly - it is the `aud` claim every identity
+// token must carry, and the path segment in the JWKS URL PrivyClient fetches to verify one.
+const APP_ID = 'cmtenk9en00250blabovll48e'
+
+// ══ FAKING A REAL PRIVY IDENTITY TOKEN (2026-09-06, PIN-FLOW-SPEC.md §3) ══
+// `set` now verifies the caller via `PrivyClient.users().get({ id_token })`, which does a REAL
+// cryptographic JWT verification (ES256) against a JWKS fetched from
+// `https://api.privy.io/v1/apps/{appId}/jwks.json` (read straight out of
+// @privy-io/node/lib/auth.mjs, not assumed) - there is no shortcut that skips this for tests. So the
+// stub below serves a THROWAWAY keypair's public half as that JWKS, and every "identity token" here
+// is a REAL, validly-signed JWT over that same keypair - proving the server's verification path
+// actually runs, not just that the code compiles.
+// Claim shape copied from @privy-io/node/lib/identity-token.mjs's `parseUserFromIdentityTokenPayload`
+// (`cr`, `guest`, `linked_accounts` as a JSON STRING of Privy's own short-key wallet shape) - guessed
+// wrong once already this session on an unrelated endpoint, so this was read from source, not typed
+// from memory.
+const jwksKeyPair = await generateKeyPair('ES256', { extractable: true })
+const jwksPublicJwk = { ...(await exportJWK(jwksKeyPair.publicKey)), kid: 'test-key', alg: 'ES256', use: 'sig' }
+// A SECOND, unrelated keypair - never registered in the JWKS the stub serves - to prove a token
+// signed by the wrong key is actually rejected, not just one that is merely malformed.
+const wrongKeyPair = await generateKeyPair('ES256', { extractable: true })
+
+async function fakeIdentityToken({ userId, address, walletId, signingKey = jwksKeyPair.privateKey }) {
+  const linkedAccounts = JSON.stringify([
+    { type: 'wallet', wallet_client_type: 'privy', id: walletId, address, chain_type: 'ethereum', lv: Math.floor(Date.now() / 1000) },
+  ])
+  return new SignJWT({ cr: String(Math.floor(Date.now() / 1000)), guest: 'f', linked_accounts: linkedAccounts })
+    .setProtectedHeader({ alg: 'ES256', typ: 'JWT', kid: 'test-key' })
+    .setIssuer('privy.io')
+    .setAudience(APP_ID)
+    .setSubject(userId)
+    .setIssuedAt()
+    .setExpirationTime('1h')
+    .sign(signingKey)
+}
 
 function fakeKV(initial = {}) {
   const m = new Map(Object.entries(initial).map(([k, v]) => [k, { v, exp: 0 }]))
@@ -75,6 +111,9 @@ function stubPrivy({ relayOk = true, quorums } = {}) {
   globalThis.fetch = async (url, init) => {
     calls.push({ url: String(url), init })
     const u = String(url)
+    if (u === `https://api.privy.io/v1/apps/${APP_ID}/jwks.json`) {
+      return new Response(JSON.stringify({ keys: [jwksPublicJwk] }), { status: 200 })
+    }
     if (u.startsWith('https://api.privy.io/v1/wallets?address=')) {
       const addr = decodeURIComponent(u.split('address=')[1]).toLowerCase()
       const w = APP_WALLETS[addr]
@@ -122,15 +161,13 @@ const payloadFor = walletId => ({
   body: { caip2: 'eip155:1', method: 'eth_sendTransaction', chain_type: 'ethereum', params: { transaction: { to: OTHER_ADDRESS } } },
 })
 
-// nonce → wallet signature → session → set. The real setup path.
-async function setPin(env, pin, account = me) {
-  const { nonce, message } = await (await call(env, { action: 'nonce' })).json()
-  const signature = await account.signMessage({ message })
-  const sess = await (await call(env, { action: 'session', nonce, signature })).json()
-  assert.ok(sess.token, 'session should open for an app wallet')
-  const res = await call(env, { action: 'set', token: sess.token, pin })
+// Identity-token → set. The real setup path since 2026-09-06 (PIN-FLOW-SPEC.md §3) - no more
+// nonce/signature/session round trip.
+async function setPin(env, pin, { userId = 'did:privy:me', address = me.address, walletId = MY_WALLET_ID } = {}) {
+  const idToken = await fakeIdentityToken({ userId, address, walletId })
+  const res = await call(env, { action: 'set', idToken, pin })
   assert.equal(res.status, 200)
-  return sess.token
+  return idToken
 }
 
 test('REGRESSION: the wallet id comes from the server - the browser cannot supply it', async () => {
@@ -147,14 +184,24 @@ test('wallet-id: an address this app does not own is a 404, not a guess', async 
   assert.equal(body.error, 'wallet-not-found')
 })
 
-test('a stranger\'s keypair cannot open a session (no free writes into the shared KV)', async () => {
+test('REGRESSION: an identity token forged with the wrong key is rejected, not trusted', async () => {
   stubPrivy()
   const env = envWith()
-  const { nonce, message } = await (await call(env, { action: 'nonce' })).json()
-  const signature = await stranger.signMessage({ message })   // a perfectly valid signature...
-  const { status, body } = await jsonOf(await call(env, { action: 'session', nonce, signature }))
-  assert.equal(status, 403, '...but not for a wallet of this app')
-  assert.equal(body.error, 'not-an-app-wallet')
+  // A perfectly well-formed JWT, right claims, right issuer/audience - signed with a key that is
+  // NOT the one the JWKS stub serves. If `set` only decoded the token instead of verifying its
+  // signature, this would sail straight through.
+  const forged = await fakeIdentityToken({ userId: 'did:privy:me', address: me.address, walletId: MY_WALLET_ID, signingKey: wrongKeyPair.privateKey })
+  const { status, body } = await jsonOf(await call(env, { action: 'set', idToken: forged, pin: '123456' }))
+  assert.equal(status, 401)
+  assert.equal(body.error, 'bad-identity-token')
+})
+
+test('a garbage idToken string is rejected, not a crash', async () => {
+  stubPrivy()
+  const env = envWith()
+  const { status, body } = await jsonOf(await call(env, { action: 'set', idToken: 'not-a-real-jwt', pin: '123456' }))
+  assert.equal(status, 401)
+  assert.equal(body.error, 'bad-identity-token')
 })
 
 test('the happy path: right PIN → both signatures → Privy relays a hash', async () => {
@@ -231,7 +278,8 @@ test('no server keys configured → 503, never a crash', async () => {
   stubPrivy()
   const env = { EZ_SYNC: fakeKV() }
   assert.equal((await call(env, { action: 'sign', address: me.address, pin: '123456', requestPayload: payloadFor(MY_WALLET_ID), userSignature: 's' })).status, 503)
-  assert.equal((await call({}, { action: 'nonce' })).status, 503)
+  const idToken = await fakeIdentityToken({ userId: 'did:privy:me', address: me.address, walletId: MY_WALLET_ID })
+  assert.equal((await call(env, { action: 'set', idToken, pin: '123456' })).status, 503)
 })
 
 test('an arbitrary URL cannot be smuggled through the signer', async () => {
