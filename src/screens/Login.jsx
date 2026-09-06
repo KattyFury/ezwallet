@@ -26,9 +26,12 @@ import { usePrivy, useModalStatus } from '@privy-io/react-auth'
 // carries NO logo of its own (appearance.logo is '' in src/privy.js), so the mark is on screen once.
 //
 // ⚠️ CLOSING THE MODAL NO LONGER FORCE-REOPENS IT (2026-09-06, PIN-FLOW-SPEC.md §2.1, reversing the
-// 09-04 decision above this comment). Closing it (X / backdrop / Escape) now reveals a placeholder
-// - explaining this is the one door into the wallet, not a meaningless wait - with a button to open
-// it again. The spec is explicit that this is what a real placeholder looks like, not a blank screen.
+// 09-04 decision above this comment). Closing it (X / backdrop / Escape) now reveals a placeholder -
+// not a blank, meaningless wait. ⚠️ THE PLACEHOLDER IS FIGMA FRAME 1 ITSELF, VERBATIM - the user was
+// explicit that this screen's own resting state (the logo + tagline already drawn below) already IS
+// the placeholder the spec means; the first version of this fix invented NEW text and a NEW button
+// on top of it, the exact mistake already made once today on SetupPin.jsx. There is no separate
+// widget to add - the existing block becomes the tap target that reopens the modal.
 export default function Login() {
   const { login, authenticated } = usePrivy()
 
@@ -70,7 +73,13 @@ export default function Login() {
   const showPlaceholder = !isOpen && !authenticated && everOpenedRef.current
 
   return (
-    <div className="screen">
+    <div
+      className="screen"
+      // Tappable ONLY once the modal has been closed - reopens it. Frame 1's own content (below) is
+      // the whole placeholder; no visible affordance is added, matching the design exactly.
+      onClick={showPlaceholder ? () => loginRef.current() : undefined}
+      style={showPlaceholder ? { cursor: 'pointer' } : undefined}
+    >
       {/* ROWS 1-5, TOP-ALIGNED TO THE FIGMA COORDINATES (frames 1-2, DESIGN-GRID-390.md).
           Not centred any more: the frames put this block at a MEASURED height, and centring it in
           rows 1-5 floated it ~3.7dvh above where it is drawn. Converted with y/844 → dvh:
@@ -100,21 +109,6 @@ export default function Login() {
         </span>
       </div>
 
-      {/* ⚠️ BROUGHT BACK 2026-09-06 (PIN-FLOW-SPEC.md §2.1) - deleted on 09-04 when the modal became
-          undismissable, and there was genuinely nothing behind it for a button to reach. Now that
-          closing the modal is a real, reachable state again, this is the placeholder the spec asks
-          for: not a blank wait, but an explanation that this is the one door in, plus a button back
-          through it. */}
-      {showPlaceholder && (
-        <div className="row-7-8 col" style={{ alignItems: 'center', justifyContent: 'center', gap: '2dvh', padding: '0 8px' }}>
-          <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', textAlign: 'center' }}>
-            This is the only way in - sign in to open your wallet.
-          </span>
-          <button className="btn btn-primary" style={{ width: 'min(75vw, calc(var(--screen-max) * 0.75))' }} onClick={() => loginRef.current()}>
-            Sign in
-          </button>
-        </div>
-      )}
     </div>
   )
 }
