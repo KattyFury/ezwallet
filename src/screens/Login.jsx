@@ -24,35 +24,50 @@ import { usePrivy, useModalStatus } from '@privy-io/react-auth'
 // Privy's overlay covers it and blurs it - measured, not assumed: `#privy-dialog-backdrop` comes back
 // position:fixed at the full viewport. The logo and the promise stay here anyway, and Privy's box
 // carries NO logo of its own (appearance.logo is '' in src/privy.js), so the mark is on screen once.
+//
+// ⚠️ CLOSING THE MODAL NO LONGER FORCE-REOPENS IT (2026-09-06, PIN-FLOW-SPEC.md §2.1, reversing the
+// 09-04 decision above this comment). Closing it (X / backdrop / Escape) now reveals a placeholder
+// - explaining this is the one door into the wallet, not a meaningless wait - with a button to open
+// it again. The spec is explicit that this is what a real placeholder looks like, not a blank screen.
 export default function Login() {
   const { login, authenticated } = usePrivy()
 
-  // OPEN IT WITHOUT BEING ASKED, AND DO NOT LET IT BE CLOSED (user decision 2026-09-04). Arriving at
-  // a sign-in screen and having to press "sign in" before being allowed to sign in is a step carrying
-  // no information, and there is nothing behind the modal to escape TO - so the X and a click on the
-  // backdrop lead nowhere and must not work.
+  // OPEN IT WITHOUT BEING ASKED, THE FIRST TIME (user decision 2026-08-30/09-04, unchanged: arriving
+  // here and having to press "sign in" before being allowed to sign in is a step carrying no
+  // information). `autoOpenedRef` stops this firing again after the user closes it themselves -
+  // that is the ONLY thing that changed 09-06: it used to reopen unconditionally on every close,
+  // which is what "cannot be dismissed" meant before the spec settled on a placeholder instead.
   //
-  // Privy ships no flag for this: `LoginModalOptions` is only loginMethods / prefill / disableSignup /
-  // walletChainType (types-Ck8tvlPZ.d.ts:2709). So the modal is REOPENED whenever it reports itself
-  // closed, which covers every way out at once - the X, the backdrop, Escape - without reaching into
-  // Privy's DOM to hide anything.
-  //
-  // ⚠️ `isOpen` IS THE ONLY DEPENDENCY, and `login` is deliberately NOT one. Privy hands back a fresh
-  // function identity on renders, and an effect that calls `login()` and depends on `login` is the
-  // render loop that froze this app on 08-30, in a new place. The ref holds the live one.
-  // ⚠️ `authenticated` IS A GUARD, NOT DECORATION (added 2026-09-05).
-  // Without it this effect also fired on the SUCCESSFUL sign-in: Privy closes its own modal the
-  // moment login completes, `isOpen` flips false, and this reopened it. React flushes a CHILD's
-  // effects before its parent's, so on the render where `authenticated` becomes true this ran before
-  // App.jsx's navigation effect had swapped Login out - i.e. the modal was reliably reopened over a
-  // user who had just got in, with no sign-in button left to escape through (it was deleted on
-  // 09-04). Reopening a login modal in a loop is also precisely the shape of the 09-04 freeze.
+  // ⚠️ `isOpen` IS THE ONLY EFFECT DEPENDENCY, and `login` is deliberately NOT one. Privy hands back
+  // a fresh function identity on renders, and an effect that calls `login()` and depends on `login`
+  // is the render loop that froze this app on 08-30, in a new place. The ref holds the live one.
+  // ⚠️ `authenticated` IS A GUARD, NOT DECORATION (added 2026-09-05, still needed here). Without it
+  // this effect also fires on the SUCCESSFUL sign-in: Privy closes its own modal the moment login
+  // completes, `isOpen` flips false, and this would reopen it. React flushes a CHILD's effects before
+  // its parent's, so on the render where `authenticated` becomes true this runs before App.jsx's
+  // navigation effect has swapped Login out - i.e. the modal would be reliably reopened over a user
+  // who had just got in. Reopening a login modal in a loop is also precisely the shape of the 09-04
+  // freeze.
   const { isOpen } = useModalStatus()
   const loginRef = useRef(login)
   loginRef.current = login
+  const autoOpenedRef = useRef(false)
   useEffect(() => {
-    if (!isOpen && !authenticated) loginRef.current()
+    if (!isOpen && !authenticated && !autoOpenedRef.current) {
+      autoOpenedRef.current = true
+      loginRef.current()
+    }
   }, [isOpen, authenticated])
+
+  // ⚠️ A SEPARATE REF FROM `autoOpenedRef`, NOT THE SAME ONE. `autoOpenedRef` flips true the instant
+  // `login()` is CALLED, before Privy has had any chance to actually open the modal - if the
+  // placeholder below were gated on that same flag, it would flash for one render on every normal
+  // arrival, in the gap between calling login() and Privy's `isOpen` becoming true. This one only
+  // ever flips true on a render where `isOpen` has ALREADY been observed true, so the placeholder
+  // can only appear after a REAL open-then-close, never during the ordinary opening animation.
+  const everOpenedRef = useRef(false)
+  useEffect(() => { if (isOpen) everOpenedRef.current = true }, [isOpen])
+  const showPlaceholder = !isOpen && !authenticated && everOpenedRef.current
 
   return (
     <div className="screen">
@@ -85,9 +100,21 @@ export default function Login() {
         </span>
       </div>
 
-      {/* THE SIGN-IN BUTTON IS GONE (2026-09-04). It was the only thing in rows 9-11, and it had
-          nothing left to do: the modal is already open on arrival and cannot be dismissed, so a button
-          to open it could never be reached, let alone pressed. */}
+      {/* ⚠️ BROUGHT BACK 2026-09-06 (PIN-FLOW-SPEC.md §2.1) - deleted on 09-04 when the modal became
+          undismissable, and there was genuinely nothing behind it for a button to reach. Now that
+          closing the modal is a real, reachable state again, this is the placeholder the spec asks
+          for: not a blank wait, but an explanation that this is the one door in, plus a button back
+          through it. */}
+      {showPlaceholder && (
+        <div className="row-7-8 col" style={{ alignItems: 'center', justifyContent: 'center', gap: '2dvh', padding: '0 8px' }}>
+          <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', textAlign: 'center' }}>
+            This is the only way in - sign in to open your wallet.
+          </span>
+          <button className="btn btn-primary" style={{ width: 'min(75vw, calc(var(--screen-max) * 0.75))' }} onClick={() => loginRef.current()}>
+            Sign in
+          </button>
+        </div>
+      )}
     </div>
   )
 }
