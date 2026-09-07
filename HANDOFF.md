@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-08 · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
 
-### ⚠️ READ THIS FIRST - LuckyPot Deposit/Withdraw/Claim is LIVE AND VERIFIED ON-CHAIN
+### ⚠️ READ THIS FIRST - LuckyPot Deposit/Withdraw/Claim/History is LIVE AND VERIFIED ON-CHAIN
 
 `functions/api/luckypot.js` encodes deposit/withdraw/claim/sweep calldata and calls Circle's real
 `contractExecution` (same pattern as `swap.js`); `src/circle.js` has the matching
@@ -13,39 +13,53 @@ wallet `0x29Eb3eC21a556dF96384A01E44E28B1F9488d03D` shows up as a brand-new `par
 (tx `0xff96d0...` → `Multicall3From.aggregate3`, status ok). Withdraw/Claim use the same signing path
 and are built but not yet individually confirmed on-chain the same way.
 
-**Layout redone 2026-09-08** to the user's own pixel-precise spec (`Desktop/LUCKYPOT-LAYOUT-SPEC.md` is
-the base; the user then corrected several specifics directly in chat - trust the chat corrections over
-that file where they differ, e.g. row 1 uses icon+text instead of the drawn logo now):
-- Row 1: menu icon + "LuckyPot.cc" text (the drawn wordmark SVG was dropped) - this ALSO freed the right
-  side of the row for the app-wide `BugButton` (it renders absolute at right:20/top:5dvh on every
-  screen; the earlier version awkwardly squeezed the LuckyPot menu icon in next to it).
-- Row 2: one hint strip, ALWAYS solid `var(--color-warning)` + black text (no more 2-colour-scheme) -
-  faucet suggestion (direct copy-address-and-open-faucet action, no popup) OR a "you won" prompt
-  (icon becomes `check`).
+**Layout went through several rounds of user corrections on 2026-09-08** (`Desktop/LUCKYPOT-LAYOUT-SPEC.md`
+is the base; trust the chat corrections below over that file where they differ):
+- Row 1: menu icon (1/3 of the row's height) + "LuckyPot.cc" wordmark, BOTH in Space Grotesk (the drawn
+  logo SVG was dropped entirely) - this also freed the row's right side for the app-wide `BugButton`
+  (renders absolute at right:20/top:5dvh on every screen).
+- Row 2: one hint strip, ALWAYS solid `var(--color-warning)` + black text - faucet suggestion (direct
+  copy-address-and-open-faucet action, no popup) OR a "you won" prompt (icon becomes `check`).
 - Epoch box + Tickets box: `var(--color-surface)` (light blue), fixed height (243.2/844 → `28.82dvh`),
-  each split into 4 equal sub-rows via flex (the last one spans 2). Amounts render as
-  "$black-17 / $grey-14" (`SplitAmount` component).
+  4 equal sub-rows via flex (the last spans 2), a divider line under sub-rows 1 and 2 (without it the box
+  read as one undifferentiated block - user fix). Amounts render as "$black-17 / $grey-14"
+  (`SplitAmount`). The USDC/ARC toggle became a `USDC ▾` dropdown revealing ARC/ETH, both disabled (no
+  token yet) - 2 plain pills made ARC look like a live option.
+- **TYPOGRAPHY (final, revised twice)**: headers/titles (the wordmark, EPOCH #, TOTAL TICKETS/POOL, My
+  tickets/deposit, Draw history, EVERY popup title) use **Space Grotesk** (luckypot.cc's own brand font),
+  all-caps. Everything else uses the app's normal system-font stack - NOT Inter (tried once, reverted:
+  ezwallet dropped webfonts app-wide on 08-25 for first-paint speed, so only Space Grotesk is loaded, and
+  only on this one screen, injected on mount via `useLuckyPotFonts()` - not in `index.html`). One local
+  size scale for the whole screen (17 for header/emphasis, 14 for body) - NOT the app-wide 15/19/25/52
+  tokens, which read as inconsistent/oversized here (this applies inside every popup too now).
 - **Fixed a real bug**: "0 winners out of 0 players" - `numWinners`/`eligibleParticipants` on
   `getEpoch()` only get written when an epoch COMMITS near draw time, reading 0 the rest of the week.
-  Switched to the same off-chain estimate the real luckypot.cc frontend uses
-  (`frontend/src/lib/prize.ts`: `projectedWeeklyYield` + `estimateNumWinners`, sqrt-based) fed by the
-  live `eligiblePoolTotal` + `currentAprBps`, and live `participantCount()` instead of the frozen field.
-  Verified by hand against live RPC numbers (eligible pool ≈5732 → estimate = 2 winners, matching the
-  real site exactly).
-- **Result button**: only enabled during the live self-claim window
-  (`prevEpochDrawnAt..+SWEEP_DELAY`), dimmed the rest of the time - browsing OLDER results is Draw
-  History's job now, not this button's.
-- **Draw History built for real** (was a disabled placeholder): `getEpochHistory()` in
-  `src/lib/luckyPot.js` multicalls `getEpoch()` over past ids, a new popup lists drawn epochs with
-  date/yield/winners.
-- Popup shell: 5/6 of the MOBILE frame width (was 3/4, then the width itself was computed against the
-  wrong reference before that - see the `min(calc(100vw*5/6), calc(var(--screen-max)*5/6))` idiom, same
-  fix `.row10-single .btn` already needed), closes ONLY via the X top-right or a click outside (no
-  bottom Close button any more).
-- "My history" and referral stay OUT of scope - still a disabled row/menu-item.
+  Switched to the off-chain estimate the real luckypot.cc frontend uses (`frontend/src/lib/prize.ts`:
+  `projectedWeeklyYield` + `estimateNumWinners`, sqrt-based) fed by live `eligiblePoolTotal` +
+  `currentAprBps`, and live `participantCount()` instead of the frozen field. Verified against live RPC
+  (eligible pool ≈5732 → estimate = 2 winners, matching the real site).
+- **Result button**: only enabled during the live self-claim window (`prevEpochDrawnAt..+SWEEP_DELAY`),
+  dimmed otherwise - browsing OLDER results is Draw History's job now, not this button's.
+- **Draw History AND My History both built for real** (both used to be disabled placeholders):
+  - `getEpochHistory()` multicalls `getEpoch()` over past ids for Draw History.
+  - `getMyHistory()` reads `Deposited`/`Withdrawn`/`Claimed` EVENT LOGS via ArcScan's Etherscan-compatible
+    `getLogs` endpoint, filtered by the wallet's address as the indexed topic - a raw `eth_getLogs`
+    against the public RPC over the whole history since deploy hits `"requested range too large"`
+    (verified against the live RPC), ArcScan's own indexer has no such cap.
+  - **Fixed a real bug here too**: ArcScan answers BOTH "genuinely no logs" and a rate-limit/error with
+    the same `status:"0"` - only `message` differs (`"No logs found"` vs anything else). The first version
+    treated both as empty, which would tell a rate-limited user "No activity yet." when they actually have
+    history. Now only `message === "No logs found"` returns `[]`; anything else throws.
+- Popup shell: **5/6** of the MOBILE frame width (not the browser viewport - `.popup-overlay` is
+  `position:fixed` to the whole window, so a naive `width:75%`/`83%` balloons past the phone frame on
+  desktop; use `min(calc(100vw*5/6), calc(var(--screen-max)*5/6))`, same idiom `.row10-single .btn`
+  already needed). Closes ONLY via the X top-right or a click outside - no bottom Close button.
+- Referral stays OUT of scope (the only thing still deliberately unbuilt on this screen).
 
 **Verified:** `npm run build` clean, `npm test` 16/16, every popup/state screenshotted with Playwright in
-mock mode (390px AND a wide 1280px viewport to catch the popup-width regression) - copied to Desktop.
+mock mode (390px AND a wide 1280px viewport to catch popup-width regressions) - copied to Desktop each
+round. `getMyHistory`'s ArcScan query pattern (topic0 hashes, address-topic padding, ABI decode) was
+verified against the real deposit tx (`0xff96d0...`) before being trusted, not guessed.
 
 ### 🔗 THE 4 OFFICIAL LINKS - use this set when introducing the project (user decision 08-04)
 | | |
