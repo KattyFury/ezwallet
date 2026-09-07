@@ -1,20 +1,51 @@
 # HANDOFF – EZwallet
 
-**Updated:** 2026-09-07 · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
+**Updated:** 2026-09-08 · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
 
-### ⚠️ READ THIS FIRST - session 2026-09-07 (2nd pass): LuckyPot Deposit/Withdraw/Claim BUILT, NOT YET TESTED ON A DEPLOY
+### ⚠️ READ THIS FIRST - LuckyPot Deposit/Withdraw/Claim is LIVE AND VERIFIED ON-CHAIN
 
-Built to `Desktop/LUCKYPOT-LAYOUT-SPEC.md` (the user's own written spec, authoritative over any earlier
-screenshot/draft): `LuckyPot.jsx` rebuilt for real (logo + hamburger menu, dynamic banner, epoch/tickets
-boxes, unified popup shell), `functions/api/luckypot.js` (new) encodes deposit/withdraw/claim/sweep
-calldata and calls Circle's real `contractExecution`, `src/circle.js` gained the matching
-`executeLuckyPot{Deposit,Withdraw,Claim}` wrappers. Referral is explicitly OUT of scope (spec §0) - no
-UI for it on this screen.
-**Verified so far:** `npm run build` clean, `npm test` 16/16, and every screen/popup state
-screenshotted with Playwright in mock mode (`C:\tmp\ezw-verify\luckypot-full.mjs`) at 390 AND 375px -
-copied to Desktop. **NOT yet verified:** mock mode never calls Circle, so no real PIN signature has
-actually gone through `contractExecution` yet - **the next session's first job is testing Deposit on a
-real deploy** (Circle's SDK does not run on localhost, same constraint as Swap).
+`functions/api/luckypot.js` encodes deposit/withdraw/claim/sweep calldata and calls Circle's real
+`contractExecution` (same pattern as `swap.js`); `src/circle.js` has the matching
+`executeLuckyPot{Deposit,Withdraw,Claim}` wrappers. **The user tested a real $10 Deposit on a deploy
+2026-09-07 and it worked** - independently confirmed on-chain (not just "the UI said success"): the
+wallet `0x29Eb3eC21a556dF96384A01E44E28B1F9488d03D` shows up as a brand-new `participants()` entry with
+`balances()=10 USDC`, and the pool's `balancesTotal()` rose by exactly $10 in the same block range
+(tx `0xff96d0...` → `Multicall3From.aggregate3`, status ok). Withdraw/Claim use the same signing path
+and are built but not yet individually confirmed on-chain the same way.
+
+**Layout redone 2026-09-08** to the user's own pixel-precise spec (`Desktop/LUCKYPOT-LAYOUT-SPEC.md` is
+the base; the user then corrected several specifics directly in chat - trust the chat corrections over
+that file where they differ, e.g. row 1 uses icon+text instead of the drawn logo now):
+- Row 1: menu icon + "LuckyPot.cc" text (the drawn wordmark SVG was dropped) - this ALSO freed the right
+  side of the row for the app-wide `BugButton` (it renders absolute at right:20/top:5dvh on every
+  screen; the earlier version awkwardly squeezed the LuckyPot menu icon in next to it).
+- Row 2: one hint strip, ALWAYS solid `var(--color-warning)` + black text (no more 2-colour-scheme) -
+  faucet suggestion (direct copy-address-and-open-faucet action, no popup) OR a "you won" prompt
+  (icon becomes `check`).
+- Epoch box + Tickets box: `var(--color-surface)` (light blue), fixed height (243.2/844 → `28.82dvh`),
+  each split into 4 equal sub-rows via flex (the last one spans 2). Amounts render as
+  "$black-17 / $grey-14" (`SplitAmount` component).
+- **Fixed a real bug**: "0 winners out of 0 players" - `numWinners`/`eligibleParticipants` on
+  `getEpoch()` only get written when an epoch COMMITS near draw time, reading 0 the rest of the week.
+  Switched to the same off-chain estimate the real luckypot.cc frontend uses
+  (`frontend/src/lib/prize.ts`: `projectedWeeklyYield` + `estimateNumWinners`, sqrt-based) fed by the
+  live `eligiblePoolTotal` + `currentAprBps`, and live `participantCount()` instead of the frozen field.
+  Verified by hand against live RPC numbers (eligible pool ≈5732 → estimate = 2 winners, matching the
+  real site exactly).
+- **Result button**: only enabled during the live self-claim window
+  (`prevEpochDrawnAt..+SWEEP_DELAY`), dimmed the rest of the time - browsing OLDER results is Draw
+  History's job now, not this button's.
+- **Draw History built for real** (was a disabled placeholder): `getEpochHistory()` in
+  `src/lib/luckyPot.js` multicalls `getEpoch()` over past ids, a new popup lists drawn epochs with
+  date/yield/winners.
+- Popup shell: 5/6 of the MOBILE frame width (was 3/4, then the width itself was computed against the
+  wrong reference before that - see the `min(calc(100vw*5/6), calc(var(--screen-max)*5/6))` idiom, same
+  fix `.row10-single .btn` already needed), closes ONLY via the X top-right or a click outside (no
+  bottom Close button any more).
+- "My history" and referral stay OUT of scope - still a disabled row/menu-item.
+
+**Verified:** `npm run build` clean, `npm test` 16/16, every popup/state screenshotted with Playwright in
+mock mode (390px AND a wide 1280px viewport to catch the popup-width regression) - copied to Desktop.
 
 ### 🔗 THE 4 OFFICIAL LINKS - use this set when introducing the project (user decision 08-04)
 | | |
