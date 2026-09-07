@@ -1,6 +1,15 @@
 # HANDOFF – EZwallet
 
-**Updated:** 2026-08-25 · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
+**Updated:** 2026-09-07 · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
+
+### ⚠️ READ THIS FIRST - session 2026-09-07 ended mid-task, LuckyPot NOT integrated yet
+
+The user's own words closing the session: **"bạn nói nhiều mà toàn build lôm côm không build cái
+trọng tâm"** (a lot of talk, a lot of small scattered fixes, the actual core task never got built).
+That is an accurate description, not just a mood - see the "What ACTUALLY got built" table below.
+**Do not repeat the pattern**: pick ONE next step (see "The real next step"), build it end-to-end, THEN
+handle side-requests that come in - don't let a side-request (an icon looking wrong, a colour token)
+replace the thing that was supposed to happen next.
 
 ### 🔗 THE 4 OFFICIAL LINKS - use this set when introducing the project (user decision 08-04)
 | | |
@@ -10,9 +19,49 @@
 | **Video** | https://youtu.be/UIR4Ee3Wp_Y |
 | **Deck** | https://canva.link/zr3ik84radd39vc |
 
-### 📍 WHERE THINGS STAND (end of session 2026-08-25)
+### 📍 WHERE THINGS STAND (end of session 2026-09-07)
 
-- **One branch only: `main`.** Every WIP branch has been merged and deleted. Everyone works on `main`. Latest commit `dbce9bd`.
+- **One branch only: `main`** (a parallel `privy` branch exists from an earlier, since-abandoned attempt
+  at a different PIN mechanism - **do not check it out or merge it without an explicit go-ahead**, user
+  instruction 2026-09-07). Latest commit on `main`: `7b7d268`.
+- **Forgot PIN is now real**: Circle's own "Forgot PIN" button inside the PIN-entry iframe used to do
+  nothing (no callback registered anywhere) - now wired to a new `ForgotPin.jsx` screen through
+  `POST /user/pin/restore` (security-questions recovery). See section 9's session table for detail.
+- **Brand redesign applied from 2 user-written spec files** (`BRAND-GUIDELINE.md` +
+  `FIGMA-SCREENS-SPEC.md`, both in the repo root): solid brand blue everywhere (no more gradients),
+  system font (Barlow is gone), new NavBar (raised white active cell on a flat grey bar), recessed
+  boxes/inputs are light blue `#E3F1FF` (not grey), Service Hub rebuilt to full-width cards. The new
+  brand icon/logo assets (`public/icon.svg`, `design/logo.svg`) are the user's own official files, not
+  redrawn.
+- **LuckyPot integration - STARTED, NOT DONE.** What's real and verified: `src/lib/luckyPot.js` reads
+  the deployed contract's actual balance/epoch/referral data (M1, read-only, no signing) - tested
+  against LIVE Arc Testnet RPC, not just mock. What's NOT done yet, and is **the actual point of this
+  whole thread**: `LuckyPot.jsx` is still the placeholder frame from before M1 (title + a static card +
+  2 disabled buttons) - it does not yet look like the user's approved wireframe (row 1 = LuckyPot's own
+  logo + a hamburger menu, light/blue theme, popups for Deposit/Withdraw/Claim), and Deposit/Withdraw/
+  Claim/referral do not actually sign or move money yet. See "The real next step" below and section 9's
+  session table for every decision already confirmed (theme, layout, referral mechanism) so the next
+  session does not have to re-ask them.
+
+#### The real next step (do this FIRST, before anything else)
+
+Rebuild `src/screens/LuckyPot.jsx` for real, in one pass:
+1. Row 1 = `design/luckypot/logo-full.svg` (already in the repo) + a hamburger menu icon opening a
+   simple menu popup - NOT the current centred "LuckyPot" title.
+2. Light/blue theme using ezwallet's actual tokens (`var(--color-*)`), NOT the dark/green CSS a separate
+   AI session produced (that file is not in the repo and should stay that way - see section 9).
+3. Wire Deposit/Withdraw for real: `functions/api/luckypot.js` (new - does not exist yet) encodes
+   calldata with viem, batches `[approve, deposit]` through Multicall3From exactly like `_swapCore.js`
+   already does for Swap, calls Circle's real `contractExecution` (copy the exact request shape from
+   `functions/api/swap.js`, including `feeLevel: 'MEDIUM'` and the `ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY`
+   fallback - an earlier draft of this file got both wrong).
+4. Referral: capture `?ref=0x...` from the URL into `localStorage` on app load (ezwallet does not do
+   this yet anywhere), bundle `setReferrer` into the first Deposit's Multicall3 batch with
+   `allowFailure: true` - this is the exact mechanism already proven on luckypot.cc itself
+   (`frontend/src/lib/referralState.ts` in that repo), reuse it, do not invent a different UX.
+
+#### Older standing state (still true, kept for context)
+
 - **Production runs:** **ENGLISH + USD/EUR ONLY.** Vietnamese and Chinese were **REMOVED FROM THE PROJECT ENTIRELY on 08-25** - the i18n layer is gone, not merely switched off (see section 2). The whole repo, comments and documents included, is English now; the only file still holding Vietnamese is `.env.txt`, which is gitignored.
 - **🟢 SWAP IS BACK UP** - the user tested it live on a deploy 08-25 and it went through with no `331001`. See section 4 for the outage history (kept in case it returns).
 - **New in session 08-25 (part 1):** the LuckyPot tile · the i18n layer removed · the whole codebase translated · 2 notification bugs fixed (dust amounts showing 0.00, long text cut off) · `Available Network: Arc Testnet` in the hint block · a `Balance:` line on the Send screen. Details in the table at the top of section 9.
@@ -403,6 +452,43 @@ A **grey** 🐛 icon (`--color-muted-2`) flush right, centred on **row 1**, pres
 ---
 
 ## 9. What comes next
+
+### 📒 WHAT SESSION 2026-09-07 DID (long session, several unrelated threads - see the honest note at the top of this file)
+
+| # | Work | Commit |
+|---|---|---|
+| 1 | **Forgot PIN wired up for real** - Circle's own "Forgot PIN" button inside the PIN-entry iframe existed but did nothing (no `setOnForgotPin` callback registered anywhere in the app). Added `functions/api/luckypot.js`-style backend action `restorePin` (`POST /user/pin/restore`), `src/circle.js` `restorePinChallenge()`, and a new `ForgotPin.jsx` screen (same shape as `PinGate.jsx`) | `b7bea59` |
+| 2 | **Full brand redesign** from the user's own `BRAND-GUIDELINE.md` + `FIGMA-SCREENS-SPEC.md` (both written this session, both in repo root - read them before touching colours/fonts/layout again): the old multi-tier iOS grey system collapsed onto the guideline's 7 colours, all gradients → solid, Barlow → system font, NavBar rebuilt (raised white active cell), Service Hub rebuilt from a 2-column tile grid to full-width cards, new brand icon/logo applied (user-supplied files, not redrawn) | `914980c` |
+| 3 | **LuckyPot draft frame** added (placeholder, not the final design) so there was something to build the real integration on | `8295dc9` |
+| 4 | **LuckyPot M1 (read-only)** - `src/lib/luckyPot.js` reads real balances/epoch/referral data via `publicClient.multicall`, same discipline as `chain.js`'s battle-tested balance reads (batch, retry, never fabricate a 0 on failure). **Caught a real bug**: `getEpoch()` returns 10 flat values, not one tuple - found by testing against LIVE Arc Testnet RPC (mock never exercises the real decode path), fixed before it shipped | `eeed013` |
+| 5 | **Tried, then reverted, a LI.FI icon** on the Exchange card - the swap backend actually calls Circle's Stablecoin Kit, not LI.FI directly (verified: no LI.FI reference anywhere in `functions/api/swap.js`/`_swapCore.js`, and Circle's own docs describe StableFX routing through Talos + market makers). Card now correctly credits "Stablecoin Kit" | `c30ffdc` |
+| 6 | **Real LuckyPot brand icon** applied (was a placeholder 4-leaf-clover ezwallet drew before real assets existed) - pulled from the user's own `KattyFury/LuckyPot` repo, not redrawn. **Picked the wrong file on the first try** (`brand-assets/pfp.svg`, missing the black outline) and had to fix it to `src/assets/logo.svg` (the real 3-path version) after the user caught it from a screenshot | `4af6677`, `7b7d268` |
+| 7 | **Recessed-box colour**: `#E3F1FF` (light blue) replaces grey for input fields and sunken content boxes - `--color-gray` (borders/dividers/NavBar) stays grey, only `--color-surface`/`-2` changed | `878aabe` |
+
+**Decisions the user settled this session (do NOT ask again):**
+- LuckyPot theme inside ezwallet: **light/blue, matching ezwallet's own tokens** - NOT the dark/green
+  theme a separate AI-generated draft proposed (that draft is not in this repo; its write-flow logic was
+  reused, its theme/layout/architecture were not - see the "real next step" note at the top of this file).
+- LuckyPot screen row 1: **the LuckyPot logo + a hamburger menu icon** (not a plain centred title).
+- Referral: **link-based** (`?ref=0x...` → localStorage → bundled into the first Deposit), reusing
+  luckypot.cc's own already-proven mechanism verbatim - not a manual input field.
+- Referral IS in scope for this integration (not deferred to later).
+- Piggy Bank's Service Hub card: removed from the UI (not deleted from code, see `ServiceHub.jsx`'s
+  comment) because the new Figma frame only shows 2 cards (Exchange, LuckyPot) - whether it comes back
+  is still open (`FIGMA-SCREENS-SPEC.md` §8.3).
+
+**Read before continuing LuckyPot work:** `Desktop/LUCKYPOT-INTEGRATION-SPEC.md` (contract ABI, addresses,
+the `contractExecution`/Multicall3 pattern - all verified against the live contract) and
+`Desktop/LUCKYPOT-OPEN-QUESTIONS.md` (product-intent questions, now mostly answered - see the decisions
+list above). The actual `KattyFury/LuckyPot` repo (local clone: `D:\Files\Claude\Build on Arc\luckypot`)
+has real, working reference code for all of this (`frontend/src/hooks/usePoolData.ts`,
+`frontend/src/pages/Deposit.tsx`, `frontend/src/lib/referralState.ts`) - read it again rather than
+reconstructing from memory.
+
+**Verification:** `npm run build` clean and `npm test` 16/16 after every commit above · the LuckyPot M1
+read path was tested against the LIVE Arc Testnet contract with a standalone script (not just mock) ·
+every UI change was screenshotted with Playwright AND copied to the user's Desktop (they cannot run the
+dev server themselves - always do this for UI work, not just describe it).
 
 ### 📒 WHAT SESSION 2026-08-25 (PART 2, UI POLISH BATCH) DID
 
