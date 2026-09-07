@@ -27,7 +27,11 @@ function LPModal({ title, onClose, children }) {
     <div className="popup-overlay" onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{
         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-        width: '75%', maxHeight: '80dvh', overflowY: 'auto',
+        // 3/4 of the MOBILE screen, not of the browser viewport - .popup-overlay is position:fixed to the
+        // whole window, and on desktop that window is far wider than the phone frame (--screen-max: 430px).
+        // Same idiom already used by .row10-single .btn for exactly this reason.
+        width: 'min(75vw, calc(var(--screen-max) * 0.75))',
+        maxHeight: '80dvh', overflowY: 'auto',
         background: 'var(--color-white)', borderRadius: 16, padding: '28px 20px 20px',
         display: 'flex', flexDirection: 'column', gap: 14,
       }}>
