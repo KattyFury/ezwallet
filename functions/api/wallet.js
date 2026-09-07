@@ -78,6 +78,21 @@ export async function onRequestPost(ctx) {
     return new Response(JSON.stringify({ challengeId }), { headers: JSON_HEADERS });
   }
 
+  if (action === 'restorePin') {
+    // FORGOT PIN - the 3rd of the 3 endpoints described in the comment above `resetPin`. Skips the old PIN
+    // entirely: Circle verifies the user's SECURITY QUESTIONS instead, then lets them set a new PIN - all inside
+    // the ONE challenge/iframe below (Circle's own hosted UI asks the questions, then the new PIN, in sequence).
+    // Same 403-for-Google-users caveat as resetPin - guarded client-side in ForgotPin.jsx before this is ever called.
+    const { status, data } = await circleReq('POST', '/user/pin/restore', { idempotencyKey: crypto.randomUUID() }, apiKey, userToken);
+    const challengeId = data?.data?.challengeId;
+    if (!challengeId) {
+      console.error('[restorePin] no challengeId returned:', status, JSON.stringify(data));
+      const msg = `${data?.message || data?.error?.message || 'no challengeId'} (HTTP ${status}${data?.code ? `, code ${data.code}` : ''})`;
+      return new Response(JSON.stringify({ error: msg, detail: data }), { status: 500, headers: JSON_HEADERS });
+    }
+    return new Response(JSON.stringify({ challengeId }), { headers: JSON_HEADERS });
+  }
+
   if (action === 'getAddress') {
     // The correct endpoint: GET /v1/w3s/wallets (X-User-Token), NOT /user/wallets
     const { data: wallets } = await circleReq('GET', '/wallets', undefined, apiKey, userToken);

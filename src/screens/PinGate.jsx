@@ -25,7 +25,12 @@ export default function PinGate() {
       .then(async s => ({ s, m: await s.prepareUnlockMessage() }))
       .catch(() => null)
     const challengeId = await signMessageChallenge(userToken, walletId, sync?.m?.message)
-    const result = await executeChallenge(await getSDK(), userToken, encryptionKey, challengeId)
+    const sdk = await getSDK()
+    // Circle's own "Forgot PIN" button lives INSIDE its PIN iframe (EnterPincode screen) - it does nothing unless
+    // a callback is registered (Circle's docs warn: unregistered, the click has no effect). true = close Circle's
+    // modal first so ours (ForgotPin.jsx) isn't fighting a leftover iframe on top of it.
+    if (sdk.setOnForgotPin) sdk.setOnForgotPin(() => navigate('ForgotPin', { next }), true)
+    const result = await executeChallenge(sdk, userToken, encryptionKey, challengeId)
     sessionStorage.setItem('ez_pin_ok', '1')
     // Backup is a SIDE feature: trading the signature for a token and pulling the copy back both run in the
     // BACKGROUND, not awaited and swallowing every error - a contact list must never hold the user at the front door.

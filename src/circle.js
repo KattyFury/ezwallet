@@ -254,6 +254,22 @@ export async function resetPinChallenge(userToken) {
   return data.challengeId
 }
 
+// FORGOT PIN - skips the old PIN, Circle verifies the security questions instead (see resetPinChallenge
+// above for the "3 PIN endpoints" comment in functions/api/wallet.js - this is the 3rd one).
+export async function restorePinChallenge(userToken) {
+  const res = await fetch('/api/wallet', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'restorePin', userToken }),
+  })
+  const data = await res.json()
+  if (data.error) {
+    console.error('[restorePinChallenge]', data.error, data.detail)
+    throw new Error(data.error)
+  }
+  return data.challengeId
+}
+
 // ⚠️ Circle error codes where the iframe KEEPS the modal open for the user to correct themselves (it does NOT close).
 // If we reject the promise on these and navigate away → when the user then enters the RIGHT value,
 // the iframe (still on top) fires onComplete success BUT the promise is already rejected → the result is lost
