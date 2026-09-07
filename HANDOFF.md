@@ -1,8 +1,109 @@
 # HANDOFF – EZwallet
 
-**Updated:** 2026-09-05 (new Figma grid + all nine PIN defects fixed and tested) · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
+**Updated:** 2026-09-07 (PIN-FLOW-SPEC.md fully built + redrawn Figma grid applied) · **Local:** `D:\Files\Claude\Build on Arc\ezwallet` · **Branch:** `privy`
 
-## ⚠️ READ THIS FIRST - PIN feature is built, blocked on ONE Privy account-level step
+## ⚠️ READ THIS FIRST (2026-09-07) - everything below this section, down to "SESSION 2026-09-05
+## (part 2)", is HISTORICAL. It documents a PIN-quorum blocker that no longer exists - the mechanism
+## was rebuilt on 2026-09-06 (PIN-FLOW-SPEC.md) and the debug test button it describes is gone from
+## the code. Kept for the reasoning trail, not as current status.
+
+### What's actually true right now
+- **The onboarding flow is exactly what the user ordered**: email OTP (Privy's own modal) → mandatory
+  PIN (`SetupPin.jsx`, a popup over the Login backdrop, matches Figma frames pixel-for-pixel) →
+  optional passkey (Privy's own MFA-enrollment popup, fired once from `App.jsx` - no screen of our
+  own wraps it any more) → Home. Nothing between Login and Home is a hand-drawn screen; it is all
+  popups, per the user's explicit rule (see `DESIGN-GRID-390.md` §0).
+- **PIN dual-approval is BUILT and TESTED (41/41, `node --test test/*.mjs`) but NOT LIVE on the
+  founder's real wallet.** `functions/api/pin.js` does identity-token verification (server-side
+  against Privy's real JWKS, no nonce/session round trip - PIN-FLOW-SPEC.md §3), PBKDF2 PIN hashing,
+  the `enable-pin-plan`/`enable-pin-apply` quorum upgrade, and the full forgot-PIN flow (§4, with
+  Resend email). The founder's own wallet (`tzaph36jf5851ik6bvcf0qs3`) is **still 1-of-1** - nobody
+  has actually clicked "Set up PIN" on it since the rebuild. That is the one real blocker left.
+- **Brand went solid-colour on 2026-09-07** (user decision): the four `--grad-*` gradients in
+  `src/index.css` are now flat fills (kept the darker end of each old ramp), `design/logo.svg` and
+  `design/new-brand/{icon,full}.svg` are the new flat-#0B53BF wordmark, favicon/apple-touch-icon
+  regenerated from it. `loginMethods` dropped `'wallet'` - Privy's modal now offers email only.
+- **The grid rule is now exact, stated by the user directly**: 10 rows with 20px gutters, 12 columns
+  with 10px gutters (not the old zero-gutter version). `DESIGN-GRID-390.md` was rewritten from
+  scratch against the REDRAWN Figma frames (renamed: `Splash`, `Login-signup`, `Login-Privy`,
+  `Login-PIN1/2/3`, `Home-Send/Receive/Menu/Services`, and a new `Frame 10` = "Send money", not yet
+  applied to code). Home-Send/Receive/Menu/Services are on the new grid; ~13 sub-screens are not.
+
+### Not yet started - the "system keyboard" rule
+The user's other 2026-09-07 rule: **no hand-drawn keypad anywhere, ever** - "toàn bộ bàn phím từ giờ
+là hệ thống". `src/components/Numpad.jsx` is still used in 5 places (`PinGateHost`, `SendAmount`,
+`Swap`, `CreateQR`, `SavedQRList`) and needs to come out, replaced by a real `<input type="text"
+inputMode="numeric">` (or similar) that raises the OS keyboard. This is a real layout change to each
+of those 5 screens (see the empty bottom half of `Frame 10` in `DESIGN-GRID-390.md`) - **do not start
+it without re-reading the frame the user draws for `SendAmount` first**; they said they'd redraw it.
+
+### Three open design questions asked 2026-09-07, still unanswered
+See `DESIGN-GRID-390.md` §6 "Open questions": (1) the filled `97.42×86` block Figma now draws behind
+the active NavBar tab - colour/fill unknown, current code still just uses a 5px top bar; (2) the QR
+on `Home-Receive` is drawn off-centre in its card (9.17 top-clearance vs 28.6 bottom) - drawing slip
+or intended; (3) `Home-Receive`'s copy line now reads "Click to copy your Account Number" vs the
+app's "Tap to copy your wallet address" - adopt the new wording?
+
+### Also still open (unchanged from before)
+- Contacts backup does not run (`App.jsx` line ~204) - removed 2026-09-04 to fix an app freeze
+  (signing silently while MFA is on deadlocked Privy's own listener), never re-added on the Contacts
+  screen where it belongs.
+- The stray key quorum `agd77lp7ay8s4t6p6pucxipk` ("ezwallet-TEST-DELETEME") cannot be deleted via
+  API (needs a signature from a throwaway key never saved) and cannot be deleted from the Privy
+  Dashboard either, as far as tried. Inert - threshold 1, owns no wallet. User said "kệ đi".
+- `src/index.css` line ~159: `background: #D6EAFB` on the outer frame, commented **TEMPORARY for
+  filming a clip, change back to `--color-white`** - still not changed back.
+- The Splash frame (logo + tagline, no button - distinct from `Login-signup` which now has the
+  button) exists in Figma but has no screen in code yet.
+
+## 🛠️ SESSION 2026-09-07: PIN-FLOW-SPEC.md APPLIED, SOLID BRAND, GRID GUTTERS
+
+Context this session started from: three separate times the user reported an invented screen/element
+that existed nowhere in Figma (an error block on `SetupPin.jsx`, the old `ProtectWallet.jsx` full
+screen, an invisible tap-target instead of the button Figma later grew). The fix pattern that ended
+it: **read the Figma node metadata before writing any JSX**, and when a state genuinely is not drawn
+anywhere (an error message, in this case), find where the DESIGN already says errors go rather than
+inventing a new place for them - frame 5's own annotation ("if error, make it red, size 17") already
+answered it; the red line inside the existing PIN popup, not a new block.
+
+**Decisions Log:**
+- `- 09-07: loginMethods = ['email'] only, no 'wallet'` - reason: "Continue with a wallet" is only
+  meaningful to someone who already owns one; on the very first screen it's the wall CLAUDE.md's core
+  value exists to remove. Setting `wallet_auth: false` on the Privy Dashboard alone was NOT enough -
+  the CLIENT config decides what the modal draws, both halves have to agree.
+- `- 09-07: no ProtectWallet screen; the passkey offer is Privy's own MFA-enrollment popup` - reason:
+  user's rule "pop up là cánh cổng" (between Login and Home, everything is a popup, nothing is a
+  hand-drawn screen) - `ProtectWallet.jsx` (shield icon + paragraph + button) matched no frame.
+- `- 09-07: brand colour is solid, no gradients` - reason: user decision, changed the source SVGs
+  first, then the four `--grad-*` CSS tokens followed to the dark end of each old ramp (already the
+  semantic colour, so nothing needed re-picking).
+- `- 09-07: the grid gutters are FIXED PIXELS (20px rows / 10px columns), not zero` - reason: stated
+  directly by the user, verified against redrawn Figma coordinates before writing any CSS (see
+  `DESIGN-GRID-390.md` §1) - it reproduces every measured frame position to ~1px.
+- `- 09-07: three separate identity-token failure codes, not one shared "Please sign in again."` -
+  reason: `getIdentityToken()` can throw (network/refresh call failed) OR resolve null (browser holds
+  no token) OR the SERVER can reject a token it did get - three different causes were producing one
+  indistinguishable sentence, so a user's bug report couldn't say which half broke.
+
+**Failed Approaches:**
+- `- 09-07: assumed frame 5's 5 drawn PIN boxes (vs 6 on frames 3/4) meant "mid-entry" → asked instead
+  of assuming → user confirmed it was a drawing slip, still 6 everywhere.`
+- (Same session, not a new failure but worth restating since it's the second time:) `- 09-07: almost
+  wrote a numeric keypad redesign for SendAmount/Swap/CreateQR/SavedQRList without being asked → user
+  said "toàn bộ bàn phím từ giờ là hệ thống" (no hand-drawn keypad, use the OS one) before this went
+  further → scoped down to a to-do, not touched, pending the user's redrawn SendAmount frame.`
+
+**Verification:** `npx vite build` clean · `node --test test/*.mjs` 41/41 · Playwright at 390×844
+against the mock (`npm run mock`-style seeded localStorage) measuring REAL rendered coordinates
+against the Figma numbers, not eyeballing screenshots - caught one real bug this way (`repeat(10,
+1fr)` in `.screen`'s row grid is actually `minmax(auto, 1fr)`, so the two rows holding taller
+by-design items grew and squeezed the other eight; fixed with `minmax(0, 1fr)`, the same pattern
+already documented for `grid-template-columns`).
+
+Commits: `0d2af0b` (brand/login/passkey-popup), `c182b8f` (grid gutters + 4 Home screens + Login
+button). Both pushed to `privy`.
+
+## 🗄️ OLD "READ THIS FIRST" (2026-09-05) - SUPERSEDED, see above. Kept for the reasoning trail only.
 
 Everything below in this section is current as of the last commit on `privy` (`372fa15`). The
 PIN-signing MECHANISM itself is proven correct (see "Confirmed working" below) - what's blocking is
@@ -148,24 +249,19 @@ file instead.
 | **Video** | https://youtu.be/UIR4Ee3Wp_Y |
 | **Deck** | https://canva.link/zr3ik84radd39vc |
 
-## ▶️ NEXT SESSION - START HERE (updated 2026-09-05, later still the same evening)
+## ▶️ OLD "NEXT SESSION" (2026-09-05) - SUPERSEDED. The real current next-steps are in the
+## "READ THIS FIRST (2026-09-07)" section at the top of this file. Left here only because the
+## debug-button/quorum-reassignment story below still has useful failed-approach detail.
 
-1. **Everything is built AND wired. Nothing has been clicked.** "Set up PIN" in Security.jsx now
-   does both steps (set the hash, then raise the wallet's own quorum to 2-of-2) - see "MAKING THE PIN
-   LOAD-BEARING" below. **The founder needs to actually do it**: open `privy.ezwallet.pages.dev`, log
-   in, Security → "Set up PIN" (or "Change PIN"). Expect TWO signature prompts, not one - that is
-   correct, not a bug (two separate authorizations). This changes a real wallet's security posture
-   and is not freely reversible, which is why no session has pressed it.
-2. **Then do the end-to-end test that has never been run:** a real Arc Testnet send from
-   `privy.ezwallet.pages.dev` (not localhost - Privy needs a real origin, and passkey needs HTTPS)
-   with the PIN actually enforced.
+1. ~~Everything is built AND wired. Nothing has been clicked.~~ Done since - PIN-FLOW-SPEC.md's
+   mechanism replaced this one outright; see the 2026-09-07 section at the top for what's live now.
+2. ~~Then do the end-to-end test~~ - still true today, still not done: the founder's real wallet has
+   never actually had "Set up PIN" clicked on it end-to-end since the PIN-FLOW-SPEC.md rebuild.
 3. **Delete the stray key quorum `agd77lp7ay8s4t6p6pucxipk` in the Privy Dashboard** when convenient
-   (details below). Harmless but untidy, and the API cannot do it.
-4. Still open from before: contacts backup does not run (it was removed on 09-04 to fix the freeze and
-   needs to move to the Contacts screen), and the sign-in screen is paused for a design pass with two
-   undecided questions - see the 09-04 section.
-5. Not restyled to the new Figma grid yet: the ~15 sub-screens. See `DESIGN-GRID-390.md` rules 1-6,
-   and the open question there about whether Menu's dividers should spread to the other lists.
+   (details below). Harmless but untidy, and the API cannot do it. Still unresolved.
+4. Contacts backup still does not run - still unresolved, see the top section.
+5. Restyled to the redrawn Figma grid as of 2026-09-07: Home-Send/Receive/Menu/Services + Login. Not
+   yet: ~13 sub-screens. See `DESIGN-GRID-390.md` (rewritten 2026-09-07) §7.
 
 ## 🛠️ SESSION 2026-09-05 (part 2): REVIEWED THE PIN FEATURE AND FIXED ALL NINE DEFECTS
 
