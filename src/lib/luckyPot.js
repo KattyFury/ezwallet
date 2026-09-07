@@ -1,3 +1,4 @@
+import { decodeEventLog } from 'viem'
 import { publicClient } from '../chain'
 import { MOCK } from '../mock'
 
@@ -189,4 +190,80 @@ export async function getEpochHistory(currentEpochId, count = 10) {
   return ids
     .map((id, i) => { const e = decodeEpoch(raws[i]); return { epochId: id, drawnAt: Number(e.drawnAt), weeklyYield: toUsdc(e.weeklyYield), numWinners: Number(e.numWinners), drawn: e.drawn } })
     .filter(e => e.drawn)
+}
+
+// MY HISTORY - this wallet's own Deposit/Withdraw/Claim actions. There is no on-chain "list my actions"
+// view, so this reads the Deposited/Withdrawn/Claimed EVENT LOGS through ArcScan's Etherscan-compatible
+// `getLogs` endpoint (same API family TxHistory.jsx already uses for regular sends) filtered by the
+// user's address as the indexed topic - a plain eth_getLogs against the public RPC over the WHOLE
+// history since deploy hits "requested range too large" (verified against the live RPC 2026-09-08);
+// ArcScan's own indexer has no such range cap.
+const ARCSCAN = 'https://testnet.arcscan.app'
+const DEPLOY_BLOCK = 59715964 // block of the CURRENT proxy (0xBdE5...d698) - see HANDOFF.md in the LuckyPot repo
+// keccak256 topic0 for each event's signature - computed with viem's toEventSelector, not guessed.
+const TOPIC0 = {
+  Deposited: '0x73a19dd210f1a7f902193214c0ee91dd35ee5b4d920cba8d519eca65a7b488ca',
+  Withdrawn: '0x217c645ce2c5eb2497bdb6d9400205f1253e8607b2aea960637fa705f2130401',
+  Claimed: '0x4ec90e965519d92681267467f775ada5bd214aa92c0dc93d90a5e880ce9ed026',
+}
+const HISTORY_EVENTS_ABI = [
+  { type: 'event', name: 'Deposited', inputs: [
+    { indexed: true, name: 'user', type: 'address' },
+    { indexed: false, name: 'amount', type: 'uint256' },
+    { indexed: false, name: 'newBalance', type: 'uint256' },
+  ] },
+  { type: 'event', name: 'Withdrawn', inputs: [
+    { indexed: true, name: 'user', type: 'address' },
+    { indexed: false, name: 'amount', type: 'uint256' },
+    { indexed: false, name: 'newBalance', type: 'uint256' },
+    { indexed: false, name: 'forfeitedTicket', type: 'bool' },
+  ] },
+  { type: 'event', name: 'Claimed', inputs: [
+    { indexed: true, name: 'epochId', type: 'uint256' },
+    { indexed: true, name: 'winner', type: 'address' },
+    { indexed: false, name: 'amount', type: 'uint256' },
+  ] },
+]
+const topicFromAddress = (addr) => '0x' + '0'.repeat(24) + addr.slice(2).toLowerCase()
+
+async function fetchEventLogs(walletAddress, eventName, topicPos) {
+  const topicParam = topicPos === 1
+    ? `topic0=${TOPIC0[eventName]}&topic0_1_opr=and&topic1=${topicFromAddress(walletAddress)}`
+    : `topic0=${TOPIC0[eventName]}&topic0_2_opr=and&topic2=${topicFromAddress(walletAddress)}`
+  const res = await fetch(`${ARCSCAN}/api?module=logs&action=getLogs&address=${LUCKYPOT_ADDRESS}&fromBlock=${DEPLOY_BLOCK}&toBlock=latest&${topicParam}`)
+  const json = await res.json()
+  // ArcScan answers a genuine "nothing found" AND a rate-limit/error with the SAME status:"0" - the only
+  // difference is the message. Treating both as "no history" would silently lie to a rate-limited user
+  // ("No activity yet." when they actually have some) - same class of bug chain.js's balance reads guard
+  // against (never let a failed read look like a real empty/zero state).
+  if (json.status !== '1') {
+    if (json.message === 'No logs found') return []
+    throw new Error(json.message || 'Could not load history')
+  }
+  return json.result.map(log => {
+    const decoded = decodeEventLog({ abi: HISTORY_EVENTS_ABI, data: log.data, topics: log.topics, eventName })
+    return { amount: toUsdc(decoded.args.amount), timestamp: parseInt(log.timeStamp, 16), hash: log.transactionHash }
+  })
+}
+
+export async function getMyHistory(walletAddress) {
+  if (MOCK) {
+    const now = Math.floor(Date.now() / 1000)
+    return [
+      { type: 'Deposit', amount: 42, timestamp: now - 3 * 86400, hash: '0xmock1' },
+      { type: 'Claim', amount: 6.6, timestamp: now - 8 * 86400, hash: '0xmock2' },
+    ]
+  }
+  const [deposits, withdrawals, claims] = await Promise.all([
+    fetchEventLogs(walletAddress, 'Deposited', 1),
+    fetchEventLogs(walletAddress, 'Withdrawn', 1),
+    fetchEventLogs(walletAddress, 'Claimed', 2),
+  ])
+  const entries = [
+    ...deposits.map(e => ({ ...e, type: 'Deposit' })),
+    ...withdrawals.map(e => ({ ...e, type: 'Withdraw' })),
+    ...claims.map(e => ({ ...e, type: 'Claim' })),
+  ]
+  entries.sort((a, b) => b.timestamp - a.timestamp)
+  return entries
 }
