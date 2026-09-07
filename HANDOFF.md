@@ -2,14 +2,19 @@
 
 **Updated:** 2026-09-07 · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
 
-### ⚠️ READ THIS FIRST - session 2026-09-07 ended mid-task, LuckyPot NOT integrated yet
+### ⚠️ READ THIS FIRST - session 2026-09-07 (2nd pass): LuckyPot Deposit/Withdraw/Claim BUILT, NOT YET TESTED ON A DEPLOY
 
-The user's own words closing the session: **"bạn nói nhiều mà toàn build lôm côm không build cái
-trọng tâm"** (a lot of talk, a lot of small scattered fixes, the actual core task never got built).
-That is an accurate description, not just a mood - see the "What ACTUALLY got built" table below.
-**Do not repeat the pattern**: pick ONE next step (see "The real next step"), build it end-to-end, THEN
-handle side-requests that come in - don't let a side-request (an icon looking wrong, a colour token)
-replace the thing that was supposed to happen next.
+Built to `Desktop/LUCKYPOT-LAYOUT-SPEC.md` (the user's own written spec, authoritative over any earlier
+screenshot/draft): `LuckyPot.jsx` rebuilt for real (logo + hamburger menu, dynamic banner, epoch/tickets
+boxes, unified popup shell), `functions/api/luckypot.js` (new) encodes deposit/withdraw/claim/sweep
+calldata and calls Circle's real `contractExecution`, `src/circle.js` gained the matching
+`executeLuckyPot{Deposit,Withdraw,Claim}` wrappers. Referral is explicitly OUT of scope (spec §0) - no
+UI for it on this screen.
+**Verified so far:** `npm run build` clean, `npm test` 16/16, and every screen/popup state
+screenshotted with Playwright in mock mode (`C:\tmp\ezw-verify\luckypot-full.mjs`) at 390 AND 375px -
+copied to Desktop. **NOT yet verified:** mock mode never calls Circle, so no real PIN signature has
+actually gone through `contractExecution` yet - **the next session's first job is testing Deposit on a
+real deploy** (Circle's SDK does not run on localhost, same constraint as Swap).
 
 ### 🔗 THE 4 OFFICIAL LINKS - use this set when introducing the project (user decision 08-04)
 | | |
@@ -33,32 +38,28 @@ replace the thing that was supposed to happen next.
   boxes/inputs are light blue `#E3F1FF` (not grey), Service Hub rebuilt to full-width cards. The new
   brand icon/logo assets (`public/icon.svg`, `design/logo.svg`) are the user's own official files, not
   redrawn.
-- **LuckyPot integration - STARTED, NOT DONE.** What's real and verified: `src/lib/luckyPot.js` reads
-  the deployed contract's actual balance/epoch/referral data (M1, read-only, no signing) - tested
-  against LIVE Arc Testnet RPC, not just mock. What's NOT done yet, and is **the actual point of this
-  whole thread**: `LuckyPot.jsx` is still the placeholder frame from before M1 (title + a static card +
-  2 disabled buttons) - it does not yet look like the user's approved wireframe (row 1 = LuckyPot's own
-  logo + a hamburger menu, light/blue theme, popups for Deposit/Withdraw/Claim), and Deposit/Withdraw/
-  Claim/referral do not actually sign or move money yet. See "The real next step" below and section 9's
-  session table for every decision already confirmed (theme, layout, referral mechanism) so the next
-  session does not have to re-ask them.
+- **LuckyPot integration - Deposit/Withdraw/Claim BUILT (M1-M4), untested on a real deploy.**
+  `src/lib/luckyPot.js` (M1, reads) was already verified against LIVE Arc Testnet RPC in the prior pass.
+  This pass added the writes: `LuckyPot.jsx` now matches `Desktop/LUCKYPOT-LAYOUT-SPEC.md` row-by-row
+  (logo + hamburger menu popup with Deposit/Withdraw/Draw history[disabled]/My history[disabled]/Exit;
+  row 2 dynamic banner - gold "claim your prize" when `owedTo(prevEpoch)>0 && !hasClaimed`, else a
+  faucet-copy-address banner; epoch box; tickets/deposit box with Deposit/Withdraw/Latest-result
+  buttons; row 9 Draw history dimmed/disabled; row 10 Exit). Referral stays OUT of scope (spec §0) -
+  intentionally no `?ref=` capture, no `setReferrer` call anywhere in this pass.
 
 #### The real next step (do this FIRST, before anything else)
 
-Rebuild `src/screens/LuckyPot.jsx` for real, in one pass:
-1. Row 1 = `design/luckypot/logo-full.svg` (already in the repo) + a hamburger menu icon opening a
-   simple menu popup - NOT the current centred "LuckyPot" title.
-2. Light/blue theme using ezwallet's actual tokens (`var(--color-*)`), NOT the dark/green CSS a separate
-   AI session produced (that file is not in the repo and should stay that way - see section 9).
-3. Wire Deposit/Withdraw for real: `functions/api/luckypot.js` (new - does not exist yet) encodes
-   calldata with viem, batches `[approve, deposit]` through Multicall3From exactly like `_swapCore.js`
-   already does for Swap, calls Circle's real `contractExecution` (copy the exact request shape from
-   `functions/api/swap.js`, including `feeLevel: 'MEDIUM'` and the `ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY`
-   fallback - an earlier draft of this file got both wrong).
-4. Referral: capture `?ref=0x...` from the URL into `localStorage` on app load (ezwallet does not do
-   this yet anywhere), bundle `setReferrer` into the first Deposit's Multicall3 batch with
-   `allowFailure: true` - this is the exact mechanism already proven on luckypot.cc itself
-   (`frontend/src/lib/referralState.ts` in that repo), reuse it, do not invent a different UX.
+Test on a real deploy, in this order (Circle's SDK cannot run on localhost, so none of this is
+testable in mock mode or on `npm run dev`):
+1. Push a preview deploy, faucet the wallet some testnet USDC, do a small real Deposit - confirm the
+   PIN screen opens, the tx lands on Arc Testnet (check `testnet.arcscan.app`), and `src/lib/luckyPot.js`'s
+   read picks up the new `deposited`/`eligible` numbers afterward.
+2. Withdraw a small amount the same way - confirm the wallet's USDC balance actually rises (same
+   "never trust tx status=1 alone" discipline as Swap's `verify-swap.mjs`).
+3. Claim needs a wallet that actually won an epoch to test for real - if none exists yet, at minimum
+   confirm the "Latest result" popup's tap-to-reveal renders correctly for a wallet that has a
+   `prevEpochId` but did NOT win (the "Good luck next epoch" branch - already screenshotted in mock,
+   but mock never exercises the real `owedTo`/`hasClaimed` reads).
 
 #### Older standing state (still true, kept for context)
 
