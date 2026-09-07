@@ -40,11 +40,16 @@
     <!-- ⚠️ SVG FIRST, PNG SECOND, AND THE ORDER MATTERS (2026-09-07, new solid-colour brand).
          A browser that understands `image/svg+xml` takes the vector and stays sharp at every size a
          tab, a bookmark bar or a pinned shortcut asks for; one that does not simply ignores that line
-         and falls through to the PNG. Both are rendered from the SAME design/new-brand/icon.svg -
-         public/*.png are generated (C:\tmp\ezw-verify\render-icons.mjs), not drawn by hand, so the
-         raster copies cannot drift away from the vector.
+         and falls through to the PNG.
          `?v=2` busts the cache of anyone still holding the old GRADIENT icon: favicons are cached
-         hard and for a long time, and without it the brand change would look like it never shipped. -->
+         hard and for a long time, and without it the brand change would look like it never shipped.
+         ⚠️ icon.png is NOT rendered from icon.svg any more (2026-09-07). It used to be, via
+         `C:\tmp\ezw-verify\render-icons.mjs`, on the stated principle "one source, so the raster copy
+         cannot drift away from the vector" - but the user then supplied a separately hand-made app
+         icon (`design/new-brand/pfp.png`, tracked source), copied straight into `public/icon.png`.
+         `render-icons.mjs` was updated to stop overwriting it - only `fav_icon.png` still comes from
+         icon.svg. Replacing icon.png again means copying a new file over it by hand, not re-running
+         that script. -->
     <link rel="icon" type="image/svg+xml" href="/icon.svg?v=2" />
     <link rel="icon" type="image/png" href="/fav_icon.png?v=2" />
     <link rel="manifest" href="/manifest.json" />
@@ -52,7 +57,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="EZwallet" />
-    <link rel="apple-touch-icon" href="/icon.png?v=2" />
+    <link rel="apple-touch-icon" href="/icon.png?v=3" />
   </head>
   <body>
     <div id="root"></div>
