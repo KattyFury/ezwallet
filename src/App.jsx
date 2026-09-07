@@ -30,6 +30,7 @@ const Security    = lazy(() => import('./screens/Security'))
 const About       = lazy(() => import('./screens/About'))
 const PinGate     = lazy(() => import('./screens/PinGate'))
 const ForgotPin   = lazy(() => import('./screens/ForgotPin'))
+const LuckyPot    = lazy(() => import('./screens/LuckyPot'))
 
 const SCREENS = {
   Login,
@@ -43,6 +44,7 @@ const SCREENS = {
   About,
   PinGate,
   ForgotPin,
+  LuckyPot,
 }
 
 export default function App() {

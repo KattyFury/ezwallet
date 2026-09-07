@@ -19,7 +19,7 @@ import { useNav } from '../nav'
 const SERVICES = [
   { id: 'swap',     icon: 'exchange', label: 'Exchange', desc: 'Swap USDC to EURC or cirBTC with LI.FI', screen: 'Swap' },
   // { id: 'pig',   icon: 'pig',      label: 'Piggy Bank', desc: '…', screen: null },  -- see note above, not in the new Figma frame
-  { id: 'luckypot', icon: 'luckypot', label: 'LuckyPot',  desc: 'Your idle USDC can bring you $$$$',      screen: null },
+  { id: 'luckypot', icon: 'luckypot', label: 'LuckyPot',  desc: 'Your idle USDC can bring you $$$$',      screen: 'LuckyPot' },
 ]
 
 export default function ServiceHub() {
