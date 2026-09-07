@@ -171,8 +171,10 @@ export default function Login() {
             gridRow 9/11 frame, and this span = 80% of the .row-1-5 frame - both frames are grid cells in the SAME COLUMN
             of .screen, so they share a width → 80% matches 80%. No forced <br /> any more: the text wraps by itself
             to that width (longer/shorter wording and font sizes still break correctly). */}
+        {/* The official slogan, verbatim (CLAUDE.md Brand Voice + FIGMA-SCREENS-SPEC.md §3 Frame 2) -
+            was a different, unofficial line ("Create a wallet with email...") before 2026-09-07. */}
         <span style={{ width: '80%', fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center' }}>
-          {'Create a wallet with email, send & receive money easily'}
+          {'A crypto wallet simple enough for my mom to use'}
         </span>
       </div>
 

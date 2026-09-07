@@ -21,12 +21,9 @@ export default function NavBar({ active }) {
           className={`navbar-btn${active === tab.id ? ' active' : ''}`}
           disabled={tab.disabled}
           onClick={tab.disabled ? undefined : () => navigate(tab.id)}
-          style={{ position: 'relative', ...(tab.disabled ? { opacity: 0.4, cursor: 'not-allowed' } : {}) }}
+          style={tab.disabled ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
         >
-          {active === tab.id && (
-            <span style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '70%', height: 5, borderRadius: '0 0 5px 5px', background: 'var(--color-brand)' }} />
-          )}
-          <Icon name={tab.icon} size="var(--is-body)" color={active === tab.id ? 'var(--color-black)' : 'var(--color-muted-2)'} style={{ marginBottom: 2 }} />
+          <Icon name={tab.icon} size="var(--is-body)" color={active === tab.id ? 'var(--color-black)' : 'var(--color-muted)'} style={{ marginBottom: 2 }} />
           {tab.label}
         </button>
       ))}

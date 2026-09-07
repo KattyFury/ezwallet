@@ -22,7 +22,7 @@ export async function brandedQrCanvas(qrCanvas) {
   x.fillStyle = '#0B53BF'; x.font = '600 30px sans-serif'
   x.fillText('Only Arc Testnet', W / 2, PAD + QR + 58)
 
-  const lw = 168, lh = lw * 380 / 1160   // logo.svg aspect ratio (viewBox 1160×380), same as the receipt image
+  const lw = 168, lh = lw * 59 / 206   // logo.svg aspect ratio (viewBox 206×59, updated 2026-09-07 with the new solid-brand logo), same as the receipt image
   const img = new Image()
   img.src = logoLong
   try { await img.decode() } catch {}

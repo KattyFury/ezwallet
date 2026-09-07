@@ -2,14 +2,24 @@ import NavBar from '../components/NavBar'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
 
-// ══ SERVICE HUB - the services home (navbar tab 1, replacing the old Swap tab) ══
-// Swap is no longer a tab of its own but one TILE in here, next to the services still to be built.
-// Adding a service = adding one line to SERVICES; do NOT copy the JSX block into a loose fourth tile.
-//   screen : the screen name in SCREENS (App.jsx). null = not built yet → the tile dims itself and is not tappable.
+// ══ SERVICE HUB - the services home (navbar tab 1) ══
+// REBUILT 2026-09-07 from FIGMA-SCREENS-SPEC.md §7 (Frame 6): the old 2-column grid of square tiles is
+// gone, replaced by full-width HORIZONTAL cards - icon left, title + description right - measured off
+// the frame (card height 148.8px, 20px gap between cards, matching the guideline's "2 yếu tố sát nhau
+// cách 20px" rule exactly). "Swap" is relabelled "Exchange" per the frame (still routes to Swap.jsx -
+// only the tile's display label changed, not the screen id).
+//
+// ⚠️ Piggy Bank is NOT drawn in the new Figma frame at all (only 2 cards: Exchange + LuckyPot) - left
+// OUT of SERVICES below rather than shown as a 3rd disabled card, since the new full-width layout has
+// no natural "half-built" slot for it the way the old 2-column grid did. Not deleted, just commented out
+// - FIGMA-SCREENS-SPEC.md §8.3 flags this as still needing your decision (drop it for good, or it comes
+// back once there's a real screen for it).
+// Adding a service = adding one line to SERVICES.
+//   screen : the screen name in SCREENS (App.jsx). null = not built yet → the card dims itself and is not tappable.
 const SERVICES = [
-  { id: 'swap', icon: 'exchange', label: 'Swap',        screen: 'Swap' },
-  { id: 'pig',  icon: 'pig',      label: 'Piggy Bank',         screen: null },
-  { id: 'luckypot', icon: 'luckypot', label: 'LuckyPot',    screen: null },
+  { id: 'swap',     icon: 'exchange', label: 'Exchange', desc: 'Swap USDC to EURC or cirBTC with LI.FI', screen: 'Swap' },
+  // { id: 'pig',   icon: 'pig',      label: 'Piggy Bank', desc: '…', screen: null },  -- see note above, not in the new Figma frame
+  { id: 'luckypot', icon: 'luckypot', label: 'LuckyPot',  desc: 'Your idle USDC can bring you $$$$',      screen: null },
 ]
 
 export default function ServiceHub() {
@@ -21,56 +31,40 @@ export default function ServiceHub() {
         Service Hub
       </div>
 
-      {/* GREY BOX over rows 2-9 + a 2-COLUMN grid inside - EXACTLY the geometry of the QR Storage screen (user decision 08-12
-          "pretty much the QR Storage layout, three squares that size"): padding 10 = tiles sit 10px from the box
-          edge, gap 10 between tiles. The third tile drops to the next row by itself, in the left column.
-          ⚠️ minmax(0,1fr) and NOT a bare '1fr': with '1fr' the content dictates min-width, so one tile with
-          large content blows the whole column open (lesson 07-23c, QR Storage).
-          ⚠️ alignItems:'start' - grid defaults to `stretch`, which STRETCHES the tile to the row height and then
-          aspectRatio 1 inflates it sideways => the 2 columns go uneven (exactly bug 07-23c). start = each tile stays square. */}
-      {/* marginBottom 2dvh = the GAP before the NavBar (user report 08-13: the grey box ate all of row 9 and stuck to the
-          navbar). 2dvh is the standard bottom gap used on every other screen (the action-grid on HomeSend/
-          HomeReceive, the button block on Swap) - do not invent a different number just for this screen. */}
-      <div style={{ gridRow: '2 / 10', marginBottom: '2dvh', background: 'var(--color-surface)', borderRadius: 20, padding: 10, minWidth: 0 }}>
-        {/* gridAutoRows '1fr' = EVERY ROW THE SAME HEIGHT, taken from the tallest tile. Needed because labels vary in
-            length at font size 30: "Swap" 1 line · "Piggy Bank" 2 lines · "Dollar-Cost
-            Averaging" (the third tile's old label) 3 lines → left alone, the 3 tiles came out 147/180/213 tall, badly uneven (measured 08-13).
-            Do NOT use alignItems:'start' any more - the default `stretch` is what makes a tile fill its row.
-            (It is aspectRatio + stretch TOGETHER that caused the sideways inflation of 07-23c; aspectRatio is gone
-            here, so stretch is safe.) */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gridAutoRows: '1fr', gap: 10, alignContent: 'start' }}>
-          {SERVICES.map(({ id, icon, label, screen }) => {
-            const soon = !screen   // not built → dimmed and not tappable (the same disabled standard as MenuScreen)
-            return (
-              // A RAISED TILE = exactly the QR tiles in QR Storage: white + a 1.5 grey border (the "tappable inside a grey
-              // box" rule) + a .25 drop shadow like a button.
-              // ⚠️ NO more aspectRatio 1 (as in the first 08-12 version): at title size 30px
-              // "Dollar-Cost Averaging" took 2 lines ≈ 70px, and with the 64 icon that exceeded the 160px column
-              // width ⇒ forcing a square pushed the text outside the tile. minHeight follows the column width (an aspect ratio
-              // on the MINIMUM rather than on the size) → short-label tiles stay square, long-label ones grow taller.
-              <button key={id} disabled={soon} onClick={soon ? undefined : () => navigate(screen)}
-                style={{
-                  minWidth: 0, border: '1.5px solid var(--color-gray)', borderRadius: 16,
-                  background: 'var(--color-white)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
-                  display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-                  gap: 12, padding: '16px 10px', fontFamily: 'inherit',
-                  opacity: soon ? 0.4 : 1, cursor: soon ? 'not-allowed' : 'pointer',
-                }}>
-                {/* Icon 56 - the user drew these 3 icons on a 200×200 canvas specifically for large sizes. Brand blue =
-                    the leading-icon language of menu items (user decision 07-17e).
-                    ⚠️ THE SIZE WAS SETTLED AFTER 2 MISSES (user 08-13): 48 + text 17 = "too small",
-                    64 + text 30 = "too big" → settled IN BETWEEN: icon 56 + text 21. Do NOT push it back to either extreme. */}
-                <Icon name={icon} size={56} color="var(--color-brand)" />
-                {/* Text = --fs-md-lg 21 = exactly the app's BUTTON text size (these tiles are buttons after all) → balanced
-                    against the 56 icon while being clearly bigger than the old 17. A long label wraps to 2 lines → NO
-                    whiteSpace:nowrap; lineHeight 1.15 keeps 2 lines compact. */}
-                <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', textAlign: 'center', lineHeight: 1.15, maxWidth: '100%' }}>
+      {/* Cards start at row 2 (Figma top=94.4 ≈ 11.18dvh, close enough to row 2's 8.44dvh start to use
+          the row boundary directly) and stack downward - justifyContent flex-start on purpose: the frame
+          leaves the rest of the screen blank below the 2nd card rather than stretching cards to fill it. */}
+      <div style={{ gridRow: '2 / 10', display: 'flex', flexDirection: 'column', gap: '2.37dvh' /* 20px / 844 */, minWidth: 0 }}>
+        {SERVICES.map(({ id, icon, label, desc, screen }) => {
+          const soon = !screen   // not built → dimmed and not tappable (the same disabled standard as MenuScreen)
+          return (
+            // A RAISED CARD - white + a drop shadow, no border (Figma: `shadow-[0_0_15px_rgba(0,0,0,.5)]`,
+            // no border on these cards, unlike the old grey-bordered tiles).
+            <button key={id} disabled={soon} onClick={soon ? undefined : () => navigate(screen)}
+              style={{
+                height: '17.63dvh' /* 148.8/844 */, minWidth: 0, width: '100%',
+                border: 'none', borderRadius: 10,
+                background: 'var(--color-white)', boxShadow: '0 0 15px rgba(0, 0, 0, 0.5)',
+                display: 'flex', alignItems: 'center',
+                padding: '0 12px 0 5.09%' /* Figma icon left edge 19.84/390 */, gap: 14, fontFamily: 'inherit', textAlign: 'left',
+                opacity: soon ? 0.4 : 1, cursor: soon ? 'not-allowed' : 'pointer',
+              }}>
+              {/* Icon 62.263px in the frame (15.96% of 390) - the user's icons are drawn on a 200×200
+                  canvas for exactly this kind of large render. */}
+              <Icon name={icon} size="min(7.38dvh, 15.96vw)" color="var(--color-brand)" />
+              {/* minWidth 0 - the mandatory guard whenever a flex item holds text (see the .screen note in
+                  index.css): without it a long description widens the card instead of wrapping. */}
+              <span className="col" style={{ minWidth: 0, gap: 4 }}>
+                <span style={{ fontSize: 20, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', lineHeight: 1.15 }}>
                   {label}
                 </span>
-              </button>
-            )
-          })}
-        </div>
+                <span style={{ fontSize: 14, fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)', lineHeight: 1.25 }}>
+                  {desc}
+                </span>
+              </span>
+            </button>
+          )
+        })}
       </div>
 
       <NavBar active="ServiceHub" />
