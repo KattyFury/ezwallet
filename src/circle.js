@@ -240,6 +240,35 @@ export async function executeSwap({ userToken, walletId, walletAddress, tokenIn,
   return res.json()
 }
 
+// LuckyPot deposit/withdraw/claim - same shape as executeSwap: the server encodes + calls contractExecution,
+// the client signs the returned challengeId with executeChallenge (PIN).
+export async function executeLuckyPotDeposit({ userToken, walletId, amountIn }) {
+  if (MOCK) return { challengeId: 'mock-challenge' }
+  const res = await fetch('/api/luckypot', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'deposit', userToken, walletId, amountIn }),
+  })
+  return res.json()
+}
+
+export async function executeLuckyPotWithdraw({ userToken, walletId, amountIn }) {
+  if (MOCK) return { challengeId: 'mock-challenge' }
+  const res = await fetch('/api/luckypot', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'withdraw', userToken, walletId, amountIn }),
+  })
+  return res.json()
+}
+
+export async function executeLuckyPotClaim({ userToken, walletId, epochId, useSweep }) {
+  if (MOCK) return { challengeId: 'mock-challenge' }
+  const res = await fetch('/api/luckypot', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'claim', userToken, walletId, epochId, useSweep }),
+  })
+  return res.json()
+}
+
 export async function resetPinChallenge(userToken) {
   const res = await fetch('/api/wallet', {
     method: 'POST',

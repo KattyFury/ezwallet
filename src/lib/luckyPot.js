@@ -15,6 +15,9 @@ const LUCKYPOT_ABI = [
   { name: 'pendingRef',       type: 'function', stateMutability: 'view', inputs: [{ type: 'address' }], outputs: [{ type: 'uint256' }] },
   { name: 'hasClaimed',       type: 'function', stateMutability: 'view', inputs: [{ type: 'uint256' }, { type: 'address' }], outputs: [{ type: 'bool' }] },
   { name: 'owedTo',           type: 'function', stateMutability: 'view', inputs: [{ type: 'uint256' }, { type: 'address' }], outputs: [{ type: 'uint256' }] },
+  // Seconds after a draw during which claim(epochId) works; past that only the permissionless sweep(epochId) does -
+  // copied verbatim from the deployed contract's ABI, same as every other entry here.
+  { name: 'SWEEP_DELAY',      type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
   // ⚠️ 10 SEPARATE (flat) outputs, NOT one tuple/struct - verified against the real deployed contract's
   // ABI directly (D:\...\poolAbi.json) AND by an actual eth_call against live Arc Testnet RPC (2026-09-07):
   // wrapping these into a single `{type:'tuple', components:[...]}` DECODES WRONG (viem throws
@@ -59,7 +62,9 @@ function mockInfo() {
     deposited: 42, eligible: 42, aprBps: 600,
     epochId: 3, epochEndTime: Math.floor(Date.now() / 1000) + 2 * 86400,
     epochDrawn: false, weeklyYieldUsd: 8.4,
+    eligiblePoolSnapshot: 5732, numWinners: 2, eligibleParticipants: 14,
     prevEpochId: 2, wonLastEpoch: false, owedLastEpoch: 0, hasClaimedLastEpoch: false,
+    prevEpochDrawnAt: Math.floor(Date.now() / 1000) - 86400, sweepDelay: 3 * 86400,
     referrer: null, pendingReferral: 0,
   }
 }
@@ -73,13 +78,14 @@ export async function getLuckyPotInfo(walletAddress) {
   if (!walletAddress) return null
 
   const base = { address: LUCKYPOT_ADDRESS, abi: LUCKYPOT_ABI }
-  const [deposited, eligible, epochId, aprBps, referrer, pendingReferral] = await multicallWithRetry([
+  const [deposited, eligible, epochId, aprBps, referrer, pendingReferral, sweepDelay] = await multicallWithRetry([
     { ...base, functionName: 'balances', args: [walletAddress] },
     { ...base, functionName: 'eligibleBalance', args: [walletAddress] },
     { ...base, functionName: 'currentEpochId' },
     { ...base, functionName: 'currentAprBps' },
     { ...base, functionName: 'refBy', args: [walletAddress] },
     { ...base, functionName: 'pendingRef', args: [walletAddress] },
+    { ...base, functionName: 'SWEEP_DELAY' },
   ])
 
   const epochIdNum = Number(epochId)
@@ -90,9 +96,10 @@ export async function getLuckyPotInfo(walletAddress) {
     epochCalls.push(
       { ...base, functionName: 'hasClaimed', args: [BigInt(prevEpochId), walletAddress] },
       { ...base, functionName: 'owedTo', args: [BigInt(prevEpochId), walletAddress] },
+      { ...base, functionName: 'getEpoch', args: [BigInt(prevEpochId)] },
     )
   }
-  const [epochRaw, hasClaimedPrev, owedPrev] = await multicallWithRetry(epochCalls)
+  const [epochRaw, hasClaimedPrev, owedPrev, prevEpochRaw] = await multicallWithRetry(epochCalls)
   const epoch = decodeEpoch(epochRaw)
 
   return {
@@ -103,7 +110,12 @@ export async function getLuckyPotInfo(walletAddress) {
     epochEndTime: Number(epoch.endTime),
     epochDrawn: epoch.drawn,
     weeklyYieldUsd: toUsdc(epoch.weeklyYield),
+    eligiblePoolSnapshot: toUsdc(epoch.eligiblePoolSnapshot),
+    numWinners: Number(epoch.numWinners),
+    eligibleParticipants: Number(epoch.eligibleParticipants),
+    sweepDelay: Number(sweepDelay),
     prevEpochId,
+    prevEpochDrawnAt: prevEpochId !== null ? Number(decodeEpoch(prevEpochRaw).drawnAt) : null,
     wonLastEpoch: prevEpochId !== null ? (owedPrev ?? 0n) > 0n : false,
     owedLastEpoch: prevEpochId !== null ? toUsdc(owedPrev ?? 0n) : 0,
     hasClaimedLastEpoch: prevEpochId !== null ? !!hasClaimedPrev : false,
