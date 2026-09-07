@@ -40,6 +40,8 @@ import x from '../../icon/x.svg?raw'
 // as-is on purpose, NOT converted to currentColor. Consequence: the `color` prop has no effect on this one.
 // `pig` (Piggy Bank) - unregistered 2026-09-07, no screen renders it any more (see ServiceHub.jsx's note on the
 // new Figma frame dropping the card). File kept at icon/pig.svg - add the import + a name back here to reuse it.
+// (A LI.FI brand-asset icon was tried here the same day and reverted - the Exchange card actually goes through
+// Circle's Stablecoin Kit, not LI.FI directly - see ServiceHub.jsx's SERVICES description.)
 const ICONS = {
   add, bug, check, clock, copy, down, down2, download, erase, exchange, globe, hub,
   human, info, luckypot, mail, menu, option, out, pencil, qr, right2, scan, share, shield, trade, up, warning, x,

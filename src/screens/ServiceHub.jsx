@@ -17,7 +17,7 @@ import { useNav } from '../nav'
 // Adding a service = adding one line to SERVICES.
 //   screen : the screen name in SCREENS (App.jsx). null = not built yet → the card dims itself and is not tappable.
 const SERVICES = [
-  { id: 'swap',     icon: 'exchange', label: 'Exchange', desc: 'Swap USDC to EURC or cirBTC with LI.FI', screen: 'Swap' },
+  { id: 'swap',     icon: 'exchange', label: 'Exchange', desc: 'Swap USDC to EURC or cirBTC with Stablecoin Kit', screen: 'Swap' },
   // { id: 'pig',   icon: 'pig',      label: 'Piggy Bank', desc: '…', screen: null },  -- see note above, not in the new Figma frame
   { id: 'luckypot', icon: 'luckypot', label: 'LuckyPot',  desc: 'Your idle USDC can bring you $$$$',      screen: 'LuckyPot' },
 ]
