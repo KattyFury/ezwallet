@@ -73,13 +73,7 @@ export default function Login() {
   const showPlaceholder = !isOpen && !authenticated && everOpenedRef.current
 
   return (
-    <div
-      className="screen"
-      // Tappable ONLY once the modal has been closed - reopens it. Frame 1's own content (below) is
-      // the whole placeholder; no visible affordance is added, matching the design exactly.
-      onClick={showPlaceholder ? () => loginRef.current() : undefined}
-      style={showPlaceholder ? { cursor: 'pointer' } : undefined}
-    >
+    <div className="screen">
       {/* ROWS 1-5, TOP-ALIGNED TO THE FIGMA COORDINATES (frames 1-2, DESIGN-GRID-390.md).
           Not centred any more: the frames put this block at a MEASURED height, and centring it in
           rows 1-5 floated it ~3.7dvh above where it is drawn. Converted with y/844 → dvh:
@@ -109,6 +103,32 @@ export default function Login() {
         </span>
       </div>
 
+      {/* ══ THE PLACEHOLDER'S BUTTON - DRAWN BY THE USER, NOT INVENTED (2026-09-07) ══
+          The Figma file now separates the two states this screen has, as two frames:
+            `Splash`       - logo + tagline, NOTHING else = what stands behind Privy's modal
+            `Login-signup` - the same, PLUS this button = what is left after the modal is closed
+          which is exactly the `showPlaceholder` distinction this file already computed. Until today
+          there was no button at all and the WHOLE screen was the tap target, because frame 1 as it
+          stood on 09-06 drew none - the user has since drawn one, so the invisible whole-screen
+          target is gone and this is the affordance.
+          Measured off Rectangle 47: x=69 w=254 y=613.76 h=48.66 on a 390×844 board
+            → 254/390 = 65.13% of the SCREEN (screen-anchored, same reasoning as the logo above)
+            → 613.76/844 = 72.72dvh, and the height is .btn's own 5.765dvh, the app-wide pill height.
+          ABSOLUTE, like every other element given exact frame coordinates: 72.72dvh is inside row 8
+          but not aligned to it, and a fixed-height grid item would stretch the 10-row grid (the bug
+          documented at length in HomeSend.jsx). */}
+      {showPlaceholder && (
+        <button
+          className="btn btn-primary"
+          onClick={() => loginRef.current()}
+          style={{
+            position: 'absolute', top: '72.72dvh', left: '50%', transform: 'translateX(-50%)',
+            width: 'min(65.13vw, calc(var(--screen-max) * 0.6513))',
+          }}
+        >
+          Log in or sign up
+        </button>
+      )}
     </div>
   )
 }

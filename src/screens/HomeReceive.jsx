@@ -77,7 +77,7 @@ export default function HomeReceive() {
           paddingBottom "making room" for the address line, which pushed it off-centre - the address
           button is absolute and overlaps nothing, so plain centring is correct). */}
       <div style={{
-        position: 'absolute', left: 0, right: 0, top: '15.62dvh', height: '39.38dvh',
+        position: 'absolute', left: 0, right: 0, top: '14.084dvh', height: '35.99dvh',
         background: 'var(--color-surface)', borderRadius: 20,
         display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0,
       }}>
@@ -85,10 +85,12 @@ export default function HomeReceive() {
             chain, so a wallet on Ethereum/Base/BSC scanning it sends on the wrong chain and the money is GONE. buildQR wraps
             it in a private scheme + the Arc chainId; see src/qr.js.
             Anyone who needs the plain address (topping up from an exchange or another wallet) taps the copy button under the QR. */}
-        {/* 283.45 square on the 390×844 board (Figma frame 7) = 33.58dvh / 72.68vw, up from
-            min(30dvh, 78vw). ⚠️ ShowQR.jsx carries the SAME formula on purpose (HANDOFF §6: "the big
-            QR = the same size as on the Receive screen") - change one, change both. */}
-        <QRCodeSVG value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" style={{ width: 'min(33.58dvh, 72.68vw)', height: 'min(33.58dvh, 72.68vw)' }} />
+        {/* 266 square on the 390×844 board (redrawn Home-Receive, Rectangle 66) = 31.52dvh / 68.21vw,
+            DOWN from the 283.45 the previous frame drew - the card shrank with it, so the QR keeps the
+            same breathing room inside it rather than growing tight against the corners.
+            ⚠️ ShowQR.jsx carries the SAME formula on purpose (HANDOFF §6: "the big QR = the same size
+            as on the Receive screen") - change one, change both. */}
+        <QRCodeSVG value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" style={{ width: 'min(31.52dvh, 68.21vw)', height: 'min(31.52dvh, 68.21vw)' }} />
       </div>
       {/* Address + copy: absolutely positioned at top 55% = the SAME coordinates as the "Hold to show tokens" button on Send
           (user decision 07-17f "all the better") - switching between the 2 tabs, the secondary line stays in one place.
@@ -96,7 +98,7 @@ export default function HomeReceive() {
           FULLY MATCHING the button style of ShowTokensButton (HomeSend.jsx) so the 2 tabs form a pair (user decision:
           same white pill with a grey border, same font size, so they read as a PAIR of buttons and not floating text). */}
       <button onClick={handleCopyAddr} style={{
-        position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
+        position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
         // ⚠️ WIDTH HUGS THE TEXT (user decision 08-13) - the fixed 3/4-screen width from 07-29 was dropped. This button and
         // "Hold to show tokens" (HomeSend) are now UNEQUAL because the two sentences differ in length;
@@ -111,7 +113,11 @@ export default function HomeReceive() {
         {addrCopied ? 'Copied!' : 'Tap to copy your wallet address'}
       </button>
 
-      <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
+      {/* ⚠️ ABSOLUTE, NOT `.row-7-8`, SINCE 2026-09-07 - identical coordinates to HomeSend's own
+          announcement block (y=462.03 h=188.97 on an 844 board = 54.74dvh → 77.13dvh). The two frames
+          draw it in the same place on purpose, so nothing shifts when the tabs are switched; see the
+          longer note in HomeSend.jsx for why no span of whole rows can express those numbers. */}
+      <div style={{ position: 'absolute', left: 0, right: 0, top: '54.74dvh', height: '22.39dvh', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         {/* Each line = one COMPLETE SENTENCE whose underlined keyword is TAPPABLE → going where the button of the same name
             in row 9 goes (user decision 07-21). The order matches the button layout: QR Storage · Create QR · Share. */}
         {/* pollMs 5s (user decision 08-13): this is the screen where someone HAS JUST HELD OUT THEIR QR AND IS WAITING for the

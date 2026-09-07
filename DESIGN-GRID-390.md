@@ -1,11 +1,51 @@
-# DESIGN GRID – 390×844 (derived 2026-09-05)
+# DESIGN GRID – 390×844
 
-Rules read straight out of the Figma file `l26UsgoqIDfvLkrozVLPTq`, page `0:1`, frames 1–10
-(**Frame 8 does not exist** – the file jumps 7 → 9). Every number below is a MEASURED node
-coordinate, not an estimate.
+**Re-derived 2026-09-07** from the redrawn Figma file `l26UsgoqIDfvLkrozVLPTq`, page `0:1`.
+Every number below is a MEASURED node coordinate, not an estimate.
 
-The remaining screens (`04-Swap`, `07-PasteAddress` … `20-About`) are still bare 390×844
-placeholder rectangles in Figma – they are meant to be built in code FROM these rules.
+> ⚠️ **This file replaced an earlier version dated 09-05, and almost every number in it moved.**
+> The user redrew the frames, renamed them, and dropped the gradient from the brand. Anything you
+> remember from the previous revision – the 20px side margin, the 94.31/127.7 action row, "frame 8
+> does not exist", "frame 1 is logo + tagline only" – is now WRONG. Read this, do not recall.
+
+## 0. The frames, by their current names
+
+The frames are no longer numbered `Frame 1…10`. The user renamed them so the mapping to code is
+unambiguous:
+
+| Figma frame | Node | Screen in code | State |
+|---|---|---|---|
+| `Splash` | `32:141` | – **not built yet** | logo + tagline, nothing else |
+| `Login-signup` | `3:22` | `Login.jsx` | logo + tagline + a **"Log in or sign up" button** |
+| `Login-Privy` | `3:195` | Privy's own modal | the sign-in card |
+| `Login-PIN1` | `5:310` | `PinGateHost.jsx` | "Set up your PIN", 6 boxes |
+| `Login-PIN2` | `6:430` | `PinGateHost.jsx` | "Re-enter your PIN", 6 boxes |
+| `Login-PIN3` | `7:499` | `PinGateHost.jsx` | "Enter PIN", 6 boxes + the red error line |
+| `Home-Send` | `11:536` | `HomeSend.jsx` | |
+| `Home-Receive` | `32:171` | `HomeReceive.jsx` | |
+| `Home-Menu` | `14:746` | `MenuScreen.jsx` | |
+| `Home-Services` | `14:864` | `ServiceHub.jsx` | |
+| `Frame 10` | `32:49` | `SendAmount.jsx` | **"Send money" – NEW, not applied to code yet** |
+
+Everything else on the canvas (`04-Swap`, `07-PasteAddress` … `20-About`) is still a bare 390×844
+placeholder rectangle: a name reserving a slot, with nothing drawn inside it.
+
+### ⚠️ THE POPUP RULE (user instruction 2026-09-07, verbatim)
+
+> "từ frame 1 tới frame 6, mọi thứ diễn ra dưới dạng pop up. đầu tiên là popup Privy, nếu có báo lỗi
+> cũng là báo trên popup Privy, set up PIN cũng là popup giống Privy, re-enter PIN cũng là popup,
+> pop up là cánh cổng ngăn người khác vào thẳng màn 06"
+
+Between `Login-signup` and `Home-Send` there are **no screens, only popups**. Errors are reported
+**on the popup**, never on a screen behind it. Nothing may be drawn outside a popup in that stretch.
+
+### ⚠️ EVERY KEYBOARD IS THE SYSTEM KEYBOARD (user instruction 2026-09-07)
+
+> "tôi không cần tự vẽ ra bàn phím số, bàn phím chữ, passkey, toàn bộ bàn phím từ giờ là hệ thống"
+
+No hand-drawn numeric pad, no hand-drawn alphabetic pad, no hand-drawn passkey UI. The PIN frames
+draw no keypad at all, and `Frame 10` leaves its whole bottom half empty for exactly this reason.
+`src/components/Numpad.jsx` is therefore **on its way out** – see §7.
 
 ---
 
@@ -14,110 +54,147 @@ placeholder rectangles in Figma – they are meant to be built in code FROM thes
 | | |
 |---|---|
 | Artboard | **390 × 844** |
-| Columns | **12 × 32.5px**, zero gutter, zero outer margin (32.5 = 390/12) |
-| Rows | **10 × 84.4px** (84.4 = 844/10) – identical to the app's existing `.screen` 10-row grid |
+| Columns | **12 × 32.5px**, zero gutter (32.5 = 390/12) |
+| Rows | **10 × 84.4px** (84.4 = 844/10) – the app's existing `.screen` 10-row grid |
 
-The row grid is not new. The **12-column grid is new**, and it is what the green guides in every
-frame are.
+### ⚠️ 390 IS THE DRAWING FRAME, NOT A LOCK (user decision 2026-09-05, still in force)
 
-### ⚠️ 390 IS THE DRAWING FRAME, NOT A LOCK (user decision 2026-09-05)
+`--screen-max` **stays 430px** – the app keeps flexing. Therefore:
 
-`--screen-max` **stays 430px** – the app keeps flexing. 390×844 is only the viewport the frames were
-drawn at. Therefore:
-
-- **Every column measurement below is PROPORTIONAL, not absolute.** 1 column = `100/12`% =
-  **8.3333%**, so it is 32.5px at 390 wide and 35.83px at 430 wide. Never hardcode 32.5.
-- **Every row measurement is `dvh`.** 1 row = 84.4px at 844 tall = **10dvh**. The existing
-  `.screen` grid (`repeat(10, 1fr)` over `100dvh`) already is this grid – keep using `grid-row`.
-- The **20px inset is absolute** (it is the existing `.screen` padding, not a grid column), so a
-  content card is 350 wide at 390 and 390 wide at 430. That is intended.
+- **Horizontal measurements are PROPORTIONAL.** 1 column = **8.3333%**. Never hardcode 32.5.
+- **Vertical measurements are `dvh`.** 1 row = **10dvh**. Keep using `grid-row`.
 
 Conversion used throughout: `x_px / 390 → %` and `y_px / 844 → dvh`.
 
-## 2. Two horizontal insets, used deliberately
+## 2. The side margin changed: 20 → 23.69
 
-| Inset | Width | Where |
-|---|---|---|
-| **20px** | 350 | Cards on Home / Receive / Menu / Service Hub (`x=19.97 w=350.06`, `x=20.97 w=348.05`) |
-| **32.5px = exactly 1 column** | 325 = 10 cols | The sign-in / PIN card, its title, and the hero balance figure |
+Every card, divider and button pair in the redrawn frames starts at `x=23.69` and ends at `366.69`:
+a **343-wide** content strip, not the 350 the old 20px padding produced.
 
-So: **content cards keep the app's existing 20px `.screen` padding; the login family and the hero
-balance are inset one full column instead.**
+⇒ `--pad: calc(min(100vw, var(--screen-max)) * 0.060744)` in `src/index.css` (23.69 at 390,
+26.12 at 430). `.screen`'s padding, `.full-bleed` and `.navbar` all derive from it.
 
-## 3. Vertical placement snaps to the 84.4 row grid
+**Anything punching through that padding must write `calc(-1 * var(--pad))`, never `-20px`.**
 
-- Sign-in / PIN card: `y=253.2` = 84.4×3 → **starts at row 4**; `h=337.6` = 84.4×4 → **rows 4–7**.
-- Menu list dividers: `y=337.6 / 422 / 506.4 / 590.8` = the row 5 / 6 / 7 / 8 boundaries exactly.
-- Menu list rows are one full row tall (84.4).
-- NavBar: `y=760.86 h=83.14` → the bottom row (row 10 starts at 759.6).
+The login/PIN family keeps its own, different inset: **32.5 = exactly 1 column**, card 325 wide.
 
-## 4. Component metrics (exact)
+## 3. Component metrics (exact, as redrawn)
 
-**Login family (frames 1–5)**
-- Logo: `w=195` = **6 columns**, centred (`x=97.5` = col 4), `y=180.91`, `h=55.44`.
-- Tagline: `y=257.69`, `h=46`, `w=259.8`.
-- Card: `x=32.5 y=253.2 w=325 h=337.6`.
-- Card title ("Log in or sign up" / "Set up your PIN" / "Re-enter your PIN" / "Enter PIN"):
-  `x=32.5 y=308.59 w=325 h=46` – i.e. full card width, centred.
-- PIN boxes: **38.94 × 51.85**, pitch 45.01 (**gap 6.07**), 6 boxes, total 264, centred at `x=63`,
-  `y=396.08`.
-- Error line (frame 5): `y=514 h=46`, and the frame's own note says **red, size 17**.
+**Login family** (`Splash`, `Login-signup`, `Login-Privy`, `Login-PIN1/2/3`)
+- Logo `w=195` = **6 columns**, centred (`x=97.5`), `y=180.91 h=55.44`.
+- Tagline `y=257.69 h=46`, `w=259.8` (on `Login-signup`/`Splash` the box is `w=264.59 h=69`).
+- **"Log in or sign up" button** (`Login-signup` only): `x=69 y=613.76 w=254 h=48.66`.
+  ⇒ 65.13% of the screen, top **72.72dvh**, the app-wide pill height.
+- Card `x=32.5 y=253.2 w=325 h=337.6` → rows 4–7 exactly.
+- Card title `x=32.5 y=308.59 w=325 h=46`.
+- PIN boxes **38.94 × 51.85**, pitch 45.01 (**gap 6.07**), **6 boxes** (the 5 drawn on `Login-PIN3`
+  before 09-07 were a drawing slip, confirmed by the user – it is 6 everywhere).
+- Error line `y=514 h=46`; the frame's own note: **red, size 17**.
 
-**Bottom NavBar (frames 6, 7, 9, 10 – identical every time)**
-- Bar `y=760.86 h=83.14`, full bleed.
-- 4 tabs × **97.5 wide = 3 columns each**.
-- Icons **25.58 × 25.58** at `y=774.85`; labels at `y=804.9`.
+**Bottom NavBar** (identical on all four Home frames)
+- Bar `y=758 h=86`, full bleed → **10.19dvh, bottom-aligned** (it was `y=760.86 h=83.14`).
+- 4 tabs × **97.42 wide** (= 389.69/4).
+- Icons **25.58** at `y=774.85`; labels at `y=804.9`.
+- ⚠️ Each frame also draws a **97.42 × 86 block on its own active tab**. See §6 – open question.
 
-**Home – Send (frame 6)**
-- Hero balance `x=32.5 y=52.88 w=325 h=72` (the 1-column inset).
-- Token card `x=19.97 y=131.87 w=350.06 h=318.18`; token rows at `y=150.46 / 210.46 / 270.46`
-  → **60px pitch** (USDC, EURC, cirBTC).
-- "Hold to show tokens" pill `w=194.25 h=39.46`, centred, `y=429.47`.
-- Announcement card `x=19.97 y=485.08 w=350.06 h=169.2`.
-- Action row: side buttons **94.31 × 60.77** at `y=676.3`; centre button **127.7 × 66.73** at
-  `y=674.3` – **the centre is bigger AND 2px higher = the primary action.**
-  Icons: side **15.06**, centre **18.43**.
-  Labels left→right: **Paste · Scan QR · Contacts**.
+**Home – Send**
+- Hero balance `x=32.5 y=46.88 w=325 h=72` (the 1-column inset).
+- Token card `x=23.69 y=118.88 w=343 h=303.78` → **top 14.084dvh, height 35.99dvh**.
+- Token rows `y=138.46 / 198.46 / 258.46` → 60px pitch.
+- "Hold to show tokens" pill `y=402.27 h=39.46 w=257`, centred → its **centre sits on the card's own
+  bottom edge** (402.27 + 39.46/2 = 422 ≈ the card's 422.66). ⇒ `top: 50%`.
+- Announcement card `x=23.69 y=462.03 w=343 h=188.97` → **top 54.74dvh, height 22.39dvh**.
+  Crosses the row 6/7 boundary, so it is absolutely positioned, not a row span.
+- Action row: sides **100 × 56.73** at `y=676.00`; centre **125.54 × 66.73** at `y=671`.
+  Gaps `(343 - 325.54)/2 = 8.73` ⇒ `1fr 1.2554fr 1fr` with `gap: 2.545%`.
+  Both centre lines are **704.37 = 83.45dvh** – identical, which is the invariant to preserve.
+- Labels left→right: **Paste · Scan QR · Contacts**.
 
-**Home – Receive (frame 7)**
-- Same balance, same announcement card, same action row geometry.
-- QR card `x=19.97 y=131.87 w=350.06 h=337.05`, QR itself **283.45 × 283.45** at `x=53.27 y=158.67`
-  (so the QR is inset 33.3 inside its card).
+**Home – Receive**
+- Same balance, same card box, same announcement card, same action row.
+- QR **266 × 266** at `x=62 y=128.05` → 31.52dvh / 68.21vw. (Was 283.45; it shrank with the card.)
+- Tap-to-copy line `x=33.69 y=402.27 w=323 h=39.46` – same y as Send's pill, different width, which
+  is intended (user decision 08-13: the two hug their own text, do not even them up).
 - Labels left→right: **QR Storage · Custom QR · Share**.
 
-**Menu (frame 9)**
-- Balance full width at `y=52.88 h=72`.
-- Deposit / Withdraw pair: `h=56.12` at `y=182.94`; Deposit `x=16.63 w=170.84`,
-  Withdraw `x=203.34 w=169.66` → ~16.5 gap, ~16.6 outer margin.
-- List rows, one 84.4 row each: Transaction history `y=282.28` · Security `y=365.49` ·
-  Language & Currency `y=446.2` · About `y=535.42` · Sign out `y=618.63`; text `h=46`.
-- Chevron at `x=369`, size ~28.5 × 24.1. Dividers span `x=20.97 → 369.03`.
+**Home – Menu**
+- Balance full width `y=46.88 h=72`.
+- **WITHDRAW LEFT, DEPOSIT RIGHT** – reversing the 09-05 reading. On the old frame both labels were
+  centred text boxes whose x meant nothing; now each label box lies exactly over its own button:
+  `Withdraw x=22.92 w=166.77` over `Rectangle 48`, `Deposit x=199.69 w=167` over `Rectangle 53`.
+- Both `h=48.66` at `y=181.46`.
+- List rows: Transaction history `y=282.28` · Security `y=369.49` · Language & Currency `y=453.20` ·
+  About `y=539.42` · Sign out `y=626.63`; text `h=46`.
+- Dividers `y=335.55 / 422 / 508.03 / 596.21`, spanning `x=23.69 w=343` – still the row 4/5/6/7
+  bottom edges to within 5px, so `borderBottom` on each row still lands on them.
+- Chevrons at `x=366.69`; **none on Sign out**.
 
-**Service Hub (frame 10)**
-- Title `y=28.54 h=55.86`, full width, centred.
-- **3 FULL-WIDTH HORIZONTAL CARDS** `w=348.05 h=145.3` at `x=20.97`,
-  `y=96.03 / 264.95 / 432.40` → **pitch 168.42 = card 145.3 + gap 23.1**.
-- Icon **100.39 × 100.39** at `x=40.59` (left side of the card).
+**Home – Services**
+- Title `y=36.45 h=55.86`, full width, centred.
+- **3 full-width horizontal cards** `x=23.69 w=343 h=153` at `y=86 / 259 / 432`
+  → **pitch 173 = card 153 + gap 20**.
+- Icon **100.39** at `x=40.59`, 26.31 of clearance top and bottom → dead centre.
 - Card title `x=156.04 h=55.86`; description `x=154.97 w=202.53 h=46`.
-- Content: **Exchange** – "Swap USDC to EURC or cirBTC with LI.FI" · **PigSave** – "Buy a piggy bank
-  and start saving" · **LuckyPot** – "Your idle USDC can earn you $$$$".
 
-## 5. What these frames do NOT specify
+**Send money** (`Frame 10`) – **NOT YET IN CODE**
+- Title "Send money" `y=36.45 h=55.86`, full width, centred (same as Service Hub's).
+- "to: <name>" `y=106.01 h=46.99`, full width, centred.
+- Amount `y=168.02 h=72`, full width, centred.
+- Currency chip `x=288.23 y=171.64 w=79.13 h=36.14` + chevron at `x=359.09 y=196.57`.
+- "Max: $1,234.56" `y=222.78 h=18`, centred.
+- Note field `x=22.98 y=274.22 w=299.54 h=36.56`, plus a `34.16 × 36.56` square at `x=333.02`.
+- **Back** `x=23.12 y=354.27 w=166.77 h=48.66` · **Continue** `x=199.88 w=167 h=48.66`.
+- ⚠️ **Everything ends at y=403.** The entire lower half is empty – that is where the SYSTEM
+  keyboard goes. No numpad is drawn because there is not meant to be one.
 
-The frames are **wireframes**: white ground, grey rounded boxes, black text, the real logo. They
-carry **no fills, no radii, no font sizes** (the only type instruction anywhere is frame 5's
-"make it red, size 17"). Text-box heights (46 / 55.86 / 72) are line boxes, not font sizes.
+## 4. The pill height is one number
 
-⇒ **Geometry comes from Figma; colour and type keep the existing locked system in `src/index.css`.**
-Do not back-derive font sizes from the 46/55.86/72 box heights.
+`48.66` on an 844 board = **5.765dvh**, and it is the same everywhere: Withdraw/Deposit,
+Back/Continue, "Log in or sign up". `.btn` carries it, with `min-height: 48px` as the touch floor on
+short viewports.
 
-## 6. Rules to carry to the un-designed screens
+## 5. Colour: solid, no gradients (user decision 2026-09-07)
+
+The brand identity dropped its gradient – `design/new-brand/{icon,full}.svg` are a flat **#0B53BF**.
+The four `--grad-*` tokens now hold the **dark end** of each old ramp:
+
+| token | value | role |
+|---|---|---|
+| `--grad-brand` | `#0B53BF` | CTA buttons, the primary action card |
+| `--grad-primary` | `#16A34A` | success / received |
+| `--grad-warning` | `#F59E0B` | warning (**black** text) |
+| `--grad-error` | `#DC2626` | error / delete |
+
+The names are historical – read `--grad-*` as "the button fill".
+
+## 6. What these frames still do NOT specify
+
+The frames remain **wireframes**: white ground, grey rounded boxes, black text. They carry **no
+fills, no radii, no font sizes** (the only type instruction anywhere is the PIN frames' "make it red,
+size 17"). Text-box heights (46 / 55.86 / 72) are line boxes, not font sizes.
+
+⇒ **Geometry comes from Figma; colour and type keep the locked system in `src/index.css`.**
+
+**Open questions – ASK, do not guess:**
+1. The **active NavBar tab** is now drawn as a full `97.42 × 86` block on every Home frame. The app
+   currently marks it with a 5px brand bar at the top of the tab. Is the block a filled highlight,
+   and in what colour?
+2. `Home-Receive` puts the QR at `y=128.05` inside a card starting at `118.88` – 9.17 above, 28.6
+   below, i.e. **not** vertically centred, which contradicts the explicit user decision of 07-19.
+   Drawing imprecision, or intended?
+3. `Home-Receive`'s line reads **"Click to copy your Account Number"**; the app says "Tap to copy
+   your wallet address". Adopt the new wording (and is "Click" right on a phone)?
+
+## 7. Rules to carry to the un-designed screens
 
 1. Sub-screen title in row 1; buttons in `.row10-single` / `.row10-dual` (unchanged).
-2. Any card that holds CONTENT sits at the 20px inset (350 wide). Any card that holds a
-   FORM/DIALOG sits at the 32.5px inset (325 wide).
-3. A card's height is a whole number of 84.4 rows.
-4. A row of 3 actions = 94.3 / 127.7 / 94.3 with the centre one primary (bigger, 2px higher).
-5. A list row is one 84.4 row tall with a divider on the row boundary and a chevron at x=369.
-6. A repeated-item card (Service Hub) is full-width horizontal: icon left ~100, title + one
+2. A card that holds CONTENT sits at `--pad` (343 wide). A card that holds a FORM/DIALOG sits at the
+   32.5 = 1-column inset (325 wide).
+3. A card's height is a whole number of 84.4 rows unless the frame says otherwise.
+4. A row of 3 actions = `1fr 1.2554fr 1fr`, gap 2.545%, centre one primary (bigger, 5px higher),
+   all three sharing one centre line.
+5. A list row is one 84.4 row tall, divider on the row boundary, chevron at `x=366.69`.
+6. A repeated-item card (Service Hub) is full-width horizontal: icon left 100.39, title + one
    description line right.
+7. **Any screen that takes typed input leaves the bottom half of the screen empty** for the system
+   keyboard, as `Frame 10` does. Do not draw a keypad.

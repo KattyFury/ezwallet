@@ -43,7 +43,7 @@ export default function ServiceHub() {
       <div style={{
         gridRow: '2 / 10', minWidth: 0,
         display: 'flex', flexDirection: 'column',
-        justifyContent: 'flex-start', paddingTop: '1.38dvh', gap: '2.74dvh',
+        justifyContent: 'flex-start', paddingTop: '0.19dvh', gap: '2.37dvh',   /* redrawn frame: first card starts at y=86 (10.19dvh), pitch 173 - 153 = 20 (2.37dvh) */
       }}>
         {SERVICES.map(({ id, icon, label, desc, screen }) => {
           const soon = !screen   // not built → dimmed and not tappable (the same disabled standard as MenuScreen)
@@ -54,7 +54,7 @@ export default function ServiceHub() {
             // colour and type stay on the locked system rather than being guessed from grey boxes.
             <button key={id} disabled={soon} onClick={soon ? undefined : () => navigate(screen)}
               style={{
-                height: '17.21dvh', minWidth: 0, width: '100%',
+                height: '18.128dvh', minWidth: 0, width: '100%',   /* redrawn Home-Services: 153 tall on an 844 board (was 145.3) */
                 border: '1.5px solid var(--color-gray)', borderRadius: 16,
                 background: 'var(--color-white)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
                 display: 'flex', alignItems: 'center',
@@ -62,8 +62,9 @@ export default function ServiceHub() {
                 padding: '0 12px 0 19.6px', gap: 14, fontFamily: 'inherit', textAlign: 'left',
                 opacity: soon ? 0.4 : 1, cursor: soon ? 'not-allowed' : 'pointer',
               }}>
-              {/* Icon 100.39 square, vertically centred in the card (Figma: 22.45 of clearance top and
-                  bottom of a 145.3 card - i.e. dead centre). 100.39/844 = 11.9dvh; the vw term is the
+              {/* Icon 100.39 square, vertically centred in the card. The card grew to 153 but the icon
+                  did NOT - the redrawn frame keeps it at 100.39 with 26.31 of clearance top and bottom,
+                  i.e. still dead centre, just with more air. 100.39/844 = 11.9dvh; the vw term is the
                   guard for a short, wide window, where a pure dvh icon would shrink to nothing.
                   The user drew these 3 icons on a 200×200 canvas, so a 100px render is their size. */}
               <Icon name={icon} size="min(11.9dvh, 25.7vw)" color="var(--color-brand)" />

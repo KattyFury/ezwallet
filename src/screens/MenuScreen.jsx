@@ -43,17 +43,22 @@ export default function MenuScreen() {
       {/* Rows 1-2: Balance (same as HomeSend / HomeReceive) */}
       <BalanceHeader totalUsd={totalUsd} loading={totalUsd === null} />
 
-      {/* Row 3: Deposit / Withdraw.
-          ⚠️ ORDER SWAPPED 2026-09-05 to Figma frame 9: DEPOSIT IS ON THE LEFT (x=16.63), Withdraw on
-          the right (x=203.34). It was the other way round. The frame's widths (170.84 / 169.66 inside
-          a ~16.6 outer margin) are what `flex: 1` inside .screen's 20px padding already produces at
-          390 - 170 each - so only the order actually changed here. */}
+      {/* Row 3: Withdraw / Deposit.
+          ⚠️ ORDER SWAPPED BACK 2026-09-07, and this reverses the 09-05 change deliberately - the frame
+          itself changed. On the old frame the two labels were CENTRED text boxes whose x told you
+          nothing (one read x=-64.57 on a 325-wide box), and reading a side off them was guesswork that
+          happened to land on Deposit-left. The redrawn Home-Menu leaves no room for that: each label
+          is a box laid exactly over its own button - "Withdraw" x=22.92 w=166.77 over Rectangle 48
+          (x=22.92 w=166.77), "Deposit" x=199.69 w=167 over Rectangle 53 (x=199.69 w=167).
+          ⇒ WITHDRAW LEFT, DEPOSIT RIGHT.
+          The widths need no code: `flex: 1` with the 10px gap inside .screen's --pad gives
+          (343 - 10) / 2 = 166.5 each at 390, against the frame's 166.77 / 167. */}
       <div className="row-3" style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-        <button className="btn btn-primary" style={{ flex: 1 }} onClick={copyAddrThenFaucet}>
-          Deposit
-        </button>
         <button className="btn btn-secondary" style={{ flex: 1, opacity: 0.4 }} disabled>
           Withdraw
+        </button>
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={copyAddrThenFaucet}>
+          Deposit
         </button>
       </div>
 

@@ -53,7 +53,7 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
       onTouchCancel={onHoldEnd}
       onContextMenu={e => e.preventDefault()}
       style={{
-        position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
+        position: 'absolute', left: '50%', top: '50%', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
         // ⚠️ WIDTH HUGS THE TEXT (user decision 08-13: "I slightly regret making it this big") - the fixed
         // 3/4-screen width from 07-29 was dropped. This pair of buttons is no longer equal because the two sentences
@@ -143,7 +143,7 @@ export default function HomeSend() {
           disagree with each other by ~2dvh; honouring frame 6 alone would break the shared line for a
           difference the eye cannot see. Scrolling + the bottom fade live on the INNER DIV - putting
           the mask on the box would fade the grey background too and smear it into the white. */}
-      <div style={{ position: 'absolute', left: 0, right: 0, top: '15.62dvh', height: '39.38dvh', background: 'var(--color-surface)', borderRadius: 20, padding: '12px 16px 0', minWidth: 0 }}>
+      <div style={{ position: 'absolute', left: 0, right: 0, top: '14.084dvh', height: '35.99dvh', background: 'var(--color-surface)', borderRadius: 20, padding: '12px 16px 0', minWidth: 0 }}>
         <div className="scroll-thin" style={{
           display: 'flex', flexDirection: 'column', gap: 26, overflowY: 'auto', height: '100%', paddingTop: 2, paddingBottom: 52,
           WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
@@ -207,7 +207,14 @@ export default function HomeSend() {
         <ShowTokensButton onHoldStart={() => setShowToken(true)} onHoldEnd={() => setShowToken(false)} />
       )}
 
-      <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
+      {/* ⚠️ ABSOLUTE, NOT `.row-7-8`, SINCE 2026-09-07 - for the same reason the token card above is.
+          The redrawn Home-Send frame puts the announcement block at y=462.03 h=188.97 on an 844
+          board = 54.74dvh → 77.13dvh, which crosses the row 6/7 boundary (60dvh) and stops 2.87dvh
+          short of the row 8/9 one. No span of whole rows can express that, and forcing it into
+          rows 7-8 is what left the old version starting 5dvh too low and ending 3dvh too high.
+          Home-Receive draws the identical block at the identical coordinates - that is the point of
+          the pair, so nothing shifts when the two tabs are switched. */}
+      <div style={{ position: 'absolute', left: 0, right: 0, top: '54.74dvh', height: '22.39dvh', display: 'flex', flexDirection: 'column', minHeight: 0 }}>
         <NotifArea
           // Each line = one COMPLETE SENTENCE whose underlined keyword is TAPPABLE → going where the button of the same
           // name in row 9 goes (user decision 07-21).

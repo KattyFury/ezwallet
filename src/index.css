@@ -127,7 +127,36 @@
   --col3:  25%;                     /* 3 columns  = one NavBar tab */
   /* A "1-column inset" applied INSIDE .screen, which is already inset 20px each side.
      min(...) mirrors how .screen itself is sized, so this is 12.5px @390 and 15.83px @430. */
-  --inset-col: calc(min(100vw, var(--screen-max)) * 0.083333 - 20px);
+  --inset-col: calc(min(100vw, var(--screen-max)) * 0.083333 - var(--pad));
+
+  /* ══════════════════════════════════════════════════════════════════════════
+     THE GRID, AS THE USER STATED IT (2026-09-07), verbatim:
+       "chiều cao chia làm 10, khoảng cách giữa mỗi vùng là 20px"
+       "chiều ngang chia làm 12, khoảng cách giữa mỗi vùng là 10px"
+     i.e. 10 rows and 12 columns with REAL GUTTERS - 20px between rows, 10px between columns. The
+     app had been built on the same 10×12 counts but with ZERO gutters, which is why measured Figma
+     coordinates kept landing "nearly" on a row edge and never exactly on one.
+     ⇒ unit height = (844 - 9×20) / 10 = 66.4  ·  row n starts at n × 86.4
+     ⇒ unit width  = (390 - 11×10) / 12 = 23.333 · column n starts at n × 33.333
+     Checked against the redrawn frames before being written here, and it reproduces them to ~1px:
+       content strip   23.33 → 366.67 (343.33)   frame  23.69 → 366.69 (343)
+       Services cards  y 86.4 / 259.2 / 432, h 152.8   frame  86 / 259 / 432, h 153
+       NavBar          y 757.6, h 86.4           frame  y 758, h 86
+       Menu dividers   335.6 / 422 / 508.4 / 594.8 - i.e. the CENTRE of each 20px gutter
+                                                  frame  335.55 / 422 / 508.03 / 596.21
+       action row      100 / 123.33 / 100 with 10px gutters
+     ⚠️ THE GUTTERS ARE FIXED PIXELS AND THE UNITS FLEX, not the other way round. That is what the
+     rule says, and it is also what keeps a 20px gap looking like a 20px gap on a 430-wide screen
+     instead of quietly growing to 22.
+     ⚠️ --pad IS ONE COLUMN UNIT. The content strip is the screen minus the first and last unit, so
+     .screen's padding IS --unit-x - there is no separate margin number to keep in step.
+     ⚠️ ANYTHING PUNCHING THROUGH THAT PADDING WRITES `calc(-1 * var(--pad))`, never `-20px`.
+     ══════════════════════════════════════════════════════════════════════════ */
+  --gap-x: 10px;
+  --gap-y: 20px;
+  --unit-x: calc((min(100vw, var(--screen-max)) - 11 * var(--gap-x)) / 12);
+  --unit-y: calc((100dvh - 9 * var(--gap-y)) / 10);
+  --pad: var(--unit-x);
 
   /* Font weights - the heavy/light ramp the design leans on */
   --fw-light:     300;   /* LIGHT - large hero numbers (balances, amounts): airy, only for BIG text */
@@ -174,7 +203,20 @@ body {
 .screen {
   position: relative;   /* the anchor for floating buttons (e.g. Show tokens pinned to the row 6/7 boundary) */
   display: grid;
-  grid-template-rows: repeat(10, 1fr);
+  /* ⚠️ minmax(0, 1fr) AND NOT A BARE 1fr - `repeat(10, 1fr)` is really `repeat(10, minmax(auto, 1fr))`,
+     so ANY row holding an item taller than its share GROWS, and the other nine are squeezed to pay
+     for it. Measured the moment the 20px gutter went in: rows 9 and 10 (the action row + the navbar,
+     both 86.4 tall by design) took 86.39 each and the other eight collapsed to 61.39 instead of 66.4.
+     minmax(0, 1fr) makes all ten tracks exactly equal and lets a taller item overflow its own track
+     instead - which is what `align-self: end` on those two elements already expects. This is the
+     vertical twin of the minmax(0, 1fr) on grid-template-columns below, and of the same bug
+     documented at length in HomeSend.jsx. */
+  grid-template-rows: repeat(10, minmax(0, 1fr));
+  /* THE 20px ROW GUTTER the user's rule specifies. `repeat(10, 1fr)` over 100dvh with this gap gives
+     rows of (844 - 9x20)/10 = 66.4 starting at n x 86.4 - which is exactly where the redrawn frames
+     put every row-aligned element. Without it the rows were 84.4 and butted together, and nothing
+     measured off Figma ever landed on an edge. */
+  row-gap: var(--gap-y);
   /* THE RIGHT COLUMN IS LOCKED TO minmax(0,1fr) - do NOT remove this line.
      Declare no columns → the implicit column = auto = it grows with the WIDEST CONTENT. A single long notification or
      address (nowrap) is enough to blow the column past the screen width → EVERY row (balance, token list, buttons, NavBar) gets
@@ -186,7 +228,7 @@ body {
   margin: 0 auto;
   background: var(--color-white);
   overflow: hidden;
-  padding: 0 20px;                /* the app-wide left/right margin = 20px (user decision, up from 15) */
+  padding: 0 var(--pad);          /* the app-wide left/right margin - see --pad (re-measured 09-07: 23.69 @390, was 20) */
 }
 
 /* ⚠️ EVERY DIRECT CHILD IS PINNED TO COLUMN 1 - do NOT remove this rule (added 2026-09-05).
@@ -210,8 +252,8 @@ body {
 
 /* Full-bleed: punch through the 20px padding to touch the edge */
 .full-bleed {
-  margin-left: -20px;
-  margin-right: -20px;
+  margin-left: calc(-1 * var(--pad));
+  margin-right: calc(-1 * var(--pad));
 }
 
 /* The scrollbar SITS INSIDE THE 20PX MARGIN (user decision 2026-07-06), and the design KEEPS ITS WIDTH when
@@ -224,7 +266,7 @@ body {
    → Result: [20px margin] [fixed-width content] [a thin scrollbar living inside the right 20px margin]. */
 .scroll-thin {
   overflow-y: auto;
-  margin-right: -20px;
+  margin-right: calc(-1 * var(--pad));
   padding-right: 12px;
   scrollbar-gutter: stable;
   scrollbar-width: thin;                              /* Firefox */
@@ -287,8 +329,12 @@ body {
   border: none;
   cursor: pointer;
   padding: 0 16px;
-  height: 6dvh;
-  min-height: 48px;        /* the minimum touch area for older users */
+  /* 48.66 on an 844 board = 5.765dvh. Every pill in the REDRAWN frames is that exact height -
+     Withdraw/Deposit on Home-Menu, Back/Continue on Send money, "Log in or sign up" on Login-signup -
+     so it is one number, not three. It was 6dvh (50.64), which is close enough that nobody would spot
+     it alone but drifts visibly once two of these sit side by side with something measured. */
+  height: 5.765dvh;
+  min-height: 48px;        /* the minimum touch area for older users - also the floor on short viewports */
   transition: opacity 0.15s;
 }
 
@@ -567,10 +613,17 @@ body {
 /* ── NavBar ── */
 .navbar {
   grid-row: 10;
+  /* THE BAR SWALLOWS THE GUTTER ABOVE IT. Row 10 alone is one unit (66.4); the frames draw the bar
+     y=758 h=86 = 757.6 + 86.4 = the last gutter PLUS the last unit. So it is exactly
+     --unit-y + --gap-y, pinned to the bottom - a bar with a 20px strip of white above it would read
+     as a mistake, and the frame closes that strip deliberately. Growing upward into its own gutter
+     cannot stretch the grid. */
+  height: calc(var(--unit-y) + var(--gap-y));
+  align-self: end;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   border-top: 1px solid var(--color-gray);
-  margin: 0 -20px;               /* the NavBar RUNS EDGE TO EDGE with no margin (cancelling .screen's 20px padding) - user decision "except the NAVBAR" */
+  margin: 0 calc(-1 * var(--pad));   /* the NavBar RUNS EDGE TO EDGE (cancelling .screen's --pad) - user decision "except the NAVBAR" */
 }
 
 .navbar-btn {
@@ -611,22 +664,39 @@ body {
 }
 
 /* ── Action grid (rows 8–9) ── */
-/* ⚠️ RATIOS AND GAP RE-MEASURED 2026-09-05 off Figma frame 6 (DESIGN-GRID-390.md):
-     side 94.31 · centre 127.7 · side 94.31, inside the 350 available at 390 wide
-     ⇒ the two gaps are (350 - 316.32) / 2 = 16.84, and the centre/side ratio is 127.7/94.31 = 1.354.
-   It was `1fr 1.5fr 1fr` with an 8px gap, which drew the centre card 143 wide instead of 128.
-   With these numbers the tracks come out at exactly 94.31 / 127.7 / 94.31 on a 390 board.
+/* ⚠️ RE-MEASURED AGAIN 2026-09-07 off the REDRAWN Home-Send / Home-Receive frames. The user redrew
+   this row, and every number in it moved:
+       side 100 · centre 125.54 · side 100, inside the 343 the new --pad leaves at 390 wide
+   ⇒ the two gaps are (343 - 325.54) / 2 = 8.73, and the centre/side ratio is 125.54/100 = 1.2554.
+   The previous set (94.31 / 127.7 / 94.31, gap 16.84, from the frames as they stood on 09-05) drew
+   the side cards ~6% narrow and the gaps almost exactly twice as wide.
+   THE GAP IS A PERCENTAGE, not the old fixed 16.84px: a column gap resolves against the grid's own
+   content box, which is the 343-wide strip, so 8.73/343 = 2.545% holds the drawn proportion at any
+   screen width instead of only at 390.
    align-items:center is what lets the primary card be TALLER than its neighbours (below) while all
    three stay on ONE centre line - the invariant that keeps Scan QR / Create QR / the Swap button
-   concentric (HANDOFF §6). Do not switch it back to the default `stretch`. */
+   concentric (HANDOFF §6). Do not switch it back to the default `stretch`. The frames confirm it
+   arithmetically: sides 676.00 + 56.73/2 = 704.37, centre 671 + 66.73/2 = 704.37. Identical.
+   ⇒ that shared centre line is 704.37/844 = 83.45dvh, and `height` + `margin-bottom` below are
+   chosen to land the row on it: 90 - (83.45 + 7.906/2) = 2.6dvh. */
 .action-grid {
   display: grid;
-  grid-template-columns: 1fr 1.354fr 1fr;
+  /* ON THE COLUMN GRID, not on eyeballed ratios (2026-09-07, after the user stated the rule):
+       left   = gutter0 + units 1-3  = 100
+       centre = units 4-7            = 123.33
+       right  = units 8-10 + gutter  = 100
+     with the rule's own 10px gutters between them: 100 + 10 + 123.33 + 10 + 100 = 343.33 = the
+     content strip. ⇒ 1 : 1.2333 : 1, gap 10px. The previous set (1.2554, gap 2.545%) came from the
+     frame's DRAWN boxes, which sit ~1-2px off their own grid; the rule is the intent.
+     `margin-bottom: var(--gap-y)` lands the row's centre on 704.4, which is where both the sides
+     (676 + 56.73/2) and the centre (671 + 66.73/2) are drawn - they share one centre line, and
+     align-items:center is what keeps them sharing it while the middle card is taller. */
+  grid-template-columns: 1fr 1.2333fr 1fr;
   align-items: center;
-  height: 8dvh;
+  height: var(--unit-y);      /* = the TALLEST child (the primary card); the sides centre inside it */
   align-self: end;
-  margin-bottom: 2dvh;
-  gap: 16.84px;
+  margin-bottom: var(--gap-y);
+  gap: var(--gap-x);
 }
 
 .action-card {
@@ -648,19 +718,20 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);   /* white buttons are raised (user decision 07-22d), a black shadow with no spread */
-  height: 7.2dvh;   /* Figma frame 6: the SIDE cards are 60.77 tall on an 844 board */
+  height: calc(var(--unit-y) - 10px);   /* 56.4 on an 844 board; the frame draws 56.73 */
 }
 
 /* THE CENTRE CARD IS BIGGER IN BOTH DIRECTIONS - that is how the frame marks it as the primary
-   action, not colour alone: Figma frame 6 gives it 127.7 × 66.73 against the sides' 94.31 × 60.77.
-   The width comes from .action-grid's 1.354fr track; this is the height half (66.73/844 = 7.9dvh).
-   The grid centres all three, so growing this one keeps every centre line equal. */
+   action, not colour alone: the redrawn Home-Send gives it 125.54 × 66.73 against the sides'
+   100 × 56.73. The width comes from .action-grid's 1.2554fr track; this is the height half
+   (66.73/844 = 7.906dvh). The grid centres all three, so growing this one keeps every centre line
+   equal - and the card is now the same height as the .action-grid row itself, so it sets it. */
 .action-card.primary {
   border: none;
   background: var(--grad-brand);
   color: var(--color-white);
-  height: 7.9dvh;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);   /* gradients get a deeper shadow than white buttons, as in .btn-primary */
+  height: var(--unit-y);   /* exactly ONE row unit (66.4); the frame draws 66.73 */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);   /* solid fills get a deeper shadow than white buttons, as in .btn-primary */
 }
 
 /* ── Send flow ── */
