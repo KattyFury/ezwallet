@@ -43,6 +43,28 @@ const USDC_DECIMALS = 6
 const toUsdc = (raw) => Number(raw) / 10 ** USDC_DECIMALS
 const ZERO_ADDR = '0x0000000000000000000000000000000000000000'
 
+// "N winners out of M players" during a LIVE (undrawn) epoch cannot come from getEpoch - numWinners/
+// weeklyYield only get written when the epoch commits, near draw time, reading 0 for the rest of the
+// week (same class of bug as eligiblePoolSnapshot). Mirrors the real luckypot.cc frontend exactly
+// (frontend/src/lib/prize.ts: projectedWeeklyYield + estimateNumWinners) - keep these two in sync with
+// that file, not with the contract's own post-draw fields.
+const WEEKS_PER_YEAR = 52n
+const DOLLARS_PER_WINNER_STEP = 1000n * 1_000_000n // $1000, 6 decimals
+function sqrtBigint(value) {
+  if (value < 2n) return value
+  let x = value, y = (x + 1n) / 2n
+  while (y < x) { x = y; y = (x + value / x) / 2n }
+  return x
+}
+function projectedWeeklyYield(eligibleTotalRaw, aprBpsRaw) {
+  return (eligibleTotalRaw * aprBpsRaw) / 10_000n / WEEKS_PER_YEAR
+}
+function estimateNumWinners(eligibleTotalRaw, weeklyYieldRaw) {
+  if (eligibleTotalRaw === 0n || weeklyYieldRaw === 0n) return 0n
+  const n = sqrtBigint(eligibleTotalRaw / DOLLARS_PER_WINNER_STEP)
+  return n === 0n ? 1n : n
+}
+
 // Same discipline as chain.js's readAllBalances: Multicall3 (1 request, not N), retry on failure with
 // growing backoff, and THROW rather than inventing a 0 - a failed read must never look like a real zero
 // balance (see chain.js's big comment on bug 07-16 for why that specific mistake is dangerous here too).
@@ -65,7 +87,7 @@ function mockInfo() {
     deposited: 42, eligible: 42, aprBps: 600,
     epochId: 3, epochEndTime: Math.floor(Date.now() / 1000) + 2 * 86400,
     epochDrawn: false, weeklyYieldUsd: 8.4,
-    poolTotal: 5747, eligiblePoolTotal: 5732, numWinners: 2, eligibleParticipants: 14,
+    poolTotal: 5747, eligiblePoolTotal: 5732, numWinners: 2, participantCount: 15,
     prevEpochId: 2, wonLastEpoch: false, owedLastEpoch: 0, hasClaimedLastEpoch: false,
     prevEpochDrawnAt: Math.floor(Date.now() / 1000) - 86400, sweepDelay: 3 * 86400,
     referrer: null, pendingReferral: 0,
@@ -99,7 +121,7 @@ export async function getLuckyPotInfo(walletAddress) {
   // luckypot.cc frontend does it (frontend/src/hooks/usePoolData.ts: useEligiblePoolTotal) - participants(i)
   // for every index, then eligibleBalance(addr) for each. Fine at this participant count (testnet-scale).
   const participantCountNum = Number(participantCountRaw)
-  let eligiblePoolTotal = 0n
+  let eligiblePoolTotalRaw = 0n
   if (participantCountNum > 0) {
     const addresses = await multicallWithRetry(
       Array.from({ length: participantCountNum }, (_, i) => ({ ...base, functionName: 'participants', args: [BigInt(i)] }))
@@ -107,8 +129,10 @@ export async function getLuckyPotInfo(walletAddress) {
     const eligibles = await multicallWithRetry(
       addresses.map(addr => ({ ...base, functionName: 'eligibleBalance', args: [addr] }))
     )
-    eligiblePoolTotal = eligibles.reduce((sum, v) => sum + (v ?? 0n), 0n)
+    eligiblePoolTotalRaw = eligibles.reduce((sum, v) => sum + (v ?? 0n), 0n)
   }
+  const weeklyYieldRaw = projectedWeeklyYield(eligiblePoolTotalRaw, aprBps)
+  const numWinnersEstimate = Number(estimateNumWinners(eligiblePoolTotalRaw, weeklyYieldRaw))
 
   const epochIdNum = Number(epochId)
   const prevEpochId = epochIdNum > 0 ? epochIdNum - 1 : null
@@ -131,11 +155,11 @@ export async function getLuckyPotInfo(walletAddress) {
     epochId: epochIdNum,
     epochEndTime: Number(epoch.endTime),
     epochDrawn: epoch.drawn,
-    weeklyYieldUsd: toUsdc(epoch.weeklyYield),
+    weeklyYieldUsd: toUsdc(weeklyYieldRaw),
     poolTotal: toUsdc(poolTotalRaw),
-    eligiblePoolTotal: toUsdc(eligiblePoolTotal),
-    numWinners: Number(epoch.numWinners),
-    eligibleParticipants: Number(epoch.eligibleParticipants),
+    eligiblePoolTotal: toUsdc(eligiblePoolTotalRaw),
+    numWinners: numWinnersEstimate,
+    participantCount: participantCountNum,
     sweepDelay: Number(sweepDelay),
     prevEpochId,
     prevEpochDrawnAt: prevEpochId !== null ? Number(decodeEpoch(prevEpochRaw).drawnAt) : null,
@@ -145,4 +169,24 @@ export async function getLuckyPotInfo(walletAddress) {
     referrer: referrer && referrer !== ZERO_ADDR ? referrer : null,
     pendingReferral: toUsdc(pendingReferral),
   }
+}
+
+// DRAW HISTORY - past epochs, newest first, DRAWN ones only (a currently-running epoch has nothing to
+// show yet). Mirrors the real luckypot.cc frontend's useEpochHistory (usePoolData.ts).
+export async function getEpochHistory(currentEpochId, count = 10) {
+  if (MOCK) {
+    return [
+      { epochId: 2, drawnAt: Math.floor(Date.now() / 1000) - 8 * 86400, weeklyYield: 9.1, numWinners: 2 },
+      { epochId: 1, drawnAt: Math.floor(Date.now() / 1000) - 15 * 86400, weeklyYield: 7.4, numWinners: 1 },
+    ]
+  }
+  const ids = []
+  for (let i = currentEpochId - 1; i >= 1 && ids.length < count; i--) ids.push(i)
+  if (!ids.length) return []
+
+  const base = { address: LUCKYPOT_ADDRESS, abi: LUCKYPOT_ABI }
+  const raws = await multicallWithRetry(ids.map(id => ({ ...base, functionName: 'getEpoch', args: [BigInt(id)] })))
+  return ids
+    .map((id, i) => { const e = decodeEpoch(raws[i]); return { epochId: id, drawnAt: Number(e.drawnAt), weeklyYield: toUsdc(e.weeklyYield), numWinners: Number(e.numWinners), drawn: e.drawn } })
+    .filter(e => e.drawn)
 }

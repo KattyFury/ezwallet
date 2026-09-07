@@ -321,11 +321,6 @@ body {
 .popup-actions { display: flex; gap: 8px; }
 .popup-actions .btn { flex: 1; }
 
-/* LuckyPot's row-1 wordmark: the raw SVG carries its own intrinsic width/height (design/luckypot/logo-full.svg
-   is used as-drawn, un-normalised unlike icon/*.svg) - without this the browser renders it at that intrinsic
-   pixel size regardless of the wrapper's height, blowing past the row. */
-.lp-logo svg { height: 100%; width: auto; display: block; }
-
 /* ── Numpad ── */
 .numpad {
   display: grid;

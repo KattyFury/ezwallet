@@ -1,16 +1,16 @@
 import { useState, useEffect } from 'react'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
-import logoFull from '../../design/luckypot/logo-full.svg?raw'
 import { ensureWalletAddress, refreshSession, getSDK, executeChallenge, circleErrorMessage,
   executeLuckyPotDeposit, executeLuckyPotWithdraw, executeLuckyPotClaim } from '../circle'
-import { getLuckyPotInfo } from '../lib/luckyPot'
+import { getLuckyPotInfo, getEpochHistory } from '../lib/luckyPot'
 import { getTokenBalances } from '../chain'
 import { addNotif } from '../notif'
 
-// LUCKYPOT - full build (2026-09-07) per Desktop/LUCKYPOT-LAYOUT-SPEC.md: read (M1) + Deposit (M2) +
-// Withdraw (M3) + Claim (M4). Theme = ezwallet's own light/blue tokens (HANDOFF decision, NOT the
-// dark/green luckypot.cc draft). Referral is OUT of scope here (spec §0) - no UI for it on this screen.
+// LUCKYPOT - full build. Theme = ezwallet's own light/blue tokens. Referral is OUT of scope on this
+// screen. Layout redone 2026-09-08 to the user's exact pixel spec (row 1 icon+wordmark instead of the
+// drawn logo, row 2 solid-warning hint strip, the 2 stat boxes split into 4 EQUAL sub-rows each, Draw
+// History built for real).
 function fmtCountdown(endTimeSec, nowSec) {
   const s = endTimeSec - nowSec
   if (s <= 0) return 'Draw pending'
@@ -18,10 +18,12 @@ function fmtCountdown(endTimeSec, nowSec) {
   const m = Math.floor((s % 3600) / 60), sec = Math.floor(s % 60)
   return `${d}d ${h}h ${m}m ${sec}s`
 }
+function dateLabel(ts) {
+  return new Date(ts * 1000).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+}
 
-// The shared popup shell (spec §6): 5/6 width, closes ONLY via the X top-right or a click outside - no
-// bottom Close button (user decision 2026-09-08). Used for EVERY popup on this screen (menu, Deposit,
-// Withdraw, result/Claim, Faucet).
+// The shared popup shell: 5/6 of the mobile screen, closes ONLY via the X top-right or a click outside
+// (no bottom Close button - user decision 2026-09-08). Used for every popup on this screen.
 function LPModal({ title, onClose, children }) {
   return (
     <div className="popup-overlay" onClick={onClose}>
@@ -50,7 +52,7 @@ function LPModal({ title, onClose, children }) {
   )
 }
 
-function AmountField({ amount, setAmount, max, onMax }) {
+function AmountField({ amount, setAmount, onMax }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, borderBottom: '1.5px solid var(--color-gray)', paddingBottom: 8 }}>
       <input className="num" type="number" min="0" inputMode="decimal" value={amount} placeholder="0.00"
@@ -58,6 +60,26 @@ function AmountField({ amount, setAmount, max, onMax }) {
         style={{ flex: 1, minWidth: 0, fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-light)', border: 'none', outline: 'none', background: 'transparent', color: 'var(--color-content)' }} />
       <button onClick={onMax} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-primary)', fontWeight: 'var(--fw-semibold)', fontSize: 'var(--fs-label)' }}>MAX</button>
     </div>
+  )
+}
+
+// One row of the 2 stat boxes (row 3-5 / row 6-8): a label on the left, a value on the right - the box
+// itself is split into 4 of these equal-height rows (the last one can span 2 via `span`).
+function StatRow({ label, children, span = 1 }) {
+  return (
+    <div style={{ flex: span, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+      <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{label}</span>
+      {children}
+    </div>
+  )
+}
+// "$eligible (black 17) / $total (grey 14)" - the exact 2-tone amount format used in both stat boxes.
+function SplitAmount({ big, small }) {
+  return (
+    <span className="num">
+      <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>${big.toFixed(2)}</span>
+      <span style={{ fontSize: 14, color: 'var(--color-muted)' }}> / ${small.toFixed(2)}</span>
+    </span>
   )
 }
 
@@ -73,13 +95,15 @@ export default function LuckyPot() {
 
   const [walletUsdc, setWalletUsdc] = useState(null)
   const [menuOpen, setMenuOpen] = useState(false)
-  const [popup, setPopup] = useState(null) // null | 'deposit' | 'withdraw' | 'result' | 'faucet'
+  const [popup, setPopup] = useState(null) // null | 'deposit' | 'withdraw' | 'result' | 'history'
   const [depositAmt, setDepositAmt] = useState('')
   const [withdrawAmt, setWithdrawAmt] = useState('')
   const [revealed, setRevealed] = useState(false)
   const [busy, setBusy] = useState(false)
   const [txError, setTxError] = useState('')
   const [txStatus, setTxStatus] = useState('')
+  const [history, setHistory] = useState(null)
+  const [historyError, setHistoryError] = useState('')
 
   function loadInfo() {
     return ensureWalletAddress()
@@ -97,11 +121,23 @@ export default function LuckyPot() {
   }, [walletAddress])
   useEffect(() => { const id = setInterval(() => setNow(Math.floor(Date.now() / 1000)), 1000); return () => clearInterval(id) }, [])
 
+  // The "Result" button only opens the CURRENT self-claim window (SWEEP_DELAY after the last draw) -
+  // outside it, it stays dimmed/disabled (user decision: "3 ngày đầu sau khi nổ giải, thứ 2 sáng tới thứ
+  // 5 sáng"). Browsing OLDER results lives in Draw History instead, not behind this button.
+  const resultWindowOpen = !!(info?.prevEpochDrawnAt > 0 && info?.sweepDelay > 0
+    && now >= info.prevEpochDrawnAt && now < info.prevEpochDrawnAt + info.sweepDelay)
   const pastClaimWindow = info?.prevEpochDrawnAt != null && info?.sweepDelay
     ? now >= info.prevEpochDrawnAt + info.sweepDelay : false
 
   function closePopup() { setPopup(null); setTxError(''); setTxStatus(''); setBusy(false); setRevealed(false) }
   function openPopup(p) { setMenuOpen(false); setDepositAmt(''); setWithdrawAmt(''); setTxError(''); setPopup(p) }
+
+  function openHistory() {
+    openPopup('history')
+    if (history === null) {
+      getEpochHistory(info?.epochId ?? 1).then(setHistory).catch(e => setHistoryError(e?.message || 'Could not load history'))
+    }
+  }
 
   async function handleDeposit() {
     const amt = depositAmt
@@ -155,6 +191,8 @@ export default function LuckyPot() {
     }
   }
 
+  // Row 2, faucet state: a DIRECT action, no popup (user decision) - copy the address and open the
+  // faucet in one tap.
   function copyAddressAndFaucet() {
     navigator.clipboard?.writeText(walletAddress || '').catch(() => {})
     window.open('https://faucet.circle.com', '_blank', 'noopener,noreferrer')
@@ -164,99 +202,94 @@ export default function LuckyPot() {
 
   return (
     <div className="screen">
-      {/* Row 1 - logo (not tappable) + hamburger opening the menu. The hamburger sits LEFT of the global
-          BugButton (App.jsx renders it absolute at right:20/top:5dvh on every screen) so the two don't overlap. */}
-      <div className="row-1" style={{ display: 'flex', alignItems: 'center' }}>
-        <span className="lp-logo" style={{ height: '3dvh', display: 'flex', alignItems: 'center', overflow: 'hidden' }} dangerouslySetInnerHTML={{ __html: logoFull }} />
+      {/* Row 1 - menu icon + "LuckyPot" (black) ".cc" (grey), both LEFT. The right side is reserved for
+          the global BugButton (App.jsx renders it absolute at right:20/top:5dvh on every screen) - that's
+          the whole reason this moved off a centred/right layout. */}
+      <div className="row-1" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <button onClick={() => setMenuOpen(true)} aria-label="Menu" style={{
-          position: 'absolute', top: '5dvh', right: 56, transform: 'translateY(-50%)',
-          background: 'none', border: 'none', cursor: 'pointer', padding: 8, WebkitTapHighlightColor: 'transparent',
+          background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex',
+          WebkitTapHighlightColor: 'transparent',
         }}>
-          <Icon name="menu" size="var(--is-body)" color="var(--color-content)" />
+          <Icon name="menu" size="5dvh" color="var(--color-content)" />
+        </button>
+        <span style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)' }}>
+          <span style={{ color: 'var(--color-content)' }}>LuckyPot</span>
+          <span style={{ color: 'var(--color-muted)' }}>.cc</span>
+        </span>
+      </div>
+
+      {/* Row 2 - the hint strip: solid warning colour always, black text, only the icon+copy change. */}
+      <div className="row-2" style={{ display: 'flex', alignItems: 'center' }}>
+        <button onClick={hasUnclaimedPrize ? () => openPopup('result') : copyAddressAndFaucet} style={{
+          flex: 1, height: '8.82dvh' /* 74.4/844 */, display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', cursor: 'pointer',
+          background: 'var(--color-warning)', border: 'none', borderRadius: 10, padding: '0 14px', fontFamily: 'inherit',
+        }}>
+          <Icon name={hasUnclaimedPrize ? 'check' : 'info'} size={20} color="var(--color-content)" />
+          <span style={{ flex: 1, fontSize: 14, color: 'var(--color-content)', fontWeight: 'var(--fw-medium)' }}>
+            {hasUnclaimedPrize
+              ? `You won $${info.owedLastEpoch.toFixed(2)} last epoch - tap to claim.`
+              : "Need testnet USDC? Tap to copy your address and open the faucet."}
+          </span>
         </button>
       </div>
 
-      {/* Row 2 - dynamic banner: unclaimed prize (gold) takes priority over the faucet suggestion */}
-      <div className="row-2" style={{ display: 'flex' }}>
-        {hasUnclaimedPrize ? (
-          <button onClick={() => openPopup('result')} style={{
-            flex: 1, display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', cursor: 'pointer',
-            background: 'var(--color-warning-soft)', border: `1.5px solid var(--color-warning)`, borderRadius: 10,
-            padding: '0 14px', fontFamily: 'inherit',
-          }}>
-            <Icon name="warning" size={20} color="var(--color-warning)" />
-            <span style={{ flex: 1, fontSize: 'var(--fs-label)', color: 'var(--color-content)', fontWeight: 'var(--fw-medium)' }}>
-              You won ${info.owedLastEpoch.toFixed(2)} last epoch - tap to claim.
-            </span>
-          </button>
-        ) : (
-          <button onClick={() => openPopup('faucet')} style={{
-            flex: 1, display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', cursor: 'pointer',
-            background: 'var(--color-surface)', border: `1.5px solid var(--color-gray)`, borderRadius: 10,
-            padding: '0 14px', fontFamily: 'inherit',
-          }}>
-            <Icon name="info" size={20} color="var(--color-brand)" />
-            <span style={{ flex: 1, fontSize: 'var(--fs-label)', color: 'var(--color-content)', fontWeight: 'var(--fw-medium)' }}>
-              Need testnet USDC? Tap to copy your address and open the faucet.
-            </span>
-          </button>
-        )}
-      </div>
-
-      {/* Row 3-5 - Epoch box */}
-      <div style={{ gridRow: '3 / 6', background: 'var(--color-white)', border: '1.5px solid var(--color-gray)', borderRadius: 10, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'center' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-semibold)' }}>{info ? `Epoch #${info.epochId}` : '…'}</span>
-          <span style={{ fontSize: 'var(--fs-tiny)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-muted)', border: '1.5px solid var(--color-gray)', borderRadius: 999, padding: '2px 10px' }}>USDC</span>
-        </div>
-        {error ? (
-          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>{error}</span>
-        ) : info ? (
-          <>
-            <span style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)', textTransform: 'uppercase', letterSpacing: 0.5 }}>Draw in</span>
-            <span className="num" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-primary)' }}>
-              {fmtCountdown(info.epochEndTime, now)}
-            </span>
-            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', lineHeight: 1.35 }}>
-              This week's yield goes to <strong style={{ color: 'var(--color-content)' }}>{info.numWinners}</strong> winner{info.numWinners === 1 ? '' : 's'} out
-              of <strong style={{ color: 'var(--color-content)' }}>{info.eligibleParticipants}</strong> player{info.eligibleParticipants === 1 ? '' : 's'}. Winners return 5% to the protocol.
-            </span>
-          </>
-        ) : (
-          <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>Loading…</span>
-        )}
-      </div>
-
-      {/* Row 6-8 - Tickets/Deposit box */}
-      <div style={{ gridRow: '6 / 9', background: 'var(--color-white)', border: '1.5px solid var(--color-gray)', borderRadius: 10, padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center' }}>
-        <div style={{ display: 'flex', gap: 12 }}>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 'var(--fs-tiny)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-primary)', textTransform: 'uppercase' }}>Total tickets / pool</span>
-            <span className="num" style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-semibold)' }}>{info ? `$${info.eligiblePoolTotal.toFixed(2)} / $${info.poolTotal.toFixed(2)}` : '…'}</span>
+      {/* Row 3-5 - Epoch box: light-blue surface, split into 4 equal sub-rows (the yield sentence spans 2). */}
+      <div style={{ gridRow: '3 / 6', alignSelf: 'center', height: '28.82dvh' /* 243.2/844 */, background: 'var(--color-surface)', borderRadius: 10, padding: 10, display: 'flex', flexDirection: 'column' }}>
+        <StatRow label={info ? `EPOCH #${info.epochId}` : '…'}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <span style={{ fontSize: 14, fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)', background: 'var(--color-brand)', borderRadius: 999, padding: '2px 10px' }}>USDC</span>
+            <span style={{ fontSize: 14, fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)', border: '1.5px solid var(--color-gray)', borderRadius: 999, padding: '2px 10px', opacity: 0.5, cursor: 'not-allowed' }}>ARC</span>
           </div>
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <span style={{ fontSize: 'var(--fs-tiny)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-primary)', textTransform: 'uppercase' }}>My tickets / deposit</span>
-            <span className="num" style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-semibold)' }}>{info ? `$${info.eligible.toFixed(2)} / $${info.deposited.toFixed(2)}` : '…'}</span>
+        </StatRow>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 14, color: 'var(--color-muted)' }}>Draw in</span>
+          <span className="num" style={{ fontSize: 'var(--fs-item)', color: 'var(--color-content)' }}>
+            {info ? fmtCountdown(info.epochEndTime, now) : '…'}
+          </span>
+        </div>
+        <div style={{ flex: 2, display: 'flex', alignItems: 'center' }}>
+          {error ? (
+            <span style={{ fontSize: 14, color: 'var(--color-error)' }}>{error}</span>
+          ) : info ? (
+            <span style={{ fontSize: 14, color: 'var(--color-muted)', lineHeight: 1.35 }}>
+              This week's yield goes to <strong style={{ color: 'var(--color-content)', fontSize: 'var(--fs-item)' }}>{info.numWinners}</strong> winner{info.numWinners === 1 ? '' : 's'} out
+              of <strong style={{ color: 'var(--color-content)', fontSize: 'var(--fs-item)' }}>{info.participantCount}</strong> player{info.participantCount === 1 ? '' : 's'}. Winners return 5% to the protocol.
+            </span>
+          ) : (
+            <span style={{ fontSize: 14, color: 'var(--color-muted)' }}>Loading…</span>
+          )}
+        </div>
+      </div>
+
+      {/* Row 6-8 - Tickets/Deposit box: same box treatment, 4 equal sub-rows. */}
+      <div style={{ gridRow: '6 / 9', alignSelf: 'center', height: '28.82dvh' /* 243.2/844 */, background: 'var(--color-surface)', borderRadius: 10, padding: 10, display: 'flex', flexDirection: 'column' }}>
+        <StatRow label="TOTAL TICKETS / POOL">
+          {info ? <SplitAmount big={info.eligiblePoolTotal} small={info.poolTotal} /> : <span className="num">…</span>}
+        </StatRow>
+        <StatRow label="My tickets / deposit">
+          {info ? <SplitAmount big={info.eligible} small={info.deposited} /> : <span className="num">…</span>}
+        </StatRow>
+        <div style={{ flex: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 14, color: 'var(--color-muted)' }}>
+            In your wallet: {walletUsdc != null ? `${walletUsdc.toFixed(2)} USDC` : '…'}
+          </span>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button className="btn btn-primary" style={{ flex: 1, fontSize: 14 }} onClick={() => openPopup('deposit')}>Deposit</button>
+            <button className="btn btn-secondary" style={{ flex: 1, fontSize: 14 }} onClick={() => openPopup('withdraw')}>Withdraw</button>
+            <button className="btn" style={{ flex: 1, fontSize: 14, background: 'var(--color-warning)', color: 'var(--color-content)', border: 'none' }}
+              disabled={!resultWindowOpen} onClick={() => openPopup('result')}>Result</button>
           </div>
         </div>
-        <span style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)' }}>
-          In your wallet: {walletUsdc != null ? `${walletUsdc.toFixed(2)} USDC` : '…'}
-        </span>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button className="btn btn-primary" style={{ flex: 1, fontSize: 'var(--fs-label)' }} onClick={() => openPopup('deposit')}>Deposit</button>
-          <button className="btn btn-secondary" style={{ flex: 1, fontSize: 'var(--fs-label)' }} onClick={() => openPopup('withdraw')}>Withdraw</button>
-          <button className="btn btn-secondary" style={{ flex: 1, fontSize: 'var(--fs-label)' }} disabled={!info || info.prevEpochId === null} onClick={() => openPopup('result')}>Latest result</button>
-        </div>
       </div>
 
-      {/* Row 9 - Draw history (not built yet, dimmed like every other "coming soon" row in the app) */}
+      {/* Row 9 - Draw history, built for real: past epochs' payouts. */}
       <div className="row-9" style={{ display: 'flex', alignItems: 'center' }}>
-        <button disabled style={{
+        <button onClick={openHistory} style={{
           flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', height: '100%',
-          background: 'none', border: 'none', padding: '0 4px', opacity: 0.4, cursor: 'not-allowed', fontFamily: 'inherit',
+          background: 'none', border: 'none', padding: '0 4px', cursor: 'pointer', fontFamily: 'inherit',
         }}>
-          <span style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)' }}>Draw history</span>
-          <Icon name="right2" size={16} color="var(--color-muted)" />
+          <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)', textTransform: 'uppercase' }}>Draw history</span>
+          <Icon name="right2" size={16} color="var(--color-brand)" />
         </button>
       </div>
 
@@ -277,7 +310,7 @@ export default function LuckyPot() {
         <LPModal title="LuckyPot menu" onClose={() => setMenuOpen(false)}>
           <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => openPopup('deposit')}>Deposit</button>
           <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => openPopup('withdraw')}>Withdraw</button>
-          <button className="btn btn-secondary" disabled style={{ width: '100%', opacity: 0.4 }}>Draw history</button>
+          <button className="btn btn-secondary" style={{ width: '100%' }} onClick={openHistory}>Draw history</button>
           <button className="btn btn-secondary" disabled style={{ width: '100%', opacity: 0.4 }}>My history</button>
           <button className="btn btn-secondary" style={{ width: '100%', color: 'var(--color-error)' }} onClick={() => navigate('ServiceHub')}>Exit</button>
         </LPModal>
@@ -320,7 +353,7 @@ export default function LuckyPot() {
         </LPModal>
       )}
 
-      {/* ── Result / Claim popup (tap-to-reveal, spec §6) ── */}
+      {/* ── Result / Claim popup (tap-to-reveal) ── */}
       {popup === 'result' && info && (
         <LPModal title={`Epoch #${info.prevEpochId} - your result`} onClose={closePopup}>
           {!revealed ? (
@@ -358,15 +391,30 @@ export default function LuckyPot() {
         </LPModal>
       )}
 
-      {/* ── Faucet popup ── */}
-      {popup === 'faucet' && (
-        <LPModal title="Get testnet USDC" onClose={closePopup}>
-          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>
-            Your wallet address will be copied. Paste it on Circle's faucet page to receive free testnet USDC.
-          </span>
-          <button className="btn btn-primary" style={{ width: '100%' }} onClick={copyAddressAndFaucet}>
-            Copy address &amp; open faucet
-          </button>
+      {/* ── Draw history popup ── */}
+      {popup === 'history' && (
+        <LPModal title="Draw history" onClose={closePopup}>
+          {historyError ? (
+            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>{historyError}</span>
+          ) : history === null ? (
+            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>Loading…</span>
+          ) : history.length === 0 ? (
+            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>No draws yet.</span>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {history.map(h => (
+                <div key={h.epochId} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1.5px solid var(--color-gray)', paddingBottom: 8 }}>
+                  <div style={{ display: 'flex', flexDirection: 'column' }}>
+                    <span style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)' }}>Epoch #{h.epochId}</span>
+                    <span style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)' }}>{dateLabel(h.drawnAt)}</span>
+                  </div>
+                  <span className="num" style={{ fontSize: 'var(--fs-label)', color: 'var(--color-primary)', fontWeight: 'var(--fw-semibold)' }}>
+                    ${h.weeklyYield.toFixed(2)} - {h.numWinners} winner{h.numWinners === 1 ? '' : 's'}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </LPModal>
       )}
     </div>
