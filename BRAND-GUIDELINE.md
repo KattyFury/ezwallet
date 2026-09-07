@@ -12,7 +12,7 @@
 | Nền/chữ phụ | Trắng |
 | Text chính | Đen |
 | Text phụ | `#757575` |
-| Nền hộp chứa / input nhập liệu | `#E3E3E3` |
+| Nền hộp chứa / input nhập liệu ("box lõm xuống") | `#E3F1FF` (2026-09-07, đổi từ `#E3E3E3` — **không dùng xám nhạt cho loại box này nữa**) |
 | Danger (lỗi/xoá) | `#EC221F` |
 | Warning (cảnh báo) | `#E8B931` |
 | Tích cực (thành công/nhận tiền) | `#14AE5C` |

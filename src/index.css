@@ -41,13 +41,13 @@
   --color-warning:      #E8B931; /* guideline "warning" */
   --color-warning-soft: #FBF4E0; /* pale tint of --color-warning (15% mixed into white) */
   --color-white:        #FFFFFF;
-  --color-gray:         #E3E3E3; /* guideline "box/input" grey - now doubles as the border/divider colour too (was a separate iOS grey before) */
-  /* TILE/CARD BACKGROUND - the guideline's box/input grey has NO separate "surface" tone, and the new
-     Figma frames draw cards as WHITE + a drop shadow instead of a grey fill (see FIGMA-SCREENS-SPEC.md
-     §5/§7's `bg-white ... shadow` cards) - --color-surface now matches that grey where a flat fill is
-     still needed (e.g. a plain background block), but new cards should reach for white+shadow instead. */
-  --color-surface:      #E3E3E3;
-  --color-surface-2:    #E3E3E3; /* was a separate mid-grey for the numpad panel - consolidated, same reasoning as --color-muted-2 above */
+  --color-gray:         #E3E3E3; /* borders / dividers / NavBar's flat inactive background - NOT the recessed-box colour below, kept grey on purpose */
+  /* RECESSED ("lõm xuống") BOX FILL - user decision 2026-09-07: light blue #E3F1FF, NOT light grey any
+     more. This is the fill for input fields and sunken content boxes (the address input, the token-list
+     card on HomeSend, the numpad panel...). Cards that sit RAISED instead (Service Hub, new Figma frames)
+     use white + a drop shadow, not this token - see FIGMA-SCREENS-SPEC.md §5/§7. */
+  --color-surface:      #E3F1FF;
+  --color-surface-2:    #E3F1FF;
 
   /* ── FONT - the system stack (2026-09-07, replacing Barlow). Character-for-character the stack this
      app used before on the since-parked `privy` branch - kept identical on purpose so the two branches
