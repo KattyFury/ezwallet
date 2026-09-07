@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from 'react'
-import { usePrivy, useWallets, useMfa, useRegisterMfaListener, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
+import { usePrivy, useWallets, useMfa, useMfaEnrollment, useRegisterMfaListener, getEmbeddedConnectedWallet } from '@privy-io/react-auth'
 import { NavContext } from './nav'
 import ErrorBoundary from './components/ErrorBoundary'
 import BugButton from './components/BugButton'
@@ -22,7 +22,6 @@ const PasteAddress = lazy(() => import('./screens/PasteAddress'))
 const SendAmount  = lazy(() => import('./screens/SendAmount'))
 const SendConfirm = lazy(() => import('./screens/SendConfirm'))
 const SendReceipt = lazy(() => import('./screens/SendReceipt'))
-const ProtectWallet = lazy(() => import('./screens/ProtectWallet'))
 const SetupPin    = lazy(() => import('./screens/SetupPin'))
 const CreateQR    = lazy(() => import('./screens/CreateQR'))
 const ShowQR      = lazy(() => import('./screens/ShowQR'))
@@ -46,7 +45,7 @@ const SCREENS = {
   Login,
   HomeSend, HomeReceive, Swap, ServiceHub, MenuScreen,
   PasteAddress, SendAmount, SendConfirm, SendReceipt,
-  ProtectWallet, SetupPin, CreateQR, ShowQR, SavedQRList,
+  SetupPin, CreateQR, ShowQR, SavedQRList,
   Contacts, QRScanner,
   TxHistory,
   Currency,
@@ -80,6 +79,10 @@ export default function App() {
   // The fix is the standard one: keep the live functions in a ref, hand the hook ONE callback that
   // never changes identity, and read the current functions out of the ref when it actually fires.
   const mfa = useMfa()
+  // Privy's own passkey-enrollment popup. Two callers: the once-per-session offer right after the PIN
+  // is set (further down), and Security.jsx's "Fingerprint" row. There is no screen of ours wrapping
+  // it - see the comment on that effect.
+  const { showMfaEnrollmentModal } = useMfaEnrollment()
   const mfaRef = useRef(mfa)
   mfaRef.current = mfa
   const onMfaRequired = useCallback(async () => {
@@ -165,19 +168,30 @@ export default function App() {
   // compares deps by identity - a fresh array from Privy on each render makes the effect re-run on
   // EVERY render. Derive the one fact this effect cares about and depend on that instead.
   // ⚠️ ALSO GATED ON THE PIN ALREADY BEING SET (2026-09-06) - the mandatory PIN screen above must run
-  // FIRST. Without this check here too, a fresh signup would have BOTH effects fire on the same
-  // render (both watching `n?.screen === 'HomeSend'`), and whichever won React's batching would be
-  // accidental, not designed. SetupPin.jsx itself navigates the user on to ProtectWallet once the PIN
-  // is actually set, so this effect no longer needs to be the one that "discovers" that transition.
+  // FIRST, and this one only after it.
+  //
+  // ⚠️ NO SCREEN OF OUR OWN ANY MORE (2026-09-07, user decision "1.b"). Until today this effect
+  // navigated to a full-screen `ProtectWallet` - a shield icon, a paragraph, a "Turn on" button, a
+  // "Not now" link - which the user drew NOWHERE and did not ask for. Their rule, verbatim: between
+  // the Login frame and the Home frame "mọi thứ diễn ra dưới dạng pop up… pop up là cánh cổng", and
+  // "toàn bộ bàn phím từ giờ là hệ thống". Privy's own MFA enrollment modal IS that popup, and the
+  // fingerprint prompt inside it IS the system UI - so the screen that used to wrap it was pure
+  // invention sitting between the user and the thing itself. It is deleted, not hidden.
+  // The offer still happens exactly once per session, so declining does not immediately re-ask.
   const passkeyOn = !!user?.mfaMethods?.includes('passkey')
   const offeredProtect = useRef(false)
   useEffect(() => {
     if (MOCK || !authenticated || !isEmbedded || !activeWallet?.address) return
     if (localStorage.getItem('ez_pin_is_set') !== '1') return
     if (offeredProtect.current || passkeyOn) return
+    // ⚠️ ONLY ON HOME. Read `nav` rather than assuming: the passkey popup is the LAST gate before
+    // Home, so firing it while the user is still mid-PIN would stack two popups on each other.
+    if (nav?.screen !== 'HomeSend') return
     offeredProtect.current = true
-    setNav(n => (n?.screen === 'HomeSend' ? { screen: 'ProtectWallet', params: {} } : n))
-  }, [authenticated, isEmbedded, activeWallet?.address, passkeyOn])
+    // Returns void and reports nothing - success is observed through `passkeyOn` flipping, which is
+    // why this effect depends on it. See Security.jsx, which calls the same modal for the same reason.
+    showMfaEnrollmentModal()
+  }, [authenticated, isEmbedded, activeWallet?.address, passkeyOn, nav?.screen])
 
   // Copy the wallet address into the localStorage key ~15 screens read (see src/privy.js). NOT only
   // a login-time job: Privy also restores the session on a page reload, and the address can arrive a

@@ -22,7 +22,12 @@ export async function brandedQrCanvas(qrCanvas) {
   x.fillStyle = '#0B53BF'; x.font = '600 30px sans-serif'
   x.fillText('Only Arc Testnet', W / 2, PAD + QR + 58)
 
-  const lw = 168, lh = lw * 380 / 1160   // logo.svg aspect ratio (viewBox 1160×380), same as the receipt image
+  // ⚠️ RATIO UPDATED 2026-09-07 WITH THE LOGO ITSELF. design/logo.svg was replaced by the new
+  // solid-colour wordmark, whose viewBox is 1425×406 - the old file's was 1160×380. A <canvas>
+  // drawImage() with explicit width AND height does not preserve aspect ratio, it stretches to fit,
+  // so leaving the old numbers here would have squashed the logo on every saved receipt without a
+  // single error anywhere. Same constant in SendReceipt.jsx - keep the two in step.
+  const lw = 168, lh = lw * 406 / 1425   // logo.svg aspect ratio (viewBox 1425×406), same as the receipt image
   const img = new Image()
   img.src = logoLong
   try { await img.decode() } catch {}

@@ -39,8 +39,14 @@ const PIN_ERROR_BY_CODE = {
   'replayed-request': 'That transaction was already submitted. Please start again.',
   'not-an-app-wallet': 'This wallet is not an EZwallet wallet.',
   // 'nonce-failed' removed 2026-09-06 with the nonce step itself (PIN-FLOW-SPEC.md §3).
-  'not-authenticated': 'Please sign in again.',
-  'bad-identity-token': 'Please sign in again.',
+  // ⚠️ THESE THREE MUST NOT SHARE A SENTENCE (2026-09-07). They used to read "Please sign in again."
+  // all round, so when the user reported seeing that line there was no way to tell WHICH half had
+  // failed - the browser never getting a token, the network call behind it failing, or the server
+  // rejecting a token it did get. Three different causes, three different fixes, one indistinguishable
+  // message. They are now separable from a screenshot alone.
+  'not-authenticated': 'Please sign in again.',                                               // browser holds no token
+  'identity-token-failed': 'Could not reach your account. Check your connection and try again.', // the call itself failed
+  'bad-identity-token': 'Your sign-in has expired. Please sign in again.',                     // server rejected the token
   'quorum-not-found': 'Could not read your wallet\'s security settings. Please try again.',
   'payload-mismatch': 'Your wallet\'s security settings changed. Please try again.',
   'enable-pin-plan-failed': 'Could not prepare PIN protection. Please try again.',
@@ -68,6 +74,30 @@ const PIN_ERROR_BY_CODE = {
 // linkedAccounts; there is nothing there to read.
 // Module-level (not inside a hook) since it touches no hook state - both usePinSigner and
 // useForgotPin need it.
+// ⚠️ `getIdentityToken()` IS A NETWORK CALL, NOT A GETTER - and it has TWO failure modes.
+// Read out of the shipped SDK (dist/esm/toViemAccount-3XT9jLqr.mjs), it is:
+//     await gi.updateUserAndIdToken()   →  GET /api/v1/users/me, then session.updateIdentityToken(...)
+//     return cookie('privy-id-token') || null
+// So it can (a) THROW, when that refresh call itself fails - offline, 401, Privy down - or (b) resolve
+// to NULL, when the call succeeded but Privy handed back no identity token for this session at all.
+// Three call sites below all needed the same two-branch handling, so it lives here once. The raw
+// reason is logged either way: the sheet only ever shows a sentence (Figma frame 5's red line), and
+// without this log there is nothing left to diagnose a real user's report from.
+async function requireIdentityToken() {
+  let idToken = null
+  try {
+    idToken = await getIdentityToken()
+  } catch (e) {
+    console.error('[PIN] getIdentityToken() failed', e)
+    throw Object.assign(new Error('identity-token-failed'), { code: 'identity-token-failed' })
+  }
+  if (!idToken) {
+    console.error('[PIN] getIdentityToken() returned null - Privy holds no identity token for this session')
+    throw Object.assign(new Error('not-authenticated'), { code: 'not-authenticated' })
+  }
+  return idToken
+}
+
 async function fetchWalletId(address) {
   const res = await fetch(PIN_ENDPOINT, {
     method: 'POST',
@@ -169,11 +199,13 @@ export function useEnableMandatoryPin() {
 // merely decoded) does not already give us. Removing the round trip also removes the ENTIRE
 // pinnonce:/pinsess: KV lifecycle - see pin.js for the server half.
 export function useSetupPin() {
-  async function setupPin() {
-    const idToken = await getIdentityToken()
-    if (!idToken) throw Object.assign(new Error('not-authenticated'), { code: 'not-authenticated' })
+  // `error` is passed straight through to the sheet's own red line (Figma frame 5's annotation:
+  // "If error, make it understandable and make it red, size 17") - that is where a failed attempt
+  // reports itself, not on any screen behind it.
+  async function setupPin({ error } = {}) {
+    const idToken = await requireIdentityToken()
 
-    const pin = await requestPin({ mode: 'set' })   // PinGateHost handles the enter→confirm loop itself
+    const pin = await requestPin({ mode: 'set', error })   // PinGateHost handles the enter→confirm loop itself
     const setRes = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set', idToken, pin }) })
     const d = await setRes.json().catch(() => ({}))
     if (!setRes.ok) throw Object.assign(new Error(d.error || 'set-failed'), { code: d.error })
@@ -204,10 +236,11 @@ export function useCompletePinSetup() {
   // `onHashSet` fires between the two steps so the caller can flip its OWN "hash exists" flag the
   // moment it becomes true, without waiting on step 3 - a real fact that should not be held hostage
   // to whether the enforcement step also succeeds.
-  async function completeSetup(address, { onHashSet } = {}) {
+  async function completeSetup(address, { onHashSet, error } = {}) {
     // `address` is only needed for step 3 now - step 1 identifies the caller from their Privy
     // identity token instead (see useSetupPin above), not from an address anyone could claim.
-    await setupPin()
+    // `error` is only for the sheet's own red line on a retry - see useSetupPin.
+    await setupPin({ error })
     onHashSet?.()
     const result = await enableMandatoryPin(address)
     return result   // { alreadyEnabled: true } | { ok: true, quorum: {...} }
@@ -226,8 +259,7 @@ export function useForgotPin() {
   // signWithPin already uses for real sends. If passkey MFA is on, Privy's own onMfaRequired
   // listener (App.jsx) fires here exactly as it does everywhere else - nothing special to do.
   async function forgotPinWithPasskey(address, newPin) {
-    const idToken = await getIdentityToken()
-    if (!idToken) throw Object.assign(new Error('not-authenticated'), { code: 'not-authenticated' })
+    const idToken = await requireIdentityToken()
     const walletId = await fetchWalletId(address)
 
     const requestPayload = {
@@ -252,8 +284,7 @@ export function useForgotPin() {
   // §4.2: no passkey - registers a 24h-cancellable pending reset. Identity comes from the token,
   // same as everywhere else in this file - never a client-claimed address.
   async function forgotPinStart(newPin) {
-    const idToken = await getIdentityToken()
-    if (!idToken) throw Object.assign(new Error('not-authenticated'), { code: 'not-authenticated' })
+    const idToken = await requireIdentityToken()
     const res = await fetch(PIN_ENDPOINT, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'forgot-pin-start', idToken, newPin }) })
     const d = await res.json().catch(() => ({}))
     if (!res.ok) throw Object.assign(new Error(d.error || 'forgot-pin-start-failed'), { code: d.error || 'forgot-pin-start-failed' })

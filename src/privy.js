@@ -48,19 +48,19 @@ export const privyConfig = {
     logo: '',
     accentColor: '#0B53BF',   // = --color-brand in src/index.css. Keep the two in step.
     walletChainType: 'ethereum-only',
-    // EMAIL FIRST, ON PURPOSE. This puts the email field at the top of the modal and MetaMask below
-    // it. Someone who already has MetaMask will find it either way; someone who has never heard of it
-    // must not be met with "Connect a wallet" as the opening move - that is the wall this app exists
-    // to remove.
-    showWalletLoginFirst: false,
-    // 'detected_ethereum_wallets', NOT the older 'detected_wallets' - that name still works but is
-    // marked deprecated in the SDK's own types (types-Ck8tvlPZ.d.ts:1580).
-    // Listing only these two also keeps Coinbase Wallet out of the modal, which matters beyond
-    // tidiness: its connector does not know Arc and warned on every load ("The configured chains are
-    // not supported by Coinbase Smart Wallet: 5042002").
-    walletList: ['metamask', 'detected_ethereum_wallets'],
   },
-  loginMethods: ['email', 'wallet'],
+  // ══ EMAIL, AND NOTHING ELSE (user decision, restated 2026-09-07) ══
+  // This used to be `['email', 'wallet']`, which put "Continue with a wallet" under the email field
+  // in Privy's modal, plus a `walletList` naming MetaMask. Both are gone. The reason is the belief at
+  // the top of CLAUDE.md, not tidiness: the FIRST screen a new user meets must not offer them a thing
+  // they have to already own. "Continue with a wallet" is only meaningful to someone who is already a
+  // crypto user - to everyone else it is the exact wall this app exists to remove, sitting on the
+  // very first screen.
+  // ⚠️ THE PRIVY DASHBOARD ALREADY HAS `wallet_auth: false` (checked via GET /v1/apps). That was not
+  // enough on its own, and this is why the option kept appearing after it was first asked for: the
+  // CLIENT config decides what the modal draws, so leaving 'wallet' in this array kept drawing it.
+  // Both halves have to agree.
+  loginMethods: ['email'],
   defaultChain: arcTestnet,
   supportedChains: [arcTestnet],
   // WHO ACTUALLY NEEDS A WALLET MADE FOR THEM (SDK docs: types-Ck8tvlPZ.d.ts:1942):

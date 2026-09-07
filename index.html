@@ -37,13 +37,22 @@
          Google Fonts, along with two preconnects to fonts.googleapis.com and fonts.gstatic.com.
          All of it is gone on purpose: it was a third-party request in front of the first paint, on an
          app whose whole point is opening fast on a cheap phone. Do not add it back without a reason. -->
-    <link rel="icon" type="image/png" href="/fav_icon.png" />
+    <!-- ⚠️ SVG FIRST, PNG SECOND, AND THE ORDER MATTERS (2026-09-07, new solid-colour brand).
+         A browser that understands `image/svg+xml` takes the vector and stays sharp at every size a
+         tab, a bookmark bar or a pinned shortcut asks for; one that does not simply ignores that line
+         and falls through to the PNG. Both are rendered from the SAME design/new-brand/icon.svg -
+         public/*.png are generated (C:\tmp\ezw-verify\render-icons.mjs), not drawn by hand, so the
+         raster copies cannot drift away from the vector.
+         `?v=2` busts the cache of anyone still holding the old GRADIENT icon: favicons are cached
+         hard and for a long time, and without it the brand change would look like it never shipped. -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg?v=2" />
+    <link rel="icon" type="image/png" href="/fav_icon.png?v=2" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="EZwallet" />
-    <link rel="apple-touch-icon" href="/icon.png" />
+    <link rel="apple-touch-icon" href="/icon.png?v=2" />
   </head>
   <body>
     <div id="root"></div>

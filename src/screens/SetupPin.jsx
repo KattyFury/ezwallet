@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { usePrivy, useLogout } from '@privy-io/react-auth'
+import { useEffect, useRef } from 'react'
 import logoLong from '../../design/logo.svg'
 import { useNav } from '../nav'
-import { clearLoginData } from '../privy'
 import { useCompletePinSetup, pinErrorMessage } from '../pinSigner'
 
 // ══ THE MANDATORY PIN, RIGHT AFTER LOGIN (2026-09-06, user decision) ══
@@ -20,20 +18,18 @@ import { useCompletePinSetup, pinErrorMessage } from '../pinSigner'
 // modal, for the same reason: arriving here and having to press something before being allowed to do
 // the one mandatory thing is a step carrying no information.
 //
-// ⚠️ UNDISMISSABLE ON CANCEL ONLY - closing the sheet with its own ✕ just reopens it (matches
-// Login.jsx: there is nothing behind this screen to escape to by dismissing it). But a REAL error
-// (not a cancel) does NOT auto-retry, on purpose: the 09-05 incident that froze the tab solid was
-// exactly a silent retry loop hitting a broken signing path (a stale passkey's server-side
-// verification failing again and again with no pause). Reopening THIS sheet on every failure would
-// risk rebuilding that same shape of bug into the one screen every user must pass through. A real
-// error stops here, shows what happened, and waits for an explicit tap ("Try again") before the
-// sheet opens once more.
+// ⚠️ ERRORS BELONG INSIDE THE SHEET, NOT ON THIS SCREEN (corrected 2026-09-07).
+// An earlier version drew its OWN error block here - red text, a "Try again" button, a "Sign out"
+// link - none of which exist in any frame. Figma frame 5 already specifies exactly where a PIN
+// error goes, in its own annotation: "If error, make it understandable and make it red, size 17" -
+// i.e. the red line INSIDE the PIN popup, which PinGateHost already renders and `requestPin({ mode,
+// error })` already feeds. So a failure re-opens the SAME sheet carrying the message, and nothing
+// new is drawn on the backdrop at all.
+// This is not the silent retry loop that froze the tab on 09-05 either: the sheet waits for six
+// fresh taps before it can try again, so a human gates every attempt.
 export default function SetupPin() {
   const { navigate } = useNav()
-  const { user } = usePrivy()
-  const { logout } = useLogout()
   const { completeSetup } = useCompletePinSetup()
-  const [error, setError] = useState('')   // '' = sheet is open / about to open; non-empty = stopped
 
   // ⚠️ REFS, NOT STATE - `running` only guards against calling run() twice concurrently (this
   // component's own StrictMode double-invoke, or the mount-effect racing a manual retry tap), and
@@ -49,24 +45,29 @@ export default function SetupPin() {
   // testing would look completely stuck for a reason that has nothing to do with the PIN flow itself.
   useEffect(() => { mountedRef.current = true; return () => { mountedRef.current = false } }, [])
 
-  async function run() {
+  // `error` is what the sheet shows on its own red line (Figma frame 5) when this is a retry after a
+  // failure - empty on the first, clean attempt.
+  async function run(error = '') {
     if (runningRef.current) return
     runningRef.current = true
-    setError('')
     const address = localStorage.getItem('ez_wallet_addr')
     try {
       await completeSetup(address, {
+        error,
         onHashSet: () => localStorage.setItem('ez_pin_is_set', '1'),
       })
       if (!mountedRef.current) return
-      const passkeyOn = !!user?.mfaMethods?.includes('passkey')
-      navigate(passkeyOn ? 'HomeSend' : 'ProtectWallet')
+      // ⚠️ ALWAYS HOME - there is no passkey SCREEN to send anyone to any more (2026-09-07, user
+      // decision "1.b"). The optional passkey offer is Privy's own popup, fired from App.jsx once the
+      // user is actually on Home. Deciding it here as well would mean two places choosing when that
+      // popup appears.
+      navigate('HomeSend')
     } catch (e) {
       if (!mountedRef.current) return
       runningRef.current = false
-      if (e?.message === 'cancelled') { run(); return }   // the sheet's own ✕ - reopen, no message needed
-      // A real failure - stop and show it, rather than retrying blind.
-      setError(pinErrorMessage(e) || 'Something went wrong. Please try again.')
+      // Cancel (the sheet's ✕) reopens it clean; a real failure reopens it carrying the reason on
+      // frame 5's own red line. Either way nothing is drawn outside the sheet.
+      run(e?.message === 'cancelled' ? '' : (pinErrorMessage(e) || 'Something went wrong. Please try again.'))
     }
   }
 
@@ -74,45 +75,14 @@ export default function SetupPin() {
   // button gating this first attempt.
   useEffect(() => { run() }, [])   // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Identical sequence to MenuScreen's "Sign out" (see the comment there): both clearLoginData() and
-  // logout() are needed, neither is enough on its own.
-  async function handleSignOut() {
-    clearLoginData()
-    ;['ez_notifs', 'ez_last_recv_ts'].forEach(k => localStorage.removeItem(k))
-    try { await logout() } catch {}
-    window.location.reload()
-  }
-
   return (
     <div className="screen">
       {/* Exactly Login.jsx's own backdrop - see that file for the coordinate derivation. Reused
           verbatim rather than re-measured, because it is the SAME frame family (1/2 for login, 3/4/5
-          for the PIN popup that sits over an identical background). */}
+          for the PIN popup that sits over an identical background). Nothing else is on this screen:
+          the sheet is the whole interface, errors included. */}
       <div className="row-1-5 col" style={{ alignItems: 'center', paddingTop: '21.43dvh', gap: '2.5dvh' }}>
         <img src={logoLong} alt="ezwallet" style={{ width: 'var(--col6)', maxWidth: 'min(50vw, calc(var(--screen-max) / 2))' }} />
-      </div>
-
-      {/* Only visible when a REAL error stopped the flow (see the file-level comment on why this
-          does not auto-retry) - otherwise the sheet itself is the whole screen and this stays empty. */}
-      {error && (
-        <div className="row-7-8 col" style={{ alignItems: 'center', justifyContent: 'center', gap: '2dvh', padding: '0 8px' }}>
-          <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</span>
-          <button className="btn btn-primary" style={{ width: 'min(75vw, calc(var(--screen-max) * 0.75))' }} onClick={run}>
-            Try again
-          </button>
-        </div>
-      )}
-
-      {/* The one real escape, for a genuinely broken signing flow - not a way to skip the PIN
-          itself (there is no "Not now" here, unlike ProtectWallet). Placed low and quiet, matching
-          how little attention it is meant to draw next to the sheet that owns this screen. */}
-      <div className="row-9 center">
-        <button type="button" onClick={handleSignOut} style={{
-          background: 'none', border: 'none', padding: 4, cursor: 'pointer',
-          color: 'var(--color-muted)', fontSize: 'var(--fs-item)', textDecoration: 'underline',
-        }}>
-          Sign out
-        </button>
       </div>
     </div>
   )

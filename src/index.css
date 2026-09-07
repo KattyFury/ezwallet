@@ -41,17 +41,24 @@
   --color-info:         #0B53BF; /* BRAND blue - money SENT (notifications) */
   --color-info-soft:    #E2EAF7; /* pale brand-blue background */
   --color-brand:        #0B53BF; /* THE BRAND COLOUR (solid) - brand TEXT/BORDERS (nav active, filters, options) */
-  --grad-brand: linear-gradient(180deg, #0088FF 0%, #0B53BF 100%); /* the brand GRADIENT (vertical: 0088FF top → 0B53BF bottom) - the BACKGROUND of CTA buttons + the primary action-card (striking, not flat) */
 
-  /* ── STATUS GRADIENTS (user decision 2026-07-17d, REPLACING the old "push darker" set of 07-16) - same direction
-     as the brand: VERTICAL, lighter on top → darker at the bottom, with the BOTTOM being the exact semantic colour (--color-primary/warning/error).
-     ⚠️ 0%/100% in CSS are STOP POSITIONS (0%=top edge, 100%=bottom edge), NOT colour intensities
-     - both ends are fully opaque colours (the user's note 07-17d: do not phrase it as "0% at the top", it implies a pale colour).
-     Measured contrast (WCAG, at both ends of the ramp): WHITE text on green 2.22→3.30 · on red
-     3.26→4.83 · BLACK text on yellow 13.89→9.78 (yellow still REQUIRES black text). */
-  --grad-primary: linear-gradient(180deg, #34C759 0%, #16A34A 100%); /* green - success/received (white text) */
-  --grad-warning: linear-gradient(180deg, #FFCC00 0%, #F59E0B 100%); /* yellow - warning (BLACK text, not white) */
-  --grad-error:   linear-gradient(180deg, #FF4D51 0%, #DC2626 100%); /* red - error/delete (white text) */
+  /* ══ NO GRADIENTS ANY MORE - SOLID FILLS (user decision 2026-09-07) ══
+     The brand identity itself dropped its gradient: design/new-brand/{icon,full}.svg are now a single
+     flat #0B53BF, where the previous files carried a vertical ramp. These four tokens are what the app
+     painted with, so they follow, and the value kept is the DARK end of each old ramp - the end that
+     was already the semantic colour (--color-brand / --color-primary / --color-warning / --color-error),
+     so nothing in the app has to be re-picked and Privy's own modal (accentColor #0B53BF in
+     src/privy.js) still matches without being touched.
+     ⚠️ THE `--grad-*` NAMES ARE KEPT ON PURPOSE. They are referenced from ~20 rules across this file
+     and several screens; renaming them to --fill-* would be a rename touching a dozen files and
+     nothing else, on a day the user asked for a colour change. The name is now historical - read it as
+     "the button fill", not as "a gradient".
+     Contrast is unchanged at the value that survived, and it is the darker, safer end of each ramp:
+     WHITE text on green 3.30 · on red 4.83 · BLACK text on yellow 9.78 (yellow still REQUIRES black). */
+  --grad-brand:   #0B53BF; /* brand blue - the BACKGROUND of CTA buttons + the primary action-card */
+  --grad-primary: #16A34A; /* green - success/received (white text) */
+  --grad-warning: #F59E0B; /* yellow - warning (BLACK text, not white) */
+  --grad-error:   #DC2626; /* red - error/delete (white text) */
   --color-error:        #DC2626; /* red - error / delete */
   --color-error-soft:   #FEE2E2; /* pale red background */
   --color-warning:      #F59E0B; /* warning yellow */
