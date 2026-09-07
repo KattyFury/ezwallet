@@ -19,18 +19,18 @@ function fmtCountdown(endTimeSec, nowSec) {
   return `${d}d ${h}h ${m}m ${sec}s`
 }
 
-// The shared popup shell (spec §6): 3/4 width, an X top-right, a Close button bottom-centre - used for
-// EVERY popup on this screen (menu, Deposit, Withdraw, result/Claim, Faucet). Distinct from the app-wide
-// .popup-card (88%/340px, no X/Close) - this format is specific to this screen, per spec.
+// The shared popup shell (spec §6): 5/6 width, closes ONLY via the X top-right or a click outside - no
+// bottom Close button (user decision 2026-09-08). Used for EVERY popup on this screen (menu, Deposit,
+// Withdraw, result/Claim, Faucet).
 function LPModal({ title, onClose, children }) {
   return (
     <div className="popup-overlay" onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{
         position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-        // 3/4 of the MOBILE screen, not of the browser viewport - .popup-overlay is position:fixed to the
+        // 5/6 of the MOBILE screen, not of the browser viewport - .popup-overlay is position:fixed to the
         // whole window, and on desktop that window is far wider than the phone frame (--screen-max: 430px).
         // Same idiom already used by .row10-single .btn for exactly this reason.
-        width: 'min(75vw, calc(var(--screen-max) * 0.75))',
+        width: 'min(calc(100vw * 5 / 6), calc(var(--screen-max) * 5 / 6))',
         maxHeight: '80dvh', overflowY: 'auto',
         background: 'var(--color-white)', borderRadius: 16, padding: '28px 20px 20px',
         display: 'flex', flexDirection: 'column', gap: 14,
@@ -45,7 +45,6 @@ function LPModal({ title, onClose, children }) {
           {title}
         </div>
         {children}
-        <button className="btn btn-secondary" style={{ alignSelf: 'center', minWidth: 120 }} onClick={onClose}>Close</button>
       </div>
     </div>
   )
@@ -325,7 +324,7 @@ export default function LuckyPot() {
       {popup === 'result' && info && (
         <LPModal title={`Epoch #${info.prevEpochId} - your result`} onClose={closePopup}>
           {!revealed ? (
-            <button className="btn btn-secondary" style={{ width: '100%', height: 100 }} onClick={() => setRevealed(true)}>
+            <button className="btn btn-secondary" style={{ width: '100%' }} onClick={() => setRevealed(true)}>
               Tap to reveal
             </button>
           ) : info.wonLastEpoch ? (
