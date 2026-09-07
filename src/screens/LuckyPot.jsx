@@ -10,20 +10,20 @@ import { addNotif } from '../notif'
 // LUCKYPOT - full build. Theme = ezwallet's own light/blue tokens. Referral is OUT of scope on this
 // screen. Layout redone 2026-09-08 to the user's exact pixel spec.
 //
-// TYPOGRAPHY (user decision 2026-09-08): headers (EPOCH #, TOTAL TICKETS/POOL, My tickets/deposit, Draw
-// history) use Space Grotesk, ALL CAPS; everything else (numbers, sentences, buttons) uses Inter. This
-// is the ONE screen in the app using a webfont - ezwallet's brand guideline dropped webfonts app-wide
-// on 08-25 for first-paint speed (see index.html's comment), so this is a deliberate, scoped exception:
-// the font is injected here on mount (not in index.html) so no other screen pays for it.
+// TYPOGRAPHY (user decision 2026-09-08, revised): headers (EPOCH #, TOTAL TICKETS/POOL, My tickets/
+// deposit, Draw history) use Space Grotesk, ALL CAPS - luckypot.cc's own font, matching its brand.
+// Everything else stays the app's normal system-font stack (ezwallet's brand guideline dropped webfonts
+// app-wide on 08-25 for first-paint speed - see index.html's comment - so only Space Grotesk is loaded
+// here, and only for headers, not a wholesale second webfont for body text too).
 const FONT_HEADER = "'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif"
-const FONT_BODY = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif"
+const FONT_BODY = 'var(--font-condensed)'
 function useLuckyPotFonts() {
   useEffect(() => {
     if (document.getElementById('lp-fonts')) return
     const link = document.createElement('link')
     link.id = 'lp-fonts'
     link.rel = 'stylesheet'
-    link.href = 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600&display=swap'
+    link.href = 'https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&display=swap'
     document.head.appendChild(link)
   }, [])
 }
@@ -82,9 +82,14 @@ function AmountField({ amount, setAmount, onMax }) {
 
 // One row of the 2 stat boxes (row 3-5 / row 6-8): a HEADER label on the left (Space Grotesk, all caps),
 // content on the right - the box itself is split into 4 of these equal-height rows (the last spans 2).
-function StatRow({ label, children, span = 1 }) {
+// `divider` draws the separating line under rows 1 and 2 (user decision 2026-09-08: without it the 4
+// sub-rows read as one undifferentiated block of text).
+function StatRow({ label, children, span = 1, divider = false }) {
   return (
-    <div style={{ flex: span, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+    <div style={{
+      flex: span, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
+      borderBottom: divider ? '1.5px solid rgba(11, 83, 191, 0.15)' : 'none',
+    }}>
       <span style={{ fontFamily: FONT_HEADER, textTransform: 'uppercase', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{label}</span>
       {children}
     </div>
@@ -230,7 +235,7 @@ export default function LuckyPot() {
         }}>
           <Icon name="menu" size="calc(100dvh / 30)" color="var(--color-content)" />
         </button>
-        <span style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)' }}>
+        <span style={{ fontFamily: FONT_HEADER, fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)' }}>
           <span style={{ color: 'var(--color-content)' }}>LuckyPot</span>
           <span style={{ color: 'var(--color-muted)' }}>.cc</span>
         </span>
@@ -253,13 +258,13 @@ export default function LuckyPot() {
 
       {/* Row 3-5 - Epoch box: light-blue surface, split into 4 equal sub-rows (the yield sentence spans 2). */}
       <div style={{ gridRow: '3 / 6', alignSelf: 'center', height: '28.82dvh' /* 243.2/844 */, background: 'var(--color-surface)', borderRadius: 10, padding: 10, display: 'flex', flexDirection: 'column' }}>
-        <StatRow label={info ? `EPOCH #${info.epochId}` : '…'}>
+        <StatRow divider label={info ? `EPOCH #${info.epochId}` : '…'}>
           <div style={{ display: 'flex', gap: 6 }}>
             <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)', background: 'var(--color-brand)', borderRadius: 999, padding: '2px 10px' }}>USDC</span>
             <span style={{ fontFamily: FONT_BODY, fontSize: 14, fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)', border: '1.5px solid var(--color-gray)', borderRadius: 999, padding: '2px 10px', opacity: 0.5, cursor: 'not-allowed' }}>ARC</span>
           </div>
         </StatRow>
-        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT_BODY }}>
+        <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT_BODY, borderBottom: '1.5px solid rgba(11, 83, 191, 0.15)' }}>
           <span style={{ fontSize: 14, color: 'var(--color-muted)' }}>Draw in</span>
           <span className="num" style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-item)', color: 'var(--color-content)' }}>
             {info ? fmtCountdown(info.epochEndTime, now) : '…'}
@@ -281,10 +286,10 @@ export default function LuckyPot() {
 
       {/* Row 6-8 - Tickets/Deposit box: same box treatment, 4 equal sub-rows. */}
       <div style={{ gridRow: '6 / 9', alignSelf: 'center', height: '28.82dvh' /* 243.2/844 */, background: 'var(--color-surface)', borderRadius: 10, padding: 10, display: 'flex', flexDirection: 'column' }}>
-        <StatRow label="TOTAL TICKETS / POOL">
+        <StatRow divider label="TOTAL TICKETS / POOL">
           {info ? <SplitAmount big={info.eligiblePoolTotal} small={info.poolTotal} /> : <span className="num" style={{ fontFamily: FONT_BODY }}>…</span>}
         </StatRow>
-        <StatRow label="My tickets / deposit">
+        <StatRow divider label="My tickets / deposit">
           {info ? <SplitAmount big={info.eligible} small={info.deposited} /> : <span className="num" style={{ fontFamily: FONT_BODY }}>…</span>}
         </StatRow>
         <div style={{ flex: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
