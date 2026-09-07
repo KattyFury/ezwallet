@@ -18,6 +18,9 @@ const LUCKYPOT_ABI = [
   // Seconds after a draw during which claim(epochId) works; past that only the permissionless sweep(epochId) does -
   // copied verbatim from the deployed contract's ABI, same as every other entry here.
   { name: 'SWEEP_DELAY',      type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
+  { name: 'balancesTotal',    type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
+  { name: 'participantCount', type: 'function', stateMutability: 'view', inputs: [], outputs: [{ type: 'uint256' }] },
+  { name: 'participants',    type: 'function', stateMutability: 'view', inputs: [{ type: 'uint256' }], outputs: [{ type: 'address' }] },
   // ⚠️ 10 SEPARATE (flat) outputs, NOT one tuple/struct - verified against the real deployed contract's
   // ABI directly (D:\...\poolAbi.json) AND by an actual eth_call against live Arc Testnet RPC (2026-09-07):
   // wrapping these into a single `{type:'tuple', components:[...]}` DECODES WRONG (viem throws
@@ -62,7 +65,7 @@ function mockInfo() {
     deposited: 42, eligible: 42, aprBps: 600,
     epochId: 3, epochEndTime: Math.floor(Date.now() / 1000) + 2 * 86400,
     epochDrawn: false, weeklyYieldUsd: 8.4,
-    eligiblePoolSnapshot: 5732, numWinners: 2, eligibleParticipants: 14,
+    poolTotal: 5747, eligiblePoolTotal: 5732, numWinners: 2, eligibleParticipants: 14,
     prevEpochId: 2, wonLastEpoch: false, owedLastEpoch: 0, hasClaimedLastEpoch: false,
     prevEpochDrawnAt: Math.floor(Date.now() / 1000) - 86400, sweepDelay: 3 * 86400,
     referrer: null, pendingReferral: 0,
@@ -78,7 +81,7 @@ export async function getLuckyPotInfo(walletAddress) {
   if (!walletAddress) return null
 
   const base = { address: LUCKYPOT_ADDRESS, abi: LUCKYPOT_ABI }
-  const [deposited, eligible, epochId, aprBps, referrer, pendingReferral, sweepDelay] = await multicallWithRetry([
+  const [deposited, eligible, epochId, aprBps, referrer, pendingReferral, sweepDelay, poolTotalRaw, participantCountRaw] = await multicallWithRetry([
     { ...base, functionName: 'balances', args: [walletAddress] },
     { ...base, functionName: 'eligibleBalance', args: [walletAddress] },
     { ...base, functionName: 'currentEpochId' },
@@ -86,7 +89,26 @@ export async function getLuckyPotInfo(walletAddress) {
     { ...base, functionName: 'refBy', args: [walletAddress] },
     { ...base, functionName: 'pendingRef', args: [walletAddress] },
     { ...base, functionName: 'SWEEP_DELAY' },
+    { ...base, functionName: 'balancesTotal' },
+    { ...base, functionName: 'participantCount' },
   ])
+
+  // "TOTAL TICKETS / POOL" needs the LIVE pool, not getEpoch's eligiblePoolSnapshot - that field only gets
+  // written when the epoch COMMITS (near draw time), reading 0 for the whole rest of the week. There is no
+  // single view function for "eligible across everyone" either, so it's assembled the same way the real
+  // luckypot.cc frontend does it (frontend/src/hooks/usePoolData.ts: useEligiblePoolTotal) - participants(i)
+  // for every index, then eligibleBalance(addr) for each. Fine at this participant count (testnet-scale).
+  const participantCountNum = Number(participantCountRaw)
+  let eligiblePoolTotal = 0n
+  if (participantCountNum > 0) {
+    const addresses = await multicallWithRetry(
+      Array.from({ length: participantCountNum }, (_, i) => ({ ...base, functionName: 'participants', args: [BigInt(i)] }))
+    )
+    const eligibles = await multicallWithRetry(
+      addresses.map(addr => ({ ...base, functionName: 'eligibleBalance', args: [addr] }))
+    )
+    eligiblePoolTotal = eligibles.reduce((sum, v) => sum + (v ?? 0n), 0n)
+  }
 
   const epochIdNum = Number(epochId)
   const prevEpochId = epochIdNum > 0 ? epochIdNum - 1 : null
@@ -110,7 +132,8 @@ export async function getLuckyPotInfo(walletAddress) {
     epochEndTime: Number(epoch.endTime),
     epochDrawn: epoch.drawn,
     weeklyYieldUsd: toUsdc(epoch.weeklyYield),
-    eligiblePoolSnapshot: toUsdc(epoch.eligiblePoolSnapshot),
+    poolTotal: toUsdc(poolTotalRaw),
+    eligiblePoolTotal: toUsdc(eligiblePoolTotal),
     numWinners: Number(epoch.numWinners),
     eligibleParticipants: Number(epoch.eligibleParticipants),
     sweepDelay: Number(sweepDelay),

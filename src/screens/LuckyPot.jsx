@@ -229,7 +229,7 @@ export default function LuckyPot() {
         <div style={{ display: 'flex', gap: 12 }}>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ fontSize: 'var(--fs-tiny)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-primary)', textTransform: 'uppercase' }}>Total tickets / pool</span>
-            <span className="num" style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-semibold)' }}>{info ? `$${info.eligiblePoolSnapshot.toFixed(2)}` : '…'}</span>
+            <span className="num" style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-semibold)' }}>{info ? `$${info.eligiblePoolTotal.toFixed(2)} / $${info.poolTotal.toFixed(2)}` : '…'}</span>
           </div>
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <span style={{ fontSize: 'var(--fs-tiny)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-primary)', textTransform: 'uppercase' }}>My tickets / deposit</span>
