@@ -105,7 +105,7 @@ export default function QRScanner() {
     <div className="screen">
       {/* Row 1 = the screen TITLE, consistent with every other sub-screen (user decision 07-29 - this screen
           had no title before, the scan box took row 1 as well). */}
-      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
+      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)' }}>
         Scan QR
       </div>
 

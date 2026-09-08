@@ -147,7 +147,7 @@ export default function SendAmount() {
     <div className="screen">
       <ErrorToast message={params.sendError} />
 
-      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
+      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)' }}>
         Send money
       </div>
 

@@ -10,7 +10,9 @@ import NotifArea, { NOTIF_FS } from '../components/NotifArea'
 
 // USDC (left) and $98.59 (right) must share the SAME font and the SAME colour - one shared style object
 // so they cannot drift apart (rather than two declarations where it is easy to change only one).
-const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
+// Weight = Regular (2026-09-08, down from Semibold) - the new Figma file draws every token-list row
+// (name + amount) in plain Regular, not bold; the amount's brand-blue colour already carries the emphasis.
+const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-normal)', color: 'var(--color-content)' }
 
 // Small solid triangle (▲/▼) signalling the token's 24h price move (user request 08-25) - a plain CSS/SVG
 // shape rather than a shared Icon.jsx entry since it is only ever used here, right next to the amount.
@@ -135,8 +137,12 @@ export default function HomeSend() {
           </div>
         ) : (
           <>
-            {tokens.map(tk => (
-              <div key={tk.symbol} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '0 2px' }}>
+            {tokens.map((tk, i) => (
+              // Thin divider under every row but the last (2026-09-08, matching the new Figma file).
+              <div key={tk.symbol} style={{
+                display: 'flex', alignItems: 'center', gap: 10, padding: '0 2px',
+                ...(i < tokens.length - 1 ? { paddingBottom: 13, borderBottom: '1px solid var(--color-gray)' } : null),
+              }}>
                 <img
                   src={`/tokens/${tk.symbol.toLowerCase()}.png`}
                   alt=""
@@ -152,13 +158,16 @@ export default function HomeSend() {
                 <span style={TOKEN_TEXT_STYLE}>{tk.symbol}</span>
                 <Icon name="check" size="var(--is-num)" color="var(--color-primary)" />
 
-                {/* SAME font and SAME colour as "USDC" on the left (TOKEN_TEXT_STYLE) - follows the shared toggle above.
-                    The 24h trend arrow (user request 08-25) is VOLATILE TOKENS ONLY - not USDC/EURC, they are
+                {/* SAME font/size/weight as "USDC" on the left (TOKEN_TEXT_STYLE), brand-blue colour - follows the
+                    shared toggle above. The 24h trend arrow (user request 08-25) is VOLATILE TOKENS ONLY - not USDC/EURC, they are
                     stablecoins. When it applies, it sits in a fixed 15px gap right after the amount (marginLeft:15
                     on the arrow itself, nothing added on top) - no arrow for a token → no gap, the amount sits
                     flush at the row's edge exactly as before this feature existed. */}
                 <span style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}>
-                  <span style={TOKEN_TEXT_STYLE}>
+                  {/* Brand-blue (2026-09-08, matching the new Figma file's black-label/blue-value pattern
+                      used everywhere else in the app - Available:/Balance:/Fee:/Rate: lines) - same font/size/weight
+                      as the name on the left (TOKEN_TEXT_STYLE), only the colour differs. */}
+                  <span style={{ ...TOKEN_TEXT_STYLE, color: 'var(--color-brand)' }}>
                     {showToken
                       ? tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)
                       : (rates ? fmtDisplay(tk.usd, cur, rates) : '…')}

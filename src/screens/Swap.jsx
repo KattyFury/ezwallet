@@ -394,7 +394,7 @@ export default function Swap() {
         </div>
       )}
 
-      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
+      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)' }}>
         Swap
       </div>
 

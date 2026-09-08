@@ -69,7 +69,56 @@ verified against the real deposit tx (`0xff96d0...`) before being trusted, not g
 | **Video** | https://youtu.be/UIR4Ee3Wp_Y |
 | **Deck** | https://canva.link/zr3ik84radd39vc |
 
-### 📍 WHERE THINGS STAND (end of session 2026-09-07)
+### 📍 WHERE THINGS STAND (end of session 2026-09-08, part 2 - the Figma re-sync)
+
+⚠️ **The 09-07 brand redesign bullet below is PARTLY STALE as of 09-08 - read this first, not that.**
+Same day, later: the user re-drew several screens in Figma (file `iQxFGA890VhyXkEKipCC9C`, now 9 frames,
+up from 8) and declared **that file's palette the new canonical source, reversing the 09-07 colour
+decision one day after it shipped**. What actually changed 09-08:
+
+- **`--color-surface`/`-2` is back to light GREY `#F1F5F9`** (NOT the light blue `#E3F1FF` from 09-07 -
+  that lasted exactly one day). `--color-muted` split into TWO tones (`#94A3B8` general secondary/nav-
+  inactive/placeholders, `#667085` specifically the "Label:" prefix word in meta lines like "Available:"/
+  "Fee:"). `--color-error` is now `#FF383C` (was `#EC221F`). Full rationale + the reversed-premise banner:
+  `BRAND-GUIDELINE.md` (rewritten) and `FIGMA-SCREENS-SPEC.md` (rewritten for all 9 frames - the old
+  8-frame version was reading a Send-money design that no longer exists).
+- **NEW rule: shadows only on CLICKABLE elements**, a centred glow (no x/y offset) instead of the old
+  straight-down `0 4px 6px`. **NOT YET applied to the actual CSS/JSX** (`.btn-primary` etc. still use the
+  old shadow) - apply it screen-by-screen when each one is rebuilt, not as one big sweep.
+- **Button text sizes went DOWN app-wide** (safe - shrinking can't overflow a button that already fit):
+  `.btn` 21px Medium → **19px Semibold**; `.action-card` (Paste/Contacts-style) 17px Medium → **15px
+  Semibold**; `.action-card.primary` (the emphasised middle one, e.g. Scan QR) → **17px Semibold**.
+- **Every screen title's weight fixed app-wide**: the repeated `row-1 center screen-title` inline style
+  (16 screens) was rendering at Medium(500); the real rule (confirmed identically across 4 separate Figma
+  frames) is **Semibold(600)**. Fixed in all 15 titled screens (Contacts.jsx's OTHER title, "Adjust
+  photo", was left alone - different row, not this pattern).
+- **`BalanceHeader.jsx` (the big balance on Home send/Home receive/Menu)**: capped at **50px** (was 76),
+  now occupies row 1 + HALF of row 2 (was 2 full rows), hard-capped at **≤75vw** so a long decimal amount
+  never overflows - this was the exact bug the user hit ("$10,000.00" pushing past 3/4 width).
+- **`HomeSend.jsx` fixes**: token name went Semibold→**Regular**, the amount is now **brand-blue** (was
+  black, matching the label-black/value-blue pattern used everywhere else), added the thin divider lines
+  between token rows that Figma has and the app was missing.
+- **`LuckyPot.jsx`**: buttons (Deposit/Withdraw/Result) are now a fixed **2/3 of a 10dvh row** with
+  `flexShrink:0` - the stat box's tight flex layout was squeezing them shorter than every other button in
+  the app. ⚠️ **Its Space-Grotesk-ALL-CAPS typography is UNCHANGED and must STAY that way** - a first pass
+  this session wrongly "normalised" it to the app-wide font/casing, which the user explicitly reverted:
+  that treatment is a deliberate, already-decided per-screen exception (see the file's own header
+  comment), not a lint error. **Lesson for next time: a screen with its own dated "user decision" comment
+  block is not fair game for a blanket guideline sweep - only apply the parts that have no stated
+  exception (this session, that meant spacing/button-sizing only, not typography).**
+- **NEW:** `SEND_MONEY_FIGMA_SPEC.md` (repo root) - the Send money screen's build spec. Its big finding:
+  the redesigned Send money screen copies `Swap.jsx`'s architecture (% slider + round-number hints +
+  numpad bottom-sheet) instead of `SendAmount.jsx`'s always-on numpad - a real architecture change, not a
+  reskin. All open questions for it are resolved (see the file) - **not built yet**, next in line.
+- **NOT YET DONE (still pending, in priority order): Send money + Exchange screens (spec-ready, 0 code
+  written) · `NavBar.jsx` rebuild (raised-white-cell-bleeding-into-content mechanism, §5 of
+  FIGMA-SCREENS-SPEC.md - direction confirmed, not built) · the shadow-glow migration across
+  `index.css`/JSX · Home receive (needs a fresh `get_design_context` read, not done this session) ·
+  Menu/Service Hub restyle to the new grey surface + button sizes (PigSave should be REMOVED, not just
+  disabled, per a 09-08 decision) · Splash/Login screens re-verified against Figma (only checked via
+  metadata, not a full design-context read, this session).**
+
+### 📍 WHERE THINGS STOOD (end of session 2026-09-07, mostly still true - see the 09-08 box above for what changed since)
 
 - **One branch only: `main`** (a parallel `privy` branch exists from an earlier, since-abandoned attempt
   at a different PIN mechanism - **do not check it out or merge it without an explicit go-ahead**, user
@@ -79,10 +128,11 @@ verified against the real deposit tx (`0xff96d0...`) before being trusted, not g
   `POST /user/pin/restore` (security-questions recovery). See section 9's session table for detail.
 - **Brand redesign applied from 2 user-written spec files** (`BRAND-GUIDELINE.md` +
   `FIGMA-SCREENS-SPEC.md`, both in the repo root): solid brand blue everywhere (no more gradients),
-  system font (Barlow is gone), new NavBar (raised white active cell on a flat grey bar), recessed
-  boxes/inputs are light blue `#E3F1FF` (not grey), Service Hub rebuilt to full-width cards. The new
-  brand icon/logo assets (`public/icon.svg`, `design/logo.svg`) are the user's own official files, not
-  redrawn.
+  system font (Barlow is gone), new NavBar (raised white active cell on a flat grey bar, ⚠️ NOT actually
+  built yet as of 09-08 either), recessed boxes/inputs were light blue `#E3F1FF` for exactly one day
+  (⚠️ SUPERSEDED 09-08, now grey `#F1F5F9` - see the box above), Service Hub rebuilt to full-width cards.
+  The new brand icon/logo assets (`public/icon.svg`, `design/logo.svg`) are the user's own official
+  files, not redrawn.
 - **LuckyPot integration - Deposit/Withdraw/Claim BUILT (M1-M4), untested on a real deploy.**
   `src/lib/luckyPot.js` (M1, reads) was already verified against LIVE Arc Testnet RPC in the prior pass.
   This pass added the writes: `LuckyPot.jsx` now matches `Desktop/LUCKYPOT-LAYOUT-SPEC.md` row-by-row
@@ -417,6 +467,25 @@ ezwallet:0xABC…@5042002?amount=25&cur=USD    ← a QR with a preset amount
 **Measured with Playwright:** over the same 22s → the Receive screen polled **4 times, evenly spaced 5.0s apart**; the Send screen **once**. Hiding/showing the tab triggered an immediate poll.
 
 **STILL MISSING:** the polling only runs on the **Send or Receive screens** (the only 2 that render `NotifArea`). Money arriving while the user is in History/Menu/Swap goes unannounced until they return Home. Announcing it on every screen means moving the polling up into `App.jsx` - **not done, it needs the user's approval because it touches the architecture**.
+
+---
+
+## 7f. AUTO-CONVERT ON INSUFFICIENT USDC (user idea, raised 2026-09-08) - ⚠️ NOT BUILT, NOTES ONLY
+
+**The scenario:** the Send screen defaults to "USD" = sending USDC 1:1 (section 2). Today, if the wallet shows e.g. $20 total but that $20 is actually EURC (0 USDC), `SendAmount` checks the balance of the EXACT selected token → the send is blocked with "Insufficient balance", even though the wallet is not really empty. The user finds this confusing: the top-line balance says $20, but sending fails.
+
+**The user's proposed fix (idea only, exact wording given 09-08 - do not rephrase the confirmation copy without asking):**
+1. When the user tries to send USD/USDC and the USDC balance is insufficient, **auto-convert (swap) the token with the HIGHEST balance into USDC** rather than just blocking.
+2. Before doing it, **show a confirmation** with a message along the lines of: *"Hết USDC nên auto convert token có số dư cao nhất thành USDC"* (out of USDC, so auto-converting your highest-balance token into USDC) - the user must confirm before it runs.
+3. If the user instead **manually picks EURC** (the currency chip) as the send currency, show the balance as **"Available: 20.00 EURC"** (i.e. label the balance line with the real token, not converted to $).
+
+**Open questions - NOT settled, ask the user before building:**
+- Which existing plumbing performs the conversion - the real Swap flow (`_swapCore.js`, 0.1% fee, section 4) or something else? If it's the real Swap, the 0.1% app fee would apply here too - does the user want that?
+- Exact trigger point: only when USDC is fully 0, or also when USDC is nonzero but not enough to cover the typed amount (partial top-up vs. full conversion of the whole balance)?
+- Exact button/copy for the confirmation dialog (Confirm/Cancel wording, where it appears - a popup like the note popup, or inline like the `overBalance` error text).
+- What happens with cirBTC in the "highest balance" comparison - does it get force-converted too, or is auto-convert EURC→USDC only?
+
+**Already true today (no change needed):** part 3 above (manual EURC selection showing the real-token balance) is effectively already the case - `SendAmount.jsx`'s "Balance:" line already uses `fmtMoney(availableAmt, cur)`, which renders EURC as `"20.00 EURC"` (not converted to `$`), and the "Insufficient balance" message already quotes the balance in the selected token. Only the label differs ("Balance:" vs the user's wording "Available:") - a possible one-word tweak, not a new feature.
 
 ---
 

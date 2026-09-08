@@ -15,12 +15,13 @@
      warning #E8B931 · tích cực #14AE5C. NO GRADIENTS anywhere (guideline: "tất cả là màu SOLID"). */
   --color-black:      #000000;   /* main text + titles + buttons */
   --color-content:    #000000;   /* main content = black */
-  /* SECONDARY TEXT = guideline's #757575 ("Màu text: đen và 757575"). This is now the ONLY grey text
-     tone in the app - --color-muted-2 (old "mid grey, unselected nav") maps here too, on purpose:
-     the guideline has one secondary-text tone, not several. */
-  --color-muted:      #757575;   /* secondary text */
-  --color-muted-2:    #757575;   /* secondary text (unselected nav items) - same tone, see note above */
-  --color-faint:      #E3E3E3;   /* hidden icons / placeholders - consolidated into the box/input grey */
+  /* SECONDARY TEXT - SPLIT INTO 2 TONES (2026-09-08, reversing the 09-07 "one secondary tone" merge):
+     the user declared the Figma file `iQxFGA890VhyXkEKipCC9C` (Send money/Exchange/Service hub/...) to
+     BE the new brand guideline's colour source, and that file uses two distinct greys for two distinct
+     jobs - do not re-merge them without asking. */
+  --color-muted:      #94A3B8;   /* general secondary text: nav-inactive labels/icons, input placeholders */
+  --color-muted-2:    #667085;   /* the "Label:" PREFIX word only, inside a meta/value line (e.g. "Available:", "Fee:", "Balance:", "Rate:" - the value itself after it is --color-brand, semibold). ⚠️ BugButton.jsx pins its icon to this variable "do NOT change it to blue/red" - that decision is about the COLOUR FAMILY (stay grey), not this exact hex, so the icon just gets slightly darker grey, unaffected in spirit. */
+  --color-faint:      #F1F5F9;   /* hidden icons / placeholders - consolidated into the box/input grey (see --color-surface below) */
 
   /* ── FUNCTIONAL COLOURS ── */
   --color-primary:      #14AE5C; /* guideline "tích cực" - active, money RECEIVED / positive */
@@ -35,19 +36,21 @@
      guideline colour, so .btn-success/.btn-error/etc keep working unchanged. */
   --grad-primary: var(--color-primary); /* was a green gradient - now solid #14AE5C */
   --grad-warning: var(--color-warning); /* was a yellow gradient - now solid #E8B931 */
-  --grad-error:   var(--color-error);   /* was a red gradient - now solid #EC221F */
-  --color-error:        #EC221F; /* guideline "danger" */
-  --color-error-soft:   #FCDEDD; /* pale tint of --color-error (15% mixed into white) */
+  --grad-error:   var(--color-error);   /* was a red gradient - now solid, see --color-error below */
+  --color-error:        #FF383C; /* guideline "danger" - updated 2026-09-08 from #EC221F to match the Figma file's Exit/Sign-out red exactly (the user declared that file the new colour source) */
+  --color-error-soft:   #FFE1E2; /* pale tint of --color-error (15% mixed into white, recomputed for the new red) */
   --color-warning:      #E8B931; /* guideline "warning" */
   --color-warning-soft: #FBF4E0; /* pale tint of --color-warning (15% mixed into white) */
   --color-white:        #FFFFFF;
   --color-gray:         #E3E3E3; /* borders / dividers / NavBar's flat inactive background - NOT the recessed-box colour below, kept grey on purpose */
-  /* RECESSED ("lõm xuống") BOX FILL - user decision 2026-09-07: light blue #E3F1FF, NOT light grey any
-     more. This is the fill for input fields and sunken content boxes (the address input, the token-list
-     card on HomeSend, the numpad panel...). Cards that sit RAISED instead (Service Hub, new Figma frames)
-     use white + a drop shadow, not this token - see FIGMA-SCREENS-SPEC.md §5/§7. */
-  --color-surface:      #E3F1FF;
-  --color-surface-2:    #E3F1FF;
+  /* RECESSED ("lõm xuống") BOX FILL - REVERSED 2026-09-08: back to light grey, NOT light blue any more.
+     The 09-07 decision (light blue #E3F1FF) is superseded one day later: the user is not using blue as a
+     surface fill any more and declared the Figma file `iQxFGA890VhyXkEKipCC9C` the new colour source,
+     which uses this exact grey for every card/input across Send money, Exchange, Service hub, Menu, Home.
+     This is the fill for input fields and sunken content boxes (the address input, the token-list
+     card on HomeSend, the numpad panel...) AND, per the new Figma file, ordinary content cards too. */
+  --color-surface:      #F1F5F9;
+  --color-surface-2:    #F1F5F9;
 
   /* ── FONT - the system stack (2026-09-07, replacing Barlow). Character-for-character the stack this
      app used before on the since-parked `privy` branch - kept identical on purpose so the two branches
@@ -218,8 +221,11 @@ body {
   align-items: center;
   justify-content: center;
   font-family: var(--font-condensed);
-  font-size: var(--fs-md-lg);
-  font-weight: var(--fw-medium);
+  /* 19px Semibold - 2026-09-08, down from 21px Medium: measured identically off every button in the new
+     Figma file (Continue/Back/Deposit/Withdraw/Sign in with Email/the Swap-style CTA). Safe to shrink app-wide
+     (user decision: going SMALLER can't overflow a button that already fit at the bigger size). */
+  font-size: var(--fs-body);
+  font-weight: var(--fw-semibold);
   border-radius: 50px;
   border: none;
   cursor: pointer;
@@ -485,8 +491,10 @@ body {
   background: var(--color-white);
   color: var(--color-black);
   font-family: var(--font-condensed);
-  font-size: var(--fs-item);
-  font-weight: var(--fw-medium);
+  /* 15px Semibold - 2026-09-08, matching the SIDE action cards (Paste/Contacts) measured in the new Figma
+     file. The emphasized MIDDLE card (Scan QR) is bigger, 17px - see .action-card.primary below. */
+  font-size: var(--fs-label);
+  font-weight: var(--fw-semibold);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);   /* white buttons are raised (user decision 07-22d), a black shadow with no spread */
@@ -496,6 +504,7 @@ body {
   border: none;
   background: var(--grad-brand);
   color: var(--color-white);
+  font-size: var(--fs-item);   /* 17px - the emphasized middle action card is one size up from its 15px siblings */
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);   /* gradients get a deeper shadow than white buttons, as in .btn-primary */
 }
 

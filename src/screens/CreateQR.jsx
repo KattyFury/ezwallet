@@ -30,7 +30,7 @@ export default function CreateQR() {
 
   return (
     <div className="screen">
-      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>
+      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)' }}>
         Create receive QR
       </div>
 

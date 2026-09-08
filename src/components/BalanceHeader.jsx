@@ -19,15 +19,23 @@ export default function BalanceHeader({ totalUsd, loading }) {
   // fmtDisplay puts the symbol on the CORRECT side: "$127.66" but "1.250.000 ₫" (symbol trails the number).
   const str = unknown ? '…' : fmtDisplay(totalUsd, cur, rates)
 
-  // The BIG balance takes ~1 row of height (user decision 07-20e: fill the empty space): base 76px, shrinking
-  // by REAL MEASURED WIDTH via canvas (useFitFontSize) - NOT amountFontSize (character counting) any more:
-  // some currencies are twice as long as USD ("1.250.000 ₫" vs "$50.00"), so guessing by length overflows.
-  const [fitRef, fitSize] = useFitFontSize(str, { max: 76, min: 28, weight: 300 })
+  // MAX SIZE = 50 (user decision 2026-09-08, FIGMA-SCREENS-SPEC.md §12): the balance is capped at 50px,
+  // shrinking by REAL MEASURED WIDTH via canvas (useFitFontSize) - NOT amountFontSize (character counting)
+  // any more: some currencies are twice as long as USD ("1.250.000 ₫" vs "$50.00"), so guessing by length
+  // overflows. The fit budget itself is capped at 75% of the SCREEN width (not just the container minus a
+  // little padding) so a long decimal amount (e.g. "$10,000.00") never draws past 3/4 of the screen, exactly
+  // the overflow the user hit that prompted this rule.
+  const [fitRef, fitSize] = useFitFontSize(str, { max: 50, min: 28, weight: 300 })
   return (
-    <div ref={fitRef} className="row-1-2" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0, padding: '0 12px' }}>
-      <span style={{ fontFamily: 'var(--font-condensed)', fontSize: fitSize, fontWeight: 'var(--fw-light)', color: 'var(--color-content)', lineHeight: 1, whiteSpace: 'nowrap' }}>
-        {str}
-      </span>
+    // Occupies row 1 + HALF of row 2 (not the full 2 rows like before max=76 needed) - flex-start instead of
+    // center so the number sits at the TOP of the row-1-2 grid area, leaving the bottom half of row 2 empty
+    // as breathing room before whatever starts at row 3.
+    <div className="row-1-2" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', minWidth: 0 }}>
+      <div ref={fitRef} style={{ height: '15dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', maxWidth: 'min(75vw, calc(var(--screen-max) * 0.75))' }}>
+        <span style={{ fontFamily: 'var(--font-condensed)', fontSize: fitSize, fontWeight: 'var(--fw-light)', color: 'var(--color-content)', lineHeight: 1, whiteSpace: 'nowrap' }}>
+          {str}
+        </span>
+      </div>
     </div>
   )
 }
