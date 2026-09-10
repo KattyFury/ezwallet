@@ -587,10 +587,24 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  /* 10px/18px (was 12/18) - 2026-09-10: the card shrank from 328 to 242px (3 rows, not 4) in the
-     current Figma pull, so up to 4 rows (Send to/Address/Amount/Network fee) need to fit comfortably
-     inside it - tightened to match. NO grey rule (user decision) - separation comes from the padding. */
-  padding: 10px 18px;
+  position: relative;
+  /* 20px/8px - 2026-09-10 RE-VERIFIED against a fresh design-context pull (nodes 1:223/17:244-249 on
+     Confirm transaction, 17:258-266 on Receipt): the label/value text box is inset only 8px from the
+     card edge (was coded as 18px, a stale measurement), and 4 rows at this padding sum to ~242px = the
+     card's own fixed height. The "no divider, spacing from padding alone" call is ALSO superseded - the
+     same pull draws a real 1px line under every row but the last (see ::after below); this Figma file is
+     actively iterated on mid-rebuild (see HANDOFF §4), so re-verify before trusting either old note again. */
+  padding: 20px 8px;
+}
+
+.confirm-row:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 0;
+  height: 1px;
+  background: var(--color-gray);
 }
 
 .confirm-label {

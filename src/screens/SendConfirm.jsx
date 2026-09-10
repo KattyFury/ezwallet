@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import Icon from '../components/Icon'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
 import { getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency } from '../data'
@@ -132,7 +131,7 @@ export default function SendConfirm() {
           )}
           <div className="confirm-row">
             <span className="confirm-label">Amount</span>
-            <span className="confirm-value num" style={{ fontSize: 20, fontWeight: 'var(--fw-bold)', color: 'var(--color-brand)' }}>
+            <span className="confirm-value num" style={{ fontSize: 22, fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
               {mainEl}
             </span>
           </div>
@@ -161,18 +160,15 @@ export default function SendConfirm() {
         </div>
       </div>
 
-      {/* Warning box - node 15:229, RE-VERIFIED 2026-09-10: a REAL positioned box (was loose-flowing
-          text before this frame was redrawn) - row 6 exactly (centre 55.09dvh, 340×70, radius 16 on the
-          shared .warning-badge class), bg rgba(232,185,49,.25) not --color-warning-soft (visibly
-          different, see the CSS comment). Icon+text sized to sit comfortably in the 70px height. */}
-      <div className="warning-badge" style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '55.09dvh', height: '8.29dvh', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textAlign: 'center' }}>
-        <Icon name="warning" size="var(--is-label)" color="var(--color-warning)" style={{ flexShrink: 0 }} />{'This transaction cannot be undone once confirmed'}
-      </div>
+      {/* The "cannot be undone" warning box is GONE - the user (2026-09-10) called it out as invented
+          drama ("vẽ chuyện ra cho rắc rối") for a wallet with no bank-style reversal in the first place,
+          and the re-fetched Figma (node 1:215) agrees: the frame no longer has ANY warning node at all,
+          not just a redrawn one. Nothing replaces it - the card sits alone above the buttons now. */}
 
       {/* Status text - Figma has nothing here (it only draws the idle state); flows right under the
-          warning box's bottom edge (59.24dvh). */}
+          card's bottom edge (49.05dvh) now that the warning box above it is gone. */}
       {(loading || (error && !loading)) && (
-        <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '61.14dvh' }}>
+        <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '52dvh' }}>
           {loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center', display: 'block' }}>Opening PIN confirmation...</span>}
           {error && !loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center', display: 'block' }}>{error}</span>}
         </div>

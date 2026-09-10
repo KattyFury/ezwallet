@@ -151,6 +151,19 @@ just because it was fetched earlier today.** If the user says a rebuilt screen s
 component currently does, rather than re-guessing at spacing/font tweaks. Both fixes are recorded in
 commit `9dc9fa8`.
 
+**Sixth round-trip, same day:** the user asked to rebuild Confirm transaction/Receipt again, calling the
+"cannot be undone" warning box invented drama for a wallet with no bank-style reversal to warn about -
+a RE-FETCH of node 1:215 confirmed the Figma frame agrees: the warning node is gone entirely now, not
+just redrawn, so `SendConfirm.jsx` dropped it outright (no replacement). The same fetch caught two more
+real drifts nobody had asked about: (1) the card's own text inset measures **8px from the card edge, not
+18px** - `.confirm-row` padding was quietly stale from an earlier pull; (2) the fetch now draws a real 1px
+divider under every row but the last (`.confirm-row:not(:last-child)::after`), reversing the 09-10 "no
+grey rule, spacing from padding alone" decision recorded lower in this file - that decision was for a
+frame that no longer exists. Also caught: Receipt's own "Amount" row inside the card had **no styling at
+all** where Figma draws it 22px semibold brand-blue (SendConfirm's had this; Receipt's copy of the same
+card never got it). Verified with `tools/figma-check.mjs` against a fresh `get_screenshot` of both nodes -
+diff panels clean, `npm run build` clean, `npm test` 16/16.
+
 #### 5. Current shared values (these changed on 2026-09-10 - §5/§6 below are older)
 
 - `--color-surface` **#E1E7ED** (was #F1F5F9) - guideline "Surface / input / card", confirmed against the

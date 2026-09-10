@@ -124,7 +124,7 @@ export default function SendReceipt() {
           ) : null}
           <div className="confirm-row">
             <span className="confirm-label">Amount</span>
-            <span className="confirm-value num">{realAmountText}</span>
+            <span className="confirm-value num" style={{ fontSize: 22, fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{realAmountText}</span>
           </div>
           {memo ? (
             <div className="confirm-row">
