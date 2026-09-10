@@ -207,6 +207,32 @@ custom (non-`.row10-*`) bottom button row should copy this absolute positioning,
 All three verified with `tools/figma-check.mjs` against fresh `get_screenshot` pulls - diff panels clean,
 `npm run build` clean, `npm test` 16/16.
 
+**Tenth round-trip (2026-09-10, same day): the SHARED `.row10-single`/`.row10-dual` class itself was wrong**
+- the user stated the rule directly: 1 button = full 340px card width; 2 buttons = 166px each (340-8)÷2;
+3 buttons = 108px each (340-8-8)÷3 - always the SAME 6.41% side inset, always an 8px gap. This is not a
+per-screen convention, it is the ONE button-row rule the whole Figma file uses everywhere, confirmed
+across every button row measured this session (Confirm/Receipt, Security, Currency, Send money, Contacts,
+TxHistory, About). The shared class had THREE numbers wrong at once, silently, in every screen using it
+(About/Currency/Security/Contacts/EnterEmail/CreateQR/LuckyPot/PinGate/QRScanner/SavedQRList/SendAmount/
+ShowQR/Swap/TxHistory - 14 files):
+- `left/right: 20px` (matching `.screen`'s own margin) instead of `6.41%` (25px, matching the 340px card
+  width every button row actually fills) - a plausible-looking number that was simply the wrong reference.
+- `.row10-single .btn { width: min(75vw, screen-max*0.75) }` - a **07-29 decision, never re-verified
+  against this Figma file**, which draws every lone Back button at the FULL card width, not 3/4 of it.
+- `.row10-dual .btn { width: 44% }` + `gap: 12px` - neither number was derived from Figma; 44%×2 + 12px
+  gap does not even sum to the container's own width, so the pair was centred and narrower than Figma
+  draws, not edge-to-edge.
+Fixed at the shared class: `left/right:6.41%`, `gap:8px` on both variants, `.row10-single .btn{width:100%}`,
+`.row10-dual .btn{flex:1}` (naturally yields 166px for 2 buttons, 108px for 3 - `.row10-dual` is a class
+name, not a hard count, so TxHistory's 3-button row now just uses `className="row10-dual"` instead of
+duplicating the position inline). **This is the third time in three round-trips a number got fabricated
+by inheriting old code instead of re-measuring against Figma (numpad spacing, then the "You send" card
+layout, now this) - when in doubt, re-derive the number from the current node, every time, even for a
+class that "obviously" already looks right.**
+Re-verified About/Currency/Security/Contacts/TxHistory (the ones already rebuilt against this Figma file)
+with `tools/figma-check.mjs` - all clean, no regression from the wider buttons. `npm run build` clean,
+`npm test` 16/16.
+
 ⚠️ The `row-gap` change (§1 above) moved every screen in the app, not only the ones rebuilt so far.
 Security and SendAmount were smoke-checked (nothing overflows the frame, no console errors) but **have
 not been compared against their Figma frames yet** (Security/SendAmount have since been properly rebuilt

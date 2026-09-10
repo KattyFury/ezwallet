@@ -287,14 +287,12 @@ export default function TxHistory() {
       </div>
       </div>
 
-      {/* 3 equal buttons, node 1:253/15:213/15:218: 108px each (340px card width - 2x8px gap, ÷3) - the
-          extra 5px padding each side closes the gap between .screen's own 20px margin and the card's real
-          25px (6.41%) inset, so flex:1 lands on exactly 108px instead of .screen's raw ~111.3px.
-          Position matches .row10-single/.row10-dual EXACTLY (absolute, top 81.52dvh/height 8.29dvh = row 9
-          of the guideline grid, centre 723px) - `gridRow:'9/11'` and later `gridRow:'10'` were both wrong:
-          a 2-row grid span centres in the wrong place, and literal grid-row 10 is row 10 (774-844), not
-          row 9 where Figma actually puts every bottom button row. */}
-      <div style={{ position: 'absolute', left: 20, right: 20, top: '81.52dvh', height: '8.29dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '0 5px' }}>
+      {/* 3 equal buttons, node 1:253/15:213/15:218: 108px each (340px card width - 2x8px gap, ÷3) - reuses
+          the shared .row10-dual class (position/gap now match Figma exactly after the 2026-09-10 fix; the
+          class doesn't care how many .btn children it has, "dual" is a name not a hard count) instead of
+          duplicating the same absolute top/height/gap inline - `flex:1` on 3 children lands on 108px
+          automatically the same way it lands on 166px for 2. */}
+      <div className="row10-dual">
         {/* An active filter = white background + BLUE BORDER (no solid fill) */}
         <button className="btn btn-secondary" style={{ flex: 1, ...(filter === 'send' ? activeFilter : {}) }}
           onClick={() => setFilter(f => f === 'send' ? 'all' : 'send')}>Send</button>

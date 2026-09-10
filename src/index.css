@@ -284,34 +284,38 @@ body {
 /* (No screen needs the yellow warning button yet - when one does: background var(--grad-warning) + BLACK text is MANDATORY,
    white on yellow is only 2.15:1 and older users cannot read it.) */
 
-/* Back/Continue buttons: CENTRED at POSITION 9 (top 85dvh + height 10dvh → centre 90dvh). They LEAVE THE GRID
+/* Back/Continue buttons: CENTRED at ROW 9 of the guideline grid (688-758px of 844 → centre 723 = 85.66dvh -
+   matches every bottom button row in the current Figma file, 1/2/3-button alike). They LEAVE THE GRID
    (position:absolute) rather than occupying 2 grid rows - a grid box stretched over both rows would block clicks
-   reaching the content beneath it (the numpad) even though nothing is visible. left/right 20px matches the .screen margin. */
+   reaching the content beneath it (the numpad) even though nothing is visible.
+   left/right 6.41% (was 20px flat) - 2026-09-10 CORRECTION: 20px matched .screen's own margin, not the
+   340px card width every button row actually fills in Figma (6.41% of 390 = 25px, same inset the cards
+   use) - narrower than the real target by 10px total, which fed the wrong number into every width below. */
 .row10-single, .row10-dual {
   position: absolute;
   grid-row: auto;               /* CANCELS the grid-row:10 that the .row-10 class applies (Contacts/About...): if an
                                    absolute element keeps its grid-row, that GRID CELL becomes its coordinate origin
                                    → top:85dvh counted from row 10 → the button flies off screen (Contacts lost its button).
                                    grid-row:auto → the origin is .screen → it lands correctly on EVERY screen. */
-  left: 20px;
-  right: 20px;
-  /* ROW 9 of the guideline grid (2026-09-10): 688-758px of 844 → centre 723 = 85.66dvh, which is where
-     the current Figma file puts every bottom button row. Was top 85dvh / height 10dvh (centre 90dvh),
-     from before the 16px gutter was accounted for. */
+  left: 6.41%;
+  right: 6.41%;
   top: 81.52dvh;
   height: 8.29dvh;
   display: flex;
   align-items: center;
   justify-content: center;
+  gap: 8px;                     /* was 12px on .row10-dual only - 2026-09-10: every multi-button row in the
+                                    current Figma file (2-button AND 3-button alike) uses 8px, not 12. */
 }
-/* A BUTTON STANDING ALONE = 3/4 OF THE SCREEN WIDTH (user decision 07-29 - previously 66.67%): consistent with "Hold to show
-   tokens" (HomeSend), "Tap to copy" (HomeReceive) and the Swap button. Measured against the SCREEN, not as a % of the
-   parent frame (the parent is inset 20px → 75% of the parent ≠ 75% of the screen, and every screen would differ). Used by: About,
-   Currency, Security. The .row10-dual button pairs below KEEP 44% - this rule is only for lone buttons. */
-.row10-single .btn { width: min(75vw, calc(var(--screen-max) * 0.75)); }
-
-.row10-dual { gap: 12px; }
-.row10-dual .btn { width: 44%; }
+/* A BUTTON STANDING ALONE = FULL 340px card width (2026-09-10 CORRECTION: was 3/4 of the screen, a
+   07-29 decision never re-verified against this Figma file - every single-button row measured today
+   (About/Currency/Security's "Back") draws the button at the SAME width the card above it uses, edge to
+   edge, not narrower). */
+.row10-single .btn { width: 100%; }
+/* Two buttons: flex:1 each with the 8px gap above naturally lands on (340-8)/2 = 166px - was a flat 44%
+   of the (now-corrected) container, which is a different number by construction and does not sum edge to
+   edge with any gap value. */
+.row10-dual .btn { flex: 1; }
 
 /* ── Shared popup (standard 2026-07-06) ──
    The popup's CENTRE is pinned at 30dvh = the CENTRE of the rows 2-5 area (10-50dvh) → the bottom half of the screen is ALWAYS free for the
