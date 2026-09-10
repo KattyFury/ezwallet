@@ -283,9 +283,7 @@ export default function LuckyPot() {
 
   return (
     <div className="screen">
-      {/* Row 1 - menu icon + "LuckyPot.cc" wordmark (Space Grotesk), both LEFT. The right side is
-          reserved for the global BugButton (App.jsx renders it absolute at right:20/top:5dvh on every
-          screen) - that's the whole reason this moved off a centred/right layout. */}
+      {/* Row 1 - menu icon + "LuckyPot.cc" wordmark (Space Grotesk), both LEFT. */}
       <div className="row-1" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <button onClick={() => setMenuOpen(true)} aria-label="Menu" style={{
           background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex',

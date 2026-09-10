@@ -10,7 +10,6 @@ import * as send from './functions/api/send.js'
 import * as swap from './functions/api/swap.js'
 import * as luckypot from './functions/api/luckypot.js'
 import * as sync from './functions/api/sync.js'
-import * as bug from './functions/api/bug.js'
 
 const PORT = 8787
 
@@ -57,7 +56,6 @@ const ROUTES = {
   '/api/swap': swap,
   '/api/luckypot': luckypot,
   '/api/sync': sync,
-  '/api/bug': bug,
 }
 
 const server = createServer(async (req, res) => {

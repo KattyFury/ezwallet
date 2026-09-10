@@ -20,7 +20,7 @@
      BE the new brand guideline's colour source, and that file uses two distinct greys for two distinct
      jobs - do not re-merge them without asking. */
   --color-muted:      #94A3B8;   /* general secondary text: nav-inactive labels/icons, input placeholders */
-  --color-muted-2:    #667085;   /* the "Label:" PREFIX word only, inside a meta/value line (e.g. "Available:", "Fee:", "Balance:", "Rate:" - the value itself after it is --color-brand, semibold). ⚠️ BugButton.jsx pins its icon to this variable "do NOT change it to blue/red" - that decision is about the COLOUR FAMILY (stay grey), not this exact hex, so the icon just gets slightly darker grey, unaffected in spirit. */
+  --color-muted-2:    #667085;   /* the "Label:" PREFIX word only, inside a meta/value line (e.g. "Available:", "Fee:", "Balance:", "Rate:" - the value itself after it is --color-brand, semibold). */
   --color-faint:      #F1F5F9;   /* hidden icons / placeholders - consolidated into the box/input grey (see --color-surface below) */
 
   /* ── FUNCTIONAL COLOURS ── */

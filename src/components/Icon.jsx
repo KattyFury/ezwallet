@@ -4,7 +4,6 @@
 // back · dca · facebook · google · hint · left · right · swap. The .svg FILES ARE STILL in `icon/`
 // (the user's drawings, not deleted). To use one again: add one import line + one name to ICONS.
 import add from '../../icon/add.svg?raw'
-import bug from '../../icon/bug.svg?raw'
 import check from '../../icon/check.svg?raw'
 import clock from '../../icon/clock.svg?raw'
 import copy from '../../icon/copy.svg?raw'
@@ -43,7 +42,7 @@ import x from '../../icon/x.svg?raw'
 // (A LI.FI brand-asset icon was tried here the same day and reverted - the Exchange card actually goes through
 // Circle's Stablecoin Kit, not LI.FI directly - see ServiceHub.jsx's SERVICES description.)
 const ICONS = {
-  add, bug, check, clock, copy, down, down2, download, erase, exchange, globe, hub,
+  add, check, clock, copy, down, down2, download, erase, exchange, globe, hub,
   human, info, luckypot, mail, menu, option, out, pencil, qr, right2, scan, share, shield, trade, up, warning, x,
 }
 

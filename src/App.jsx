@@ -1,7 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { NavContext } from './nav'
 import ErrorBoundary from './components/ErrorBoundary'
-import BugButton from './components/BugButton'
 
 // LAZY-LOAD EVERY SCREEN (2026-07-17) - the user: "why is this rubbish app so slow to load".
 // Before: App.jsx imported all 22 screens STATICALLY → Vite bundled EVERYTHING into one 1,668 KB file, and the
@@ -115,17 +114,9 @@ export default function App() {
         {/* fallback = an EMPTY WHITE SCREEN FRAME, deliberately WITHOUT a spinner or "loading" text: screens load in
             <100ms, and a spinner that blinks in and out is more annoying than nothing. Keeping the white background +
             the exact .screen frame → no layout jump when the real screen appears. */}
-        {/* ANCHOR FRAME for the bug-report button: same width and centring as .screen (max 430px), so the button
-            hugs the APP's right edge and not the screen's (on desktop those two are very far apart).
-            The inner .screen still handles its own height/overflow. */}
-        <div style={{ position: 'relative', maxWidth: 'var(--screen-max)', margin: '0 auto' }}>
-          <Suspense fallback={<div className="screen" />}>
-            <Screen />
-          </Suspense>
-          {/* The bug-report button shows on EVERY screen, Login/PinGate included - errors are most likely exactly when
-              you cannot get into the app, and blocking it there would silence the case that most needs reporting. */}
-          <BugButton screen={nav.screen} />
-        </div>
+        <Suspense fallback={<div className="screen" />}>
+          <Screen />
+        </Suspense>
       </ErrorBoundary>
     </NavContext.Provider>
   )
