@@ -253,6 +253,11 @@ body {
      one-pixel consolidation choice made on purpose, not a fresh measurement. */
   font-size: var(--fs-content-1);
   font-weight: var(--fw-semibold);
+  line-height: 1;   /* 2026-09-10: without this, the browser's "normal" line-height adds asymmetric leading
+                        above/below the glyphs - invisible on the standard 48px button (enough headroom to
+                        hide it) but a clearly visible downward shift on LuckyPot's short 34px buttons
+                        (Deposit/Withdraw/Result), which the user caught. line-height:1 makes the text's own
+                        box match its glyphs, so flex align-items:center centers it for real at any height. */
   border-radius: 50px;
   border: none;
   cursor: pointer;

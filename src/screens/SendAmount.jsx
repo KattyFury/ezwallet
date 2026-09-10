@@ -25,7 +25,7 @@ const effectiveToken = c => (c === 'USD' || c === 'VND' ? 'USDC' : c)
 
 export default function SendAmount() {
   const { navigate, params } = useNav()
-  const { address } = params
+  const { address, back = 'HomeSend' } = params
   const name = params.name || findContactName(address)
   // WHAT YOU SCAN IS WHAT YOU GET: if the QR carries a valid currency → open in that currency (2 USDC shows as "2 USDC",
   // NOT converted to USD). An old/unclear QR (e.g. 'VND') → default to USD.
@@ -265,11 +265,14 @@ export default function SendAmount() {
       </div>
       )}
 
-      {/* The [Back][Continue] pair = the STANDARD row10-dual position (rows 9-10, centred on the 9/10 boundary) */}
+      {/* The [Back][Continue] pair = the STANDARD row10-dual position (rows 9-10, centred on the 9/10 boundary).
+          Back returns to wherever this screen was entered FROM (`back` param) - was hardcoded to HomeSend
+          regardless of origin, so Contacts → pick a person → Send → Back landed on Home instead of
+          Contacts (user report 2026-09-10). Entry points now pass their own screen name as `back`. */}
       <div className="row10-dual">
-        <button className="btn btn-secondary" onClick={() => navigate('HomeSend')}>Back</button>
+        <button className="btn btn-secondary" onClick={() => navigate(back)}>Back</button>
         <button className="btn btn-primary" disabled={!canContinue}
-          onClick={() => navigate('SendConfirm', { address, name, amount, memo, currency: cur, tokenAmount })}>
+          onClick={() => navigate('SendConfirm', { address, name, amount, memo, currency: cur, tokenAmount, back })}>
           Continue
         </button>
       </div>

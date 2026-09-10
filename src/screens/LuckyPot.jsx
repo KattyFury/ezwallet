@@ -196,6 +196,18 @@ export default function LuckyPot() {
       .then(i => setInfo(i))
       .catch(e => setError(e?.message || 'Could not load LuckyPot data'))
   }
+  // After a deposit/withdraw/claim, ONE immediate loadInfo() call was the only refresh - no retry, no
+  // interval. 2026-09-10 bug report: the number stayed stuck after a real deposit ("trơ ra"). Root cause:
+  // executeChallenge resolving only means the PIN signature was accepted and the tx BROADCAST, not that
+  // it is mined/indexed yet - the immediate read can land before the RPC node has caught up, and nothing
+  // ever asked again. Fixed with 2 extra delayed re-checks (3s, then 8s) on top of the immediate one -
+  // same backoff idea multicallWithRetry already uses elsewhere, just applied here at the UI layer instead
+  // of inside one RPC call.
+  function reloadInfoAfterTx() {
+    loadInfo()
+    setTimeout(loadInfo, 3000)
+    setTimeout(loadInfo, 8000)
+  }
   useEffect(() => { loadInfo() }, [])
   useEffect(() => {
     if (!walletAddress) return
@@ -241,8 +253,9 @@ export default function LuckyPot() {
       await executeChallenge(await getSDK(), userToken, encryptionKey, res.challengeId)
       addNotif(`Deposited ${amt} USDC into LuckyPot`, 'sent', null, `luckypot-deposit-${Date.now()}`)
       closePopup()
-      loadInfo()
-      getTokenBalances(walletAddress).then(ts => setWalletUsdc((ts.find(t => t.symbol === 'USDC') || {}).amount ?? 0)).catch(() => {})
+      reloadInfoAfterTx()
+      const reloadBalance = () => getTokenBalances(walletAddress).then(ts => setWalletUsdc((ts.find(t => t.symbol === 'USDC') || {}).amount ?? 0)).catch(() => {})
+      reloadBalance(); setTimeout(reloadBalance, 3000)
     } catch (e) {
       setTxError(circleErrorMessage(e)); setBusy(false); setTxStatus('')
     }
@@ -259,8 +272,9 @@ export default function LuckyPot() {
       await executeChallenge(await getSDK(), userToken, encryptionKey, res.challengeId)
       addNotif(`Withdrew ${amt} USDC from LuckyPot`, 'sent', null, `luckypot-withdraw-${Date.now()}`)
       closePopup()
-      loadInfo()
-      getTokenBalances(walletAddress).then(ts => setWalletUsdc((ts.find(t => t.symbol === 'USDC') || {}).amount ?? 0)).catch(() => {})
+      reloadInfoAfterTx()
+      const reloadBalance = () => getTokenBalances(walletAddress).then(ts => setWalletUsdc((ts.find(t => t.symbol === 'USDC') || {}).amount ?? 0)).catch(() => {})
+      reloadBalance(); setTimeout(reloadBalance, 3000)
     } catch (e) {
       setTxError(circleErrorMessage(e)); setBusy(false); setTxStatus('')
     }
@@ -276,7 +290,7 @@ export default function LuckyPot() {
       await executeChallenge(await getSDK(), userToken, encryptionKey, res.challengeId)
       addNotif(`Claimed $${info.owedLastEpoch.toFixed(2)} from LuckyPot`, 'received', null, `luckypot-claim-${Date.now()}`)
       closePopup()
-      loadInfo()
+      reloadInfoAfterTx()
     } catch (e) {
       setTxError(circleErrorMessage(e)); setBusy(false); setTxStatus('')
     }

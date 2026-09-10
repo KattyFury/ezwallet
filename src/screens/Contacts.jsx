@@ -168,7 +168,7 @@ export default function Contacts() {
                     <Icon name={copiedId === c.id ? 'check' : 'copy'} size="var(--is-caption)" color={copiedId === c.id ? 'var(--color-primary)' : 'var(--color-muted)'} />
                   </button>
                 </div>
-                <button onClick={() => navigate('SendAmount', { address: c.address, name: c.name })}
+                <button onClick={() => navigate('SendAmount', { address: c.address, name: c.name, back: 'Contacts' })}
                   className="btn btn-primary" style={{ height: 40, minHeight: 40, padding: '0 22px', fontSize: 'var(--fs-content-2)' }}>
                   Send
                 </button>

@@ -54,7 +54,7 @@ export default function QRScanner() {
             setHint("That's your own QR – scan the recipient's QR")
           } else if (parsed) {
             active = false
-            navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount, currency: parsed.currency })
+            navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount, currency: parsed.currency, back: 'QRScanner' })
             return
           } else {
             setHint('Invalid QR, try again')
@@ -91,7 +91,7 @@ export default function QRScanner() {
         const parsed = code ? parseQR(code.data) : null
         if (parsed?.wrongChain) setHint('QR from another network – this wallet currently only works on Arc')
         else if (parsed && isOwnAddress(parsed.address)) setHint("That's your own QR – scan the recipient's QR")
-        else if (parsed) navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount, currency: parsed.currency })
+        else if (parsed) navigate('SendAmount', { address: parsed.address, name: null, amount: parsed.amount, currency: parsed.currency, back: 'QRScanner' })
         else setHint('No valid QR found in the image')
       }
       img.onerror = () => setHint('Could not read the image')

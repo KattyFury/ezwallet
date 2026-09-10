@@ -369,6 +369,21 @@ NavBar: `gap:6px` → `2px`. `align-items:center`/`justify-content:center` were 
 never off-centre), only the icon-to-label gap needed closing. Verified with live Playwright screenshots
 of HomeSend/HomeReceive in mock mode. `npm run build` clean, `npm test` 16/16.
 
+**Seventeenth round-trip (2026-09-10, same day): two LuckyPot bugs, unrelated to each other.** (1) The
+user felt Deposit/Withdraw/Result button text sat below-centre, not on it. A standard 4x-zoomed Playwright
+screenshot confirmed real asymmetric spacing (more room above the text than below) - root cause was
+`line-height: normal`'s default asymmetric leading, invisible on the app's usual 48px-tall buttons but
+visible on LuckyPot's short 34px ones. Fixed with `line-height: 1` on the shared `.btn` class (`index.css`)
+- one-line fix, no screen-specific override needed since every button inherits it. (2) The user reported
+the balance "trơ ra" (stays stuck) right after a real deposit. `LuckyPot.jsx`'s `loadInfo()` was called
+exactly ONCE, synchronously, right after `executeChallenge` resolves - **zero seconds of polling, no
+retry**. That resolve only confirms the PIN signature was accepted and the tx was broadcast, not that it
+is mined/indexed by the RPC yet, so the immediate read can and does land before the chain has caught up.
+Added `reloadInfoAfterTx()` (immediate read + 2 delayed re-reads at 3s and 8s, same backoff shape
+`multicallWithRetry` already uses inside one RPC call, just applied here at the UI layer across multiple
+reads) and swapped all 3 tx handlers (`handleDeposit`/`handleWithdraw`/`handleClaim`) from bare `loadInfo()`
+to it. `npm run build` clean, `npm test` 16/16.
+
 **LuckyPot note (2026-09-10):** the user redrew this frame's own Figma to bring it closer to the real
 luckypot.cc frontend, then added a "My history" box to row 9 (next to "Draw history") - the handler
 (`openMyHistory`) and its popup already existed in the code, only wired into the hamburger menu; row 9

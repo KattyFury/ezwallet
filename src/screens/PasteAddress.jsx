@@ -20,7 +20,7 @@ export default function PasteAddress() {
   // (user decision 07-23: it used to always readText → iOS popped the OS-level "Paste|Speak" confirmation
   // even when pointless - that popup is iOS 16+ clipboard security, the web CANNOT turn it off, it can only
   // be avoided by not reading when there is no need). Empty field → then read the clipboard (one OS popup, fine).
-  const goNext = a => { if (isValid(a) && !isOwnAddress(a)) { navigate('SendAmount', { address: a, name: null }); return true } return false }
+  const goNext = a => { if (isValid(a) && !isOwnAddress(a)) { navigate('SendAmount', { address: a, name: null, back: 'PasteAddress' }); return true } return false }
 
   async function handleDan() {
     let a = trimmed
