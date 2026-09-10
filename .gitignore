@@ -10,3 +10,5 @@ dist/
 
 .DS_Store
 Thumbs.db
+
+figma-check/   # output of tools/figma-check.mjs

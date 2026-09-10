@@ -1,6 +1,126 @@
 # HANDOFF – EZwallet
 
-**Updated:** 2026-09-08 · **Local:** `D:\Files\Claude\Build on Arc\EZwallet`
+**Updated:** 2026-09-10 · **Local:** `D:\Files\Claude\ezwallet`
+
+### ⚠️ READ THIS FIRST - REBUILDING SCREENS FROM FIGMA (6 done, 17 to go)
+
+**Figma file: `GxgsMU6HAYqolckzvPWXp1`.** The user's position, stated directly on 2026-09-10:
+*"toàn bộ thiết kế Figma đang chuẩn BRAND GUIDELINE chỉ có Claude là đang làm sai"* - the Figma file and
+`BRAND-GUIDELINE.md` agree with each other. **When the code disagrees with them, the code is wrong.**
+It took four rounds of user corrections to get 3 screens right. Everything below exists so the next 17
+do not cost the same.
+
+#### 1. THE GRID - this was the root cause of nearly every error
+
+`BRAND-GUIDELINE.md` says *"Grid dọc: 10 hàng, spacing mỗi hàng 16px"* and *"Grid ngang: 12 cột, spacing
+mỗi cột 8px"*. That gutter had **never been implemented**: `.screen` was `repeat(10, 1fr)` with no gap, so
+rows were 844/10 = 84.4px. The real row height is **70px** (844 − 9×16 = 700, ÷10). Everything was
+therefore up to ~14px out, and the fix was one line: `row-gap: 16px` on `.screen`.
+
+| Row | y (of 844) | What lives there |
+|---|---|---|
+| 1 | 0–70 | the balance number |
+| 2 | 86–156 | Withdraw/Deposit (Menu) |
+| 2–5 | 86–414 | the token card (Send) / QR card (Receive) |
+| 3–7 | 172–586 | the 5 Menu rows (centres 207/293/379/465/551) |
+| 6–8 | 430–672 | the notification card |
+| 9 | 688–758 | the action pill row (centre 723 = 85.66dvh) |
+| 10 | 774–844 | the NavBar - exactly **70px**, not 84.4 |
+
+Row N: `top = (N−1)×86`, `bottom = top + 70`. Horizontally: column = (390 − 11×8)/12 = **25.167px**, so
+cols 2–11 = x 33.17–356.83 = the **324px white cards**, and the same span including its outer gutters =
+x 25.17–364.83 = the **340px grey boxes** = an inset of **6.45%**. Convert with `x/390 → %`,
+`y/844 → dvh`. **If a Figma measurement does not land on this grid, suspect your reading of the grid -
+do not start nudging individual elements.**
+
+#### 2. The five mistakes - what made each one possible
+
+1. **Trusting the MCP node list over the rendered image.** `get_design_context` returns a structured node
+   list, but anything flattened into the frame's background image is **absent from it** - the Menu divider
+   lines and the navbar's white active cell were both invisible in the node list while being plainly
+   visible in the render. Both were dropped, twice.
+   → **The rendered PNG is ground truth. The node list only supplies coordinates.**
+2. **Comparing by eye.** A balance rendering at 28px instead of 50px, a missing grey card behind the QR,
+   and a 12px offset on the button row all survived several "looks right" screenshot reviews. They fell
+   out in seconds under an overlay diff.
+3. **Trusting stale docs in this repo.** §5/§6 below still described Barlow, gradients, `#F2F2F7`, and a
+   "10 equal rows" grid. `FIGMA-SCREENS-SPEC.md` §1 asserted 84.4px rows. Those documents were written
+   against older Figma files and actively misled the work.
+4. **Assuming a shape from its silhouette.** "Hold to show tokens" / "Tap to copy your address" are **half
+   ovals**, not pills: measuring the white run row by row gives 183px wide at y=374 growing to 258px at
+   y=412, then cut dead at y=414 - the grey box's bottom edge. They are 258×40 with a 38px radius on the
+   **top corners only**, sitting inside the grey box so the box clips the lower half *and the shadow*.
+   That clipping is the whole effect: shadow on the grey, nothing on the white page below.
+5. **A CSS grid trap.** Placing an element at `grid-row: 2` while `BalanceHeader` already spans
+   `grid-row: 1/3` makes CSS Grid insert an implicit second column and split every row's width - the Menu
+   rows silently shrank to 133px and wrapped. Absolute positioning sidesteps it.
+
+#### 3. The verification workflow - not optional
+
+```bash
+npm i --no-save playwright && npx playwright install chromium   # once
+npm run mock                                                    # dev server, fake balances
+node tools/figma-check.mjs HomeSend ref.png --probe 195,374 48,774
+```
+`tools/figma-check.mjs` renders the screen at 390×844, writes a 3-panel `app | difference | figma` image,
+and prints RGB at any pixels you name. Get `ref.png` from the Figma MCP `get_screenshot` on the frame's
+node id, then `curl` the URL it returns. **The middle panel finds drift; the probes prove it is gone.**
+Glyph-edge ghosting is expected - the app renders the system font, Figma draws Inter.
+
+Also useful: `?screen=<Name>` on any URL forces that screen (a QA override in `App.jsx`), so a screen can
+be opened without walking the flow.
+
+#### 4. Where the rebuild stands
+
+**Done (6):** Splash `1:169` · Login `1:180` · Sign in with email `1:193` · Send `1:328` · Receive `1:373`
+· Menu `1:16`.
+
+**Left (17):** Service hub `1:43` · Exchange `1:63` · Send money `1:88` · Create receive QR `1:113` ·
+Created receive QR `1:128` · Arabica `1:139` · Scan QR `1:150` · LuckyPot `1:158` · Paste address to send
+`1:205` · Confirm transaction `1:215` · Receipt `1:227` · Contacts `1:239` · Transaction history `1:248` ·
+Language & currency `1:259` · Security `1:275` · About `1:286` · QR storage `1:303`.
+
+⚠️ The `row-gap` change moved every screen in the app, not only the 6 rebuilt ones. ServiceHub, Swap,
+TxHistory, Contacts, About, Security and SendAmount were smoke-checked (nothing overflows the frame, no
+console errors) but **none of them has been compared against its Figma frame yet**.
+
+#### 5. Current shared values (these changed on 2026-09-10 - §5/§6 below are older)
+
+- `--color-surface` **#E1E7ED** (was #F1F5F9) - guideline "Surface / input / card", confirmed against the
+  Sign-in input and the navbar bar.
+- **Buttons carry a GLOW, not a drop shadow:** `0 0 8px rgba(0,0,0,.48)` on the rebuilt screens
+  (guideline: *"Chỉ phần tử bấm được. Glow đều quanh, không offset"*). The navbar active cell uses
+  `0 0 15px rgba(0,0,0,.5)`, measured off the fringe.
+- **NavBar:** flat `--color-surface` bar, 16px semibold labels, 24px icons, bottom-aligned with 10.5px of
+  padding. The active tab is a **white cell contiguous with the white content above** - one block casting
+  its shadow down onto the grey. `.navbar` is `overflow: hidden` so that glow cannot leak upwards and grey
+  the seam.
+- **Action pills:** side 100×56 radius 28, centre 124×64 radius 32, no border, 13px / 16px semibold labels,
+  icons 19.5 / 24. Columns `1fr 1.24fr 1fr`, gap 8 (100+8+124+8+100 = 340).
+- **Notification area:** 13px text throughout. The hint block is a **borderless white card, radius 16**,
+  black body text with semibold keywords and a red network line - it is no longer a blue-bordered blue-text
+  box. Notification rows are white pills, radius 16, tinted text - no more pale coloured fills.
+- **Token rows (Send)** are individual white cards, 48px tall, radius 16, 10px apart, name and value both
+  18px semibold. The verified-check badge was dropped (the design has no slot for it).
+- **BalanceHeader** measures its fit box by a definite `width`; with only `max-width` the box sizes to its
+  own text and `useFitFontSize` collapses to the floor. That bug rendered the balance at 28px.
+
+#### 6. Open points the user may want to settle
+
+- **13px notification/hint text** comes from the Figma, but a 2026-07-16 decision set 17px *for older
+  eyes*. The design's layout only fits at 13. Flagged, not resolved.
+- **Fixed 258px pill width** comes from the Figma; a 2026-08-13 decision said those two buttons should hug
+  their text and be deliberately unequal. Figma now draws both identical.
+- **Receive labels** are verbatim Figma: the button says **"Custom QR"** while the hint above it says
+  "Create QR" - the inconsistency is in the design itself.
+- **The balance stays `--fw-light`** even though Figma draws Regular, per the standing "big numbers are
+  always Light" rule. Say so if that should change.
+- **The bug-report feature was removed entirely** this session (component, `functions/api/bug.js`, the
+  Telegram integration, the icon, `__APP_VERSION__`). §7d below is obsolete. **Still to do by hand:**
+  delete `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` from Cloudflare Pages → ezwallet → Settings → Variables,
+  and revoke the bot via @BotFather if it should stop working immediately.
+
+---
 
 ### ⚠️ READ THIS FIRST - LuckyPot Deposit/Withdraw/Claim/History is LIVE AND VERIFIED ON-CHAIN
 
@@ -296,7 +416,12 @@ or is it making them adapt to crypto?". Anything that drifts from that: stop and
 
 ---
 
-## 5. Design System (`src/index.css` :root) - FINAL STATE
+## 5. Design System (`src/index.css` :root) - ⚠️ PARTLY SUPERSEDED
+
+> ⚠️ **Written before the 2026-09-10 Figma rebuild.** Barlow, the gradients, `#F2F2F7`/`#636366`, the
+> straight-down drop shadow, the blue-bordered hint block and the "white + grey border = tappable" rule
+> have all since changed. Where this section and **READ FIRST §5** disagree, READ FIRST wins - and where
+> both are silent, the Figma render decides. Kept for the reasoning behind each older decision.
 
 **Font: ONE FONT ONLY = BARLOW** across the app (all 4 `--font-*` variables point at Barlow, keeping the old names so the JSX needs no edits). Weights loaded: `300;400;500;600`.
 **Weights:** `--fw-light 300` = large HERO NUMBERS (balances, amounts - user decision 07-17f: KEEP Light, do not bold them) · `400` body · `500` buttons/items/labels/important values · `600` titles + active. **NEVER 700** (`--fw-bold` is locked at 600).
@@ -344,7 +469,10 @@ or is it making them adapt to crypto?". Anything that drifts from that: stop and
 
 ## 6. Layout Rules
 
-- **A 10-row grid** (`.screen` grid 10×1fr, 100dvh, padding `0 20px`, `position:relative`). Sub-screens: the title in row 1, buttons in `.row10-single`/`.row10-dual` (absolute top 85dvh, forcing `grid-row:auto`). The 4 main screens: a full-bleed NavBar in row 10, text+icons at `--fs/is-body 19`. **An UNSELECTED tab = `--color-muted-2` #8E8E93 (MID grey, user decision 07-22d - the dark grey #636366 looked dull); the SELECTED tab = black + a brand bar above it.**
+> ⚠️ **Positions in this section predate the 2026-09-10 grid fix** (they assume 84.4px rows and the old
+> 90dvh button centre). The structural reasoning still holds; the numbers do not. See **READ FIRST §1**.
+
+- **A 10-row grid WITH A 16px GUTTER** (`.screen` grid 10×1fr + `row-gap:16px`, 100dvh, padding `0 20px`, `position:relative`) → rows are **70px**, not 84.4. Sub-screens: the title in row 1, buttons in `.row10-single`/`.row10-dual` (absolute, now row 9 = top 81.52dvh / height 8.29dvh → centre 85.66dvh, forcing `grid-row:auto`). The 4 main screens: a full-bleed NavBar in row 10, text+icons at `--fs/is-body 19`. **An UNSELECTED tab = `--color-muted-2` #8E8E93 (MID grey, user decision 07-22d - the dark grey #636366 looked dull); the SELECTED tab = black + a brand bar above it.**
 - **⚠️ `.screen` MUST have `grid-template-columns: minmax(0,1fr)`** - without it a single long `nowrap` string inflates the column and skews the whole screen. **A flex item holding nowrap text MUST have `minWidth:0`.**
 - **THE APP-WIDE KEYBOARD RULE (user decision 07-23, "option A" - ending the two-keyboard conflict for good):** **ENTERING MONEY = the app numpad** (large, with a dot, independent of locale) · **ENTERING TEXT = the iPhone keyboard** · **NEVER both at once.** Concretely: SendAmount + CreateQR - focusing a text field (note/QR name/note popup) → `typingText` HIDES the numpad panel, and blur brings it back. The Add QR popup (SavedQRList) - the Amount field is no longer an `<input>` (the iPhone decimal keyboard on some locales shows a `,` that the regex swallows, and it breaks the app standard) but a div that opens the app numpad SHEET (geometry identical to the Swap sheet, rendered AFTER the popup so it floats above it, and the popup is anchored to the top half so they do not overlap; tapping the field blurs the Name field first so the iPhone keyboard drops). Do not add another screen that takes money input through the system keyboard.
 - **The APP-WIDE numpad is the "MID GREY" style (user decision 07-22g: `--color-surface-2` #D1D1D6, no longer the pale surface #F2F2F7 - so the white keys pop):** the panel/sheet has a `--color-surface-2` background, full-bleed from HALF OF ROW 6 → the bottom of the screen, top corners at radius 20, with WHITE key tiles at radius 12 and an 8px gap - the shared class is `.numpad-gray` (index.css). SendAmount + CreateQR: `gridRow 6/11, margin 5dvh -20px 0, padding 24px 20px 0`, numpad flex 5.5 + the button/padding area flex 3.5, with the `.row10-dual` buttons floating on the grey. Swap: a sheet overlay with the same geometry (see the Swap section), flex 5.5/0.5/2/1. **24px of grey padding on top + SHORTER keys (numpad 5.5 parts, NOT 6)** - user decision 07-20c: if the keys are too big, reduce the key height; Back/Done ALWAYS stay anchored to the row 9-10 edge, do not move them.
@@ -489,7 +617,12 @@ ezwallet:0xABC…@5042002?amount=25&cur=USD    ← a QR with a preset amount
 
 ---
 
-## 7d. THE BUG-REPORT BUTTON → TELEGRAM (2026-08-13) - LIVE IN PRODUCTION
+## 7d. ⛔ REMOVED 2026-09-10 - THE BUG-REPORT BUTTON → TELEGRAM (2026-08-13)
+
+> The whole feature was deleted at the user's request: `BugButton.jsx`, `functions/api/bug.js`, the bug
+> icon, the `/api/bug` dev route and `__APP_VERSION__` are gone (commit `dd13c26`). **Still to do by hand:**
+> remove `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` from Cloudflare Pages → ezwallet → Settings → Variables,
+> and revoke the bot via @BotFather. The rest of this section is kept only as a record of how it worked.
 
 A **grey** 🐛 icon (`--color-muted-2`) flush right, centred on **row 1**, present on **EVERY screen including Login/PinGate** (errors are most likely exactly when you cannot get into the app). Rendered once in `App.jsx` inside an anchor frame of `maxWidth: var(--screen-max)` → it hugs the right edge **of the app**, not the desktop screen edge.
 
