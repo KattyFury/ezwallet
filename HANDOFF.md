@@ -33,6 +33,15 @@ x 25.17–364.83 = the **340px grey boxes** = an inset of **6.45%**. Convert wit
 `y/844 → dvh`. **If a Figma measurement does not land on this grid, suspect your reading of the grid -
 do not start nudging individual elements.**
 
+**THE HEADER RULE (user, 2026-09-10, stated directly - applies to every screen title app-wide):** the
+title sits in row 1 (its own 70px box), size **28**, horizontally **centred**, vertically anchored to the
+**bottom** of that row - not centred, not a raw pixel offset guessed from a screenshot. The single shared
+definition is `.screen-title` in `index.css` (`font-size:28; align-items:flex-end`, riding on `.center`
+for `display:flex` + horizontal centring by CSS source order); every screen title uses
+`className="row-1 center screen-title"` with NO inline `fontSize` - the class is the only place this
+value lives. **Never fix a title with one-off absolute positioning per screen** (ServiceHub/Exchange did
+this on the first pass and had to be converted back) - route it through this class instead.
+
 #### 2. The five mistakes - what made each one possible
 
 1. **Trusting the MCP node list over the rendered image.** `get_design_context` returns a structured node
