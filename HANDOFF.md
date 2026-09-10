@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-10 · **Local:** `D:\Files\Claude\ezwallet`
 
-### ⚠️ READ THIS FIRST - REBUILDING SCREENS FROM FIGMA (9 done, 14 to go)
+### ⚠️ READ THIS FIRST - REBUILDING SCREENS FROM FIGMA (12 done, 11 to go)
 
 **Figma file: `GxgsMU6HAYqolckzvPWXp1`.** The user's position, stated directly on 2026-09-10:
 *"toàn bộ thiết kế Figma đang chuẩn BRAND GUIDELINE chỉ có Claude là đang làm sai"* - the Figma file and
@@ -81,13 +81,13 @@ be opened without walking the flow.
 
 #### 4. Where the rebuild stands
 
-**Done (9):** Splash `1:169` · Login `1:180` · Sign in with email `1:193` · Send `1:328` · Receive `1:373`
-· Menu `1:16` · Service hub `1:43` · Exchange `1:63` (= `Swap.jsx`) · LuckyPot `1:158`.
+**Done (12):** Splash `1:169` · Login `1:180` · Sign in with email `1:193` · Send `1:328` · Receive `1:373`
+· Menu `1:16` · Service hub `1:43` · Exchange `1:63` (= `Swap.jsx`) · LuckyPot `1:158` · Paste address to
+send `1:205` · Confirm transaction `1:215` (= `SendConfirm.jsx`) · Receipt `1:227` (= `SendReceipt.jsx`).
 
-**Left (14):** Send money `1:88` · Create receive QR `1:113` · Created receive QR `1:128` · Arabica
-`1:139` · Scan QR `1:150` · Paste address to send `1:205` · Confirm transaction `1:215` · Receipt `1:227`
-· Contacts `1:239` · Transaction history `1:248` · Language & currency `1:259` · Security `1:275` ·
-About `1:286` · QR storage `1:303`.
+**Left (11):** Send money `1:88` · Create receive QR `1:113` · Created receive QR `1:128` · Arabica
+`1:139` · Scan QR `1:150` · Contacts `1:239` · Transaction history `1:248` · Language & currency `1:259` ·
+Security `1:275` · About `1:286` · QR storage `1:303`.
 
 ⚠️ The `row-gap` change (§1 above) moved every screen in the app, not only the ones rebuilt so far.
 TxHistory, Contacts, About, Security and SendAmount were smoke-checked (nothing overflows the frame, no
@@ -112,6 +112,33 @@ UI, being a static frame). The CTA button lost its old "3/4 of the screen width"
 here to **enter**" (not "input") - a standing, deliberate override recorded in `FIGMA-SCREENS-SPEC.md`
 §9, not a miss.
 
+⚠️ **On the Exchange round-trip (same day, later):** the reverse button and the CTA both had REAL bugs
+the user caught by looking at the app, not by diffing. (1) The reverse button used the raw Figma pixel
+(26.71dvh), which sits mostly INSIDE the "You pay" card rather than bridging the gap between the two
+cards - moved to the literal midpoint of the gutter (29.62dvh) per the user's explicit "phải nằm chính
+giữa 2 box". (2) The CTA had `height:'100%'` on its 70px row-9 slot, making it 70px tall ("mập") instead
+of the 48.66≈48px Figma draws right there in the design context - the data was available the whole time,
+the code just filled the row instead of reading it. Also: the round-number hint chips still carried the
+pre-rebuild `--fs-item` (17px); verified live against Figma that "Available: 20.00 EURC" and "Hold to
+show tokens" both read 16px on this same screen pull and fixed the chips to match - EnterEmail's
+suggestion/domain chips were ALSO re-verified live (not from memory) and turned out to be 16px too, not
+the 17 the code had.
+
+**Third round-trip:** the user redrew Service hub's and Exchange's headers in Figma (they had been wrong)
+and asked for a check. Both now match `.screen-title`'s bottom-anchored/28px/centred rule exactly -
+**zero changes needed**, because both titles were already routed through the shared class rather than a
+one-off position, so the correction landed automatically. This is the payoff of "one shared definition":
+fix the rule once, every conforming screen inherits the fix for free.
+
+**THE RECURRING BUG CLASS, stated plainly:** a fixed pixel value (a button height, an icon size) sits
+right there in the Figma design context, and the code uses a relative/generic value instead
+(`height:'100%'` of a row slot, a shared token that was never re-measured) - not because the value was
+hard to find, but because nobody read the number that was already in hand. This happened on the CTA
+button THREE separate times across two different screens (Exchange's CTA, then the discovery that the
+SAME bug lived in the shared `.btn` class - see §5) before it was fixed at the class level. **When
+sizing anything, check the design context response for that exact node's own height/width before writing
+a percentage, a `dvh`, or a `100%` - do not default to "fill the container".**
+
 #### 5. Current shared values (these changed on 2026-09-10 - §5/§6 below are older)
 
 - `--color-surface` **#E1E7ED** (was #F1F5F9) - guideline "Surface / input / card", confirmed against the
@@ -132,6 +159,15 @@ here to **enter**" (not "input") - a standing, deliberate override recorded in `
   18px semibold. The verified-check badge was dropped (the design has no slot for it).
 - **BalanceHeader** measures its fit box by a definite `width`; with only `max-width` the box sizes to its
   own text and `useFitFontSize` collapses to the floor. That bug rendered the balance at 28px.
+- **`.btn` is FIXED 48px tall, 18px text** (was `height:6dvh`≈50.6px with `min-height:48px` only as a
+  floor, and `font-size:var(--fs-body)`=19px) - see the recurring-bug note above. This is every button in
+  the app, not just the ones rebuilt so far.
+- **`.confirm-box` is radius 16** (was 20) - shared by `SendConfirm.jsx`/`SendReceipt.jsx`.
+- **Header rule** (§1 below has the full statement): every screen title is bottom-anchored, centred, 28px,
+  in row 1's 70px box, via the single shared `.screen-title` class - never position a title per screen.
+- `App.jsx`'s `?screen=` QA override now also reads `?params=<URI-encoded JSON>` for screens that need nav
+  params to render without crashing (SendConfirm/SendReceipt read `address`/`amount`/etc and call
+  `.toFixed()` on them - undefined without this). `tools/figma-check.mjs` has a matching `--params` flag.
 
 #### 6. Open points the user may want to settle
 
@@ -147,6 +183,9 @@ here to **enter**" (not "input") - a standing, deliberate override recorded in `
   Telegram integration, the icon, `__APP_VERSION__`). §7d below is obsolete. **Still to do by hand:**
   delete `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` from Cloudflare Pages → ezwallet → Settings → Variables,
   and revoke the bot via @BotFather if it should stop working immediately.
+- **SendConfirm's secondary button is now "Back"** (was "Edit") - the exact Figma text, onClick unchanged
+  (still re-opens SendAmount with the existing params, i.e. still functions as "edit"). Not flagged by the
+  user, just a literal-text-match call - say so if "Edit" was the better word for what it does.
 
 ---
 
