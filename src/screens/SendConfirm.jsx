@@ -108,12 +108,15 @@ export default function SendConfirm() {
 
   return (
     <div className="screen">
-      <div className="row-1 center send-title" style={{ justifyContent: 'center' }}>
-        <span>Confirm transaction</span>
+      <div className="row-1 center screen-title" style={{ fontWeight: 'var(--fw-semibold)' }}>
+        Confirm transaction
       </div>
 
-      <div className="row-2-8 col" style={{ justifyContent: 'center', alignItems: 'stretch', gap: 14 }}>
-        <div className="confirm-box">
+      {/* Card - node 1:223: rows 3-6 exactly (top 20.38dvh, height 38.86dvh = 4×70+3×16=328px), radius 16
+          (fixed on the shared .confirm-box class). Figma draws this card blank (no content detail), so
+          the rows inside keep their existing sizes/logic - only the OUTER position/size changed. */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '20.38dvh', height: '38.86dvh' }}>
+        <div className="confirm-box" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div className="confirm-row">
             <span className="confirm-label">Send to</span>
             <span className="confirm-value">{name || shortenAddr(address)}</span>
@@ -153,7 +156,11 @@ export default function SendConfirm() {
             </span>
           </div>
         </div>
+      </div>
 
+      {/* Figma draws the card blank, with nothing below it - the warning + status text keep flowing
+          right under the card's bottom edge (59.24dvh) rather than a Figma-specified position. */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '61.14dvh', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div className="warning-badge" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
           <Icon name="warning" size="var(--is-label)" color="var(--color-warning)" />{'This transaction cannot be undone once confirmed'}
         </div>
@@ -162,9 +169,12 @@ export default function SendConfirm() {
         {error && !loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</span>}
       </div>
 
-      <div className="row-10 row10-dual">
-        <button className="btn btn-secondary" disabled={loading || done} onClick={() => navigate('SendAmount', params)}>Edit</button>
-        <button className="btn btn-primary" style={{ flex: 1 }}
+      {/* Back/Confirm PIN - node 1:218-1:221: ~165px each, i.e. (340 − 8) / 2 - flex:1 with an 8px gap.
+          Centre 85.63dvh, glow shadow. "Back" (was "Edit") per the exact Figma label - functionally
+          unchanged, still re-opens SendAmount with the same params to adjust the transaction. */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.63dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8 }}>
+        <button className="btn btn-secondary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} disabled={loading || done} onClick={() => navigate('SendAmount', params)}>Back</button>
+        <button className="btn btn-primary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }}
           disabled={loading || done} onClick={handleConfirm}>
           {loading ? 'Processing...' : 'Confirm PIN'}
         </button>

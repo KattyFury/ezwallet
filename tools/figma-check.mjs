@@ -12,6 +12,9 @@
 //   npm run mock                                   # dev server on :5173 with fake balances
 //   node tools/figma-check.mjs HomeSend ref.png    # → figma-check/diff_HomeSend.png (app | diff | figma)
 //   node tools/figma-check.mjs HomeSend ref.png --probe 195,374 195,412 48,774
+//   node tools/figma-check.mjs SendConfirm ref.png --params '{"address":"0xAbC...","amount":25}'
+//     (screens that read nav params - SendConfirm/SendReceipt - crash on undefined without this;
+//     App.jsx's ?screen= override reads a matching ?params= query param)
 //
 // Get ref.png from the Figma MCP: get_screenshot on the frame's node id, then curl the returned URL.
 // The 3-panel output: LEFT = the app, MIDDLE = difference-blend (black = identical; bright = drift),
@@ -31,6 +34,8 @@ if (!screen || !refPath) {
 }
 const probeIdx = rest.indexOf('--probe')
 const probes = probeIdx === -1 ? [] : rest.slice(probeIdx + 1).map(p => p.split(',').map(Number))
+const paramsIdx = rest.indexOf('--params')
+const paramsArg = paramsIdx === -1 ? null : rest[paramsIdx + 1]
 const outDir = 'figma-check'
 mkdirSync(outDir, { recursive: true })
 
@@ -42,7 +47,8 @@ await page.addInitScript(() => {
   localStorage.setItem('ez_user_token', 'mock')
   sessionStorage.setItem('ez_pin_ok', '1')
 })
-await page.goto(`http://localhost:5173/?screen=${screen}`, { waitUntil: 'networkidle' })
+const url = `http://localhost:5173/?screen=${screen}` + (paramsArg ? `&params=${encodeURIComponent(paramsArg)}` : '')
+await page.goto(url, { waitUntil: 'networkidle' })
 await page.waitForTimeout(600)
 const appShot = (await page.screenshot()).toString('base64')
 const refShot = readFileSync(refPath).toString('base64')

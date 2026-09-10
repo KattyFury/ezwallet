@@ -238,17 +238,23 @@ body {
   align-items: center;
   justify-content: center;
   font-family: var(--font-condensed);
-  /* 19px Semibold - 2026-09-08, down from 21px Medium: measured identically off every button in the new
-     Figma file (Continue/Back/Deposit/Withdraw/Sign in with Email/the Swap-style CTA). Safe to shrink app-wide
-     (user decision: going SMALLER can't overflow a button that already fit at the bigger size). */
-  font-size: var(--fs-body);
+  /* 18px Semibold - 2026-09-10 CORRECTION: was --fs-body (19px). Every button re-verified this session
+     (EnterEmail Back/Continue, PasteAddress Back/Paste, SendConfirm Back/Confirm PIN, Receipt Save/Done,
+     Menu Deposit/Withdraw, Exchange's CTA) reads 18px in the current Figma file, not 19 - the 19px note
+     below is from an OLDER pull. */
+  font-size: 18px;
   font-weight: var(--fw-semibold);
   border-radius: 50px;
   border: none;
   cursor: pointer;
   padding: 0 16px;
-  height: 6dvh;
-  min-height: 48px;        /* the minimum touch area for older users */
+  /* FIXED 48px - 2026-09-10 CORRECTION: was height:6dvh (≈50.6px @844, never actually 48 on any real
+     viewport) with min-height only acting as a floor, not a cap. BRAND-GUIDELINE.md is explicit -
+     "Button height: 48/40/32 — bội số của 8" - and every button measured this session confirms 48.
+     This is the SAME class of bug the user caught on Exchange's CTA (height:'100%' instead of a fixed
+     48px); fixing it here at the shared-class level closes it for every .btn in the app at once. */
+  height: 48px;
+  min-height: 48px;        /* the minimum touch area for older users - now equal to height, kept as a safety net */
   transition: opacity 0.15s;
 }
 
@@ -545,14 +551,6 @@ body {
 }
 
 /* ── Send flow ── */
-.send-title {
-  gap: 10px;
-  font-family: var(--font-display);
-  font-size: var(--fs-title);
-  font-weight: var(--fw-semibold);   /* screen titles are BOLD (semibold) */
-  color: var(--color-black);
-}
-
 .memo-row {
   display: flex;
   align-items: center;
@@ -578,9 +576,9 @@ body {
 
 .confirm-box {
   width: 100%;
-  /* The Swap standard (user decision 07-17): a surface fill with no border, large cards at radius 20 */
+  /* radius 16 (2026-09-10 correction, was 20 - nodes 1:223/1:236 both confirm 16 in the current Figma file) */
   border: none;
-  border-radius: 20px;
+  border-radius: 16px;
   background: var(--color-surface);
   overflow: hidden;
 }

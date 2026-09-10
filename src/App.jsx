@@ -51,9 +51,16 @@ const SCREENS = {
 export default function App() {
   const [nav, setNav] = useState(() => {
     // QA override for screenshotting a specific screen (e.g. ?screen=Splash) without touching the real
-    // boot logic below - only takes effect when the name is a valid registered screen.
-    const forced = new URLSearchParams(window.location.search).get('screen')
-    if (forced && SCREENS[forced]) return { screen: forced, params: {} }
+    // boot logic below - only takes effect when the name is a valid registered screen. `?params=` is an
+    // optional URI-encoded JSON object for screens that read from nav params (SendConfirm/SendReceipt
+    // need address/amount/etc - without this they'd crash on undefined.toFixed()).
+    const qs = new URLSearchParams(window.location.search)
+    const forced = qs.get('screen')
+    if (forced && SCREENS[forced]) {
+      let forcedParams = {}
+      try { forcedParams = JSON.parse(decodeURIComponent(qs.get('params') || '{}')) } catch {}
+      return { screen: forced, params: forcedParams }
+    }
     // Session exists → through the PIN GATE (wallet unlock) before HomeSend, unless this session is already unlocked
     // (ez_pin_ok - set after verifying the PIN, or right after CREATING the PIN on first login). No session → Login.
     const hasSession = localStorage.getItem('ez_user_token')

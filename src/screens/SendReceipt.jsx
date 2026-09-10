@@ -6,9 +6,10 @@ import { addNotif } from '../notif'
 import { saveImageToPhotos } from '../saveImage'
 import logoLong from '../../design/logo.svg'
 
-// Big GREEN check icon (success) - check.svg already includes the outlined circle and the tick
+// Big GREEN check icon (success) - check.svg already includes the outlined circle and the tick.
+// 70px (was 76) - node 1:238's exact placeholder size.
 function CheckIcon() {
-  return <Icon name="check" size={76} color="var(--color-primary)" />
+  return <Icon name="check" size={70} color="var(--color-primary)" />
 }
 
 function shortenAddr(addr) {
@@ -88,14 +89,27 @@ export default function SendReceipt() {
         Receipt
       </div>
 
-      <div className="row-2-8 col center" style={{ gap: 12 }}>
+      {/* Check icon - node 1:238: centre 24.53dvh (= row 3's centre exactly). */}
+      <div style={{ position: 'absolute', left: '50%', top: '24.53dvh', transform: 'translate(-50%, -50%)' }}>
         <CheckIcon />
-        <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }}>Sent successfully</span>
-        {/* ONE span, ONE font/size/weight - "$2" as a single block */}
-        <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
-          {amountText}
-        </span>
-        <div className="confirm-box" style={{ width: '100%' }}>
+      </div>
+
+      {/* "Sent successfully" - node 1:234: top-anchored (no vertical centring in the Figma layer), 18px
+          semibold (was --fs-body 19 medium). */}
+      <span style={{ position: 'absolute', left: '50%', top: '30.08dvh', transform: 'translateX(-50%)', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>
+        Sent successfully
+      </span>
+
+      {/* Amount - node 1:237: top-anchored, 48px semibold (was --fs-amount 52) - its box ends exactly
+          where the card below begins (344px = card top). */}
+      <span className="num" style={{ position: 'absolute', left: '50%', top: '33.29dvh', transform: 'translateX(-50%)', fontSize: 48, fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
+        {amountText}
+      </span>
+
+      {/* Card - node 1:236: centre 55.09dvh, 339×242 (the familiar 3-row-tall card: 3×70+2×16=242),
+          radius 16 (fixed on the shared .confirm-box class). */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '55.09dvh', height: '28.67dvh', transform: 'translateY(-50%)' }}>
+        <div className="confirm-box" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div className="confirm-row">
             <span className="confirm-label">Send to</span>
             <span className="confirm-value">{to}</span>
@@ -125,9 +139,11 @@ export default function SendReceipt() {
         </div>
       </div>
 
-      <div className="row-10 row10-dual">
-        <button className="btn btn-secondary" onClick={saveReceipt}>Save receipt</button>
-        <button className="btn btn-primary" onClick={() => navigate('HomeSend')}>Done</button>
+      {/* Save receipt/Done - node 1:230-1:233: both exactly 166px, i.e. (340 − 8) / 2 - flex:1 with an
+          8px gap. Centre 85.63dvh, glow shadow. */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.63dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8 }}>
+        <button className="btn btn-secondary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} onClick={saveReceipt}>Save receipt</button>
+        <button className="btn btn-primary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} onClick={() => navigate('HomeSend')}>Done</button>
       </div>
     </div>
   )
