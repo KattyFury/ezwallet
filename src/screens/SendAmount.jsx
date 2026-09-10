@@ -236,12 +236,14 @@ export default function SendAmount() {
           HIDDEN while typing TEXT (note field focused / note popup open) - the iPhone keyboard rising on top of the
           numpad looks terrible (reported 07-23); blur / close the popup → the numpad returns. */}
       {!typingText && !showNote && (
-      <div className="numpad-gray" style={{ gridRow: '6 / 11', margin: '5dvh -20px 0', padding: '24px 20px 0', background: 'var(--color-surface-2)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column' }}>
+      <div className="numpad-gray" style={{ gridRow: '6 / 11', margin: '0 -20px 0', padding: '24px 20px 0', background: 'var(--color-surface-2)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column' }}>
         {/* AMOUNT SUGGESTIONS (VND only) - placed DIRECTLY ABOVE the numpad so the typing finger reaches them instantly, one tap
-            instead of counting zeroes. Fixed height (space is reserved even with no suggestions) so the
-            numpad does NOT jump up and down with every extra digit - a jumping layout is a nightmare for older
-            users aiming a finger at a key. */}
-        <div style={{ height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 0 }}>
+            instead of counting zeroes. Height only reserved WHILE hints are actually showing (was a permanent
+            44px gap regardless - 2026-09-10: node 1:108 draws the grey panel starting flush at 50.95dvh with
+            no such gap, and VND is unreachable in practice, so that gap was pure dead space pushing the whole
+            numpad down against the fresh Figma pull. Still reserves space when hints DO show, so the numpad
+            doesn't jump while actively typing VND - just collapses to 0 the rest of the time). */}
+        <div style={{ height: hints.length ? 44 : 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 0, overflow: 'hidden' }}>
           {hints.map(v => (
             <button key={v} onClick={() => setDigits(String(v))}
               style={{ border: '1.5px solid var(--color-gray)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
