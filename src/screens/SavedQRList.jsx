@@ -91,8 +91,8 @@ export default function SavedQRList() {
                   {/* height auto = the svg keeps itself square via the viewBox (forcing height 100% was 3px off) */}
                   <QRCodeSVG value={buildQR(walletAddr, { amount: q.amount, currency: c })} size={104} level="M" style={{ width: '100%', height: 'auto', display: 'block' }} />
                 </div>
-                {q.name && <span style={{ fontSize: 16, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.name}</span>}
-                <span className="num" style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{label}</span>
+                {q.name && <span style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.name}</span>}
+                <span className="num" style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{label}</span>
               </button>
             )
           })}
@@ -120,13 +120,13 @@ export default function SavedQRList() {
         <div className="popup-overlay" onClick={resetForm}>
           <div className="popup-card" onClick={e => e.stopPropagation()}>
             <div className="popup-title">Add to QR Storage</div>
-            <input className="address-input" placeholder={'Name (optional)'} value={name} onChange={e => setName(e.target.value)} maxLength={30} style={{ fontSize: 'var(--fs-body)' }} />
+            <input className="address-input" placeholder={'Name (optional)'} value={name} onChange={e => setName(e.target.value)} maxLength={30} style={{ fontSize: 'var(--fs-content-1)' }} />
             {/* Label carries the user's DEFAULT currency symbol (user decision 07-20: USDC→$, EURC→€…) */}
             {/* The Amount field is NOT an input (keyboard rule 07-23) - tapping opens the app numpad sheet; the Name field is
                 blurred first so the iPhone keyboard drops before the numpad rises (never both at once).
                 A blinking _ caret while the sheet is open (the app-wide signal that money is being entered). */}
             <div className="address-input" onClick={() => { document.activeElement?.blur?.(); openPad() }}
-              style={{ fontSize: 'var(--fs-body)', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+              style={{ fontSize: 'var(--fs-content-1)', display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
               {amountStr ? (
                 <span className="num">{amountStr}{pad && <span className="caret">_</span>}</span>
               ) : pad ? (

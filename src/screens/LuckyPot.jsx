@@ -13,12 +13,13 @@ import { addNotif } from '../notif'
 //
 // TYPOGRAPHY (user decision 2026-09-08, RECONFIRMED same day after a false start): headers/titles (the
 // "LuckyPot.cc" wordmark, Epoch #, Total tickets/pool, My tickets/deposit, Draw history, every popup
-// title) use Space Grotesk, ALL CAPS (except the wordmark, which keeps its brand casing) - this is a
-// DELIBERATE per-screen exception, not an oversight - do NOT "normalise" it to the app-wide system
-// font/casing again. Only spacing and button sizing on this screen follow the app-wide rule; the
-// Space-Grotesk-caps header treatment is LuckyPot's own brand identity and stays exactly as designed.
-// Everything else stays the app's system-font stack, mapped onto the closest official size token:
-// 14px → `--fs-label` (15), 12px → `--fs-tiny` (13).
+// title) use Space Grotesk (the wordmark keeps its brand casing, other headers ordinary mixed case) -
+// this FONT-FAMILY exception is deliberate, LuckyPot's own brand identity, and stays.
+// SIZE, however, is back on the app-wide 5-tier scale as of 2026-09-10 (the user's own call - LuckyPot
+// no longer keeps a separate local size mapping): every text size on this screen is one of
+// --fs-content-1/-content-2/-caption, same tokens every other screen uses. Only the two true HERO NUMBER
+// displays (the deposit/withdraw amount input, the "you won $X" amount) stay literal px + --fw-light,
+// same as the rest of the app's hero-number system.
 const FONT_HEADER = "'Space Grotesk', system-ui, -apple-system, 'Segoe UI', sans-serif"
 const FONT_BODY = 'var(--font-condensed)'
 function useLuckyPotFonts() {
@@ -43,7 +44,7 @@ function useLuckyPotFonts() {
 // pull draws "Total tickets / Pool", "My tickets / My deposit", "Draw history" and "My history" in
 // ordinary mixed case - only "EPOCH #3" is capitalised, and that is literally how the string is typed
 // (`EPOCH #${epochId}`), not a CSS transform.
-const headerStyle = { fontFamily: FONT_HEADER, fontSize: 16, fontWeight: 700, color: 'var(--color-brand)' }
+const headerStyle = { fontFamily: FONT_HEADER, fontSize: 'var(--fs-content-2)', fontWeight: 700, color: 'var(--color-brand)' }
 
 function fmtCountdown(endTimeSec, nowSec) {
   const s = endTimeSec - nowSec
@@ -58,7 +59,7 @@ function dateLabel(ts) {
 
 // The shared popup shell: 5/6 of the mobile screen, closes ONLY via the X top-right or a click outside
 // (no bottom Close button - user decision 2026-09-08). Used for every popup on this screen. Title uses
-// the same header treatment as the main screen's labels (Space Grotesk, uppercase, 17).
+// the same header treatment as the main screen's labels (Space Grotesk, mixed case, Nội dung 2).
 function LPModal({ title, onClose, children }) {
   return (
     <div className="popup-overlay" onClick={onClose}>
@@ -78,7 +79,7 @@ function LPModal({ title, onClose, children }) {
         }}>
           <Icon name="x" size={18} color="var(--color-muted)" />
         </button>
-        <div style={{ ...headerStyle, fontSize: 'var(--fs-item)', textAlign: 'center' }}>
+        <div style={{ ...headerStyle, fontSize: 'var(--fs-content-2)', textAlign: 'center' }}>
           {title}
         </div>
         {children}
@@ -93,7 +94,7 @@ function AmountField({ amount, setAmount, onMax }) {
       <input className="num" type="number" min="0" inputMode="decimal" value={amount} placeholder="0.00"
         onChange={e => setAmount(e.target.value)}
         style={{ flex: 1, minWidth: 0, fontFamily: FONT_BODY, fontSize: 28, fontWeight: 'var(--fw-light)', border: 'none', outline: 'none', background: 'transparent', color: 'var(--color-content)' }} />
-      <button onClick={onMax} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, color: 'var(--color-primary)', fontWeight: 'var(--fw-semibold)', fontSize: 'var(--fs-label)' }}>MAX</button>
+      <button onClick={onMax} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: FONT_BODY, color: 'var(--color-primary)', fontWeight: 'var(--fw-semibold)', fontSize: 'var(--fs-caption)' }}>MAX</button>
     </div>
   )
 }
@@ -118,8 +119,8 @@ function StatRow({ label, children, span = 1, divider = false, style }) {
 function SplitAmount({ big, small }) {
   return (
     <span className="num" style={{ fontFamily: FONT_BODY }}>
-      <span style={{ fontSize: 16, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>${big.toFixed(2)}</span>
-      <span style={{ fontSize: 13, fontWeight: 'var(--fw-semibold)', color: 'var(--color-muted-2)' }}> / ${small.toFixed(2)}</span>
+      <span style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>${big.toFixed(2)}</span>
+      <span style={{ fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-muted-2)' }}> / ${small.toFixed(2)}</span>
     </span>
   )
 }
@@ -134,7 +135,7 @@ function TokenDropdown() {
   return (
     <div style={{ position: 'relative' }}>
       <button onClick={() => setOpen(o => !o)} style={{
-        display: 'flex', alignItems: 'center', gap: 4, fontFamily: FONT_BODY, fontSize: 16, fontWeight: 'var(--fw-semibold)', height: 34,
+        display: 'flex', alignItems: 'center', gap: 4, fontFamily: FONT_BODY, fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', height: 34,
         color: 'var(--color-content)', background: 'var(--color-white)', border: 'none', borderRadius: 999, padding: '0 10px', cursor: 'pointer',
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)',
       }}>
@@ -146,7 +147,7 @@ function TokenDropdown() {
           background: 'var(--color-white)', border: '1.5px solid var(--color-gray)', borderRadius: 10, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
         }}>
           {['ARC', 'ETH'].map(sym => (
-            <div key={sym} style={{ padding: '8px 12px', fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-muted)', opacity: 0.5, cursor: 'not-allowed' }}>{sym}</div>
+            <div key={sym} style={{ padding: '8px 12px', fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', opacity: 0.5, cursor: 'not-allowed' }}>{sym}</div>
           ))}
         </div>
       )}
@@ -159,10 +160,10 @@ function HistoryRow({ title, subtitle, right }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1.5px solid var(--color-gray)', paddingBottom: 8 }}>
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{title}</span>
-        <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)' }}>{subtitle}</span>
+        <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{title}</span>
+        <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)' }}>{subtitle}</span>
       </div>
-      <span className="num" style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-primary)', fontWeight: 'var(--fw-semibold)' }}>{right}</span>
+      <span className="num" style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-primary)', fontWeight: 'var(--fw-semibold)' }}>{right}</span>
     </div>
   )
 }
@@ -321,7 +322,7 @@ export default function LuckyPot() {
           background: 'var(--color-warning)', border: 'none', borderRadius: 16, padding: '0 14px', fontFamily: FONT_BODY,
         }}>
           <Icon name={hasUnclaimedPrize ? 'check' : 'info'} size={25} color="var(--color-content)" />
-          <span style={{ flex: 1, fontSize: 13, color: 'var(--color-content)', fontWeight: 'var(--fw-semibold)' }}>
+          <span style={{ flex: 1, fontSize: 'var(--fs-caption)', color: 'var(--color-content)', fontWeight: 'var(--fw-semibold)' }}>
             {hasUnclaimedPrize
               ? `You won $${info.owedLastEpoch.toFixed(2)} last epoch - tap to claim.`
               : "Need testnet USDC? Tap to copy your address and open the faucet."}
@@ -332,14 +333,14 @@ export default function LuckyPot() {
       {/* Row 3-5 - Epoch box: radius 16 (was 10), height 28.67dvh/242px (was 28.82/243.2) - the 4
           sub-rows still split 1:1:2 (60.5px each), that proportion was already correct. */}
       <div style={{ gridRow: '3 / 6', alignSelf: 'center', height: '28.67dvh', background: 'var(--color-surface)', borderRadius: 16, padding: 8, display: 'flex', flexDirection: 'column' }}>
-        <StatRow divider label={info ? `EPOCH #${info.epochId}` : '…'} style={{ fontSize: 18 }}>
+        <StatRow divider label={info ? `EPOCH #${info.epochId}` : '…'} style={{ fontSize: 'var(--fs-content-1)' }}>
           <TokenDropdown />
         </StatRow>
         {/* "Draw in:" - label 16px --color-muted-2 (was --fs-label muted), value Space Grotesk BOLD 18px
             black (was body-font 17 regular) - node 13:154/13:155. */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT_BODY, borderBottom: '1.5px solid rgba(11, 83, 191, 0.15)' }}>
-          <span style={{ fontSize: 16, color: 'var(--color-muted-2)' }}>Draw in:</span>
-          <span className="num" style={{ fontFamily: FONT_HEADER, fontSize: 18, fontWeight: 700, color: 'var(--color-content)' }}>
+          <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)' }}>Draw in:</span>
+          <span className="num" style={{ fontFamily: FONT_HEADER, fontSize: 'var(--fs-content-1)', fontWeight: 700, color: 'var(--color-content)' }}>
             {info ? fmtCountdown(info.epochEndTime, now) : '…'}
           </span>
         </div>
@@ -347,14 +348,14 @@ export default function LuckyPot() {
             (was --fs-item) - node 13:156. */}
         <div style={{ flex: 2, display: 'flex', alignItems: 'center', fontFamily: FONT_BODY }}>
           {error ? (
-            <span style={{ fontSize: 16, color: 'var(--color-error)' }}>{error}</span>
+            <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-error)' }}>{error}</span>
           ) : info ? (
-            <span style={{ fontSize: 16, color: 'var(--color-muted-2)', lineHeight: 1.35 }}>
-              This week's yield goes to <strong style={{ color: 'var(--color-content)', fontSize: 18 }}>{info.numWinners}</strong> winner{info.numWinners === 1 ? '' : 's'} out
-              of <strong style={{ color: 'var(--color-content)', fontSize: 18 }}>{info.participantCount}</strong> player{info.participantCount === 1 ? '' : 's'}. Winners return 5% to the protocol.
+            <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)', lineHeight: 1.35 }}>
+              This week's yield goes to <strong style={{ color: 'var(--color-content)', fontSize: 'var(--fs-content-1)' }}>{info.numWinners}</strong> winner{info.numWinners === 1 ? '' : 's'} out
+              of <strong style={{ color: 'var(--color-content)', fontSize: 'var(--fs-content-1)' }}>{info.participantCount}</strong> player{info.participantCount === 1 ? '' : 's'}. Winners return 5% to the protocol.
             </span>
           ) : (
-            <span style={{ fontSize: 16, color: 'var(--color-muted-2)' }}>Loading…</span>
+            <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)' }}>Loading…</span>
           )}
         </div>
       </div>
@@ -374,7 +375,7 @@ export default function LuckyPot() {
             label --color-muted-2 16px, value black. Grouped TIGHT with the buttons (user fix 2026-09-08:
             space-between pushed them apart, leaving an ugly gap). */}
         <div style={{ flex: 2, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 8 }}>
-          <span style={{ fontFamily: FONT_BODY, fontSize: 16, fontWeight: 'var(--fw-normal)', color: 'var(--color-muted-2)' }}>
+          <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-normal)', color: 'var(--color-muted-2)' }}>
             Your balance: <span style={{ color: 'var(--color-content)' }}>{walletUsdc != null ? `${walletUsdc.toFixed(2)} USDC` : '…'}</span>
           </span>
           {/* RE-VERIFIED 2026-09-10 (the user redrew this row too): Deposit/Withdraw/Result are now
@@ -383,9 +384,9 @@ export default function LuckyPot() {
               16px semibold, glow shadow. ⚠️ "Result", NOT "Latest result" (user decision 2026-09-10,
               overriding the Figma text on purpose - do not "fix" this back to match the design). */}
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary" style={{ flex: 1, height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} onClick={() => openPopup('deposit')}>Deposit</button>
-            <button className="btn btn-secondary" style={{ flex: 1, height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} onClick={() => openPopup('withdraw')}>Withdraw</button>
-            <button className="btn" style={{ flex: 1, height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, background: 'var(--color-warning)', color: 'var(--color-content)', border: 'none', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }}
+            <button className="btn btn-primary" style={{ flex: 1, height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 'var(--fs-content-2)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} onClick={() => openPopup('deposit')}>Deposit</button>
+            <button className="btn btn-secondary" style={{ flex: 1, height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 'var(--fs-content-2)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} onClick={() => openPopup('withdraw')}>Withdraw</button>
+            <button className="btn" style={{ flex: 1, height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 'var(--fs-content-2)', background: 'var(--color-warning)', color: 'var(--color-content)', border: 'none', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }}
               disabled={!resultWindowOpen} onClick={() => openPopup('result')}>Result</button>
           </div>
         </div>
@@ -421,7 +422,7 @@ export default function LuckyPot() {
           style={{
             flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-            fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-bold)',
+            fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-bold)',
             color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)',
             WebkitTapHighlightColor: 'transparent',
           }}>Exit</button>
@@ -430,48 +431,48 @@ export default function LuckyPot() {
       {/* ── Menu popup (row 1's hamburger) ── */}
       {menuOpen && (
         <LPModal title="LuckyPot menu" onClose={() => setMenuOpen(false)}>
-          <button className="btn btn-secondary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-label)' }} onClick={() => openPopup('deposit')}>Deposit</button>
-          <button className="btn btn-secondary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-label)' }} onClick={() => openPopup('withdraw')}>Withdraw</button>
-          <button className="btn btn-secondary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-label)' }} onClick={openHistory}>Draw history</button>
-          <button className="btn btn-secondary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-label)' }} onClick={openMyHistory}>My history</button>
-          <button className="btn btn-secondary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-error)' }} onClick={() => navigate('ServiceHub')}>Exit</button>
+          <button className="btn btn-secondary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)' }} onClick={() => openPopup('deposit')}>Deposit</button>
+          <button className="btn btn-secondary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)' }} onClick={() => openPopup('withdraw')}>Withdraw</button>
+          <button className="btn btn-secondary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)' }} onClick={openHistory}>Draw history</button>
+          <button className="btn btn-secondary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)' }} onClick={openMyHistory}>My history</button>
+          <button className="btn btn-secondary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-error)' }} onClick={() => navigate('ServiceHub')}>Exit</button>
         </LPModal>
       )}
 
       {/* ── Deposit popup ── */}
       {popup === 'deposit' && (
         <LPModal title="Deposit" onClose={closePopup}>
-          <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
+          <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)' }}>
             Wallet balance: <strong className="num" style={{ color: 'var(--color-content)' }}>{walletUsdc != null ? walletUsdc.toFixed(2) : '…'} USDC</strong>
           </span>
           <AmountField amount={depositAmt} setAmount={setDepositAmt} onMax={() => setDepositAmt(String(walletUsdc ?? 0))} />
-          <button className="btn btn-primary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-label)' }}
+          <button className="btn btn-primary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)' }}
             disabled={busy || !(parseFloat(depositAmt) > 0) || parseFloat(depositAmt) > (walletUsdc ?? 0)}
             onClick={handleDeposit}>
             {busy ? (txStatus || 'Confirming…') : 'Deposit'}
           </button>
-          {txError && <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>{txError}</span>}
+          {txError && <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-error)' }}>{txError}</span>}
         </LPModal>
       )}
 
       {/* ── Withdraw popup ── */}
       {popup === 'withdraw' && (
         <LPModal title="Withdraw" onClose={closePopup}>
-          <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
+          <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)' }}>
             Deposited: <strong className="num" style={{ color: 'var(--color-content)' }}>{info ? info.deposited.toFixed(2) : '…'} USDC</strong>
           </span>
           <AmountField amount={withdrawAmt} setAmount={setWithdrawAmt} onMax={() => setWithdrawAmt(String(info?.deposited ?? 0))} />
           {info?.eligible > 0 && parseFloat(withdrawAmt) > 0 && (
-            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-tiny)', color: 'var(--color-warning)' }}>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-warning)' }}>
               Withdrawing now will remove you from this epoch's draw.
             </span>
           )}
-          <button className="btn btn-primary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-label)' }}
+          <button className="btn btn-primary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)' }}
             disabled={busy || !(parseFloat(withdrawAmt) > 0) || parseFloat(withdrawAmt) > (info?.deposited ?? 0)}
             onClick={handleWithdraw}>
             {busy ? (txStatus || 'Confirming…') : 'Withdraw'}
           </button>
-          {txError && <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>{txError}</span>}
+          {txError && <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-error)' }}>{txError}</span>}
         </LPModal>
       )}
 
@@ -479,35 +480,35 @@ export default function LuckyPot() {
       {popup === 'result' && info && (
         <LPModal title={`Epoch #${info.prevEpochId} - your result`} onClose={closePopup}>
           {!revealed ? (
-            <button className="btn btn-secondary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-label)' }} onClick={() => setRevealed(true)}>
+            <button className="btn btn-secondary" style={{ width: '100%', fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)' }} onClick={() => setRevealed(true)}>
               Tap to reveal
             </button>
           ) : info.wonLastEpoch ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>You won</span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)' }}>You won</span>
               <span className="num" style={{ fontFamily: FONT_BODY, fontSize: 32, fontWeight: 'var(--fw-light)', color: 'var(--color-primary)' }}>
                 ${info.owedLastEpoch.toFixed(2)}
               </span>
               {info.hasClaimedLastEpoch ? (
-                <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>Already claimed.</span>
+                <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)' }}>Already claimed.</span>
               ) : (
                 <>
-                  <button className="btn btn-primary" style={{ width: '100%', marginTop: 8, fontFamily: FONT_BODY, fontSize: 'var(--fs-label)' }} disabled={busy} onClick={handleClaim}>
+                  <button className="btn btn-primary" style={{ width: '100%', marginTop: 8, fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)' }} disabled={busy} onClick={handleClaim}>
                     {busy ? (txStatus || 'Confirming…') : (pastClaimWindow ? 'Release prize' : 'Claim now')}
                   </button>
                   {pastClaimWindow && (
-                    <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)', textAlign: 'center' }}>
+                    <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', textAlign: 'center' }}>
                       The self-claim window passed, but your prize is still there - this releases it.
                     </span>
                   )}
-                  {txError && <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>{txError}</span>}
+                  {txError && <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-error)' }}>{txError}</span>}
                 </>
               )}
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, textAlign: 'center' }}>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)' }}>Good luck next epoch</span>
-              <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>Your principal is safe and still deposited.</span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)' }}>Good luck next epoch</span>
+              <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)' }}>Your principal is safe and still deposited.</span>
             </div>
           )}
         </LPModal>
@@ -517,11 +518,11 @@ export default function LuckyPot() {
       {popup === 'history' && (
         <LPModal title="Draw history" onClose={closePopup}>
           {historyError ? (
-            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>{historyError}</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-error)' }}>{historyError}</span>
           ) : history === null ? (
-            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>Loading…</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', textAlign: 'center' }}>Loading…</span>
           ) : history.length === 0 ? (
-            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>No draws yet.</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', textAlign: 'center' }}>No draws yet.</span>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {history.map(h => (
@@ -537,11 +538,11 @@ export default function LuckyPot() {
       {popup === 'myhistory' && (
         <LPModal title="My history" onClose={closePopup}>
           {myHistoryError ? (
-            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>{myHistoryError}</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-error)' }}>{myHistoryError}</span>
           ) : myHistory === null ? (
-            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>Loading…</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', textAlign: 'center' }}>Loading…</span>
           ) : myHistory.length === 0 ? (
-            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>No activity yet.</span>
+            <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', textAlign: 'center' }}>No activity yet.</span>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {myHistory.map(h => (

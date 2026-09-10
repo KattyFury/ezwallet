@@ -41,19 +41,19 @@ export default function CreateQR() {
           Send money's "You send" card, RE-VERIFIED 2026-09-10, not assumed from that screen's position). */}
       <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '20.38dvh', height: '18.48dvh', background: 'var(--color-surface)', borderRadius: 16 }} />
 
-      <span style={{ position: 'absolute', left: '8.46%', top: '23.74dvh', transform: 'translateY(-50%)', fontSize: 18, fontWeight: 'var(--fw-semibold)' }}>You receive</span>
+      <span style={{ position: 'absolute', left: '8.46%', top: '23.74dvh', transform: 'translateY(-50%)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)' }}>You receive</span>
 
       {/* Chip - node 18:88: centre 29.6dvh. Icon (18:89) is a literal 24x24 BLACK SQUARE, no rounding -
           same as Send money's chip, not a real token logo (Figma draws none). */}
       <button onClick={() => setShowCur(true)}
-        style={{ position: 'absolute', left: '8.46%', top: '29.6dvh', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'var(--color-white)', borderRadius: 999, height: 42, padding: '0 14px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', cursor: 'pointer' }}>
+        style={{ position: 'absolute', left: '8.46%', top: '29.6dvh', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'var(--color-white)', borderRadius: 999, height: 42, padding: '0 14px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', cursor: 'pointer' }}>
         <div style={{ width: 24, height: 24, background: 'var(--color-black)', flexShrink: 0 }} />
         {cur}
-        <Icon name="down2" size="var(--is-item)" color="var(--color-brand)" />
+        <Icon name="down2" size="var(--is-content-2)" color="var(--color-brand)" />
       </button>
 
       {/* node 18:87: "Balance:" (not "Available:" - Receive's own wording, verbatim from Figma). */}
-      <span style={{ position: 'absolute', left: '8.46%', top: '35.47dvh', transform: 'translateY(-50%)', fontSize: 16, whiteSpace: 'nowrap' }}>
+      <span style={{ position: 'absolute', left: '8.46%', top: '35.47dvh', transform: 'translateY(-50%)', fontSize: 'var(--fs-content-2)', whiteSpace: 'nowrap' }}>
         <span style={{ color: 'var(--color-muted-2)' }}>Balance: </span>
         <span className="num" style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>20.00 {cur === 'USD' ? 'USDC' : cur}</span>
       </span>
@@ -72,7 +72,7 @@ export default function CreateQR() {
           and the numpad panel. */}
       {fromLibrary && (
         <div className="memo-row" style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '44.5dvh' }}>
-          <Icon name="pencil" size="var(--is-md-lg)" color="var(--color-muted)" />
+          <Icon name="pencil" size="var(--is-content-1)" color="var(--color-muted)" />
           <input className="memo-input" value={name} onChange={e => setName(e.target.value)} placeholder={'Name your QR'} maxLength={30}
             onFocus={() => setTypingText(true)} onBlur={() => setTypingText(false)} />
         </div>

@@ -36,7 +36,7 @@ function TokenRow({ sym, onClick }) {
     <button onClick={onClick}
       style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 999, height: 42, background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'inherit', padding: '0 12px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', flexShrink: 0 }}>
       <img src={`/tokens/${sym.toLowerCase()}.png`} alt={sym} style={{ width: 24, height: 24, borderRadius: '50%' }} />
-      <span className="num" style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
+      <span className="num" style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
       <Icon name="down2" size={15} color="var(--color-brand)" />
     </button>
   )
@@ -307,7 +307,7 @@ export default function Swap() {
     return (
       <div style={{ ...CARD, minWidth: 0, height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
         {/* 2026-09-10: 18px semibold BLACK (was --fs-body 19 medium muted) - nodes 1:70/1:76 */}
-        <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{label}</span>
+        <span style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{label}</span>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
           <TokenRow sym={sym} onClick={onPick} />
           {/* THE AMOUNT FIELD. The white box's COLOUR/BORDER around the number was REMOVED (user decision 07-22: a bordered box looks rigid and long
@@ -333,14 +333,14 @@ export default function Swap() {
         {/* 2026-09-10: 16px (was --fs-item 17), label colour --color-muted-2 #667085 (was --color-muted) -
             node 1:71's "Available:" span. Available and ~$ share the same size. */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
-          <span style={{ fontSize: 16, color: 'var(--color-muted-2)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {/* balLabel: You receive = "Balance", You pay = null (hidden - user decision 07-22f: the Available line was
                 dropped from You pay). A balance that cannot be read yet → "…", NEVER a drawn 0 (bug 07-17). */}
             {balLabel ? <>{balLabel}: <span className="num" style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-semibold)' }}>
               {balKnown ? `${spendableOf(sym, balances[sym]).toFixed(decimalsFor(sym))} ${sym}` : '…'}
             </span></> : null}
           </span>
-          <span className="num" style={{ fontSize: 16, color: 'var(--color-muted-2)', whiteSpace: 'nowrap' }}>{disp !== null ? `~ ${fmtDisp(disp)}` : ''}</span>
+          <span className="num" style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)', whiteSpace: 'nowrap' }}>{disp !== null ? `~ ${fmtDisp(disp)}` : ''}</span>
         </div>
       </div>
     )
@@ -437,13 +437,14 @@ export default function Swap() {
         <SideCard label={'You receive'} sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} balLabel="Balance" idle={!(amountNum > 0)} />
       </div>
 
-      {/* Rate + Fee - node 1:83/10:123: 13px (was --fs-item 17), label colour --color-muted-2 #667085
-          (was --color-muted), figures BLACK semibold (was medium). Alone in row 6, centred at 51.4dvh. */}
+      {/* Rate + Fee - node 1:83/10:123: raw Figma reading was 13px, rounded up to Chú thích (15px) - the
+          new 5-tier scale (2026-09-10) has no tier below 15, absorbing the old --fs-tiny. Label colour
+          --color-muted-2 #667085, figures BLACK semibold. Alone in row 6, centred at 51.4dvh. */}
       <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '51.4dvh', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '0 11px' }}>
-        <span style={{ fontSize: 13, color: 'var(--color-muted-2)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted-2)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
           Rate: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-semibold)' }}>{rateTxt}</span>
         </span>
-        <span style={{ fontSize: 13, color: 'var(--color-muted-2)', whiteSpace: 'nowrap' }}>
+        <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted-2)', whiteSpace: 'nowrap' }}>
           Fee: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-semibold)' }}>{feeTxt}</span>
         </span>
       </div>
@@ -469,8 +470,8 @@ export default function Swap() {
                 // as one value, not a differently-weighted label:value pair.
                 <button key={v} onClick={() => pickHint(v)}
                   style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}>
-                  <span className="num" style={{ fontSize: 16, fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
-                  <span className="num" style={{ fontSize: 16, fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}> {fromSym}</span>
+                  <span className="num" style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
+                  <span className="num" style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}> {fromSym}</span>
                 </button>
               ))}
             </div>
@@ -512,8 +513,8 @@ export default function Swap() {
               ⚠️ "enter", NOT "input": the Figma text reads "Slide or tap here to input", but the user
               explicitly decided (2026-09-08) to keep "enter" regardless of what Figma draws -
               this is a deliberate standing override, not an oversight, so it is NOT changed to match. */}
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', ...(needAmount ? { fontSize: 'var(--fs-item)' } : null) }}>
-            {success && <Icon name="check" size="var(--is-md-lg)" color="var(--color-white)" />}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', ...(needAmount ? { fontSize: 'var(--fs-content-2)' } : null) }}>
+            {success && <Icon name="check" size="var(--is-content-1)" color="var(--color-white)" />}
             {error || status || (needAmount ? 'Slide or tap here to enter' : 'Swap')}
           </span>
         </button>
@@ -537,7 +538,7 @@ export default function Swap() {
           style={{
             flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
             background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-            fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-bold)',
+            fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-bold)',
             color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)',
             WebkitTapHighlightColor: 'transparent',
           }}>Exit</button>

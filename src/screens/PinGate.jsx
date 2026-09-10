@@ -91,7 +91,7 @@ export default function PinGate() {
     <div className="screen">
       <div className="row-1-5 center col" style={{ gap: 16, textAlign: 'center', padding: '0 24px' }}>
         <img src={logoLong} alt="EZwallet" style={{ width: '56%' }} />
-        {error && <div style={{ fontSize: 'var(--fs-body)', color: 'var(--color-error)', maxWidth: 300 }}>{error}</div>}
+        {error && <div style={{ fontSize: 'var(--fs-content-1)', color: 'var(--color-error)', maxWidth: 300 }}>{error}</div>}
       </div>
       <div className="row-10 row10-dual">
         <button className="btn btn-secondary" onClick={signOut}>Sign out</button>

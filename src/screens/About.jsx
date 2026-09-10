@@ -37,8 +37,8 @@ export default function About() {
           // text starting at 15.13% (after the icon), both 18px semibold black.
           <button key={label} onClick={() => window.open(link, '_blank')}
             style={{ position: 'absolute', left: '7.95%', right: '9.23%', top, transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 10, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
-            <Icon name="right2" size="var(--is-item)" color="var(--color-brand)" />
-            <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)' }}>{label}</span>
+            <Icon name="right2" size="var(--is-content-2)" color="var(--color-brand)" />
+            <span style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)' }}>{label}</span>
           </button>
         ) : (
           // Plain rows (App/Version/Network/Wallet) - node 1:293-1:296: label at 9.23%, 18px semibold
@@ -46,8 +46,8 @@ export default function About() {
           // is real functional info the app must still show, right-aligned at the mirrored 9.23% inset,
           // 16px muted-2 matching the "Label:"-line value colour used everywhere else in the app.
           <div key={label} style={{ position: 'absolute', left: '9.23%', right: '9.23%', top, transform: 'translateY(-50%)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', flexShrink: 0 }}>{label}</span>
-            <span style={{ fontSize: 16, color: 'var(--color-muted-2)', textAlign: 'right', wordBreak: 'break-word' }}>{value}</span>
+            <span style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', flexShrink: 0 }}>{label}</span>
+            <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)', textAlign: 'right', wordBreak: 'break-word' }}>{value}</span>
           </div>
         )
       ))}

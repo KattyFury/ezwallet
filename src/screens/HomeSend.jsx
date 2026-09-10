@@ -133,9 +133,9 @@ export default function HomeSend() {
           maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
         }}>
         {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>Loading...</div>
+          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-content-1)', padding: '0 2px' }}>Loading...</div>
         ) : tokens.length === 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-body)', padding: '0 2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-content-1)', padding: '0 2px' }}>
             No tokens yet
           </div>
         ) : (
@@ -215,7 +215,7 @@ export default function HomeSend() {
               <div onClick={() => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } localStorage.setItem('ez_faucet_pending', String(Date.now())); window.open('https://faucet.circle.com/', '_blank') }}
                 style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                 {/* The icon is CENTRED-LEFT against the whole 2-line block (user decision 07-17) - not stuck to line 1 */}
-                <Icon name="warning" size="var(--is-item)" color="var(--color-warning)" style={{ flexShrink: 0 }} />
+                <Icon name="warning" size="var(--is-content-2)" color="var(--color-warning)" style={{ flexShrink: 0 }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
                   <span style={{ fontSize: NOTIF_FS, color: 'var(--color-content)' }}>Out of USDC for transaction fees</span>
                   <span style={{ fontSize: NOTIF_FS, color: 'var(--color-content)' }}>
@@ -248,16 +248,16 @@ export default function HomeSend() {
           <div className="popup-card" onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
             <button onClick={() => setPctPopup(null)} aria-label="Close"
               style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-              <Icon name="x" size="var(--is-item)" color="var(--color-muted)" />
+              <Icon name="x" size="var(--is-content-2)" color="var(--color-muted)" />
             </button>
             <div className="popup-title">{pctPopup.symbol}</div>
-            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--color-content)' }}>
+            <div style={{ fontSize: 'var(--fs-content-1)', color: 'var(--color-content)' }}>
               {'24h price change: '}
               <span style={{ fontWeight: 'var(--fw-medium)', color: pctPopup.change24h > 0 ? 'var(--color-primary)' : 'var(--color-error)' }}>
                 {pctStr(pctPopup.change24h)}
               </span>
             </div>
-            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--color-content)' }}>
+            <div style={{ fontSize: 'var(--fs-content-1)', color: 'var(--color-content)' }}>
               {`Value changed from ${fmtDisplay(pctPopup.usd / (1 + pctPopup.change24h / 100), cur, rates)} to ${fmtDisplay(pctPopup.usd, cur, rates)}`}
             </div>
           </div>

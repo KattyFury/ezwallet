@@ -47,10 +47,10 @@ export default function PasteAddress() {
           placeholder="0x..."
           value={address}
           onChange={e => { setAddress(e.target.value); setDirty(true) }}
-          style={{ width: '100%', height: 40, fontSize: 19, borderRadius: 8 }}
+          style={{ width: '100%', height: 40, fontSize: 'var(--fs-content-1)', borderRadius: 8 }}
         />
         {showError && (
-          <span style={{ display: 'block', marginTop: 8, fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>
+          <span style={{ display: 'block', marginTop: 8, fontSize: 'var(--fs-caption)', color: 'var(--color-error)' }}>
             {self ? "That's your own wallet – you can't send to yourself" : 'Invalid address – must start with 0x, 42 chars'}
           </span>
         )}

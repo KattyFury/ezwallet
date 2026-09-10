@@ -58,16 +58,24 @@
   --font-display:   system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";   /* BRAND: the logo, main screen TITLES */
   --font-condensed: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";   /* LEGACY NAME: numbers, currency symbols, BUTTONS */
 
-  /* ── FONT SIZES (a suggested scale - unlocked and tunable) ── */
-  --fs-amount:   52px;   /* large money amounts - matches the $10,000.00 balance in FIGMA-SCREENS-SPEC.md §5 */
-  --fs-title:    25px;   /* page TITLES - measured off 3 separate Figma frames (EnterEmail/ServiceHub/SendAmount, FIGMA-SCREENS-SPEC.md), all agree on 25px */
-  --fs-num:      24px;   /* numbers in lists (token amounts) */
-  --fs-md-lg:    21px;   /* "medium-large" - BUTTONS + the slogan + text while TYPING (2px above content) */
-  --fs-body:     19px;   /* "medium" - body CONTENT (one step below medium-large) */
-  --fs-item:     17px;   /* "medium-small" - list items */
-  --fs-label:    15px;   /* "small" - labels, secondary text, placeholders */
-  --fs-tiny:     13px;   /* "mini" - badges / very small notes */
-  --fs-content:  20px;   /* alias → --fs-body */
+  /* ── FONT SIZES - the official 5-tier text scale (user decision 2026-09-10, REPLACES the old
+     label/item/body/md-lg/title scale entirely - that scale is gone, do not resurrect the old names).
+     Header 1/Header 2/Nội dung 1/Nội dung 2/Chú thích: 28/22/19/17/15. Two of these (content-1, content-2)
+     are a deliberate ROUND-NUMBER CONSOLIDATION, not a raw Figma reading: the actual measured values across
+     today's rebuild were 18px (card labels/buttons/chip text) and 16px (meta "Label:" values/captions) -
+     the user chose 19/17 anyway for a cleaner, more evenly-stepped scale (15-17-19-22-28) applied
+     app-wide, overriding the individual per-screen pixel readings on purpose. Header 1 (28) and Header 2
+     (22) DO match real Figma measurements exactly (screen titles; "To: Name"/Amount-row emphasis).
+     This scale covers TEXT roles only (titles, labels, buttons, captions) - it does NOT apply to hero
+     number displays (the balance, amount-entry, receipt amount), which keep their own Figma-measured
+     per-screen size + --fw-light, a separate system below. */
+  --fs-amount:    52px;   /* hero money amounts (Home/Menu balance) - separate system, unchanged */
+  --fs-h1:        28px;   /* Header 1 - screen titles */
+  --fs-num:       24px;   /* numbers in lists (token amounts) - separate system, unchanged */
+  --fs-h2:        22px;   /* Header 2 - inline emphasis (a name, an amount inside a row) */
+  --fs-content-1: 19px;   /* Nội dung 1 - the workhorse size: card labels, buttons, chips */
+  --fs-content-2: 17px;   /* Nội dung 2 - meta values ("Label:" lines), secondary captions */
+  --fs-caption:   15px;   /* Chú thích - the smallest tier; also absorbs the old --fs-tiny (13) badges/notes */
 
   /* ── ICON SIZES - ALWAYS TIED TO THE TEXT BESIDE THEM ──
      User decision 2026-07-16: "icons must match the text, big text with a small icon is wrong".
@@ -75,11 +83,11 @@
      Stop writing one-off size={14}/{18}/{20} - the moment a font size changes, the icon is out of step (bug 07-16).
      Only icons STANDING ALONE (with no text to match) keep a hardcoded number: the SendReceipt
      check at 76, the Contacts avatar, the QR delete button, the Swap reverse button, the numpad erase key. */
-  --is-num:     24px;   /* pairs with --fs-num    24 */
-  --is-md-lg:   21px;   /* pairs with --fs-md-lg  21 - buttons */
-  --is-body:    19px;   /* pairs with --fs-body   19 - content, notifications, navbar (07-17e: down from md-lg for air) */
-  --is-item:    17px;   /* pairs with --fs-item   17 */
-  --is-label:   15px;   /* pairs with --fs-label  15 */
+  --is-num:       24px;   /* pairs with --fs-num       24 */
+  --is-h2:        22px;   /* pairs with --fs-h2        22 */
+  --is-content-1: 19px;   /* pairs with --fs-content-1 19 */
+  --is-content-2: 17px;   /* pairs with --fs-content-2 17 */
+  --is-caption:   15px;   /* pairs with --fs-caption   15 */
 
   /* ── SCREEN WIDTH ──
      .screen = min(100vw, --screen-max). To size something as a % OF THE SCREEN (not a % of a parent
@@ -112,7 +120,7 @@ html, body, #root {
 
 body {
   font-family: var(--font-base);
-  font-size: var(--fs-content);
+  font-size: var(--fs-content-1);
   color: var(--color-content);
   background: #D6EAFB;   /* TEMPORARY for filming a clip (so the status bar matches the pale blue) - CHANGE BACK to var(--color-white) once filming is done, see index.css:114 */
   -webkit-font-smoothing: antialiased;
@@ -228,7 +236,7 @@ body {
    above) supplies `display:flex` + horizontal centring; `align-items:flex-end` here OVERRIDES its
    vertical centring (this rule is declared later in the file, so it wins for that one property). Do NOT
    fix titles with ad-hoc absolute positioning per screen - route them through this class instead. */
-.screen-title { font-family: var(--font-display); color: var(--color-black); font-size: 28px; align-items: flex-end; }   /* screen titles = system font, BLACK */
+.screen-title { font-family: var(--font-display); color: var(--color-black); font-size: var(--fs-h1); align-items: flex-end; }   /* screen titles = system font, BLACK, Header 1 */
 
 /* Every number & currency symbol ($/USDC/EURC/cirBTC) → --font-condensed, regular */
 .num { font-family: var(--font-condensed); }
@@ -238,11 +246,12 @@ body {
   align-items: center;
   justify-content: center;
   font-family: var(--font-condensed);
-  /* 18px Semibold - 2026-09-10 CORRECTION: was --fs-body (19px). Every button re-verified this session
+  /* Nội dung 1 (19px) - 2026-09-10: the raw Figma reading across every button re-verified this session
      (EnterEmail Back/Continue, PasteAddress Back/Paste, SendConfirm Back/Confirm PIN, Receipt Save/Done,
-     Menu Deposit/Withdraw, Exchange's CTA) reads 18px in the current Figma file, not 19 - the 19px note
-     below is from an OLDER pull. */
-  font-size: 18px;
+     Menu Deposit/Withdraw, Exchange's CTA) was actually 18px, not 19 - but the user's new 5-tier scale
+     (15-17-19-22-28) deliberately rounds button text to the same "Nội dung 1" tier as card labels, a
+     one-pixel consolidation choice made on purpose, not a fresh measurement. */
+  font-size: var(--fs-content-1);
   font-weight: var(--fw-semibold);
   border-radius: 50px;
   border: none;
@@ -350,7 +359,7 @@ body {
 .popup-title {
   font-family: var(--font-display);
   color: var(--color-black);
-  font-size: var(--fs-title);
+  font-size: var(--fs-h2);   /* Header 2, not Header 1 - a popup title is a secondary heading, not the page title */
   font-weight: var(--fw-semibold);   /* the title is BOLD (semibold) - the heavy pole of the contrast */
   text-align: center;
 }
@@ -482,7 +491,7 @@ body {
   justify-content: flex-end;
   padding-bottom: 10.5px;
   font-family: var(--font-condensed);
-  font-size: 16px;              /* measured off Send/Receive/Menu (2026-09-10) - was --fs-body 19 */
+  font-size: var(--fs-content-2);   /* Nội dung 2 - raw measurement (Send/Receive/Menu) was 16px, rounded up to the new scale's 17 */
   font-weight: var(--fw-semibold);
   color: var(--color-muted);   /* UNSELECTED = the guideline's secondary text tone */
   background: none;
@@ -574,7 +583,7 @@ body {
   border: none;
   outline: none;
   font-family: var(--font-base);
-  font-size: var(--fs-label);
+  font-size: var(--fs-caption);
   color: var(--color-black);
   background: transparent;
 }
@@ -618,16 +627,17 @@ body {
 }
 
 .confirm-label {
-  /* 16px (was --fs-body 19) - 2026-09-10: matches every other label:value row measured this session
-     (Exchange's "Available:"/"Balance:", node 1:71) - --color-muted-2 (#667085), not --color-muted. */
-  font-size: 16px;
+  /* Nội dung 2 (17px) - raw measurement (Exchange's "Available:"/"Balance:", node 1:71, and every other
+     label:value row this session) was 16px, rounded up to the new scale. --color-muted-2 (#667085), not
+     --color-muted. */
+  font-size: var(--fs-content-2);
   color: var(--color-muted-2);
   flex-shrink: 0;
 }
 
 .confirm-value {
-  /* 16px semibold (was --fs-md-lg 21 medium) - same reasoning as .confirm-label. */
-  font-size: 16px;
+  /* Nội dung 2 (17px) semibold - same reasoning as .confirm-label. */
+  font-size: var(--fs-content-2);
   font-weight: var(--fw-semibold);
   color: var(--color-content);
   text-align: right;
@@ -645,7 +655,7 @@ body {
   border: none;
   border-radius: 16px;
   padding: 10px 12px;
-  font-size: var(--fs-label);
+  font-size: var(--fs-caption);
   color: var(--color-content);
   text-align: center;
 }
@@ -658,7 +668,7 @@ body {
   border-radius: 10px;
   padding: 10px 12px;
   font-family: var(--font-base);
-  font-size: var(--fs-label);
+  font-size: var(--fs-caption);
   color: var(--color-black);
   resize: none;
   outline: none;

@@ -155,18 +155,18 @@ export default function SendAmount() {
           cleanly. Same per-element absolute placement Confirm transaction/Receipt already use. */}
       <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '10.19dvh', height: '18.48dvh', background: 'var(--color-surface)', borderRadius: 16 }} />
 
-      <span style={{ position: 'absolute', left: '8.46%', top: '13.55dvh', transform: 'translateY(-50%)', fontSize: 18, fontWeight: 'var(--fw-semibold)' }}>You send</span>
+      <span style={{ position: 'absolute', left: '8.46%', top: '13.55dvh', transform: 'translateY(-50%)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)' }}>You send</span>
 
       {/* Chip - node 1:94: centre 19.4dvh. Icon (1:95) is a literal 24x24 BLACK SQUARE, no rounding -
           Figma draws no real token icon here, so draw exactly what it draws, not a borrowed round one. */}
       <button onClick={() => setShowCur(true)}
-        style={{ position: 'absolute', left: '8.46%', top: '19.4dvh', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'var(--color-white)', borderRadius: 999, height: 42, padding: '0 14px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', cursor: 'pointer' }}>
+        style={{ position: 'absolute', left: '8.46%', top: '19.4dvh', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'var(--color-white)', borderRadius: 999, height: 42, padding: '0 14px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', cursor: 'pointer' }}>
         <div style={{ width: 24, height: 24, background: 'var(--color-black)', flexShrink: 0 }} />
         {cur}
-        <Icon name="down2" size="var(--is-item)" color="var(--color-brand)" />
+        <Icon name="down2" size="var(--is-content-2)" color="var(--color-brand)" />
       </button>
 
-      <span style={{ position: 'absolute', left: '8.46%', top: '25.28dvh', transform: 'translateY(-50%)', fontSize: 16, whiteSpace: 'nowrap' }}>
+      <span style={{ position: 'absolute', left: '8.46%', top: '25.28dvh', transform: 'translateY(-50%)', fontSize: 'var(--fs-content-2)', whiteSpace: 'nowrap' }}>
         <span style={{ color: 'var(--color-muted-2)' }}>Available: </span>
         <span className="num" style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{availableStr}</span>
       </span>
@@ -191,8 +191,8 @@ export default function SendAmount() {
 
       {/* "To" card - node 1:91: row 4 (340x70, top 30.57dvh). "To:" 18px + the name 22px, both semibold. */}
       <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '30.57dvh', height: '8.29dvh', background: 'var(--color-surface)', borderRadius: 16, display: 'flex', alignItems: 'center', padding: '0 8px', minWidth: 0 }}>
-        <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-          {'To: '}<span style={{ fontSize: 22 }}>{name || shortenAddr(address)}</span>
+        <span style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {'To: '}<span style={{ fontSize: 'var(--fs-h2)' }}>{name || shortenAddr(address)}</span>
         </span>
       </div>
 
@@ -200,16 +200,16 @@ export default function SendAmount() {
           the "To" card and the message row. VND is unreachable in practice (CURRENCIES above has no
           'VND' - see the file header comment) so this and the error message never actually coincide. */}
       {isVnd && digits && (
-        <span className="num" style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '39.5dvh', fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>
+        <span className="num" style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '39.5dvh', fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', textAlign: 'center' }}>
           {vndRate ? `≈ ${tokenAmount.toFixed(2)} USDC` : 'Getting exchange rate...'}
         </span>
       )}
       {selfSend ? (
-        <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '39.5dvh', fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>
+        <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '39.5dvh', fontSize: 'var(--fs-caption)', color: 'var(--color-error)', textAlign: 'center' }}>
           That's your own wallet – you can't send to yourself
         </span>
       ) : overBalance && (
-        <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '39.5dvh', fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>
+        <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '39.5dvh', fontSize: 'var(--fs-caption)', color: 'var(--color-error)', textAlign: 'center' }}>
           {'Insufficient balance (available:'} {availableStr})
         </span>
       )}
@@ -227,11 +227,11 @@ export default function SendAmount() {
           onBlur={() => setTypingText(false)}
           onChange={e => { setMemo(e.target.value); setNoteTouched(true) }}
           maxLength={100}
-          style={{ flex: 1, minWidth: 0, height: 40, borderRadius: 8, fontSize: 18 }}
+          style={{ flex: 1, minWidth: 0, height: 40, borderRadius: 8, fontSize: 'var(--fs-content-1)' }}
         />
         <button onClick={openNotePopup} aria-label={'Set your default note'}
           style={{ flexShrink: 0, width: 33, height: 40, borderRadius: 8, border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <Icon name="option" size="var(--is-label)" color="var(--color-muted)" />
+          <Icon name="option" size="var(--is-caption)" color="var(--color-muted)" />
         </button>
       </div>
 
@@ -249,7 +249,7 @@ export default function SendAmount() {
         <div style={{ height: hints.length ? 44 : 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 0, overflow: 'hidden' }}>
           {hints.map(v => (
             <button key={v} onClick={() => setDigits(String(v))}
-              style={{ border: '1.5px solid var(--color-gray)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
+              style={{ border: '1.5px solid var(--color-gray)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
               {fmtAmountHint(v)}
             </button>
           ))}
@@ -282,7 +282,7 @@ export default function SendAmount() {
             <div className="popup-title">Set your default note</div>
             <input className="address-input" placeholder={'Type here'} value={draftNote}
               onChange={e => setDraftNote(e.target.value)} maxLength={100} autoFocus
-              style={{ width: '100%', height: 52, fontSize: 'var(--fs-md-lg)' }} />
+              style={{ width: '100%', height: 52, fontSize: 'var(--fs-content-1)' }} />
             <div className="popup-actions">
               <button className="btn btn-secondary" onClick={() => setShowNote(false)}>Back</button>
               <button className="btn btn-primary" onClick={saveDefaultNote}>Save</button>

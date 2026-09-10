@@ -31,7 +31,7 @@ function timeLabel(ts) {
 // The date boundary between transaction groups (user decision: the boundary shows day, month and year).
 function DateHeader({ date, first }) {
   return (
-    <div style={{ fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)', padding: first ? '2px 2px 8px' : '18px 2px 8px' }}>
+    <div style={{ fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)', padding: first ? '2px 2px 8px' : '18px 2px 8px' }}>
       {date}
     </div>
   )
@@ -90,29 +90,29 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, sw
         background: isSend ? 'var(--color-info-soft)' : 'var(--color-primary-soft)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <Icon name={isSend ? 'up' : 'down'} size="var(--is-label)" color={isSend ? 'var(--color-info)' : 'var(--color-primary)'} />
+        <Icon name={isSend ? 'up' : 'down'} size="var(--is-caption)" color={isSend ? 'var(--color-info)' : 'var(--color-primary)'} />
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
         {/* row 1: who - item size, bold */}
-        <div style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+        <div style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {isSwap ? swapTitle : `${isSend ? 'Sent to' : 'Received from'} ${who}`}
         </div>
         {/* row 2: status/time + the [+ Add] button. Swap → "Swap completed · At <time>" (user decision 07-20d) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
-          <span style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)' }}>
+          <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)' }}>
             {isSwap ? 'Swap completed · ' : ''}At <span className="num">{timeLabel(tx.timeStamp)}</span>
           </span>
           {!isSwap && !name && !isFaucet && counter && (   /* the faucet is a test-money machine, saving it as a contact is pointless */
             <span onClick={e => { e.stopPropagation(); onAdd(counter) }}
-              style={{ flexShrink: 0, fontSize: 'var(--fs-tiny)', fontWeight: 'var(--fw-medium)', color: 'var(--color-brand)', border: '1px solid var(--color-brand)', borderRadius: 6, padding: '1px 8px', whiteSpace: 'nowrap', background: 'var(--color-white)' }}>
+              style={{ flexShrink: 0, fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-medium)', color: 'var(--color-brand)', border: '1px solid var(--color-brand)', borderRadius: 6, padding: '1px 8px', whiteSpace: 'nowrap', background: 'var(--color-white)' }}>
               Add to Contacts
             </span>
           )}
         </div>
         {/* rows 3-4: Note (if any) - free to wrap when long */}
         {memo && (
-          <div style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)', marginTop: 2, lineHeight: 1.4, wordBreak: 'break-word' }}>
+          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', marginTop: 2, lineHeight: 1.4, wordBreak: 'break-word' }}>
             Note: {memo}
           </div>
         )}
@@ -120,10 +120,10 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, sw
 
       {/* The money block - anchored to rows 1-2 (top-aligned). Primary: display money ($). Secondary: the real token, grey */}
       <div style={{ textAlign: 'right', flexShrink: 0, marginTop: 2 }}>
-        <div className="num" style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-semibold)', color: isSend ? 'var(--color-error)' : 'var(--color-primary)', whiteSpace: 'nowrap' }}>
+        <div className="num" style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: isSend ? 'var(--color-error)' : 'var(--color-primary)', whiteSpace: 'nowrap' }}>
           {isSend ? '-' : '+'}{rates ? `${displaySymbol(cur)}${displayNum(usd, cur, rates)}` : '…'}
         </div>
-        <div className="num" style={{ fontSize: 'var(--fs-tiny)', color: 'var(--color-muted)', marginTop: 2, whiteSpace: 'nowrap' }}>
+        <div className="num" style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', marginTop: 2, whiteSpace: 'nowrap' }}>
           {amount.toFixed(amount < 0.01 ? 6 : 2)} {symbol}
         </div>
       </div>
@@ -134,8 +134,8 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, sw
 function DetailRow({ label, children }) {
   return (
     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '7px 0' }}>
-      <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', flexShrink: 0 }}>{label}</span>
-      <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', textAlign: 'right', wordBreak: 'break-word' }}>{children}</span>
+      <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', flexShrink: 0 }}>{label}</span>
+      <span style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', textAlign: 'right', wordBreak: 'break-word' }}>{children}</span>
     </div>
   )
 }
@@ -264,10 +264,10 @@ export default function TxHistory() {
         maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
       }}>
         {loading ? (
-          <div style={{ width: '100%', textAlign: 'center', paddingTop: 40, color: 'var(--color-muted)', fontSize: 'var(--fs-label)' }}>Loading...</div>
+          <div style={{ width: '100%', textAlign: 'center', paddingTop: 40, color: 'var(--color-muted)', fontSize: 'var(--fs-caption)' }}>Loading...</div>
         ) : filtered.length === 0 ? (
           <div style={{ width: '100%', textAlign: 'center', paddingTop: 40 }}>
-            <div style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>{emptyMsg}</div>
+            <div style={{ fontSize: 'var(--fs-content-1)', color: 'var(--color-muted)' }}>{emptyMsg}</div>
           </div>
         ) : (() => {
           // Group by day: insert a DateHeader whenever the day changes. Swap pairs are NOT merged (user decision 07-20:
@@ -313,7 +313,7 @@ export default function TxHistory() {
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
                 {shortAddr(d.counter)}
                 <button onClick={() => copyCounter(d.counter)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 0 }}>
-                  <Icon name={copied ? 'check' : 'copy'} size="var(--is-item)" color={copied ? 'var(--color-primary)' : 'var(--color-muted)'} />
+                  <Icon name={copied ? 'check' : 'copy'} size="var(--is-content-2)" color={copied ? 'var(--color-primary)' : 'var(--color-muted)'} />
                 </button>
               </span>
             </DetailRow>

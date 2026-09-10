@@ -67,10 +67,10 @@ export default function MenuScreen() {
           Figma centre (14.3dvh, node 1:29/1:30) instead of only approximating it via a grid cell.
           Glow shadow (0 0 8px rgba(0,0,0,.48)) matches every button rebuilt today. */}
       <div style={{ position: 'absolute', left: '6.45%', right: '6.45%', top: '14.3dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8, alignItems: 'center' }}>
-        <button className="btn btn-secondary" style={{ flex: 1, opacity: 0.4, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', fontSize: 18 }} disabled>
+        <button className="btn btn-secondary" style={{ flex: 1, opacity: 0.4, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', fontSize: 'var(--fs-content-1)' }} disabled>
           Withdraw
         </button>
-        <button className="btn btn-primary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', fontSize: 18 }} onClick={copyAddrThenFaucet}>
+        <button className="btn btn-primary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', fontSize: 'var(--fs-content-1)' }} onClick={copyAddrThenFaucet}>
           Deposit
         </button>
       </div>
@@ -85,7 +85,7 @@ export default function MenuScreen() {
           <button className="menu-item" style={{ ...ROW_STYLE, top, opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
             <Bullet color="var(--color-brand)" />
-            <span style={{ flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)' }}>{label}</span>
+            <span style={{ flex: 1, fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)' }}>{label}</span>
           </button>
           <div style={{ position: 'absolute', left: '6.45%', right: '6.45%', top: rule, height: 1, background: 'var(--color-gray)' }} />
         </div>
@@ -102,7 +102,7 @@ export default function MenuScreen() {
           window.location.reload()
         }}>
           <Bullet color="var(--color-error)" />
-          <span style={{ flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)' }}>Sign out</span>
+          <span style={{ flex: 1, fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)' }}>Sign out</span>
         </button>
       </div>
 

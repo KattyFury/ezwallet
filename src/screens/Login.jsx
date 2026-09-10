@@ -181,7 +181,7 @@ export default function Login() {
       </span>
 
       {restoring && (
-        <span style={{ position: 'absolute', top: 'calc(85.66dvh - 40px)', left: '50%', transform: 'translateX(-50%)', fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
+        <span style={{ position: 'absolute', top: 'calc(85.66dvh - 40px)', left: '50%', transform: 'translateX(-50%)', fontSize: 'var(--fs-caption)', color: 'var(--color-muted)' }}>
           Processing...
         </span>
       )}

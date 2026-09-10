@@ -29,8 +29,8 @@ export default function Currency() {
   // The value chip = EXACTLY the token chip on the Swap screen (user decision 07-17f "match the other dropdown
   // buttons"): WHITE + no border, GLOW shadow (2026-09-10: node 1:259/1:266/1:269 draw shadow, not a grey
   // border) + the down2 ARROW INSIDE the chip. Tap opens the popup.
-  const LABEL = { flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)' }
-  const CHIP = { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', border: 'none', background: 'var(--color-white)', borderRadius: 999, padding: '5px 10px 5px 14px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }
+  const LABEL = { flex: 1, fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)' }
+  const CHIP = { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', border: 'none', background: 'var(--color-white)', borderRadius: 999, padding: '5px 10px 5px 14px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }
 
   // Currency picker popup: a locked option is a dimmed, disabled button. The locked flag stays so a new currency
   // without a wired exchange rate can reuse it immediately.
@@ -66,11 +66,11 @@ export default function Currency() {
         <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 16 }}>
           <button className="menu-item" style={{ height: 70, padding: '0 8px' }} onClick={() => setLangPicker(true)}>
             <span style={LABEL}>Language</span>
-            <span style={CHIP}>English<Icon name="down2" size="var(--is-item)" color="var(--color-brand)" /></span>
+            <span style={CHIP}>English<Icon name="down2" size="var(--is-content-2)" color="var(--color-brand)" /></span>
           </button>
           <button className="menu-item" style={{ height: 70, padding: '0 8px' }} onClick={() => setCurPicker(true)}>
             <span style={LABEL}>Default currency</span>
-            <span style={CHIP}>{CUR_SHORT[currency] || 'USD'}<Icon name="down2" size="var(--is-item)" color="var(--color-brand)" /></span>
+            <span style={CHIP}>{CUR_SHORT[currency] || 'USD'}<Icon name="down2" size="var(--is-content-2)" color="var(--color-brand)" /></span>
           </button>
         </div>
       </div>

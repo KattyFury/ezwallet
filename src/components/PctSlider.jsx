@@ -57,7 +57,7 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
         <div style={{
           position: 'absolute', left: `${pct}%`, transform: 'translateX(-50%)',
           background: disabled ? 'var(--color-gray)' : 'var(--grad-brand)', color: 'var(--color-white)',
-          borderRadius: 8, padding: '2px 10px', fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)',
+          borderRadius: 8, padding: '2px 10px', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)',
           whiteSpace: 'nowrap', transition: dragging ? 'none' : 'left .15s ease',
         }}>
           {pct}%
@@ -93,7 +93,7 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
         {MARKERS.map(m => (
           <span key={m} onClick={() => !disabled && onChange(m)} style={{
             position: 'absolute', left: `${m}%`, transform: 'translateX(-50%)', padding: '4px 6px',
-            fontSize: 'var(--fs-item)', color: pct === m ? 'var(--color-brand)' : 'var(--color-muted)',
+            fontSize: 'var(--fs-content-2)', color: pct === m ? 'var(--color-brand)' : 'var(--color-muted)',
             fontWeight: pct === m ? 'var(--fw-semibold)' : 'var(--fw-normal)', whiteSpace: 'nowrap',
             cursor: disabled ? 'default' : 'pointer', WebkitUserSelect: 'none', userSelect: 'none',
           }}>

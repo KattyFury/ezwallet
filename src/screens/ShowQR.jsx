@@ -65,7 +65,7 @@ export default function ShowQR() {
           code" black, "Current Available Network: Arc Testnet" in --color-error (the file's OLDER, unedited
           copies of this frame still draw the pre-09-08 red #EC221F - BRAND-GUIDELINE.md's current #FF383C
           wins, per the two-sources rule: an unedited leftover inside Figma is not a second source). */}
-      <div style={{ position: 'absolute', left: '50%', top: '55.09dvh', transform: 'translate(-50%, -50%)', width: 324, fontSize: 16, fontWeight: 'var(--fw-semibold)', textAlign: 'center', lineHeight: '24px' }}>
+      <div style={{ position: 'absolute', left: '50%', top: '55.09dvh', transform: 'translate(-50%, -50%)', width: 324, fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', textAlign: 'center', lineHeight: '24px' }}>
         <span>Have the sender scan this code</span><br />
         <span style={{ color: 'var(--color-error)' }}>Current Available Network: Arc Testnet</span>
       </div>
@@ -77,10 +77,10 @@ export default function ShowQR() {
         position: 'absolute', left: '50%', top: '63dvh', transform: 'translateX(-50%)',
         display: 'inline-flex', alignItems: 'center', gap: 8,
         background: 'none', border: 'none', padding: 6, cursor: 'pointer',
-        fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)',
+        fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-medium)',
         color: 'var(--color-brand)', WebkitTextFillColor: 'var(--color-brand)', WebkitTapHighlightColor: 'transparent',
       }}>
-        <Icon name="share" size="var(--is-md-lg)" color="var(--color-brand)" />
+        <Icon name="share" size="var(--is-content-1)" color="var(--color-brand)" />
         Share
       </button>
 

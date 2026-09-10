@@ -13,13 +13,20 @@ Background: #FFFFFF
 
 ## Typography
 Font: system stack
-H1: 24/28, weight 500
-H2: 18/24, weight 500
-Body: 16/22, weight 400
-Caption: 13/16, weight 400
-Button (CTA chuẩn + action-card primary): 18px, weight 500
-Button (action-card phụ): 16px, weight 500
-Hero number: weight Light
+
+Text scale - user decision 2026-09-10, REPLACES the H1/H2/Body/Caption rows below entirely (kept only as
+history in HANDOFF.md, not read from here anymore):
+Header 1: 28px - screen titles (matches the live Figma measurement exactly)
+Header 2: 22px - inline emphasis: a name, an amount inside a row (matches the live Figma measurement exactly)
+Nội dung 1: 19px - card labels, buttons, chips (a deliberate round-number consolidation - the raw Figma
+  reading across these elements is 18px; 19 was chosen for a cleaner, evenly-stepped scale)
+Nội dung 2: 17px - meta "Label:" values, secondary captions (same consolidation - raw reading is 16px)
+Chú thích: 15px - the smallest tier; also absorbs what used to be separate 13px notes/badges
+
+Weight: mostly Semibold (600) for the tiers above; body/reading content stays Regular (400). Not locked to
+exactly 2 weights - use judgement per element, same as before.
+Hero number (balance, amount-entry, receipt amount): weight Light, size measured per screen - a SEPARATE
+system from the 5-tier text scale above, not folded into it.
 
 ## Spacing / Grid
 Scale: 4, 8, 12, 16, 24, 32, 48, 64

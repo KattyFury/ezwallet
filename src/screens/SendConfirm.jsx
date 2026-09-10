@@ -131,7 +131,7 @@ export default function SendConfirm() {
           )}
           <div className="confirm-row">
             <span className="confirm-label">Amount</span>
-            <span className="confirm-value num" style={{ fontSize: 22, fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
+            <span className="confirm-value num" style={{ fontSize: 'var(--fs-h2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
               {mainEl}
             </span>
           </div>
@@ -169,8 +169,8 @@ export default function SendConfirm() {
           card's bottom edge (49.05dvh) now that the warning box above it is gone. */}
       {(loading || (error && !loading)) && (
         <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '52dvh' }}>
-          {loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center', display: 'block' }}>Opening PIN confirmation...</span>}
-          {error && !loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center', display: 'block' }}>{error}</span>}
+          {loading && <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', textAlign: 'center', display: 'block' }}>Opening PIN confirmation...</span>}
+          {error && !loading && <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-error)', textAlign: 'center', display: 'block' }}>{error}</span>}
         </div>
       )}
 

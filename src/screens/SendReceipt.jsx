@@ -96,7 +96,7 @@ export default function SendReceipt() {
 
       {/* "Sent successfully" - node 1:234: top-anchored (no vertical centring in the Figma layer), 18px
           semibold (was --fs-body 19 medium). */}
-      <span style={{ position: 'absolute', left: '50%', top: '30.08dvh', transform: 'translateX(-50%)', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>
+      <span style={{ position: 'absolute', left: '50%', top: '30.08dvh', transform: 'translateX(-50%)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>
         Sent successfully
       </span>
 
@@ -124,7 +124,7 @@ export default function SendReceipt() {
           ) : null}
           <div className="confirm-row">
             <span className="confirm-label">Amount</span>
-            <span className="confirm-value num" style={{ fontSize: 22, fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{realAmountText}</span>
+            <span className="confirm-value num" style={{ fontSize: 'var(--fs-h2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{realAmountText}</span>
           </div>
           {memo ? (
             <div className="confirm-row">
@@ -134,7 +134,7 @@ export default function SendReceipt() {
           ) : null}
           <div className="confirm-row">
             <span className="confirm-label">Time</span>
-            <span className="confirm-value" style={{ fontSize: 'var(--fs-body)' }}>{fmtTime(timestamp)}</span>
+            <span className="confirm-value" style={{ fontSize: 'var(--fs-content-1)' }}>{fmtTime(timestamp)}</span>
           </div>
         </div>
       </div>

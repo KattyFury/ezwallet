@@ -46,11 +46,11 @@ export default function Security() {
   // pull (node 15:190, the Figma file's own name for this frame - misspelled "Secutiry", HANDOFF's old
   // node id 1:275 no longer exists). Value colour is --color-muted-2 (#667085), not --color-muted
   // (#94A3B8) - same "Label:"-line token as Confirm/Receipt's card rows, not the nav-inactive tone.
-  const LABEL = { flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)' }
-  const VALUE = { fontSize: 16, fontWeight: 'var(--fw-semibold)', color: 'var(--color-muted-2)', maxWidth: '55%', textAlign: 'right', wordBreak: 'break-all' }
+  const LABEL = { flex: 1, fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)' }
+  const VALUE = { fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-muted-2)', maxWidth: '55%', textAlign: 'right', wordBreak: 'break-all' }
   // The "Change PIN" pill button - white, fully rounded, glow shadow (the SAME chip look Currency.jsx's
   // currency picker uses, but a plain button here, no caret - Figma draws no dropdown on this one).
-  const PIN_CHIP = { border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', borderRadius: 999, height: 42, padding: '0 18px', fontSize: 18, fontWeight: 'var(--fw-semibold)', cursor: 'pointer', flexShrink: 0 }
+  const PIN_CHIP = { border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', borderRadius: 999, height: 42, padding: '0 18px', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', flexShrink: 0 }
 
   return (
     <div className="screen">

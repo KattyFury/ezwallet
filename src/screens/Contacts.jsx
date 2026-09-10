@@ -66,7 +66,7 @@ function AvatarCropper({ src, onCancel, onDone }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
-      <div className="screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-medium)' }}>Adjust photo</div>
+      <div className="screen-title" style={{ fontSize: 'var(--fs-h1)', fontWeight: 'var(--fw-medium)' }}>Adjust photo</div>
       <div
         onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
         style={{ width: V, height: V, borderRadius: '50%', overflow: 'hidden', position: 'relative', background: '#000', touchAction: 'none', cursor: 'grab' }}
@@ -142,7 +142,7 @@ export default function Contacts() {
           evidence to check against and is left as the prior user-tuned value). */}
       <div className="row-2-8" style={{ width: '100%', ...(contacts.length ? { background: 'var(--color-surface)', borderRadius: 16, padding: '4px 16px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' } : {}) }}>
         {contacts.length === 0 ? (
-          <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>No contacts yet</span>
+          <span style={{ fontSize: 'var(--fs-content-1)', color: 'var(--color-muted)' }}>No contacts yet</span>
         ) : (
           <div className="scroll-thin" style={{ overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column' }}>
           {contacts.map(c => {
@@ -159,17 +159,17 @@ export default function Contacts() {
                   </button>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 20, fontWeight: 'var(--fw-medium)' }}>{c.name}</div>
+                  <div style={{ fontSize: 'var(--fs-h2)', fontWeight: 'var(--fw-medium)' }}>{c.name}</div>
                   <button onClick={() => copyAddr(c)}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)' }}>
+                    <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted)' }}>
                       {c.address.slice(0, 6)}...{c.address.slice(-4)}
                     </span>
-                    <Icon name={copiedId === c.id ? 'check' : 'copy'} size="var(--is-label)" color={copiedId === c.id ? 'var(--color-primary)' : 'var(--color-muted)'} />
+                    <Icon name={copiedId === c.id ? 'check' : 'copy'} size="var(--is-caption)" color={copiedId === c.id ? 'var(--color-primary)' : 'var(--color-muted)'} />
                   </button>
                 </div>
                 <button onClick={() => navigate('SendAmount', { address: c.address, name: c.name })}
-                  className="btn btn-primary" style={{ height: 40, minHeight: 40, padding: '0 22px', fontSize: 'var(--fs-item)' }}>
+                  className="btn btn-primary" style={{ height: 40, minHeight: 40, padding: '0 22px', fontSize: 'var(--fs-content-2)' }}>
                   Send
                 </button>
                 <button onClick={() => openEdit(c)}
@@ -209,15 +209,15 @@ export default function Contacts() {
                     ? <img src={form.pfp} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : <Icon name="add" size={30} color="var(--color-muted)" />}
                 </button>
-                <input className="address-input" placeholder={'Name'} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ fontSize: 'var(--fs-body)' }} />
-                <input className="address-input" placeholder="0x..." value={form.addr} onChange={e => setForm(f => ({ ...f, addr: e.target.value }))} style={{ fontSize: 'var(--fs-body)' }} />
+                <input className="address-input" placeholder={'Name'} value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} style={{ fontSize: 'var(--fs-content-1)' }} />
+                <input className="address-input" placeholder="0x..." value={form.addr} onChange={e => setForm(f => ({ ...f, addr: e.target.value }))} style={{ fontSize: 'var(--fs-content-1)' }} />
                 {/* EDIT: a red "Delete contact" line (not a button - avoids ending up with 3 buttons), tapping it → confirm.
                     14px vertical margin (user decision 07-20: keep it away from the address field above and the Back/Save
                     pair below so nobody taps it by accident - popup-card gap 12px + 14px = ~26px each side). The popup still
                     centres itself over rows 1-6 thanks to top:30dvh + translateY(-50%). */}
                 {form.id && (
                   <button onClick={() => setConfirmDelete(true)}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)', fontFamily: 'inherit', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', padding: '2px 0', margin: '14px 0', textAlign: 'center' }}>
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)', fontFamily: 'inherit', fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-medium)', padding: '2px 0', margin: '14px 0', textAlign: 'center' }}>
                     Delete contact
                   </button>
                 )}
@@ -236,7 +236,7 @@ export default function Contacts() {
         <div className="popup-overlay" style={{ zIndex: 110 }} onClick={() => setConfirmDelete(false)}>
           <div className="popup-card" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
             <div className="popup-title">Delete contact?</div>
-            <div style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>This can't be undone.</div>
+            <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)' }}>This can't be undone.</div>
             <div className="popup-actions" style={{ marginTop: 4 }}>
               <button className="btn btn-secondary" onClick={() => setConfirmDelete(false)}>Back</button>
               <button className="btn btn-error" onClick={handleDelete}>Delete</button>

@@ -268,6 +268,45 @@ All five verified with `tools/figma-check.mjs` against fresh `get_screenshot` pu
 build` clean, `npm test` 16/16. **Every frame in the file has now been rebuilt at least once** - see the
 "Left: none" note in §4 above for what that does and does not mean going forward.
 
+**Twelfth round-trip (2026-09-10, same day): the text scale itself, app-wide.** With every screen rebuilt,
+the user defined an official 5-tier TEXT hierarchy (not hero numbers - see BRAND-GUIDELINE.md's Typography
+section, rewritten to match) - Header 1/Header 2/Nội dung 1/Nội dung 2/Chú thích = 28/22/19/17/15px,
+REPLACING the old --fs-label/-item/-body/-md-lg/-title/-tiny/-content scale entirely (those CSS var names
+no longer exist - do not resurrect them). Two of the five are a **deliberate round-number consolidation,
+not a fresh Figma reading**: the user was told outright that the raw measured values for "Nội dung 1" and
+"Nội dung 2" were 18px and 16px (buttons/card-labels; meta "Label:" values) across every screen rebuilt
+today, and chose 19/17 anyway for a cleaner, evenly-stepped scale - a real, deliberate design decision,
+not a fabrication, and the one place today where "match Figma's raw pixel exactly" was knowingly overridden
+on the user's own instruction. Header 1 (28) and Header 2 (22) already matched the raw Figma reading
+exactly, no consolidation needed there.
+Applied via `--fs-h1/-h2/-content-1/-content-2/-caption` (+ paired `--is-*` icon sizes) in `index.css`,
+then bulk-renamed across every screen/component (`var(--fs-old-name)` → the matching new token) and every
+literal `fontSize: 18/19/16/20/22/24` in the screens rebuilt this session → the corresponding token.
+**Explicit exceptions, not oversights:**
+- `NotifArea.jsx`'s `NOTIF_FS` (13px) was NOT bumped to Chú thích (15) - its own comment documents a real,
+  previously-hit overflow bug ("at 17 the hint block's 4 lines wrap and overflow the card") at just 4px
+  more; 15 was never tested against that same 4-line hint block, so this was left alone rather than risk
+  reintroducing a fixed bug. Worth a deliberate look later, not a blind bump.
+- Hero number displays (balance, amount-entry, receipt/QR amount: 44/48/52px + `--fw-light`) are a
+  SEPARATE system, out of scope for this 5-tier TEXT scale - not touched.
+Re-verified Confirm transaction/Security/About with `tools/figma-check.mjs` after the change (1-2px text
+size shifts, nothing overflows or misaligns) - diff panels clean. `npm run build` clean, `npm test` 16/16.
+
+**LuckyPot was explicitly PULLED IN too, same round-trip - the standing "keeps its own local size scale"
+exception is GONE for size.** First pass left it alone (per that old exception); the user immediately said
+otherwise ("LuckyPot theo hệ quy chiếu mới luôn đi") and separately flagged its old 13px text as genuinely
+hard to read ("13px khó đọc lắm") - a real usability complaint, not just a consistency nit, so no half
+measure was applied. All of `LuckyPot.jsx`'s own literal 13/16/18px text now uses
+`--fs-caption`/`--fs-content-2`/`--fs-content-1` like every other screen. What DID survive as a real,
+narrower exception: the Space Grotesk FONT-FAMILY + mixed-case header treatment (still LuckyPot's own
+brand identity, per the 2026-09-08 decision - only the SIZE mapping changed), and the two true hero-number
+displays (the deposit/withdraw amount input, the "you won $X" amount - 28/32px + `--fw-light`, the same
+separate system every other screen's hero numbers use, never part of the 5-tier text scale). Verified with
+a live Playwright screenshot in mock mode (not `figma-check` - this screen has no single static Figma
+frame to diff against) - the denser stat boxes do NOT overflow at the larger sizes, confirming the
+original "app-wide sizes read as oversized here" concern that justified the old exception no longer holds
+now that the app-wide scale itself changed. `npm run build` clean, `npm test` 16/16.
+
 **LuckyPot note (2026-09-10):** the user redrew this frame's own Figma to bring it closer to the real
 luckypot.cc frontend, then added a "My history" box to row 9 (next to "Draw history") - the handler
 (`openMyHistory`) and its popup already existed in the code, only wired into the hamburger menu; row 9
