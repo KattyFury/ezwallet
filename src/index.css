@@ -598,13 +598,16 @@ body {
 }
 
 .confirm-row:not(:last-child)::after {
+  /* 0.5px / #94A3B8 (= --color-muted) - read directly off the divider's own SVG asset
+     (node 17:233 etc: `stroke="#94A3B8" stroke-width="0.5"`), not guessed from the nearby label
+     colour (--color-muted-2 #667085, a different token used for the "Label:" text itself). */
   content: '';
   position: absolute;
   left: 8px;
   right: 8px;
   bottom: 0;
-  height: 1px;
-  background: var(--color-gray);
+  height: 0.5px;
+  background: var(--color-muted);
 }
 
 .confirm-label {
