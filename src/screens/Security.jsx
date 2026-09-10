@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
-import Icon from '../components/Icon'
 import { getSDK, executeChallenge, resetPinChallenge, refreshSession, circleErrorMessage } from '../circle'
 
 export default function Security() {
@@ -43,10 +42,15 @@ export default function Security() {
     setCopied(true); setTimeout(() => setCopied(false), 1500)
   }
 
-  // VALUE raised to fs-item 17 (user 07-17f: "content feels a bit small" - was fs-label 15)
-  const LABEL = { flex: 1, fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)' }
-  const VALUE = { fontSize: 'var(--fs-item)', color: 'var(--color-muted)', maxWidth: '55%', textAlign: 'right', wordBreak: 'break-all' }
-  // (PIN-change status: an ERROR must be RED to stand out - user 07-17f. The pinErr flag is declared above.)
+  // 18px semibold black (was fs-body/fw-medium) - RE-VERIFIED 2026-09-10 against a fresh design-context
+  // pull (node 15:190, the Figma file's own name for this frame - misspelled "Secutiry", HANDOFF's old
+  // node id 1:275 no longer exists). Value colour is --color-muted-2 (#667085), not --color-muted
+  // (#94A3B8) - same "Label:"-line token as Confirm/Receipt's card rows, not the nav-inactive tone.
+  const LABEL = { flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)' }
+  const VALUE = { fontSize: 16, fontWeight: 'var(--fw-semibold)', color: 'var(--color-muted-2)', maxWidth: '55%', textAlign: 'right', wordBreak: 'break-all' }
+  // The "Change PIN" pill button - white, fully rounded, glow shadow (the SAME chip look Currency.jsx's
+  // currency picker uses, but a plain button here, no caret - Figma draws no dropdown on this one).
+  const PIN_CHIP = { border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', borderRadius: 999, height: 42, padding: '0 18px', fontSize: 18, fontWeight: 'var(--fw-semibold)', cursor: 'pointer', flexShrink: 0 }
 
   return (
     <div className="screen">
@@ -54,25 +58,31 @@ export default function Security() {
         Security
       </div>
 
-      {/* SHARED GREY BOX rows 2-4 (Currency was split into its own screen 08-04 - see Currency.jsx);
-          no grey separator lines inside the box (old rule kept). Change PIN still uses the RIGHT CHEVRON right2
-          (user decision: it is a row that goes somewhere, not a dropdown). */}
-      <div style={{ gridRow: '2 / 5', background: 'var(--color-surface)', borderRadius: 20, padding: '0 16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-evenly', minWidth: 0 }}>
-        <div className="menu-item">
-          <span style={LABEL}>Login email</span>
-          <span style={VALUE}>{email}</span>
+      {/* Card - node 15:196: rows 2-8 (340x586, radius 16 - was 20/rows 2-4), the SAME full-height card
+          template every Menu sub-screen shares (About.jsx already had this right; Security/Currency did
+          not). Content is NOT spread with justify-content:space-evenly like About's 7 rows - Figma packs
+          Email/Wallet address/PIN into rows 2-4 only (86/172/258, each its own 70px row + 16px gap) and
+          leaves the rest of the tall card blank, so the rows flow from the top instead. */}
+      <div style={{ gridRow: '2 / 9', position: 'relative', minWidth: 0 }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'var(--color-surface)', borderRadius: 16 }} />
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div className="menu-item" style={{ height: 70, padding: '0 8px' }}>
+            <span style={LABEL}>Email</span>
+            <span style={VALUE}>{email}</span>
+          </div>
+          {/* Tap-to-copy kept (real functionality, predates this Figma pass) - the copy ICON is dropped
+              because the fresh pull draws none on this row, only the plain value text. */}
+          <button className="menu-item" style={{ height: 70, padding: '0 8px' }} onClick={copyAddr}>
+            <span style={LABEL}>Wallet address</span>
+            <span style={{ ...VALUE, color: copied ? 'var(--color-primary)' : 'var(--color-muted-2)' }}>{copied ? 'Copied' : shortAddr}</span>
+          </button>
+          <div className="menu-item" style={{ height: 70, padding: '0 8px' }}>
+            <span style={LABEL}>PIN</span>
+            <button style={{ ...PIN_CHIP, color: pinStatus ? (pinErr ? 'var(--color-error)' : 'var(--color-primary)') : 'var(--color-black)' }} disabled={!!pinStatus} onClick={handleResetPin}>
+              {pinStatus || 'Change PIN'}
+            </button>
+          </div>
         </div>
-        <button className="menu-item" onClick={copyAddr}>
-          <span style={LABEL}>Wallet address</span>
-          <span style={{ ...VALUE, color: copied ? 'var(--color-primary)' : 'var(--color-muted)' }}>{copied ? 'Copied' : shortAddr}</span>
-          <Icon name="copy" size="var(--is-item)" color="var(--color-brand)" />
-        </button>
-        <button className="menu-item" onClick={handleResetPin}>
-          <span style={LABEL}>Change PIN</span>
-          {pinStatus
-            ? <span style={{ fontSize: 'var(--fs-item)', color: pinErr ? 'var(--color-error)' : 'var(--color-primary)' }}>{pinStatus}</span>
-            : <Icon name="right2" size="var(--is-md-lg)" color="var(--color-brand)" />}
-        </button>
       </div>
 
       <div className="row-10 row10-single">

@@ -416,14 +416,17 @@ body {
   flex-direction: column;
   animation: sheet-up .28s ease;
 }
-/* The "GREY" numpad (user decision 07-20 "that is the look"): a grey surface area + WHITE key tiles with radius 12 and an 8px gap
-   so each key reads as raised. SHARED by the Swap sheet + the numpad panel on Send (SendAmount) + Custom QR
-   (CreateQR) - just add the "numpad-gray" class to the container. */
+/* The "GREY" numpad (user decision 07-20 "that is the look"): a grey surface area + WHITE key tiles with an
+   8px gap so each key reads as raised. SHARED by the Swap sheet + the numpad panel on Send (SendAmount) +
+   Custom QR (CreateQR) - just add the "numpad-gray" class to the container.
+   Radius 16 + glow shadow (was 12/no shadow) - 2026-09-10: Send money's own key nodes (18:16 etc, part of
+   the same numpad component) draw radius 16 and the app's standard `0 0 8px rgba(0,0,0,.48)` clickable-glow,
+   fixing all three screens' numpad at once per the "one shared definition" rule. */
 .numpad-gray .numpad { gap: 8px; }
 .numpad-gray .numpad-row { gap: 8px; }
-.numpad-gray .numpad-key { background: var(--color-white); border-radius: 12px; }
+.numpad-gray .numpad-key { background: var(--color-white); border-radius: 16px; box-shadow: 0 0 8px rgba(0, 0, 0, 0.48); }
 .numpad-gray .numpad-key:active { background: rgba(0,0,0,0.06); }
-.numpad-gray .numpad-key.empty { background: transparent; }
+.numpad-gray .numpad-key.empty { background: transparent; box-shadow: none; }
 
 /* The blinking caret in a number field (SendAmount/CreateQR/Swap) - it tells the user WHERE THE DIGITS WILL GO
    when they press the numpad (before, there was only a faint '0' and no sense of what was being aimed at). */

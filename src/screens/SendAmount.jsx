@@ -3,10 +3,10 @@ import { useNav } from '../nav'
 import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
 import ErrorToast from '../components/ErrorToast'
-import { getTokenInfo, getDisplayRates, cachedRates } from '../chain'
+import { getTokenInfo, getDisplayRates, cachedRates, TOKENS } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import { findContactName } from '../store'
-import { displaySymbol, spendableOf, floorTo, fmtMoney } from '../data'
+import { displaySymbol, spendableOf, floorTo } from '../data'
 import { useFitFontSize } from '../useFitFontSize'
 import { amountHints, fmtAmountHint } from '../amountHint'
 
@@ -111,16 +111,6 @@ export default function SendAmount() {
   const availableStr = isVnd
     ? `${availableInCur !== null ? Math.floor(availableInCur).toLocaleString('vi-VN') : '…'} ₫`
     : `${availableAmt !== null ? availableAmt.toFixed(decimalsFor(cur)) : '…'} ${cur}`
-  // The Balance line, now in the blank space below the note field (user request 08-25: "the Send screen is missing Balance").
-  // ⚠️ It shows the SPENDABLE amount (the same number the "Insufficient balance" message quotes), NOT the raw
-  // wallet balance: USDC keeps GAS_RESERVE_USDC back for gas, so printing the raw balance here would promise
-  // money that the Continue button then refuses - the exact confusion this line is meant to remove.
-  // Formatted with fmtMoney (ONE STRING ONE STYLE): USD/USDC → "$70.00", EURC → "20.00 EURC", cirBTC → "0.00054321 cirBTC".
-  // Not loaded yet → "…", NEVER a drawn 0 (bug 07-16: a fake 0 reads as an empty wallet).
-  const balanceStr = isVnd
-    ? (availableInCur !== null ? `${Math.floor(availableInCur).toLocaleString('vi-VN')} ₫` : '…')
-    : (availableAmt !== null ? fmtMoney(availableAmt.toFixed(decimalsFor(cur)), cur) : '…')
-
   // AMOUNT SUGGESTIONS (user decision 08-04) - VND ONLY: typing "50" → [5,000] [50,000] [500,000].
   // Never for USD/EUR: typing "50" already means 50 dollars, and suggesting ×100 (5,000 dollars) would be a deadly trap.
   const hints = isVnd && !showCur ? amountHints(digits, availableInCur) : []
@@ -141,7 +131,10 @@ export default function SendAmount() {
   const amountStr = (cur === 'USD' ? displaySymbol('USDC') : '') + shownDigits + (isVnd && digits ? ' ₫' : '')
   // Font size shrinks by REAL WIDTH (VND numbers are twice as long as USD, so counting characters overflows) - the "_" caret
   // is included in the measurement, otherwise it comes up exactly one caret short and overflows at the longest numbers.
-  const [fitRef, fitSize] = useFitFontSize(amountStr + '_', { max: 52, min: 18, weight: 600 })
+  // max 44 / weight 300 (was 52/600) - node 1:99, RE-VERIFIED 2026-09-10: 44px, and Light per the app's
+  // standing "big numbers are always Light" rule (the node itself draws Regular, same override as everywhere else).
+  const [fitRef, fitSize] = useFitFontSize(amountStr + '_', { max: 44, min: 18, weight: 300 })
+  const tokenColor = TOKENS.find(t => t.symbol === effectiveToken(cur))?.color || '#94A3B8'
 
   return (
     <div className="screen">
@@ -151,74 +144,90 @@ export default function SendAmount() {
         Send money
       </div>
 
-      {/* The Send-to / amount / note block - one flex column centred over rows 2-5. gap 4dvh (user decision
-          07-22c: 2dvh felt cramped, a little more air - still one block, not scattered). */}
-      <div style={{ gridRow: '2 / 6', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '4dvh', minWidth: 0 }}>
-        <div className="center" style={{ gap: 6 }}>
-          <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)' }}>Send to:</span>
-          <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>
-            {name || shortenAddr(address)}
-          </span>
-        </div>
+      {/* ⚠️ 2026-09-10 ARCHITECTURE CHANGE (node 1:88, re-fetched fresh - the old SEND_MONEY_FIGMA_SPEC.md
+          predicted a Swap-style % slider from a DIFFERENT, older Figma file key and was wrong; this file's
+          actual frame keeps a numpad, just restyled). "Send to:" + the inline amount/chip row are GONE,
+          replaced by two cards + a connector circle, the same shape Confirm transaction/Receipt use. */}
 
-        <div className="center col" style={{ gap: 6 }}>
-          {/* The big number is ALWAYS centred; the currency chip is anchored to the RIGHT EDGE (no longer following the number's width) */}
-          <div ref={fitRef} style={{ width: '100%', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span className="num" style={{ fontSize: fitSize, fontWeight: 'var(--fw-semibold)', lineHeight: 1, whiteSpace: 'nowrap', color: overBalance ? 'var(--color-error)' : digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
+      {/* "You send" card - node 1:90: rows 2-3 (340x156, top 10.19dvh, radius 16). Label top-left; the
+          token chip + Available line stacked bottom-left; the big amount right-aligned - text sits at the
+          same 8px card inset measured everywhere today (Confirm/Receipt/Security). */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '10.19dvh', height: '18.48dvh', background: 'var(--color-surface)', borderRadius: 16, padding: '14px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
+        <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)' }}>You send</span>
+        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0, flexShrink: 0 }}>
+            <button onClick={() => setShowCur(true)}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'var(--color-white)', borderRadius: 999, height: 42, padding: '0 14px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', cursor: 'pointer' }}>
+              <img src={`/tokens/${effectiveToken(cur).toLowerCase()}.png`} alt=""
+                style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }}
+                onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }} />
+              <div style={{ width: 24, height: 24, borderRadius: '50%', background: tokenColor, display: 'none', flexShrink: 0 }} />
+              {cur}
+              <Icon name="down2" size="var(--is-item)" color="var(--color-brand)" />
+            </button>
+            <span style={{ fontSize: 16, whiteSpace: 'nowrap' }}>
+              <span style={{ color: 'var(--color-muted-2)' }}>Available: </span>
+              <span className="num" style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{availableStr}</span>
+            </span>
+          </div>
+          <div ref={fitRef} style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
+            <span className="num" style={{ fontSize: fitSize, fontWeight: 'var(--fw-light)', lineHeight: 1, whiteSpace: 'nowrap', color: overBalance ? 'var(--color-error)' : digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
               {amountStr}<span className="caret">_</span>
             </span>
-            <button onClick={() => setShowCur(true)}
-              style={{ position: 'absolute', right: 0, top: '50%', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 4, border: 'none', borderRadius: 10, padding: '6px 10px', background: 'var(--color-surface)', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
-              {cur}<Icon name="down2" size="var(--is-md-lg)" color="var(--color-brand)" />
-            </button>
           </div>
-          {/* VND: state PLAINLY how much USDC will leave the wallet. The user types Vietnamese money but what moves on-chain
-              is USDC - hiding that is deceptive, and showing it faintly means they never notice they are spending a
-              stablecoin. No rate yet → say so, rather than leaving Continue dead with no explanation. */}
-          {isVnd && digits && (
-            <span className="num" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)', textAlign: 'center' }}>
-              {vndRate ? `≈ ${tokenAmount.toFixed(2)} USDC` : 'Getting exchange rate...'}
-            </span>
-          )}
-          {selfSend ? (
-            /* The only way to reach this screen with your own wallet is via Contacts - say so IMMEDIATELY, do not
-               let the user type an amount before finding out they cannot send. */
-            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>
-              That's your own wallet – you can't send to yourself
-            </span>
-          ) : overBalance && (
-            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>
-              {'Insufficient balance (available:'} {availableStr})
-            </span>
-          )}
         </div>
+      </div>
 
-        {/* The note field + the options icon (opens the default-note popup) ON THE RIGHT (user decision 07-20e) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-          <input
-            className="address-input"
-            placeholder={'Transfer note (optional)'}
-            value={memo}
-            onFocus={() => { onNoteFocus(); setTypingText(true) }}
-            onBlur={() => setTypingText(false)}
-            onChange={e => { setMemo(e.target.value); setNoteTouched(true) }}
-            maxLength={100}
-            style={{ flex: 1, minWidth: 0, height: 52, fontSize: 'var(--fs-md-lg)' }}
-          />
-          <button onClick={openNotePopup} aria-label={'Set your default note'}
-            style={{ flexShrink: 0, width: 52, height: 52, borderRadius: 10, border: 'none', background: 'var(--color-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="option" size="var(--is-md-lg)" color="var(--color-muted)" />
-          </button>
-        </div>
+      {/* Connector circle - node 1:100: NO icon (Figma draws it blank - not fabricating one) and NOT
+          clickable (2026-09-08 decision: same component slot as Swap's reverse button, but nothing to
+          reverse on a one-way send). Sits at the literal midpoint of the gutter between the two cards
+          (29.62dvh) - the SAME value Swap's own reverse button uses for the identical rule. */}
+      <div aria-hidden style={{ position: 'absolute', left: '50%', top: '29.62dvh', transform: 'translate(-50%, -50%)', zIndex: 3, width: 50, height: 50, borderRadius: '50%', background: 'var(--grad-brand)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} />
 
-        {/* Balance - moved here 08-25 (user report: grouped with "Send to" up top looked messy) into the blank
-            space right below the note field, so the original block above keeps its layout unchanged. */}
-        <div className="center" style={{ gap: 6 }}>
-          <span style={{ fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)' }}>Balance:</span>
-          <span className="num" style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)' }}>
-            {balanceStr}
-          </span>
-        </div>
+      {/* "To" card - node 1:91: row 4 (340x70, top 30.57dvh). "To:" 18px + the name 22px, both semibold. */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '30.57dvh', height: '8.29dvh', background: 'var(--color-surface)', borderRadius: 16, display: 'flex', alignItems: 'center', padding: '0 8px', minWidth: 0 }}>
+        <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          {'To: '}<span style={{ fontSize: 22 }}>{name || shortenAddr(address)}</span>
+        </span>
+      </div>
+
+      {/* Status text - Figma draws none of these (it only shows the idle state); sit in the gap between
+          the "To" card and the message row. VND is unreachable in practice (CURRENCIES above has no
+          'VND' - see the file header comment) so this and the error message never actually coincide. */}
+      {isVnd && digits && (
+        <span className="num" style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '39.5dvh', fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>
+          {vndRate ? `≈ ${tokenAmount.toFixed(2)} USDC` : 'Getting exchange rate...'}
+        </span>
+      )}
+      {selfSend ? (
+        <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '39.5dvh', fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>
+          That's your own wallet – you can't send to yourself
+        </span>
+      ) : overBalance && (
+        <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '39.5dvh', fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>
+          {'Insufficient balance (available:'} {availableStr})
+        </span>
+      )}
+
+      {/* Message row - node 1:101/1:103: top 42.57dvh, input 40 tall / radius 8 (Figma-specific overrides
+          on the shared .address-input class, which defaults to 52/10). The icon button is now WHITE with
+          a glow shadow (was flat grey, no shadow) - matches the app rule "shadow only on clickable
+          elements", and Figma draws it that way (node 1:103's own rect). */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '42.57dvh', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+        <input
+          className="address-input"
+          placeholder={'Message (optional)'}
+          value={memo}
+          onFocus={() => { onNoteFocus(); setTypingText(true) }}
+          onBlur={() => setTypingText(false)}
+          onChange={e => { setMemo(e.target.value); setNoteTouched(true) }}
+          maxLength={100}
+          style={{ flex: 1, minWidth: 0, height: 40, borderRadius: 8, fontSize: 18 }}
+        />
+        <button onClick={openNotePopup} aria-label={'Set your default note'}
+          style={{ flexShrink: 0, width: 33, height: 40, borderRadius: 8, border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Icon name="option" size="var(--is-label)" color="var(--color-muted)" />
+        </button>
       </div>
 
       {/* GREY numpad panel with WHITE keys (user decision 07-20, matching the Swap sheet): from half of row 6 to the bottom,

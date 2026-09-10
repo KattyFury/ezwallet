@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-10 · **Local:** `D:\Files\Claude\ezwallet`
 
-### ⚠️ READ THIS FIRST - REBUILDING SCREENS FROM FIGMA (12 done, 11 to go)
+### ⚠️ READ THIS FIRST - REBUILDING SCREENS FROM FIGMA (15 done, 8 to go)
 
 **Figma file: `GxgsMU6HAYqolckzvPWXp1`.** The user's position, stated directly on 2026-09-10:
 *"toàn bộ thiết kế Figma đang chuẩn BRAND GUIDELINE chỉ có Claude là đang làm sai"* - the Figma file and
@@ -81,13 +81,46 @@ be opened without walking the flow.
 
 #### 4. Where the rebuild stands
 
-**Done (12):** Splash `1:169` · Login `1:180` · Sign in with email `1:193` · Send `1:328` · Receive `1:373`
+**Done (15):** Splash `1:169` · Login `1:180` · Sign in with email `1:193` · Send `1:328` · Receive `1:373`
 · Menu `1:16` · Service hub `1:43` · Exchange `1:63` (= `Swap.jsx`) · LuckyPot `1:158` · Paste address to
-send `1:205` · Confirm transaction `1:215` (= `SendConfirm.jsx`) · Receipt `1:227` (= `SendReceipt.jsx`).
+send `1:205` · Confirm transaction `1:215` (= `SendConfirm.jsx`) · Receipt `1:227` (= `SendReceipt.jsx`)
+· Send money `1:88` (= `SendAmount.jsx`) · Language & currency `1:259` (= `Currency.jsx`) · Security
+`15:190` (= `Security.jsx` - the Figma frame is literally misspelled "Secutiry"; HANDOFF's old id `1:275`
+no longer exists in the file - **node ids shift, always re-check with `get_metadata` before trusting an id
+written down earlier**, not just the design content).
 
-**Left (11):** Send money `1:88` · Create receive QR `1:113` · Created receive QR `1:128` · Arabica
-`1:139` · Scan QR `1:150` · Contacts `1:239` · Transaction history `1:248` · Language & currency `1:259` ·
-Security `1:275` · About `1:286` · QR storage `1:303`.
+**Left (8):** Create receive QR `1:113` · Created receive QR `1:128` · Arabica `1:139` · Scan QR `1:150` ·
+Contacts `1:239` · Transaction history `1:248` · About `1:286` · QR storage `1:303`.
+
+**Seventh round-trip (2026-09-10):** Confirm transaction/Receipt's divider line, then three more screens in
+one pass - Send money, Language & currency, Security. Findings:
+- **Send money is a real architecture rewrite, not a reskin, and the OLD `SEND_MONEY_FIGMA_SPEC.md` is
+  WRONG** - it documents a *different, older* Figma file (`iQxFGA890VhyXkEKipCC9C`) that predicted a
+  Swap-style % slider. The CURRENT file (`GxgsMU6HAYqolckzvPWXp1`, node `1:88`) keeps a numpad, just
+  restyled (radius 16 + glow, was 12/flat) - fixed at the shared `.numpad-gray .numpad-key` class, so Swap
+  and CreateQR's numpads picked up the same correction for free. `SendAmount.jsx` dropped its old
+  "Send to: / centred amount+chip / Balance:" flow entirely for two cards ("You send" / "To") + a
+  non-clickable connector circle, the same shape Confirm transaction/Receipt use - all business logic
+  (VND plumbing, insufficient-balance guard, self-send guard, default-note popup) carried over unchanged,
+  only the JSX layer was rebuilt. The connector circle and the wallet-address copy icon are both rendered
+  **without an icon/graphic**, because the fresh pull draws neither - not fabricating one to fill the slot.
+- **Language & currency and Security were both sized wrong**: both used a small 1-3-row card
+  (`gridRow:'2/3'` and `'2/5'`) when the current Figma draws the SAME full 340×586 (`gridRow:'2/9'`) card
+  template every Menu sub-screen shares - `About.jsx` already had this part right, these two didn't.
+  Content still packs at the TOP of the tall card (flex column, not `justify-content:space-evenly` -
+  that would spread 2-3 rows across the whole 586px and not match Figma at all).
+- **Language row is back** despite the 08-25 i18n deletion - Figma still draws it. Resolved with the user
+  directly: a real popup, English locked as the only option (same disabled-button pattern
+  `CURRENCY_OPTIONS` already used), never a functional switch.
+- **Security's "Change PIN" became a pill button** (white, glow shadow, no caret) replacing the old
+  right-chevron row-link style: Figma draws a real button. `pinStatus` states re-purpose the pill instead of
+  swapping in a chevron.
+- Two small colour/size drifts caught the same way as Confirm/Receipt: Security's Email/Wallet-address
+  values were `--fs-item`(17)/`--color-muted` - Figma wants 16px/`--color-muted-2`, the same "Label:"-line
+  token used everywhere else. Currency's dropdown chips had a grey BORDER (07-17f decision) - current
+  Figma draws a borderless glow-shadow chip instead, matching the token chip everywhere else already does.
+- Verified with `tools/figma-check.mjs` against fresh `get_screenshot` pulls of all three nodes - diff
+  panels clean on all three, `npm run build` clean, `npm test` 16/16.
 
 ⚠️ The `row-gap` change (§1 above) moved every screen in the app, not only the ones rebuilt so far.
 TxHistory, Contacts, About, Security and SendAmount were smoke-checked (nothing overflows the frame, no
