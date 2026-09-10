@@ -170,7 +170,7 @@ export default function EnterEmail() {
                   textAlign: 'left', padding: '6px 12px',
                   border: '1.5px solid var(--color-brand)', borderRadius: 999,
                   background: 'var(--color-white)', cursor: 'pointer',
-                  fontSize: 'var(--fs-item)', fontFamily: 'inherit', color: 'var(--color-brand)',
+                  fontSize: 16, fontFamily: 'inherit', color: 'var(--color-brand)',
                   fontWeight: 'var(--fw-normal)', alignSelf: 'flex-start', maxWidth: '100%',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
@@ -191,7 +191,7 @@ export default function EnterEmail() {
                   // The standard HINT chip = blue border + blue text (matching the email suggestions above + the Swap chips)
                   padding: '6px 12px', border: '1.5px solid var(--color-brand)', borderRadius: 999,
                   background: 'var(--color-white)', cursor: 'pointer',
-                  fontSize: 'var(--fs-item)', fontFamily: 'inherit', color: 'var(--color-brand)',
+                  fontSize: 16, fontFamily: 'inherit', color: 'var(--color-brand)',
                   fontWeight: 'var(--fw-normal)',
                 }}>
                 {d}

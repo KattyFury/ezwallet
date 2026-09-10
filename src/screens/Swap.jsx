@@ -418,11 +418,14 @@ export default function Swap() {
 
       {/* Reverse button - node 1:87: 50×50 (was 44), SOLID brand fill (the guideline forbids gradients -
           --grad-brand already aliases to the solid colour, so this needed no value change), glow shadow
-          "0 0 8px rgba(0,0,0,.5)" (was a straight-down .35), centred at 26.71dvh - straddling the bottom
-          of the "You pay" card and the 16px gutter below it. */}
+          "0 0 8px rgba(0,0,0,.5)" (was a straight-down .35). 2026-09-10 CORRECTION: the previous pass
+          used the raw Figma pixel (26.71dvh), which sits mostly INSIDE the "You pay" card rather than
+          bridging the gap - the user's explicit call: this button belongs EXACTLY IN THE MIDDLE of the 2
+          cards. Centre = the midpoint of the 16px gutter between them: card 1 bottom (10.19+18.48=28.67dvh)
+          and card 2 top (30.57dvh) → (28.67+30.57)/2 = 29.62dvh. */}
       <button onClick={swapDir} aria-label={'Reverse direction'}
         style={{
-          position: 'absolute', left: '50%', top: '26.71dvh', transform: `translate(-50%, -50%) rotate(${flip}deg)`, zIndex: 3,
+          position: 'absolute', left: '50%', top: '29.62dvh', transform: `translate(-50%, -50%) rotate(${flip}deg)`, zIndex: 3,
           width: 50, height: 50, borderRadius: '50%', border: 'none', background: 'var(--grad-brand)',
           boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', transition: 'transform .3s ease',
@@ -457,10 +460,17 @@ export default function Swap() {
           {hints.length ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
               {hints.map(v => (
+                // 2026-09-10 CORRECTION: this chip still carried the OLD --fs-item (17px) value,
+                // unchanged from before today's rebuild since the Figma mockup has no live-typing state
+                // to read a chip size from directly. 16px is not a guess - it is the SAME size confirmed
+                // live from Figma on every other secondary/hint-class text this session ("Available: 20.00
+                // EURC" node 1:71, "Hold to show tokens" node 1:337): that is the current standard this
+                // chip should follow instead of the stale 17. Both spans now match (semibold, brand blue)
+                // as one value, not a differently-weighted label:value pair.
                 <button key={v} onClick={() => pickHint(v)}
                   style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}>
-                  <span className="num" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
-                  <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-brand)' }}> {fromSym}</span>
+                  <span className="num" style={{ fontSize: 16, fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
+                  <span className="num" style={{ fontSize: 16, fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}> {fromSym}</span>
                 </button>
               ))}
             </div>
@@ -471,11 +481,17 @@ export default function Swap() {
         </div>
       </div>
 
-      {/* The Swap button - node 1:85: row 9 (top 81.52dvh / height 8.29dvh, centre 85.66dvh), radius 38
-          (was 50), SOLID brand fill, width = the SAME 340px as the cards above it (was 3/4 of the
-          screen) - edge to edge with "You pay"/"You receive", not a narrower standalone pill. The bigger
-          glow "0 0 20px rgba(0,0,0,.32)" (was the standard button shadow) is this CTA's own value, not
-          reused from elsewhere. Still the only place status is shown; priority error > status > hint/'Swap'. */}
+      {/* The Swap button - node 1:85: row 9 is 70px tall (top 81.52dvh / height 8.29dvh, centre
+          85.66dvh) but the BUTTON ITSELF is 48.66≈48px (2026-09-10 CORRECTION: the previous pass set
+          height:'100%' on the button, filling the whole 70px row - "mập" per the user, and off the
+          guideline's spacing scale 8/16/24/32/40/48/56/64, which the standard button height MUST land
+          on). The row stays 70px as the LAYOUT slot; the button is a fixed 48px, centred inside it via
+          the row's own alignItems:center - do not stretch a button to fill its row again. Radius 38 on a
+          48-tall button clamps to the same full pill CSS already renders for every other radius ≥ half
+          the height, so this still reads identically to a stadium shape. SOLID brand fill, width = the
+          SAME 340px as the cards above it (was 3/4 of the screen). The bigger glow
+          "0 0 20px rgba(0,0,0,.32)" (was the standard button shadow) is this CTA's own value, not reused
+          from elsewhere. Still the only place status is shown; priority error > status > hint/'Swap'. */}
       <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '81.52dvh', height: '8.29dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         {(() => {
           const needAmount = !error && !status && !(amountNum > 0)   // no amount chosen → the button becomes the hint that opens the numpad
@@ -485,7 +501,7 @@ export default function Swap() {
           return (
         <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
           style={{
-            width: '100%', height: '100%', borderRadius: 38, overflow: 'hidden',
+            width: '100%', height: 48, minHeight: 0, borderRadius: 38, overflow: 'hidden',
             boxShadow: error || success ? undefined : '0 0 20px rgba(0, 0, 0, 0.32)',
             ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
             ...(success ? { opacity: confirmed ? 1 : 0.6 } : null),
