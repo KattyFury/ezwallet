@@ -23,7 +23,8 @@ export default function NavBar({ active }) {
           onClick={tab.disabled ? undefined : () => navigate(tab.id)}
           style={tab.disabled ? { opacity: 0.4, cursor: 'not-allowed' } : undefined}
         >
-          <Icon name={tab.icon} size="var(--is-body)" color={active === tab.id ? 'var(--color-black)' : 'var(--color-muted)'} style={{ marginBottom: 2 }} />
+          {/* 24px, measured off Send/Receive/Menu (2026-09-10) - was --is-body 19 */}
+          <Icon name={tab.icon} size={24} color={active === tab.id ? 'var(--color-black)' : 'var(--color-muted)'} style={{ marginBottom: 2 }} />
           {tab.label}
         </button>
       ))}

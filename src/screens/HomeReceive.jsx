@@ -65,38 +65,48 @@ export default function HomeReceive() {
         <QRCodeCanvas value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" includeMargin />
       </div>
 
-      {/* The QR is anchored to rows 3-5 exactly (user decision 07-19: it used to be 3-6 + paddingBottom "making room" for the
-          address line in row 6 → which pushed the QR off-centre within its 3-row block. Row 6 is now reserved for the
-          address button and no longer overlaps, so the QR centres cleanly inside its 3 rows). */}
-      <div style={{ gridRow: '3 / 6', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0 }}>
+      {/* QR POSITION - CRITICAL, exact Figma pixels (node 1:398), not the old row 3-5 flex-centre (2026-09-10:
+          that centred at 35dvh, a full ~8.7dvh too low now that BalanceHeader only needs ~1.5 rows, §12).
+          Centre at (66.15%, 27.09dvh), size = min(30.57dvh, 66.15% of the screen-max-capped width) - both
+          the position AND the size are locked to the Figma numbers, do not approximate with the grid rows. */}
+      <div style={{
+        position: 'absolute', left: '50%', top: '27.09dvh', transform: 'translate(-50%, -50%)',
+        width: 'min(30.57dvh, calc(var(--screen-max) * 0.6615))', height: 'min(30.57dvh, calc(var(--screen-max) * 0.6615))',
+      }}>
         {/* ⚠️ No more bare `0x…` addresses (user decision 08-13) - EVM addresses are identical on EVERY
             chain, so a wallet on Ethereum/Base/BSC scanning it sends on the wrong chain and the money is GONE. buildQR wraps
             it in a private scheme + the Arc chainId; see src/qr.js.
             Anyone who needs the plain address (topping up from an exchange or another wallet) taps the copy button under the QR. */}
-        <QRCodeSVG value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" style={{ width: 'min(30dvh, 78vw)', height: 'min(30dvh, 78vw)' }} />
+        <QRCodeSVG value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" style={{ width: '100%', height: '100%' }} />
       </div>
-      {/* Address + copy: absolutely positioned at top 55% = the SAME coordinates as the "Hold to show tokens" button on Send
-          (user decision 07-17f "all the better") - switching between the 2 tabs, the secondary line stays in one place.
+      {/* Address + copy: centre at 46.68dvh (2026-09-10, exact Figma value, node 1:384 - same value as
+          "Hold to show tokens" on Send, still a matched pair, just both moved up from the old 55%).
           07-19: the shortened address and separate copy icon were hidden, leaving one instruction line "tap to copy" -
           FULLY MATCHING the button style of ShowTokensButton (HomeSend.jsx) so the 2 tabs form a pair (user decision:
-          same white pill with a grey border, same font size, so they read as a PAIR of buttons and not floating text). */}
+          same white pill, same font size, so they read as a PAIR of buttons and not floating text). */}
       <button onClick={handleCopyAddr} style={{
-        position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
+        position: 'absolute', left: '50%', top: '46.68dvh', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
         // ⚠️ WIDTH HUGS THE TEXT (user decision 08-13) - the fixed 3/4-screen width from 07-29 was dropped. This button and
         // "Hold to show tokens" (HomeSend) are now UNEQUAL because the two sentences differ in length;
         // that is intended, do not "even them up". If you change one button, change the other to the same formula.
         maxWidth: 'min(92vw, calc(var(--screen-max) - 24px))', overflow: 'hidden', textOverflow: 'ellipsis',
-        padding: '0 18px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
+        padding: '0 18px', borderRadius: 50, border: 'none', background: 'var(--color-white)',
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         color: addrCopied ? 'var(--color-primary)' : 'var(--color-content)', fontFamily: 'var(--font-condensed)',
-        fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-medium)', cursor: 'pointer', whiteSpace: 'nowrap',
+        fontSize: '16px', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', whiteSpace: 'nowrap',
         WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
       }}>
         {addrCopied ? 'Copied!' : 'Tap to copy your wallet address'}
       </button>
 
-      <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
+      {/* GREY WRAPPER CARD (2026-09-10, node 7:35 "Vector15") - identical geometry/treatment to the same
+          card on Send (top 50.95dvh, height 28.67dvh), replacing the old plain row-7-8 div. */}
+      <div style={{
+        position: 'absolute', left: '6.41%', right: '6.41%', top: '50.95dvh', height: '28.67dvh',
+        background: 'var(--color-surface)', borderRadius: 20, padding: '12px 18px',
+        display: 'flex', flexDirection: 'column', minHeight: 0,
+      }}>
         {/* Each line = one COMPLETE SENTENCE whose underlined keyword is TAPPABLE → going where the button of the same name
             in row 9 goes (user decision 07-21). The order matches the button layout: QR Storage · Create QR · Share. */}
         {/* pollMs 5s (user decision 08-13): this is the screen where someone HAS JUST HELD OUT THEIR QR AND IS WAITING for the
@@ -111,18 +121,19 @@ export default function HomeReceive() {
       </div>
 
       {/* Button order 07-19 (user decision): QR Storage left · Create QR centre · Share RIGHT - most people are
-          right-handed, so the most-used button (Share) sits on the right where it is easy to reach. */}
+          right-handed, so the most-used button (Share) sits on the right where it is easy to reach.
+          Icon sizes 19.5/24 (2026-09-10, up from --is-item 17) match the side/centre pills exactly. */}
       <div className="row-9 action-grid">
         <button className="action-card" onClick={() => navigate('SavedQRList')}>
-          <Icon name="download" size="var(--is-item)" />
+          <Icon name="download" size={19.5} />
           <span>QR Storage</span>
         </button>
         <button className="action-card primary" onClick={() => navigate('CreateQR')}>
-          <Icon name="qr" size="var(--is-item)" color="var(--color-white)" />
+          <Icon name="qr" size={24} color="var(--color-white)" />
           <span>Create QR</span>
         </button>
         <button className="action-card" onClick={handleShare}>
-          <Icon name="share" size="var(--is-item)" />
+          <Icon name="share" size={19.5} />
           <span>{copied ? 'Copied!' : 'Share'}</span>
         </button>
       </div>

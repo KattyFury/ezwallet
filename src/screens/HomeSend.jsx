@@ -10,9 +10,9 @@ import NotifArea, { NOTIF_FS } from '../components/NotifArea'
 
 // USDC (left) and $98.59 (right) must share the SAME font and the SAME colour - one shared style object
 // so they cannot drift apart (rather than two declarations where it is easy to change only one).
-// Weight = Regular (2026-09-08, down from Semibold) - the new Figma file draws every token-list row
-// (name + amount) in plain Regular, not bold; the amount's brand-blue colour already carries the emphasis.
-const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-num)', fontWeight: 'var(--fw-normal)', color: 'var(--color-content)' }
+// Weight = Semibold, 18px (2026-09-10, up from Regular/24px 09-08) - the current Figma file draws each
+// token as its OWN white card (not a shared divided list), name + amount both Semibold 18.
+const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-condensed)', fontSize: '18px', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
 
 // Small solid triangle (▲/▼) signalling the token's 24h price move (user request 08-25) - a plain CSS/SVG
 // shape rather than a shared Icon.jsx entry since it is only ever used here, right next to the amount.
@@ -40,10 +40,9 @@ const isVolatile = symbol => !STABLECOINS.includes(symbol)
 // PRESS AND HOLD (not a sticky toggle): by default it shows $ (which everyday users understand);
 // holding reveals the real token amounts; releasing returns to $ - so nobody flips it, forgets, and is left
 // staring at "0.0001 cirBTC" with no idea what it means.
-// Grey background and grey text - a secondary button, less important than the content itself.
-// CENTRED ON ROW 6 (below the token list in rows 3-5, ABOVE the notification area in row 7) - evenly spaced from both so
-// nobody thinks this button produces the notifications. top:55% = the centre of row 6 of .screen (10 equal rows,
-// row 6 = 50%→60%); translate(-50%,-50%) drops the whole button body onto that centre.
+// POSITION (2026-09-10): centre at 46.68dvh - the exact Figma value (node 1:337, "calc(40%+56.4px)"),
+// sitting right at the bottom edge of the grey token box (see the box's own top+height below), NOT row 6's
+// centre (55%) any more - the tighter BalanceHeader (max 50px, §12) pulled everything up about one row.
 function ShowTokensButton({ onHoldStart, onHoldEnd }) {
   return (
     <button
@@ -55,7 +54,7 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
       onTouchCancel={onHoldEnd}
       onContextMenu={e => e.preventDefault()}
       style={{
-        position: 'absolute', left: '50%', top: '55%', transform: 'translate(-50%, -50%)', zIndex: 10,
+        position: 'absolute', left: '50%', top: '46.68dvh', transform: 'translate(-50%, -50%)', zIndex: 10,
         display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
         // ⚠️ WIDTH HUGS THE TEXT (user decision 08-13: "I slightly regret making it this big") - the fixed
         // 3/4-screen width from 07-29 was dropped. This pair of buttons is no longer equal because the two sentences
@@ -64,13 +63,12 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
         // whiteSpace:'nowrap' below, so the text CANNOT wrap. maxWidth + ellipsis are only a safety net
         // in case some wording ends up far too long.
         maxWidth: 'min(92vw, calc(var(--screen-max) - 24px))', overflow: 'hidden', textOverflow: 'ellipsis',
-        // The button sits INSIDE the grey box (the token area of 07-17f) → WHITE + GREY BORDER so it stands out on the
-        // surface (user rule 07-17f: "a button inside a grey box becomes white with a grey border", like the token chips
-        // on Swap). BLACK text + drop shadow (user decision 07-22f: this button must look raised and clearly tappable).
-        padding: '0 18px', borderRadius: 50, border: '1.5px solid var(--color-gray)', background: 'var(--color-white)',
-        boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
-        color: 'var(--color-content)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-item)',
-        fontWeight: 'var(--fw-medium)', cursor: 'pointer', whiteSpace: 'nowrap',
+        // The button sits INSIDE the grey box (the token area of 07-17f) → WHITE so it stands out on the surface.
+        // Glow shadow (2026-09-10, matching every button rebuilt today) instead of the old straight-down shadow + grey border.
+        padding: '0 18px', borderRadius: 50, border: 'none', background: 'var(--color-white)',
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
+        color: 'var(--color-content)', fontFamily: 'var(--font-condensed)', fontSize: '16px',
+        fontWeight: 'var(--fw-semibold)', cursor: 'pointer', whiteSpace: 'nowrap',
         WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
       }}
       aria-label={'Hold to show token amounts'}
@@ -119,13 +117,17 @@ export default function HomeSend() {
     <div className="screen">
       <BalanceHeader totalUsd={totalUsd} loading={loading} />
 
-      {/* Rows 3-5.5 (user decision 07-17f): a GREY surface BOX holding the token list - extended 5dvh further
-          down into half of row 6 (height calc below; the grid does not clip the overhang) so the "Hold to show
-          tokens" button (absolute top 55% = exactly the box's bottom edge) sits NEATLY INSIDE the box. Scrolling + the bottom fade live
-          on the INNER DIV - putting the mask on the box would fade the grey background too and smear it into the white. */}
-      <div className="row-3-5" style={{ background: 'var(--color-surface)', borderRadius: 20, padding: '12px 16px 0', height: 'calc(100% + 5dvh)', minWidth: 0 }}>
+      {/* GREY BOX (2026-09-10, exact Figma geometry - node 1:334): top 10.19dvh, height 38.86dvh, NOT
+          row-3-5 any more (that started a full row too low - the tighter BalanceHeader freed up the top
+          of row 2). Each token is now its OWN WHITE rounded-16 CARD (48px tall, 10px gap) instead of a
+          flat list with divider rules - matching nodes 1:357/1:365/1:369 exactly. The "Hold to show
+          tokens" pill (top 46.68dvh) sits right at this box's bottom edge, as before. */}
+      <div style={{
+        position: 'absolute', left: '6.41%', right: '6.41%', top: '10.19dvh', height: '38.86dvh',
+        background: 'var(--color-surface)', borderRadius: 20, padding: '10px 8px 0', minWidth: 0,
+      }}>
         <div className="scroll-thin" style={{
-          display: 'flex', flexDirection: 'column', gap: 26, overflowY: 'auto', height: '100%', paddingTop: 2, paddingBottom: 52,
+          display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto', height: '100%', paddingBottom: 44,
           WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
           maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
         }}>
@@ -137,26 +139,23 @@ export default function HomeSend() {
           </div>
         ) : (
           <>
-            {tokens.map((tk, i) => (
-              // Thin divider under every row but the last (2026-09-08, matching the new Figma file).
+            {tokens.map(tk => (
               <div key={tk.symbol} style={{
-                display: 'flex', alignItems: 'center', gap: 10, padding: '0 2px',
-                ...(i < tokens.length - 1 ? { paddingBottom: 13, borderBottom: '1px solid var(--color-gray)' } : null),
+                display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
+                height: 48, borderRadius: 16, background: 'var(--color-white)', padding: '0 10px',
               }}>
                 <img
                   src={`/tokens/${tk.symbol.toLowerCase()}.png`}
                   alt=""
-                  style={{ width: 34, height: 34, borderRadius: '50%', flexShrink: 0 }}
+                  style={{ width: 27, height: 27, borderRadius: '50%', flexShrink: 0 }}
                   onError={e => {
                     e.target.style.display = 'none'
                     e.target.nextSibling.style.display = 'flex'
                   }}
                 />
-                <div className="token-icon" style={{ background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
+                <div className="token-icon" style={{ width: 27, height: 27, background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
 
-                {/* The real token name (USDC/EURC/cirBTC) + the verified badge (the app's green) */}
                 <span style={TOKEN_TEXT_STYLE}>{tk.symbol}</span>
-                <Icon name="check" size="var(--is-num)" color="var(--color-primary)" />
 
                 {/* SAME font/size/weight as "USDC" on the left (TOKEN_TEXT_STYLE), brand-blue colour - follows the
                     shared toggle above. The 24h trend arrow (user request 08-25) is VOLATILE TOKENS ONLY - not USDC/EURC, they are
@@ -164,9 +163,9 @@ export default function HomeSend() {
                     on the arrow itself, nothing added on top) - no arrow for a token → no gap, the amount sits
                     flush at the row's edge exactly as before this feature existed. */}
                 <span style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}>
-                  {/* Brand-blue (2026-09-08, matching the new Figma file's black-label/blue-value pattern
-                      used everywhere else in the app - Available:/Balance:/Fee:/Rate: lines) - same font/size/weight
-                      as the name on the left (TOKEN_TEXT_STYLE), only the colour differs. */}
+                  {/* Brand-blue (matching the new Figma file's black-label/blue-value pattern used everywhere
+                      else in the app - Available:/Balance:/Fee:/Rate: lines) - same font/size/weight as the
+                      name on the left (TOKEN_TEXT_STYLE), only the colour differs. */}
                   <span style={{ ...TOKEN_TEXT_STYLE, color: 'var(--color-brand)' }}>
                     {showToken
                       ? tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)
@@ -194,7 +193,14 @@ export default function HomeSend() {
         <ShowTokensButton onHoldStart={() => setShowToken(true)} onHoldEnd={() => setShowToken(false)} />
       )}
 
-      <div className="row-7-8" style={{ display: 'flex', flexDirection: 'column', minHeight: 0, paddingBottom: '2dvh' }}>
+      {/* GREY WRAPPER CARD (2026-09-10, node 7:35/1:335 - "Vector12"): same treatment as the token box
+          above, wrapping the whole notification/hint area (top 50.95dvh, height 28.67dvh) - a new
+          element vs the old plain row-7-8 div, matching Send AND Receive identically. */}
+      <div style={{
+        position: 'absolute', left: '6.41%', right: '6.41%', top: '50.95dvh', height: '28.67dvh',
+        background: 'var(--color-surface)', borderRadius: 20, padding: '12px 18px',
+        display: 'flex', flexDirection: 'column', minHeight: 0,
+      }}>
         <NotifArea
           // Each line = one COMPLETE SENTENCE whose underlined keyword is TAPPABLE → going where the button of the same
           // name in row 9 goes (user decision 07-21).
@@ -224,10 +230,11 @@ export default function HomeSend() {
 
       <div className="row-9 action-grid">
         {/* Left→right order: Paste · Scan QR · Contacts (user decision 07-23: Contacts is used more
-            often → on the RIGHT; the NotifArea hint uses the same order) */}
-        <button className="action-card" onClick={() => navigate('PasteAddress')}><Icon name="copy" size="var(--is-item)" /><span>Paste</span></button>
-        <button className="action-card primary" onClick={() => navigate('QRScanner')}><Icon name="scan" size="var(--is-item)" color="var(--color-white)" /><span>Scan QR</span></button>
-        <button className="action-card" onClick={() => navigate('Contacts')}><Icon name="human" size="var(--is-item)" /><span>Contacts</span></button>
+            often → on the RIGHT; the NotifArea hint uses the same order). Icon sizes 19.5/24 (2026-09-10,
+            up from --is-item 17) match the side/centre pills exactly. */}
+        <button className="action-card" onClick={() => navigate('PasteAddress')}><Icon name="copy" size={19.5} /><span>Paste</span></button>
+        <button className="action-card primary" onClick={() => navigate('QRScanner')}><Icon name="scan" size={24} color="var(--color-white)" /><span>Scan QR</span></button>
+        <button className="action-card" onClick={() => navigate('Contacts')}><Icon name="human" size={19.5} /><span>Contacts</span></button>
       </div>
 
       <NavBar active="HomeSend" />

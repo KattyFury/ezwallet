@@ -415,16 +415,15 @@ body {
 .row-2-8  { grid-row: 2 / 9; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
 /* ── NavBar ── */
-/* NAVBAR REBUILT 2026-09-07 from FIGMA-SCREENS-SPEC.md §5: each of the 4 tabs now sits in its OWN
-   equal-width cell - the whole bar is a flat grey fill (--color-gray, the guideline's box/input tone),
-   and the ACTIVE tab's cell turns solid white and floats above the rest with a shadow, instead of the
-   old blue underline indicator. The border-top divider is gone too - redundant once the bar itself has
-   a grey fill (a grey line on a grey background did nothing anyway). */
+/* NAVBAR SIMPLIFIED 2026-09-10, matching the Send/Receive/Menu frames in the current Figma file
+   (GxgsMU6HAYqolckzvPWXp1): the "raised white active cell" look is GONE - all 3 frames draw the bar as
+   ONE FLAT --color-surface fill with no per-tab background/shadow, and the active tab differs ONLY by
+   colour (black vs muted), both at the SAME font-weight (semibold) - not a weight bump like before. */
 .navbar {
   grid-row: 10;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  background: var(--color-gray);
+  background: var(--color-surface);
   margin: 0 -20px;               /* the NavBar RUNS EDGE TO EDGE with no margin (cancelling .screen's 20px padding) - user decision "except the NAVBAR" */
 }
 
@@ -434,22 +433,19 @@ body {
   align-items: center;
   justify-content: center;
   font-family: var(--font-condensed);
-  font-size: var(--fs-body);   /* "medium" 19 (user decision 07-17e - 21 looked coarse, one step down for air) */
-  font-weight: var(--fw-medium);
+  font-size: 16px;              /* measured off Send/Receive/Menu (2026-09-10) - was --fs-body 19 */
+  font-weight: var(--fw-semibold);
   color: var(--color-muted);   /* UNSELECTED = the guideline's secondary text tone */
   background: none;
   border: none;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: background 0.1s, color 0.1s;
+  transition: color 0.1s;
   gap: 3px;
 }
 
 .navbar-btn.active {
-  background: var(--color-white);
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);   /* the "raised white cell" look, measured off FIGMA-SCREENS-SPEC.md §5 */
   color: var(--color-black);
-  font-weight: var(--fw-bold);
 }
 
 /* ── Token list ── */
@@ -466,12 +462,15 @@ body {
   flex-shrink: 0;
 }
 
-/* ── Action grid (rows 8–9) ── */
+/* ── Action grid (row 9) ── */
+/* RESIZED 2026-09-10 to the exact Send/Receive pill geometry (both frames agree: side pills 100×56,
+   centre pill 124×64, gap ~8px - 100+8+124+8+100=340 = the content width used by every other card on
+   these screens). align-items:center (not the old stretch) so the taller centre pill floats above its
+   shorter siblings without distorting them. */
 .action-grid {
   display: grid;
-  grid-template-columns: 1fr 1.5fr 1fr;
-  height: 8dvh;
-  align-self: end;
+  grid-template-columns: 1fr 1.24fr 1fr;
+  align-items: center;
   margin-bottom: 2dvh;
   gap: 8px;
 }
@@ -482,29 +481,29 @@ body {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  /* WHITE BACKGROUND + GREY BORDER = the "TAPPABLE" signal (user decision 07-21, replacing the old surface fill: grey =
-     recessed = it looked like an area you cannot tap). box-sizing:border-box is global, so the border does NOT
-     add to the card's size. The `primary` card (Scan QR / Create QR) stays a gradient with no border. */
-  border-radius: 20px;
-  border: 1.5px solid var(--color-gray);
+  height: 6.64dvh;      /* 56px of 844 */
+  min-height: 44px;
+  /* NO BORDER (2026-09-10, matching Send/Receive exactly - the shadow alone signals "tappable" here,
+     the grey-border rule from 07-21 does not apply to this pill style). Fully rounded (radius = height/2). */
+  border-radius: 28px;
+  border: none;
   background: var(--color-white);
   color: var(--color-black);
   font-family: var(--font-condensed);
-  /* 15px Semibold - 2026-09-08, matching the SIDE action cards (Paste/Contacts) measured in the new Figma
-     file. The emphasized MIDDLE card (Scan QR) is bigger, 17px - see .action-card.primary below. */
-  font-size: var(--fs-label);
+  font-size: 13px;      /* measured off Paste/Contacts/QR storage/Share, 2026-09-10 */
   font-weight: var(--fw-semibold);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);   /* white buttons are raised (user decision 07-22d), a black shadow with no spread */
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.48);   /* glow, not the old straight-down shadow - matches every other button rebuilt 2026-09-10 */
 }
 
 .action-card.primary {
-  border: none;
+  height: 7.58dvh;      /* 64px of 844 - the emphasized centre pill is taller, not just bigger text */
+  min-height: 50px;
+  border-radius: 32px;
   background: var(--grad-brand);
   color: var(--color-white);
-  font-size: var(--fs-item);   /* 17px - the emphasized middle action card is one size up from its 15px siblings */
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);   /* gradients get a deeper shadow than white buttons, as in .btn-primary */
+  font-size: 16px;      /* measured off "Scan QR"/"Custom QR", 2026-09-10 */
 }
 
 /* ── Send flow ── */
