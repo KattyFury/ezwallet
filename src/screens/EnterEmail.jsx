@@ -139,7 +139,7 @@ export default function EnterEmail() {
   // this frame was re-verified today), lowercase "email" per the exact Figma text.
   return (
     <div className="screen">
-      <div className="row-1 center screen-title" style={{ fontSize: '28px', fontWeight: 'var(--fw-semibold)' }}>
+      <div className="row-1 center screen-title" style={{ fontWeight: 'var(--fw-semibold)' }}>
         Sign in with email
       </div>
 

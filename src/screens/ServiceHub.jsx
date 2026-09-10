@@ -20,9 +20,10 @@ export default function ServiceHub() {
 
   return (
     <div className="screen">
-      {/* Title - node 1:54: top 43.04px (no vertical centring in the Figma layer itself, unlike
-          Exchange's dead-centred title), 28px semibold. Lowercase "hub" per the exact Figma text. */}
-      <div style={{ position: 'absolute', left: '50%', top: '5.1dvh', transform: 'translateX(-50%)', width: '100%', textAlign: 'center', fontSize: 28, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>
+      {/* THE HEADER RULE (see .screen-title in index.css): every screen title sits bottom-anchored,
+          centred, size 28, in the 70px row-1 box - the same shared class every other screen's title
+          uses, not an ad-hoc position. Lowercase "hub" per the exact Figma text. */}
+      <div className="row-1 center screen-title" style={{ fontWeight: 'var(--fw-semibold)' }}>
         Service hub
       </div>
 

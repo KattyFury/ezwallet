@@ -221,7 +221,14 @@ body {
 }
 
 /* ── Buttons ── */
-.screen-title { font-family: var(--font-display); color: var(--color-black); }   /* screen titles = system font, BLACK */
+/* THE HEADER RULE (user, 2026-09-10, applies to every screen title app-wide): the title sits in its
+   70px row (row 1), size 28, horizontally CENTRED, vertically anchored to the BOTTOM of that row - not
+   centred, not a raw top offset. `.screen-title` is the single shared definition; every screen title
+   uses `className="row-1 center screen-title"` so this rule cannot drift per screen. `.center` (defined
+   above) supplies `display:flex` + horizontal centring; `align-items:flex-end` here OVERRIDES its
+   vertical centring (this rule is declared later in the file, so it wins for that one property). Do NOT
+   fix titles with ad-hoc absolute positioning per screen - route them through this class instead. */
+.screen-title { font-family: var(--font-display); color: var(--color-black); font-size: 28px; align-items: flex-end; }   /* screen titles = system font, BLACK */
 
 /* Every number & currency symbol ($/USDC/EURC/cirBTC) → --font-condensed, regular */
 .num { font-family: var(--font-condensed); }

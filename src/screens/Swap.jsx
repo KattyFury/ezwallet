@@ -394,9 +394,11 @@ export default function Swap() {
         </div>
       )}
 
-      {/* Title - node 1:67: dead-centre of row 1 (28px semibold, was --fs-title 25), unlike ServiceHub's
-          bottom-weighted title - that inconsistency is in the Figma file itself, replicated exactly. */}
-      <div style={{ position: 'absolute', left: '50%', top: '4.15dvh', transform: 'translate(-50%, -50%)', width: '100%', textAlign: 'center', fontSize: 28, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>
+      {/* THE HEADER RULE (see .screen-title in index.css): every screen title sits bottom-anchored,
+          centred, size 28, in the 70px row-1 box - the same shared class every other screen's title
+          uses (2026-09-10 correction: an earlier pass here guessed at a raw pixel offset instead of
+          applying the one shared rule). */}
+      <div className="row-1 center screen-title" style={{ fontWeight: 'var(--fw-semibold)' }}>
         Exchange
       </div>
 

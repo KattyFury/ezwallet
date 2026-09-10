@@ -377,16 +377,17 @@ export default function LuckyPot() {
           <span style={{ fontFamily: FONT_BODY, fontSize: 16, fontWeight: 'var(--fw-normal)', color: 'var(--color-muted-2)' }}>
             Your balance: <span style={{ color: 'var(--color-content)' }}>{walletUsdc != null ? `${walletUsdc.toFixed(2)} USDC` : '…'}</span>
           </span>
-          {/* Deposit 92 / Withdraw 91 / Latest result 125 (flex-grow proportional to those px widths,
+          {/* Deposit 92 / Withdraw 91 / Result 125 (flex-grow proportional to those px widths,
               node 14:163-14:170) - was 3 EQUAL flex:1 buttons. Height 34px (was 6.67dvh ≈ 56px - far
               taller than the Figma pill), 16px semibold (was --fs-label), glow shadow (was the .btn
-              class's old straight-down shadow, not yet updated app-wide for this screen). "Latest
-              result" (was "Result" - the Figma's exact label). */}
+              class's old straight-down shadow, not yet updated app-wide for this screen). ⚠️ "Result",
+              NOT "Latest result" (user decision 2026-09-10, overriding the Figma text on purpose - do
+              not "fix" this back to match the design). */}
           <div style={{ display: 'flex', gap: 8 }}>
             <button className="btn btn-primary" style={{ flex: '92 1 0%', height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} onClick={() => openPopup('deposit')}>Deposit</button>
             <button className="btn btn-secondary" style={{ flex: '91 1 0%', height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} onClick={() => openPopup('withdraw')}>Withdraw</button>
             <button className="btn" style={{ flex: '125 1 0%', height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, background: 'var(--color-warning)', color: 'var(--color-content)', border: 'none', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }}
-              disabled={!resultWindowOpen} onClick={() => openPopup('result')}>Latest result</button>
+              disabled={!resultWindowOpen} onClick={() => openPopup('result')}>Result</button>
           </div>
         </div>
       </div>
