@@ -510,7 +510,7 @@ export default function Swap() {
           onClick={needAmount ? openPad : handleSwap}>
           {/* Hint text = fs-item 17 (the app-wide HINT SIZE rule - .btn's default 21 gets ellipsised).
               ⚠️ "enter", NOT "input": the Figma text reads "Slide or tap here to input", but the user
-              explicitly decided (FIGMA-SCREENS-SPEC.md §9) to keep "enter" regardless of what Figma draws -
+              explicitly decided (2026-09-08) to keep "enter" regardless of what Figma draws -
               this is a deliberate standing override, not an oversight, so it is NOT changed to match. */}
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', ...(needAmount ? { fontSize: 'var(--fs-item)' } : null) }}>
             {success && <Icon name="check" size="var(--is-md-lg)" color="var(--color-white)" />}

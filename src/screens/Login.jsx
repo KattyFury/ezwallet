@@ -189,7 +189,7 @@ export default function Login() {
       {/* "Sign in with email" pill - node 1:191/1:192, centre at y=(699+48/2)=723px = 85.66dvh,
           width 231.996px = 59.48% of the screen. No icon (Figma's button is text-only, unlike the old
           mail-icon version). Glow shadow (0 0 8px rgba(0,0,0,.5), measured off the Figma layer) instead
-          of .btn-primary's straight-down shadow - per-screen shadow update, see FIGMA-SCREENS-SPEC.md §4. */}
+          of .btn-primary's straight-down shadow - per BRAND-GUIDELINE.md's shadow rule (clickable elements only, glow not offset). */}
       <button className="btn"
         style={{
           position: 'absolute', top: '85.66dvh', left: '50%', transform: 'translate(-50%, -50%)',

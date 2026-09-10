@@ -10,6 +10,42 @@
 It took four rounds of user corrections to get 3 screens right. Everything below exists so the next 17
 do not cost the same.
 
+**⚠️⚠️ TWO SOURCES OF TRUTH ONLY: live Figma + `BRAND-GUIDELINE.md`. Nothing else.** Stated directly by
+the user 2026-09-10 after a Send money round-trip cost three separate corrections: *"note vào handoff:
+figma là nguồn sự thật, sửa thiết kế theo figma chứ không nửa figma nửa code cũ."* Concretely:
+- Every measurement (position, size, gap, colour, icon) comes from a **fresh** `get_design_context` /
+  `get_metadata` call on the node being built, not from memory of an earlier fetch, not from a sibling
+  screen's "close enough" precedent, and not from whatever the pre-existing code already did. Re-verify
+  the number, don't reuse it.
+- A value **inherited from old code and never re-checked against this pull is a bug**, not a base to
+  build on - even something as small as a leftover `margin` or a `flex` proportion. If you didn't
+  personally verify a number against the current node, assume it's wrong.
+- Borrowing a solution from a DIFFERENT screen (even one already verified correct) is still a fabrication
+  if the current node's own export doesn't show it. Convenient precedent is not evidence.
+- If Figma's raw export looks incomplete (no icon layer, a blank key, a missing colour) - it very often
+  IS incomplete (flattened into a background image, an unexported detail) rather than "the design really
+  has nothing there." When the user states directly what it should be, that instruction overrides an
+  empty API response - it does not count as fabrication, the API export was the gap.
+- **Two related, cautionary examples from the SAME session** (Send money, `1:88`, seventh round-trip):
+  1. The "You send" card's chip/available-line/amount were positioned with flexbox
+     (`justify-content:space-between`/`flex-end`) approximating the layout instead of each element's own
+     measured `x/y` - it LOOKED right at a glance but landed 15-20px off Figma's real coordinates, which
+     only `figma-check.mjs`'s pixel diff (not eyeballing) caught. Fixed by placing every child at its own
+     absolute `%`/`dvh` coordinate, the same per-element method Confirm transaction/Receipt already used.
+  2. The numpad's key height/gap and the token icon's shape were carried over from pre-Figma-rebuild code
+     (a `flex:5.5` proportion, a real circular icon reused from `Swap.jsx`) instead of the current node's
+     own numbers (fixed 48px keys/8px gap/27px to the CTA row; a flat 24px BLACK SQUARE, no real icon at
+     all). Both looked defensible in isolation - neither was what the current Figma pull actually draws.
+
+**Repo cleanup (2026-09-10):** `FIGMA-SCREENS-SPEC.md` and `SEND_MONEY_FIGMA_SPEC.md` are DELETED - both
+were reading a *different, older* Figma file (`iQxFGA890VhyXkEKipCC9C`) than the one this whole rebuild
+uses, both had already misled at least one build (Send money's now-corrected "it's a % slider" guess came
+straight from the deleted spec doc), and per the two-sources rule above they were a competing, stale
+third source that should never have existed alongside live Figma. `BRAND-GUIDELINE.md` stays - it is
+verified byte-for-byte identical to the text literally embedded in the Figma file itself (node `1:419`),
+so it counts as Figma, not a separate paper copy of it. Do not recreate a similar "spec digest" doc for
+any future screen - read the live node instead, every time.
+
 #### 1. THE GRID - this was the root cause of nearly every error
 
 `BRAND-GUIDELINE.md` says *"Grid dọc: 10 hàng, spacing mỗi hàng 16px"* and *"Grid ngang: 12 cột, spacing
@@ -102,8 +138,8 @@ one pass - Send money, Language & currency, Security. Findings:
   "Send to: / centred amount+chip / Balance:" flow entirely for two cards ("You send" / "To") + a
   non-clickable connector circle, the same shape Confirm transaction/Receipt use - all business logic
   (VND plumbing, insufficient-balance guard, self-send guard, default-note popup) carried over unchanged,
-  only the JSX layer was rebuilt. The connector circle and the wallet-address copy icon are both rendered
-  **without an icon/graphic**, because the fresh pull draws neither - not fabricating one to fill the slot.
+  only the JSX layer was rebuilt. ⚠️ SUPERSEDED by the eighth round-trip below: the connector circle DOES
+  carry an icon (`down`), the user said so directly after the export came back blank - see below.
 - **Language & currency and Security were both sized wrong**: both used a small 1-3-row card
   (`gridRow:'2/3'` and `'2/5'`) when the current Figma draws the SAME full 340×586 (`gridRow:'2/9'`) card
   template every Menu sub-screen shares - `About.jsx` already had this part right, these two didn't.
@@ -121,6 +157,34 @@ one pass - Send money, Language & currency, Security. Findings:
   Figma draws a borderless glow-shadow chip instead, matching the token chip everywhere else already does.
 - Verified with `tools/figma-check.mjs` against fresh `get_screenshot` pulls of all three nodes - diff
   panels clean on all three, `npm run build` clean, `npm test` 16/16.
+
+**Eighth round-trip (2026-09-10, same day): the user rejected the Send money rebuild outright** ("bạn
+build sai... bớt ngu lại") over three concrete things, all fixed:
+1. **The numpad's key size/spacing was fabricated** - `flex:5.5` of whatever space happened to be left,
+   inherited unverified from pre-rebuild code, not Figma's own fixed 48px-tall/8px-gap keys. Fixed with an
+   explicit 216px-tall numpad block (4×48 + 3×8) and 27px of panel padding-top - both numbers the user
+   gave directly, matching node `18:16` etc. exactly (panel top 430 → first key 457 = 27px; last key
+   672 → CTA row 699 = 27px).
+2. **The token icon was a real circular icon borrowed from `Swap.jsx`'s chip**, not what node `1:95`
+   actually draws (a flat 24px BLACK SQUARE, no rounding, no real icon). "Exchange does it too" is not a
+   defence - each screen's own export is the source, not a sibling screen's precedent. Fixed.
+3. **The connector circle needed the `down` icon (`down.svg`)** - the raw `get_design_context` export
+   showed no icon layer under node `1:100` (checked 4 times, always empty), but the user confirmed
+   directly this is a flattened-into-background-image miss, not an actually-blank node - the same failure
+   mode §2.1 above already documents for the Menu dividers/NavBar cell. Added `Icon name="down"`, white,
+   centred.
+4. **Root cause, worth stating plainly**: the "You send" card's own children (chip, available line, big
+   amount) were positioned with flexbox (`space-between`/`flex-end`) approximating Figma's layout rather
+   than each element's own measured coordinate - visually close enough to look right, but a `figma-check`
+   pixel probe on the icon (46,163) read solid white in the app against solid black in Figma, proving the
+   chip was actually ~15-20px away from where Figma puts it. Rebuilt with per-element absolute `%`/`dvh`
+   positions (label 13.55dvh, chip 19.4dvh, available 25.28dvh, amount 16.72dvh - all centre-anchored
+   except the amount, which Figma itself top-anchors), the same method Confirm transaction/Receipt use.
+   **Lesson: flexbox convenience layout is not a substitute for the node's own numbers, even when it looks
+   right on screen** - only a pixel diff proves it, eyeballing doesn't.
+5. Re-verified against a matching-content Figma pull (`currency:"EURC"` params, matching the static
+   example) - diff panel clean, no more doubled digits, icon lands exactly on Figma's black square.
+   `npm run build` clean, `npm test` 16/16.
 
 ⚠️ The `row-gap` change (§1 above) moved every screen in the app, not only the ones rebuilt so far.
 TxHistory, Contacts, About, Security and SendAmount were smoke-checked (nothing overflows the frame, no

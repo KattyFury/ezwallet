@@ -3,7 +3,7 @@ import { useNav } from '../nav'
 import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
 import ErrorToast from '../components/ErrorToast'
-import { getTokenInfo, getDisplayRates, cachedRates, TOKENS } from '../chain'
+import { getTokenInfo, getDisplayRates, cachedRates } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import { findContactName } from '../store'
 import { displaySymbol, spendableOf, floorTo } from '../data'
@@ -134,7 +134,6 @@ export default function SendAmount() {
   // max 44 / weight 300 (was 52/600) - node 1:99, RE-VERIFIED 2026-09-10: 44px, and Light per the app's
   // standing "big numbers are always Light" rule (the node itself draws Regular, same override as everywhere else).
   const [fitRef, fitSize] = useFitFontSize(amountStr + '_', { max: 44, min: 18, weight: 300 })
-  const tokenColor = TOKENS.find(t => t.symbol === effectiveToken(cur))?.color || '#94A3B8'
 
   return (
     <div className="screen">
@@ -149,40 +148,46 @@ export default function SendAmount() {
           actual frame keeps a numpad, just restyled). "Send to:" + the inline amount/chip row are GONE,
           replaced by two cards + a connector circle, the same shape Confirm transaction/Receipt use. */}
 
-      {/* "You send" card - node 1:90: rows 2-3 (340x156, top 10.19dvh, radius 16). Label top-left; the
-          token chip + Available line stacked bottom-left; the big amount right-aligned - text sits at the
-          same 8px card inset measured everywhere today (Confirm/Receipt/Security). */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '10.19dvh', height: '18.48dvh', background: 'var(--color-surface)', borderRadius: 16, padding: '14px 8px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
-        <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)' }}>You send</span>
-        <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 0, flexShrink: 0 }}>
-            <button onClick={() => setShowCur(true)}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'var(--color-white)', borderRadius: 999, height: 42, padding: '0 14px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', cursor: 'pointer' }}>
-              <img src={`/tokens/${effectiveToken(cur).toLowerCase()}.png`} alt=""
-                style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }}
-                onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }} />
-              <div style={{ width: 24, height: 24, borderRadius: '50%', background: tokenColor, display: 'none', flexShrink: 0 }} />
-              {cur}
-              <Icon name="down2" size="var(--is-item)" color="var(--color-brand)" />
-            </button>
-            <span style={{ fontSize: 16, whiteSpace: 'nowrap' }}>
-              <span style={{ color: 'var(--color-muted-2)' }}>Available: </span>
-              <span className="num" style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{availableStr}</span>
-            </span>
-          </div>
-          <div ref={fitRef} style={{ flex: 1, minWidth: 0, textAlign: 'right' }}>
-            <span className="num" style={{ fontSize: fitSize, fontWeight: 'var(--fw-light)', lineHeight: 1, whiteSpace: 'nowrap', color: overBalance ? 'var(--color-error)' : digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
-              {amountStr}<span className="caret">_</span>
-            </span>
-          </div>
-        </div>
+      {/* "You send" card - node 1:90: rows 2-3 (340x156, top 10.19dvh, radius 16). RE-VERIFIED 2026-09-10:
+          every child below is placed at its OWN measured Figma coordinate (converted x/390→%, y/844→dvh),
+          not approximated with flexbox space-between/flex-end like the first pass - that approximation is
+          exactly what put the chip/icon/numbers at the wrong y and made them impossible to pixel-diff
+          cleanly. Same per-element absolute placement Confirm transaction/Receipt already use. */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '10.19dvh', height: '18.48dvh', background: 'var(--color-surface)', borderRadius: 16 }} />
+
+      <span style={{ position: 'absolute', left: '8.46%', top: '13.55dvh', transform: 'translateY(-50%)', fontSize: 18, fontWeight: 'var(--fw-semibold)' }}>You send</span>
+
+      {/* Chip - node 1:94: centre 19.4dvh. Icon (1:95) is a literal 24x24 BLACK SQUARE, no rounding -
+          Figma draws no real token icon here, so draw exactly what it draws, not a borrowed round one. */}
+      <button onClick={() => setShowCur(true)}
+        style={{ position: 'absolute', left: '8.46%', top: '19.4dvh', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'var(--color-white)', borderRadius: 999, height: 42, padding: '0 14px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', cursor: 'pointer' }}>
+        <div style={{ width: 24, height: 24, background: 'var(--color-black)', flexShrink: 0 }} />
+        {cur}
+        <Icon name="down2" size="var(--is-item)" color="var(--color-brand)" />
+      </button>
+
+      <span style={{ position: 'absolute', left: '8.46%', top: '25.28dvh', transform: 'translateY(-50%)', fontSize: 16, whiteSpace: 'nowrap' }}>
+        <span style={{ color: 'var(--color-muted-2)' }}>Available: </span>
+        <span className="num" style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{availableStr}</span>
+      </span>
+
+      {/* Amount - node 1:99: top-anchored (no y-centring in Figma) at 16.72dvh, right-aligned to the same
+          8.46% inset as everything else in this card. */}
+      <div ref={fitRef} style={{ position: 'absolute', left: '51%', right: '8.46%', top: '16.72dvh', textAlign: 'right' }}>
+        <span className="num" style={{ fontSize: fitSize, fontWeight: 'var(--fw-light)', lineHeight: 1, whiteSpace: 'nowrap', color: overBalance ? 'var(--color-error)' : digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
+          {amountStr}<span className="caret">_</span>
+        </span>
       </div>
 
-      {/* Connector circle - node 1:100: NO icon (Figma draws it blank - not fabricating one) and NOT
+      {/* Connector circle - node 1:100: icon is "down" (down.svg) per the user directly - the raw Figma
+          export shows this node with no icon layer (flattened out of the node list, the same class of
+          miss HANDOFF §2.1 already documents for the Menu dividers/NavBar cell), not actually blank. NOT
           clickable (2026-09-08 decision: same component slot as Swap's reverse button, but nothing to
           reverse on a one-way send). Sits at the literal midpoint of the gutter between the two cards
           (29.62dvh) - the SAME value Swap's own reverse button uses for the identical rule. */}
-      <div aria-hidden style={{ position: 'absolute', left: '50%', top: '29.62dvh', transform: 'translate(-50%, -50%)', zIndex: 3, width: 50, height: 50, borderRadius: '50%', background: 'var(--grad-brand)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} />
+      <div aria-hidden style={{ position: 'absolute', left: '50%', top: '29.62dvh', transform: 'translate(-50%, -50%)', zIndex: 3, width: 50, height: 50, borderRadius: '50%', background: 'var(--grad-brand)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <Icon name="down" size="var(--is-num)" color="var(--color-white)" />
+      </div>
 
       {/* "To" card - node 1:91: row 4 (340x70, top 30.57dvh). "To:" 18px + the name 22px, both semibold. */}
       <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '30.57dvh', height: '8.29dvh', background: 'var(--color-surface)', borderRadius: 16, display: 'flex', alignItems: 'center', padding: '0 8px', minWidth: 0 }}>
@@ -236,13 +241,11 @@ export default function SendAmount() {
           HIDDEN while typing TEXT (note field focused / note popup open) - the iPhone keyboard rising on top of the
           numpad looks terrible (reported 07-23); blur / close the popup → the numpad returns. */}
       {!typingText && !showNote && (
-      <div className="numpad-gray" style={{ gridRow: '6 / 11', margin: '0 -20px 0', padding: '24px 20px 0', background: 'var(--color-surface-2)', borderRadius: '20px 20px 0 0', display: 'flex', flexDirection: 'column' }}>
+      <div className="numpad-gray" style={{ gridRow: '6 / 11', margin: '0 -20px 0', padding: '27px 20px 0', background: 'var(--color-surface-2)', borderRadius: '20px 20px 0 0' }}>
         {/* AMOUNT SUGGESTIONS (VND only) - placed DIRECTLY ABOVE the numpad so the typing finger reaches them instantly, one tap
-            instead of counting zeroes. Height only reserved WHILE hints are actually showing (was a permanent
-            44px gap regardless - 2026-09-10: node 1:108 draws the grey panel starting flush at 50.95dvh with
-            no such gap, and VND is unreachable in practice, so that gap was pure dead space pushing the whole
-            numpad down against the fresh Figma pull. Still reserves space when hints DO show, so the numpad
-            doesn't jump while actively typing VND - just collapses to 0 the rest of the time). */}
+            instead of counting zeroes. Height only reserved WHILE hints are actually showing - VND is
+            unreachable in practice (see the file header comment), so this never actually pushes the numpad
+            down against the verified 27px offset below. */}
         <div style={{ height: hints.length ? 44 : 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 0, overflow: 'hidden' }}>
           {hints.map(v => (
             <button key={v} onClick={() => setDigits(String(v))}
@@ -251,11 +254,14 @@ export default function SendAmount() {
             </button>
           ))}
         </div>
-        {/* Numpad 5.5 parts (07-20c: keys a touch shorter), the .row10-dual buttons still anchored to the row 9-10 edge */}
-        <div style={{ flex: 5.5, minHeight: 0 }}>
+        {/* Numpad - node 18:16 etc, RE-VERIFIED 2026-09-10 (the user flagged the previous flex-proportional
+            sizing as fabricated): FIXED 48px key height, 8px gap, 4 rows = 4x48 + 3x8 = 216px exactly - not
+            a fraction of whatever space is left. Panel padding-top 27px above + this 216px block put the
+            last key row's bottom 27px above the Back/Continue row (699dvh, independently positioned via
+            .row10-dual), matching Figma's own 27px gap on both sides of the numpad exactly. */}
+        <div style={{ height: 216 }}>
           <Numpad onKey={handleKey} showComma={!isVnd} />
         </div>
-        <div style={{ flex: 3.5 }} />
       </div>
       )}
 

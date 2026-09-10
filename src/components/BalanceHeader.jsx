@@ -19,7 +19,7 @@ export default function BalanceHeader({ totalUsd, loading }) {
   // fmtDisplay puts the symbol on the CORRECT side: "$127.66" but "1.250.000 ₫" (symbol trails the number).
   const str = unknown ? '…' : fmtDisplay(totalUsd, cur, rates)
 
-  // MAX SIZE = 50 (user decision 2026-09-08, FIGMA-SCREENS-SPEC.md §12): the balance is capped at 50px,
+  // MAX SIZE = 50 (user decision 2026-09-08, confirmed against Menu/Home send/Home receive's own Figma nodes): the balance is capped at 50px,
   // shrinking by REAL MEASURED WIDTH via canvas (useFitFontSize) - NOT amountFontSize (character counting)
   // any more: some currencies are twice as long as USD ("1.250.000 ₫" vs "$50.00"), so guessing by length
   // overflows. The fit budget itself is capped at 75% of the SCREEN width (not just the container minus a
