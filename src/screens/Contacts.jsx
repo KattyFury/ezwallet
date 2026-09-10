@@ -136,8 +136,11 @@ export default function Contacts() {
 
       {/* SHARED GREY BOX around the whole list (user decision 07-17f: "mark the area clearly so people can see it
           is one box"). The box's horizontal padding = an EVEN margin on both sides for every row (rows used to be
-          full-bleed: the PFP touched the left edge while the options button was inset 4px + the scrollbar gutter → the user called it "off to the left"). */}
-      <div className="row-2-8" style={{ width: '100%', ...(contacts.length ? { background: 'var(--color-surface)', borderRadius: 20, padding: '4px 16px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' } : {}) }}>
+          full-bleed: the PFP touched the left edge while the options button was inset 4px + the scrollbar gutter → the user called it "off to the left").
+          Card radius 16 (was 20) - node 1:247, RE-VERIFIED 2026-09-10 against live Figma (the box itself is a
+          blank 340x586 placeholder with no example rows, so the internal row padding above has no Figma
+          evidence to check against and is left as the prior user-tuned value). */}
+      <div className="row-2-8" style={{ width: '100%', ...(contacts.length ? { background: 'var(--color-surface)', borderRadius: 16, padding: '4px 16px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' } : {}) }}>
         {contacts.length === 0 ? (
           <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>No contacts yet</span>
         ) : (

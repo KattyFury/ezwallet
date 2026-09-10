@@ -254,8 +254,10 @@ export default function TxHistory() {
       </div>
 
       {/* SHARED GREY BOX around the whole history (user decision 07-17f "mark the boundary"). The bottom fade mask lives on the
-          INNER DIV - putting it on the box would fade the grey background too and smear it into the white. */}
-      <div className="row-2-8" style={{ background: 'var(--color-surface)', borderRadius: 20, padding: '4px 14px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' }}>
+          INNER DIV - putting it on the box would fade the grey background too and smear it into the white.
+          Card radius 16 (was 20) - node 1:258, RE-VERIFIED 2026-09-10 against live Figma (blank 340x586
+          placeholder, no example rows, so the row padding below has no Figma evidence and is left as-is). */}
+      <div className="row-2-8" style={{ background: 'var(--color-surface)', borderRadius: 16, padding: '4px 14px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' }}>
       <div className="scroll-thin" style={{
         display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start', height: '100%', overflowY: 'auto',
         WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
@@ -285,7 +287,14 @@ export default function TxHistory() {
       </div>
       </div>
 
-      <div style={{ gridRow: '9 / 11', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+      {/* 3 equal buttons, node 1:253/15:213/15:218: 108px each (340px card width - 2x8px gap, ÷3) - the
+          extra 5px padding each side closes the gap between .screen's own 20px margin and the card's real
+          25px (6.41%) inset, so flex:1 lands on exactly 108px instead of .screen's raw ~111.3px.
+          Position matches .row10-single/.row10-dual EXACTLY (absolute, top 81.52dvh/height 8.29dvh = row 9
+          of the guideline grid, centre 723px) - `gridRow:'9/11'` and later `gridRow:'10'` were both wrong:
+          a 2-row grid span centres in the wrong place, and literal grid-row 10 is row 10 (774-844), not
+          row 9 where Figma actually puts every bottom button row. */}
+      <div style={{ position: 'absolute', left: 20, right: 20, top: '81.52dvh', height: '8.29dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '0 5px' }}>
         {/* An active filter = white background + BLUE BORDER (no solid fill) */}
         <button className="btn btn-secondary" style={{ flex: 1, ...(filter === 'send' ? activeFilter : {}) }}
           onClick={() => setFilter(f => f === 'send' ? 'all' : 'send')}>Send</button>
