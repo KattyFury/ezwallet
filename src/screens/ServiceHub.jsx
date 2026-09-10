@@ -3,23 +3,16 @@ import Icon from '../components/Icon'
 import { useNav } from '../nav'
 
 // ══ SERVICE HUB - the services home (navbar tab 1) ══
-// REBUILT 2026-09-07 from FIGMA-SCREENS-SPEC.md §7 (Frame 6): the old 2-column grid of square tiles is
-// gone, replaced by full-width HORIZONTAL cards - icon left, title + description right - measured off
-// the frame (card height 148.8px, 20px gap between cards, matching the guideline's "2 yếu tố sát nhau
-// cách 20px" rule exactly). "Swap" is relabelled "Exchange" per the frame (still routes to Swap.jsx -
-// only the tile's display label changed, not the screen id).
+// REBUILT 2026-09-10 against the current Figma file (GxgsMU6HAYqolckzvPWXp1, node 1:43) on the
+// guideline grid (70px rows + 16px gutter, see HANDOFF.md READ FIRST §1): 2 full-width cards, each
+// spanning exactly one "double row" (156px = 2×70+16) - card 1 at rows 2-3 (top 10.19dvh), card 2 at
+// rows 4-5 (top 30.57dvh), the 16px gap between them falling exactly on the grid gutter.
 //
-// ⚠️ Piggy Bank is NOT drawn in the new Figma frame at all (only 2 cards: Exchange + LuckyPot) - left
-// OUT of SERVICES below rather than shown as a 3rd disabled card, since the new full-width layout has
-// no natural "half-built" slot for it the way the old 2-column grid did. Not deleted, just commented out
-// - FIGMA-SCREENS-SPEC.md §8.3 flags this as still needing your decision (drop it for good, or it comes
-// back once there's a real screen for it).
-// Adding a service = adding one line to SERVICES.
-//   screen : the screen name in SCREENS (App.jsx). null = not built yet → the card dims itself and is not tappable.
+// ⚠️ Piggy Bank is NOT drawn in the Figma frame at all (only 2 cards: Exchange + LuckyPot) - left OUT
+// of SERVICES below rather than shown as a 3rd disabled card. Not deleted, just not listed here.
 const SERVICES = [
-  { id: 'swap',     icon: 'exchange', label: 'Exchange', desc: 'Swap USDC to EURC or cirBTC with Stablecoin Kit', screen: 'Swap' },
-  // { id: 'pig',   icon: 'pig',      label: 'Piggy Bank', desc: '…', screen: null },  -- see note above, not in the new Figma frame
-  { id: 'luckypot', icon: 'luckypot', label: 'LuckyPot',  desc: 'Your idle USDC can bring you $$$$',      screen: 'LuckyPot' },
+  { id: 'swap', icon: 'exchange', label: 'Exchange', desc: 'Swap between USDC, EURC & cirBTC', screen: 'Swap', top: '10.19dvh' },
+  { id: 'luckypot', icon: 'luckypot', label: 'LuckyPot', desc: 'Your idle money can become lottery tickets – for free', screen: 'LuckyPot', top: '30.57dvh' },
 ]
 
 export default function ServiceHub() {
@@ -27,45 +20,35 @@ export default function ServiceHub() {
 
   return (
     <div className="screen">
-      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)' }}>
-        Service Hub
+      {/* Title - node 1:54: top 43.04px (no vertical centring in the Figma layer itself, unlike
+          Exchange's dead-centred title), 28px semibold. Lowercase "hub" per the exact Figma text. */}
+      <div style={{ position: 'absolute', left: '50%', top: '5.1dvh', transform: 'translateX(-50%)', width: '100%', textAlign: 'center', fontSize: 28, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>
+        Service hub
       </div>
 
-      {/* Cards start at row 2 (Figma top=94.4 ≈ 11.18dvh, close enough to row 2's 8.44dvh start to use
-          the row boundary directly) and stack downward - justifyContent flex-start on purpose: the frame
-          leaves the rest of the screen blank below the 2nd card rather than stretching cards to fill it. */}
-      <div style={{ gridRow: '2 / 10', display: 'flex', flexDirection: 'column', gap: '2.37dvh' /* 20px / 844 */, minWidth: 0 }}>
-        {SERVICES.map(({ id, icon, label, desc, screen }) => {
-          const soon = !screen   // not built → dimmed and not tappable (the same disabled standard as MenuScreen)
-          return (
-            // A RAISED CARD - white + a drop shadow, no border (Figma: `shadow-[0_0_15px_rgba(0,0,0,.5)]`,
-            // no border on these cards, unlike the old grey-bordered tiles).
-            <button key={id} disabled={soon} onClick={soon ? undefined : () => navigate(screen)}
-              style={{
-                height: '17.63dvh' /* 148.8/844 */, minWidth: 0, width: '100%',
-                border: 'none', borderRadius: 10,
-                background: 'var(--color-white)', boxShadow: '0 0 15px rgba(0, 0, 0, 0.5)',
-                display: 'flex', alignItems: 'center',
-                padding: '0 12px 0 5.09%' /* Figma icon left edge 19.84/390 */, gap: 14, fontFamily: 'inherit', textAlign: 'left',
-                opacity: soon ? 0.4 : 1, cursor: soon ? 'not-allowed' : 'pointer',
-              }}>
-              {/* Icon 62.263px in the frame (15.96% of 390) - the user's icons are drawn on a 200×200
-                  canvas for exactly this kind of large render. */}
-              <Icon name={icon} size="min(7.38dvh, 15.96vw)" color="var(--color-brand)" />
-              {/* minWidth 0 - the mandatory guard whenever a flex item holds text (see the .screen note in
-                  index.css): without it a long description widens the card instead of wrapping. */}
-              <span className="col" style={{ minWidth: 0, gap: 4 }}>
-                <span style={{ fontSize: 20, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', lineHeight: 1.15 }}>
-                  {label}
-                </span>
-                <span style={{ fontSize: 14, fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)', lineHeight: 1.25 }}>
-                  {desc}
-                </span>
-              </span>
-            </button>
-          )
-        })}
-      </div>
+      {SERVICES.map(({ id, icon, label, desc, screen, top }) => {
+        const soon = !screen   // not built → dimmed and not tappable (the same disabled standard as MenuScreen)
+        return (
+          // A RAISED WHITE CARD, radius 16, glow shadow (nodes 7:113/7:117) - not the old grey-border
+          // tile style. Icon is a real Icon component at the Figma placeholder's exact 55.844px box,
+          // inset 10px from the card's left edge and vertically centred; the label+desc block starts
+          // right after it with a 9px gap, both lines in BLACK (the description is NOT muted grey here,
+          // unlike almost every other secondary-text line in the app - this frame draws it solid black).
+          <button key={id} disabled={soon} onClick={soon ? undefined : () => navigate(screen)}
+            style={{
+              position: 'absolute', left: '6.41%', right: '6.41%', top, height: '18.48dvh',
+              border: 'none', borderRadius: 16, background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
+              display: 'flex', alignItems: 'center', padding: '0 8px 0 10px', gap: 9, minWidth: 0,
+              fontFamily: 'inherit', textAlign: 'left', opacity: soon ? 0.4 : 1, cursor: soon ? 'not-allowed' : 'pointer',
+            }}>
+            <Icon name={icon} size="min(14.32vw, calc(var(--screen-max) * 0.1432))" color="var(--color-brand)" style={{ flexShrink: 0 }} />
+            <span className="col" style={{ minWidth: 0, gap: 2 }}>
+              <span style={{ fontSize: 24, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', lineHeight: 1.2 }}>{label}:</span>
+              <span style={{ fontSize: 16, fontWeight: 'var(--fw-normal)', color: 'var(--color-content)', lineHeight: 1.3 }}>{desc}</span>
+            </span>
+          </button>
+        )
+      })}
 
       <NavBar active="ServiceHub" />
     </div>

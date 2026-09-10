@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-10 · **Local:** `D:\Files\Claude\ezwallet`
 
-### ⚠️ READ THIS FIRST - REBUILDING SCREENS FROM FIGMA (6 done, 17 to go)
+### ⚠️ READ THIS FIRST - REBUILDING SCREENS FROM FIGMA (9 done, 14 to go)
 
 **Figma file: `GxgsMU6HAYqolckzvPWXp1`.** The user's position, stated directly on 2026-09-10:
 *"toàn bộ thiết kế Figma đang chuẩn BRAND GUIDELINE chỉ có Claude là đang làm sai"* - the Figma file and
@@ -72,17 +72,36 @@ be opened without walking the flow.
 
 #### 4. Where the rebuild stands
 
-**Done (6):** Splash `1:169` · Login `1:180` · Sign in with email `1:193` · Send `1:328` · Receive `1:373`
-· Menu `1:16`.
+**Done (9):** Splash `1:169` · Login `1:180` · Sign in with email `1:193` · Send `1:328` · Receive `1:373`
+· Menu `1:16` · Service hub `1:43` · Exchange `1:63` (= `Swap.jsx`) · LuckyPot `1:158`.
 
-**Left (17):** Service hub `1:43` · Exchange `1:63` · Send money `1:88` · Create receive QR `1:113` ·
-Created receive QR `1:128` · Arabica `1:139` · Scan QR `1:150` · LuckyPot `1:158` · Paste address to send
-`1:205` · Confirm transaction `1:215` · Receipt `1:227` · Contacts `1:239` · Transaction history `1:248` ·
-Language & currency `1:259` · Security `1:275` · About `1:286` · QR storage `1:303`.
+**Left (14):** Send money `1:88` · Create receive QR `1:113` · Created receive QR `1:128` · Arabica
+`1:139` · Scan QR `1:150` · Paste address to send `1:205` · Confirm transaction `1:215` · Receipt `1:227`
+· Contacts `1:239` · Transaction history `1:248` · Language & currency `1:259` · Security `1:275` ·
+About `1:286` · QR storage `1:303`.
 
-⚠️ The `row-gap` change moved every screen in the app, not only the 6 rebuilt ones. ServiceHub, Swap,
+⚠️ The `row-gap` change (§1 above) moved every screen in the app, not only the ones rebuilt so far.
 TxHistory, Contacts, About, Security and SendAmount were smoke-checked (nothing overflows the frame, no
-console errors) but **none of them has been compared against its Figma frame yet**.
+console errors) but **have not been compared against their Figma frames yet**.
+
+**LuckyPot note (2026-09-10):** the user redrew this frame's own Figma to bring it closer to the real
+luckypot.cc frontend, then added a "My history" box to row 9 (next to "Draw history") - the handler
+(`openMyHistory`) and its popup already existed in the code, only wired into the hamburger menu; row 9
+now calls it directly. Two more real mismatches came out of this rebuild specifically: `TokenDropdown`
+was a solid-blue pill with white text (Figma: white pill, black text, glow shadow) and every stat-box
+label had `textTransform: uppercase` left over from a 2026-08-09 decision that this newer Figma pull no
+longer follows (only "EPOCH #3" is capitalised, and that is literally typed that way in the string, not
+a CSS transform) - both were caught by the diff tool, not by eye.
+
+**Exchange note:** rebuilt `Swap.jsx` in place (same screen id, Figma just relabels the tile "Exchange" -
+see ServiceHub). The user's instruction *"vùng từ hàng 8 trở lên là vùng dành cho slider"* is now literal:
+the round-number chips + `PctSlider` sit in an absolutely-positioned block at rows 7-8 (top 61.14dvh,
+height 18.48dvh), matching the blank space in the Figma mockup (which does not render the slider's own
+UI, being a static frame). The CTA button lost its old "3/4 of the screen width" rule - node 1:85 is
+340px wide, the same edge-to-edge width as the cards above it, with a larger one-off glow
+(`0 0 20px rgba(0,0,0,.32)`) that is NOT the shared button shadow. The button copy stays "Slide or tap
+here to **enter**" (not "input") - a standing, deliberate override recorded in `FIGMA-SCREENS-SPEC.md`
+§9, not a miss.
 
 #### 5. Current shared values (these changed on 2026-09-10 - §5/§6 below are older)
 

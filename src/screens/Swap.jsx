@@ -29,14 +29,15 @@ const SWAP_ENABLED = true
 const SWAP_TOKENS = ['USDC', 'EURC', 'cirBTC']
 const decimalsFor = sym => (sym === 'cirBTC' ? 6 : 2)
 
+// 2026-09-10, node 1:72/13:149: height 42 (was uncapped), NO border (was 1.5px grey - the glow shadow
+// alone is this app's "tappable" signal now), icon 24 (was 32), text 18 (was --fs-body 19).
 function TokenRow({ sym, onClick }) {
-  // Chips enlarged for older eyes (user decision 07-20 "make the elements bigger"): logo 32, text 19 (--fs-body)
   return (
     <button onClick={onClick}
-      style={{ display: 'flex', alignItems: 'center', gap: 8, border: '1.5px solid var(--color-gray)', borderRadius: 999, background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'inherit', padding: '5px 12px 5px 6px', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)' }}>
-      <img src={`/tokens/${sym.toLowerCase()}.png`} alt={sym} style={{ width: 32, height: 32, borderRadius: '50%' }} />
-      <span className="num" style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
-      <Icon name="down2" size="var(--is-body)" color="var(--color-brand)" />
+      style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 999, height: 42, background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'inherit', padding: '0 12px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', flexShrink: 0 }}>
+      <img src={`/tokens/${sym.toLowerCase()}.png`} alt={sym} style={{ width: 24, height: 24, borderRadius: '50%' }} />
+      <span className="num" style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
+      <Icon name="down2" size={15} color="var(--color-brand)" />
     </button>
   )
 }
@@ -266,10 +267,9 @@ export default function Swap() {
     }
   }
 
-  // The card = a PALE GREY BACKGROUND, NO BORDER, large corner radius (user decision 07-17c, matching the mockup the user sent).
-  // It used to be a grey border on white → which sank into .screen's white background and did not read as a block.
-  // The token chip inside stays WHITE → standing out on the grey card (no heavy border needed).
-  const CARD = { border: 'none', borderRadius: 20, background: 'var(--color-surface)', padding: '14px 16px' }
+  // The card = a PALE GREY BACKGROUND, NO BORDER, NO SHADOW (nodes 1:68/1:69, 2026-09-10: radius 16,
+  // was 20 - the token chip inside stays WHITE so it stands out on the grey without needing a border).
+  const CARD = { border: 'none', borderRadius: 16, background: 'var(--color-surface)', padding: '14px 16px' }
 
   // ONE MINIMAL 3-row card (user decision 07-20 "strip it back so the text can be bigger for older users"):
   //   the You pay/receive label
@@ -302,12 +302,12 @@ export default function Swap() {
     // The _ caret appears ONLY WHILE TYPING (numpad open) or when the field is EMPTY (the tap hint) - once there is a number it is OFF
     // (user decision 07-28: "10.00_" with a caret blinking after a finished number looks nonsensical).
     const showCaret = onAmount && (isTyping || !hasValue)
-    const [fitRef, fitSize] = useFitFontSize((showZero ? '' : amtStr) + (showCaret ? '_' : ''), { max: 52, min: 18 })
+    {/* 44px max (was 52), node 1:82's "_" caret - measured at 44 on this Figma pull */}
+    const [fitRef, fitSize] = useFitFontSize((showZero ? '' : amtStr) + (showCaret ? '_' : ''), { max: 44, min: 18 })
     return (
-      <div style={{ ...CARD, minWidth: 0, height: 'calc(20dvh - 5px)', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
-        {/* Weight hierarchy (user decision 07-17e "important things get bold"): the card's role label = medium.
-            The card is 2 ROWS tall, so secondary text goes to --fs-body 19 and the big number to base 52 (user decision 07-20, big for older eyes) */}
-        <span style={{ fontSize: 'var(--fs-body)', fontWeight: 'var(--fw-medium)', color: 'var(--color-muted)' }}>{label}</span>
+      <div style={{ ...CARD, minWidth: 0, height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
+        {/* 2026-09-10: 18px semibold BLACK (was --fs-body 19 medium muted) - nodes 1:70/1:76 */}
+        <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{label}</span>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
           <TokenRow sym={sym} onClick={onPick} />
           {/* THE AMOUNT FIELD. The white box's COLOUR/BORDER around the number was REMOVED (user decision 07-22: a bordered box looks rigid and long
@@ -330,17 +330,17 @@ export default function Swap() {
             </span>
           </div>
         </div>
-        {/* The secondary row = --fs-item 17 ("medium-small"), SMALLER than the You pay/receive label at 19 ("medium") - user decision
-            07-21: making them equal destroyed the heavy/light hierarchy. Available and ~$ share the same size. */}
+        {/* 2026-09-10: 16px (was --fs-item 17), label colour --color-muted-2 #667085 (was --color-muted) -
+            node 1:71's "Available:" span. Available and ~$ share the same size. */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
-          <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          <span style={{ fontSize: 16, color: 'var(--color-muted-2)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {/* balLabel: You receive = "Balance", You pay = null (hidden - user decision 07-22f: the Available line was
                 dropped from You pay). A balance that cannot be read yet → "…", NEVER a drawn 0 (bug 07-17). */}
-            {balLabel ? <>{balLabel}: <span className="num" style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-medium)' }}>
+            {balLabel ? <>{balLabel}: <span className="num" style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-semibold)' }}>
               {balKnown ? `${spendableOf(sym, balances[sym]).toFixed(decimalsFor(sym))} ${sym}` : '…'}
             </span></> : null}
           </span>
-          <span className="num" style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>{disp !== null ? `~ ${fmtDisp(disp)}` : ''}</span>
+          <span className="num" style={{ fontSize: 16, color: 'var(--color-muted-2)', whiteSpace: 'nowrap' }}>{disp !== null ? `~ ${fmtDisp(disp)}` : ''}</span>
         </div>
       </div>
     )
@@ -394,106 +394,113 @@ export default function Swap() {
         </div>
       )}
 
-      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)' }}>
-        Swap
+      {/* Title - node 1:67: dead-centre of row 1 (28px semibold, was --fs-title 25), unlike ServiceHub's
+          bottom-weighted title - that inconsistency is in the Figma file itself, replicated exactly. */}
+      <div style={{ position: 'absolute', left: '50%', top: '4.15dvh', transform: 'translate(-50%, -50%)', width: '100%', textAlign: 'center', fontSize: 28, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>
+        Exchange
       </div>
 
-      {/* The rows 2→9 AREA is split into 3 BLOCKS with justify-content:space-between (user decision 07-20e): the 2 gaps
-          between blocks are AUTOMATICALLY EQUAL (the You-pay/receive block ↔ the hint+slider block ↔ the Swap button), with no
-          lopsided empty space. paddingBottom 2dvh = matching the action-card margin-bottom on Send/Receive. */}
-      <div style={{ gridRow: '2 / 10', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minWidth: 0 }}>
+      {/* 2026-09-10 REBUILD against the current Figma file (node 1:63): every zone below is placed on
+          exact guideline-grid coordinates (see HANDOFF.md READ FIRST §1) instead of the old
+          flex/space-between layout, which cannot be checked pixel-by-pixel the way absolute positions
+          can. "You pay"/"You receive" occupy rows 2-3 and 4-5 (156px each, the same double-row height as
+          the Service Hub cards); the reverse button straddles their shared gutter; Rate/Fee sits alone in
+          row 6; the round-number chips + % slider fill rows 7-8 - this is the "row 8 and up is the
+          slider's area" the user flagged; the CTA sits on row 9 at the width of the cards (NOT 3/4 of the
+          screen - node 1:85 is 340px wide, edge to edge with the cards). */}
 
-        {/* BLOCK 1: You pay ⇅ You receive + Fee/Rate */}
-        <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-          <SideCard label={'You pay'} sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
-            onAmount={openPad} typing={pad ? typed : null} balLabel="Available" />
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '10.19dvh', height: '18.48dvh' }}>
+        <SideCard label={'You pay'} sym={fromSym} onPick={() => setPicker('from')} amount={hasBal ? amountNum : null} disp={amountDisplay}
+          onAmount={openPad} typing={pad ? typed : null} balLabel="Available" />
+      </div>
 
-          {/* The reverse button - OVERLAPPING the gap between the 2 cards, rotating 180° on each tap. A BRAND GRADIENT circle +
-              a WHITE icon (user decision 07-29, reversing the 07-22h pale-blue/dark-blue-icon version) → same family as
-              .btn-primary/.action-card.primary; shadow .35 per the gradient-button rule. margin -17/-17 on a
-              44px button → it occupies 10px in flow = a 10px GAP between the cards, with the button bridging it (17px over each). */}
-          <div style={{ display: 'flex', justifyContent: 'center', margin: '-17px 0', position: 'relative', zIndex: 3 }}>
-            <button onClick={swapDir} aria-label={'Reverse direction'}
-              style={{ width: 44, height: 44, borderRadius: '50%', border: 'none', background: 'var(--grad-brand)', boxShadow: '0 4px 6px rgba(0, 0, 0, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transform: `rotate(${flip}deg)`, transition: 'transform .3s ease' }}>
-              <Icon name="trade" size="var(--is-num)" color="var(--color-white)" />
-            </button>
-          </div>
+      {/* Reverse button - node 1:87: 50×50 (was 44), SOLID brand fill (the guideline forbids gradients -
+          --grad-brand already aliases to the solid colour, so this needed no value change), glow shadow
+          "0 0 8px rgba(0,0,0,.5)" (was a straight-down .35), centred at 26.71dvh - straddling the bottom
+          of the "You pay" card and the 16px gutter below it. */}
+      <button onClick={swapDir} aria-label={'Reverse direction'}
+        style={{
+          position: 'absolute', left: '50%', top: '26.71dvh', transform: `translate(-50%, -50%) rotate(${flip}deg)`, zIndex: 3,
+          width: 50, height: 50, borderRadius: '50%', border: 'none', background: 'var(--grad-brand)',
+          boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer', transition: 'transform .3s ease',
+        }}>
+        <Icon name="trade" size="var(--is-num)" color="var(--color-white)" />
+      </button>
 
-          <SideCard label={'You receive'} sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} balLabel="Balance" idle={!(amountNum > 0)} />
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '30.57dvh', height: '18.48dvh' }}>
+        <SideCard label={'You receive'} sym={toSym} onPick={() => setPicker('to')} amount={estNum} disp={estNum !== null ? toDisplay(estNum, toSym) : null} balLabel="Balance" idle={!(amountNum > 0)} />
+      </div>
 
-          {/* Fee + Rate - one SMALL fs-item 17 line: Rate aligned LEFT · Fee aligned RIGHT, the figures in BLACK so they stand out */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 10, padding: '0 16px' }}>
-            <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              Rate: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-medium)' }}>{rateTxt}</span>
-            </span>
-            <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>
-              Fee: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-medium)' }}>{feeTxt}</span>
-            </span>
-          </div>
+      {/* Rate + Fee - node 1:83/10:123: 13px (was --fs-item 17), label colour --color-muted-2 #667085
+          (was --color-muted), figures BLACK semibold (was medium). Alone in row 6, centred at 51.4dvh. */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '51.4dvh', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '0 11px' }}>
+        <span style={{ fontSize: 13, color: 'var(--color-muted-2)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+          Rate: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-semibold)' }}>{rateTxt}</span>
+        </span>
+        <span style={{ fontSize: 13, color: 'var(--color-muted-2)', whiteSpace: 'nowrap' }}>
+          Fee: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-semibold)' }}>{feeTxt}</span>
+        </span>
+      </div>
+
+      {/* Round-number chips + the % slider - "row 8 and up is the slider's area" (user, 2026-09-10):
+          rows 7-8 (156px), the same double-row height used everywhere else in this rebuild.
+          ⚠️ The chip row MUST have a FIXED HEIGHT (height 40, never sized by its content): when `hints.map` is
+          empty the row collapses to 0, which used to reflow the slider below it (bug reported 07-21) -
+          reserving the space keeps the slider still while the chips merely fade in and out. */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '61.14dvh', height: '18.48dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1dvh', minWidth: 0 }}>
+        {/* NO amount chosen → the row stays EMPTY (user decision 07-23: the "Slide to adjust…" hint pill was dropped, the
+            instruction MOVED ONTO THE SWAP BUTTON as "Slide or tap here to enter", which opens the numpad). */}
+        <div style={{ height: 40, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0 }}>
+          {hints.length ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+              {hints.map(v => (
+                <button key={v} onClick={() => pickHint(v)}
+                  style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}>
+                  <span className="num" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
+                  <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-brand)' }}> {fromSym}</span>
+                </button>
+              ))}
+            </div>
+          ) : null}
         </div>
-
-        {/* BLOCK 2: round-number chips + the % slider - one group.
-            ⚠️ The chip row MUST have a FIXED HEIGHT (height 40, never sized by its content): when `hints.map` is
-            empty the row collapses to 0 → block 2 shrinks → space-between pushes the whole slider group down every time a hint
-            appears/disappears (bug reported 07-21). Reserving the space = the slider STAYS PUT while the chips merely fade in and out. */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1dvh', minWidth: 0 }}>
-          {/* A FIXED height 40 row (so the slider does not jump - see the note below): with an amount → round-number chips;
-              with NO amount chosen → the row stays EMPTY (user decision 07-23: the "Slide to adjust…" hint pill was dropped, the
-              instruction MOVED ONTO THE SWAP BUTTON as "Slide or tap here to enter", which opens the numpad). */}
-          <div style={{ height: 40, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0 }}>
-            {hints.length ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
-                {hints.map(v => (
-                  <button key={v} onClick={() => pickHint(v)}
-                    style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}>
-                    <span className="num" style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
-                    <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-brand)' }}> {fromSym}</span>
-                  </button>
-                ))}
-              </div>
-            ) : null}
-          </div>
-          <div style={{ minWidth: 0 }}>
-            <PctSlider pct={Math.round(pct)} onChange={onPct} disabled={!hasBal || loading} />
-          </div>
+        <div style={{ minWidth: 0 }}>
+          <PctSlider pct={Math.round(pct)} onChange={onPct} disabled={!hasBal || loading} />
         </div>
+      </div>
 
-        {/* BLOCK 3: the Swap button - the default `.btn` pill (radius 50, height 6dvh) CONCENTRIC with the action-card
-            Scan QR (Send) / Create QR (Receive) - user decision 07-21, reversing the 07-20e version (a square 8dvh looked
-            out of step with the other screens). How it lines up: this block copies the geometry of `.action-grid` exactly
-            (`height 8dvh` + `marginBottom 2dvh`, last in the flex space-between of the 2/10 area) → a band of
-            80→88dvh, with the 6dvh button centred in it ⇒ its CENTRE at 84dvh = exactly the action-card centre. Do NOT add
-            paddingBottom to the parent, the marginBottom here already reserves the 2dvh.
-            The button remains the ONLY place status is shown. Priority: error > status > hint/'Swap'.
-            NO amount entered yet (user decision 07-23, replacing the old hint pill in the chip row): the button reads
-            "Slide or tap here to enter" and tapping it opens the numpad (openPad) instead of swapping. */}
-        <div style={{ height: '8dvh', marginBottom: '2dvh', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {(() => {
-            const needAmount = !error && !status && !(amountNum > 0)   // no amount chosen → the button becomes the hint that opens the numpad
-            // 'Swap submitted' (sent, awaiting confirmation) = PALE green · 'Swap successful' (the received token balance has
-            // risen) = SOLID green → telling the 2 steps apart avoids confusion (user decision 07-28, they used to share a colour).
-            const confirmed = status === 'Swap successful'
-            return (
-          <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
-            style={{
-              // Width = 3/4 of the SCREEN width (user decision 07-29: every button STANDING ALONE gets the same size for consistency -
-              // like "Hold to show tokens" on HomeSend + "Tap to copy" on HomeReceive). min(75vw, ...) anchors
-              // straight to .screen, not to a % of the parent frame that is inset 20px.
-              width: 'min(75vw, calc(var(--screen-max) * 0.75))', overflow: 'hidden',
-              ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
-              ...(success ? { opacity: confirmed ? 1 : 0.6 } : null),
-            }}
-            disabled={needAmount ? (!hasBal || loading) : (!canSwap && !error)}
-            onClick={needAmount ? openPad : handleSwap}>
-            {/* Hint text = fs-item 17 (the app-wide HINT SIZE rule - .btn's default 21 gets ellipsised) */}
-            <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', ...(needAmount ? { fontSize: 'var(--fs-item)' } : null) }}>
-              {success && <Icon name="check" size="var(--is-md-lg)" color="var(--color-white)" />}
-              {error || status || (needAmount ? 'Slide or tap here to enter' : 'Swap')}
-            </span>
-          </button>
-            )
-          })()}
-        </div>
+      {/* The Swap button - node 1:85: row 9 (top 81.52dvh / height 8.29dvh, centre 85.66dvh), radius 38
+          (was 50), SOLID brand fill, width = the SAME 340px as the cards above it (was 3/4 of the
+          screen) - edge to edge with "You pay"/"You receive", not a narrower standalone pill. The bigger
+          glow "0 0 20px rgba(0,0,0,.32)" (was the standard button shadow) is this CTA's own value, not
+          reused from elsewhere. Still the only place status is shown; priority error > status > hint/'Swap'. */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '81.52dvh', height: '8.29dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        {(() => {
+          const needAmount = !error && !status && !(amountNum > 0)   // no amount chosen → the button becomes the hint that opens the numpad
+          // 'Swap submitted' (sent, awaiting confirmation) = PALE green · 'Swap successful' (the received token balance has
+          // risen) = SOLID green → telling the 2 steps apart avoids confusion (user decision 07-28, they used to share a colour).
+          const confirmed = status === 'Swap successful'
+          return (
+        <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
+          style={{
+            width: '100%', height: '100%', borderRadius: 38, overflow: 'hidden',
+            boxShadow: error || success ? undefined : '0 0 20px rgba(0, 0, 0, 0.32)',
+            ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
+            ...(success ? { opacity: confirmed ? 1 : 0.6 } : null),
+          }}
+          disabled={needAmount ? (!hasBal || loading) : (!canSwap && !error)}
+          onClick={needAmount ? openPad : handleSwap}>
+          {/* Hint text = fs-item 17 (the app-wide HINT SIZE rule - .btn's default 21 gets ellipsised).
+              ⚠️ "enter", NOT "input": the Figma text reads "Slide or tap here to input", but the user
+              explicitly decided (FIGMA-SCREENS-SPEC.md §9) to keep "enter" regardless of what Figma draws -
+              this is a deliberate standing override, not an oversight, so it is NOT changed to match. */}
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', ...(needAmount ? { fontSize: 'var(--fs-item)' } : null) }}>
+            {success && <Icon name="check" size="var(--is-md-lg)" color="var(--color-white)" />}
+            {error || status || (needAmount ? 'Slide or tap here to enter' : 'Swap')}
+          </span>
+        </button>
+          )
+        })()}
       </div>
 
       {/* ROW 10 = THE EXIT BUTTON, not the NavBar (08-12): Swap now opens FROM the Service Hub, so it no

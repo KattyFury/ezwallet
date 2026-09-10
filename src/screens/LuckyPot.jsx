@@ -34,8 +34,16 @@ function useLuckyPotFonts() {
 // Every button on this screen = 2/3 of a 10dvh grid row (user decision 2026-09-08: the stat box's tight
 // flex layout was squeezing Deposit/Withdraw/Result shorter than every other button in the app -
 // flexShrink:0 stops the parent flex row from compressing them again).
-const LP_BTN_H = { height: '6.67dvh', flexShrink: 0 }
-const headerStyle = { fontFamily: FONT_HEADER, textTransform: 'uppercase', fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }
+// 2026-09-10: every Space-Grotesk header label in the redesigned Figma file (EPOCH #/Total tickets/
+// My tickets/Draw history/My history) is drawn BOLD (700), not semibold (600) - a deliberate exception
+// to the app's usual 600-weight cap, same spirit as the existing "Space Grotesk is this screen's own
+// brand identity" note above (that cap exists only because Barlow 700 looked bad, which does not apply
+// to Space Grotesk at all).
+// ⚠️ NO textTransform:uppercase any more (dropping the 2026-09-08 "ALL CAPS" decision): the new Figma
+// pull draws "Total tickets / Pool", "My tickets / My deposit", "Draw history" and "My history" in
+// ordinary mixed case - only "EPOCH #3" is capitalised, and that is literally how the string is typed
+// (`EPOCH #${epochId}`), not a CSS transform.
+const headerStyle = { fontFamily: FONT_HEADER, fontSize: 16, fontWeight: 700, color: 'var(--color-brand)' }
 
 function fmtCountdown(endTimeSec, nowSec) {
   const s = endTimeSec - nowSec
@@ -94,23 +102,24 @@ function AmountField({ amount, setAmount, onMax }) {
 // the box itself is split into 4 of these equal-height rows (the last spans 2). `divider` draws the
 // separating line under rows 1 and 2 (user decision 2026-09-08: without it the 4 sub-rows read as one
 // undifferentiated block of text).
-function StatRow({ label, children, span = 1, divider = false }) {
+function StatRow({ label, children, span = 1, divider = false, style }) {
   return (
     <div style={{
       flex: span, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
       borderBottom: divider ? '1.5px solid rgba(11, 83, 191, 0.15)' : 'none',
     }}>
-      <span style={headerStyle}>{label}</span>
+      <span style={{ ...headerStyle, ...style }}>{label}</span>
       {children}
     </div>
   )
 }
-// "$eligible (black 17) / $total (grey 15)" - the exact 2-tone amount format used in both stat boxes.
+// "$eligible (black 16 semibold) / $total (grey 13 semibold)" - 2026-09-10: sizes measured off the
+// current Figma file (was 17/15), both weights semibold per the row's inherited base style.
 function SplitAmount({ big, small }) {
   return (
     <span className="num" style={{ fontFamily: FONT_BODY }}>
-      <span style={{ fontSize: 'var(--fs-item)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>${big.toFixed(2)}</span>
-      <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}> / ${small.toFixed(2)}</span>
+      <span style={{ fontSize: 16, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>${big.toFixed(2)}</span>
+      <span style={{ fontSize: 13, fontWeight: 'var(--fw-semibold)', color: 'var(--color-muted-2)' }}> / ${small.toFixed(2)}</span>
     </span>
   )
 }
@@ -118,15 +127,18 @@ function SplitAmount({ big, small }) {
 // USDC ▾ dropdown (row 3-5's epoch box, top-right): only USDC actually works on this pool - ARC/ETH are
 // shown so the control isn't a dead end, but stay disabled until Arc mainnet has its own token (user
 // decision 2026-09-08 - "chưa click được vì chưa có token").
+// 2026-09-10 (node 13:147/13:143): WHITE pill + BLACK text + a glow shadow, height 34 - was a solid
+// brand-blue pill with white text and no shadow.
 function TokenDropdown() {
   const [open, setOpen] = useState(false)
   return (
     <div style={{ position: 'relative' }}>
       <button onClick={() => setOpen(o => !o)} style={{
-        display: 'flex', alignItems: 'center', gap: 4, fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', fontWeight: 'var(--fw-semibold)',
-        color: 'var(--color-white)', background: 'var(--color-brand)', border: 'none', borderRadius: 999, padding: '2px 8px 2px 10px', cursor: 'pointer',
+        display: 'flex', alignItems: 'center', gap: 4, fontFamily: FONT_BODY, fontSize: 16, fontWeight: 'var(--fw-semibold)', height: 34,
+        color: 'var(--color-content)', background: 'var(--color-white)', border: 'none', borderRadius: 999, padding: '0 10px', cursor: 'pointer',
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)',
       }}>
-        USDC <Icon name="down2" size={12} color="var(--color-white)" />
+        USDC <Icon name="down2" size={14} color="var(--color-brand)" />
       </button>
       {open && (
         <div onMouseLeave={() => setOpen(false)} style={{
@@ -283,28 +295,33 @@ export default function LuckyPot() {
 
   return (
     <div className="screen">
-      {/* Row 1 - menu icon + "LuckyPot.cc" wordmark (Space Grotesk), both LEFT. */}
+      {/* 2026-09-10 REBUILD against the user's updated Figma file (node 1:158) - this is now much closer
+          to the real luckypot.cc frontend, per the user's own description. Every zone below sits on
+          exact guideline-grid coordinates (HANDOFF.md READ FIRST §1: 70px rows, 16px gutter). */}
+
+      {/* Row 1 - menu icon + "LuckyPot.cc" wordmark (Space Grotesk bold 28px, was --fs-title 25), both LEFT. */}
       <div className="row-1" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
         <button onClick={() => setMenuOpen(true)} aria-label="Menu" style={{
           background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex',
           WebkitTapHighlightColor: 'transparent',
         }}>
-          <Icon name="menu" size="calc(100dvh / 30)" color="var(--color-content)" />
+          <Icon name="menu" size={27} color="var(--color-content)" />
         </button>
-        <span style={{ fontFamily: FONT_HEADER, fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)' }}>
+        <span style={{ fontFamily: FONT_HEADER, fontSize: 28, fontWeight: 700 }}>
           <span style={{ color: 'var(--color-content)' }}>LuckyPot</span>
-          <span style={{ color: 'var(--color-muted)' }}>.cc</span>
+          <span style={{ color: 'var(--color-muted-2)' }}>.cc</span>
         </span>
       </div>
 
-      {/* Row 2 - the hint strip: solid warning colour always, black text, only the icon+copy change. */}
+      {/* Row 2 - the hint strip: solid warning colour, black text. Radius 16 (was 10), height matches
+          row 2 exactly (8.29dvh, was 8.82), icon 25 (was 20), text 13px semibold (was --fs-label medium). */}
       <div className="row-2" style={{ display: 'flex', alignItems: 'center' }}>
         <button onClick={hasUnclaimedPrize ? () => openPopup('result') : copyAddressAndFaucet} style={{
-          flex: 1, height: '8.82dvh' /* 74.4/844 */, display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', cursor: 'pointer',
-          background: 'var(--color-warning)', border: 'none', borderRadius: 10, padding: '0 14px', fontFamily: FONT_BODY,
+          flex: 1, height: '8.29dvh', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left', cursor: 'pointer',
+          background: 'var(--color-warning)', border: 'none', borderRadius: 16, padding: '0 14px', fontFamily: FONT_BODY,
         }}>
-          <Icon name={hasUnclaimedPrize ? 'check' : 'info'} size={20} color="var(--color-content)" />
-          <span style={{ flex: 1, fontSize: 'var(--fs-label)', color: 'var(--color-content)', fontWeight: 'var(--fw-medium)' }}>
+          <Icon name={hasUnclaimedPrize ? 'check' : 'info'} size={25} color="var(--color-content)" />
+          <span style={{ flex: 1, fontSize: 13, color: 'var(--color-content)', fontWeight: 'var(--fw-semibold)' }}>
             {hasUnclaimedPrize
               ? `You won $${info.owedLastEpoch.toFixed(2)} last epoch - tap to claim.`
               : "Need testnet USDC? Tap to copy your address and open the faucet."}
@@ -312,64 +329,89 @@ export default function LuckyPot() {
         </button>
       </div>
 
-      {/* Row 3-5 - Epoch box: light-blue surface, split into 4 equal sub-rows (the yield sentence spans 2). */}
-      <div style={{ gridRow: '3 / 6', alignSelf: 'center', height: '28.82dvh' /* 243.2/844 */, background: 'var(--color-surface)', borderRadius: 10, padding: 10, display: 'flex', flexDirection: 'column' }}>
-        <StatRow divider label={info ? `EPOCH #${info.epochId}` : '…'}>
+      {/* Row 3-5 - Epoch box: radius 16 (was 10), height 28.67dvh/242px (was 28.82/243.2) - the 4
+          sub-rows still split 1:1:2 (60.5px each), that proportion was already correct. */}
+      <div style={{ gridRow: '3 / 6', alignSelf: 'center', height: '28.67dvh', background: 'var(--color-surface)', borderRadius: 16, padding: 10, display: 'flex', flexDirection: 'column' }}>
+        <StatRow divider label={info ? `EPOCH #${info.epochId}` : '…'} style={{ fontSize: 18 }}>
           <TokenDropdown />
         </StatRow>
+        {/* "Draw in:" - label 16px --color-muted-2 (was --fs-label muted), value Space Grotesk BOLD 18px
+            black (was body-font 17 regular) - node 13:154/13:155. */}
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 6, fontFamily: FONT_BODY, borderBottom: '1.5px solid rgba(11, 83, 191, 0.15)' }}>
-          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>Draw in</span>
-          <span className="num" style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-item)', color: 'var(--color-content)' }}>
+          <span style={{ fontSize: 16, color: 'var(--color-muted-2)' }}>Draw in:</span>
+          <span className="num" style={{ fontFamily: FONT_HEADER, fontSize: 18, fontWeight: 700, color: 'var(--color-content)' }}>
             {info ? fmtCountdown(info.epochEndTime, now) : '…'}
           </span>
         </div>
+        {/* Yield sentence - 16px regular base (was --fs-label), the 2 inline numbers 18px semibold black
+            (was --fs-item) - node 13:156. */}
         <div style={{ flex: 2, display: 'flex', alignItems: 'center', fontFamily: FONT_BODY }}>
           {error ? (
-            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>{error}</span>
+            <span style={{ fontSize: 16, color: 'var(--color-error)' }}>{error}</span>
           ) : info ? (
-            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', lineHeight: 1.35 }}>
-              This week's yield goes to <strong style={{ color: 'var(--color-content)', fontSize: 'var(--fs-item)' }}>{info.numWinners}</strong> winner{info.numWinners === 1 ? '' : 's'} out
-              of <strong style={{ color: 'var(--color-content)', fontSize: 'var(--fs-item)' }}>{info.participantCount}</strong> player{info.participantCount === 1 ? '' : 's'}. Winners return 5% to the protocol.
+            <span style={{ fontSize: 16, color: 'var(--color-muted-2)', lineHeight: 1.35 }}>
+              This week's yield goes to <strong style={{ color: 'var(--color-content)', fontSize: 18 }}>{info.numWinners}</strong> winner{info.numWinners === 1 ? '' : 's'} out
+              of <strong style={{ color: 'var(--color-content)', fontSize: 18 }}>{info.participantCount}</strong> player{info.participantCount === 1 ? '' : 's'}. Winners return 5% to the protocol.
             </span>
           ) : (
-            <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>Loading…</span>
+            <span style={{ fontSize: 16, color: 'var(--color-muted-2)' }}>Loading…</span>
           )}
         </div>
       </div>
 
-      {/* Row 6-8 - Tickets/Deposit box: same box treatment, 4 equal sub-rows. */}
-      <div style={{ gridRow: '6 / 9', alignSelf: 'center', height: '28.82dvh' /* 243.2/844 */, background: 'var(--color-surface)', borderRadius: 10, padding: 10, display: 'flex', flexDirection: 'column' }}>
-        <StatRow divider label="TOTAL TICKETS / POOL">
+      {/* Row 6-8 - Tickets/Deposit box: radius 16 (was 10), height 28.67dvh (was 28.82). */}
+      <div style={{ gridRow: '6 / 9', alignSelf: 'center', height: '28.67dvh', background: 'var(--color-surface)', borderRadius: 16, padding: 10, display: 'flex', flexDirection: 'column' }}>
+        <StatRow divider label="Total tickets / Pool">
           {info ? <SplitAmount big={info.eligiblePoolTotal} small={info.poolTotal} /> : <span className="num" style={{ fontFamily: FONT_BODY }}>…</span>}
         </StatRow>
-        <StatRow divider label="My tickets / deposit">
+        {/* "My tickets / My deposit" - node 14:160 repeats "My" for both halves; the previous build
+            dropped the second one. */}
+        <StatRow divider label="My tickets / My deposit">
           {info ? <SplitAmount big={info.eligible} small={info.deposited} /> : <span className="num" style={{ fontFamily: FONT_BODY }}>…</span>}
         </StatRow>
-        {/* Wallet line + buttons grouped TIGHT together (user fix 2026-09-08: space-between pushed them
-            to opposite ends of this 2-row-tall area, leaving an ugly gap in the middle). */}
+        {/* Wallet line - node 14:185: "Your balance: X USDC" (was "In your wallet:"), REGULAR weight
+            (was semibold - this line's base style differs from the rows above it in the Figma file),
+            label --color-muted-2 16px, value black. Grouped TIGHT with the buttons (user fix 2026-09-08:
+            space-between pushed them apart, leaving an ugly gap). */}
         <div style={{ flex: 2, display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 8 }}>
-          <span style={{ fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
-            In your wallet: {walletUsdc != null ? `${walletUsdc.toFixed(2)} USDC` : '…'}
+          <span style={{ fontFamily: FONT_BODY, fontSize: 16, fontWeight: 'var(--fw-normal)', color: 'var(--color-muted-2)' }}>
+            Your balance: <span style={{ color: 'var(--color-content)' }}>{walletUsdc != null ? `${walletUsdc.toFixed(2)} USDC` : '…'}</span>
           </span>
-          <div style={{ display: 'flex', gap: 10 }}>
-            <button className="btn btn-primary" style={{ ...LP_BTN_H, flex: 1, fontFamily: FONT_BODY, fontSize: 'var(--fs-label)' }} onClick={() => openPopup('deposit')}>Deposit</button>
-            <button className="btn btn-secondary" style={{ ...LP_BTN_H, flex: 1, fontFamily: FONT_BODY, fontSize: 'var(--fs-label)' }} onClick={() => openPopup('withdraw')}>Withdraw</button>
-            <button className="btn" style={{ ...LP_BTN_H, flex: 1, fontFamily: FONT_BODY, fontSize: 'var(--fs-label)', background: 'var(--color-warning)', color: 'var(--color-content)', border: 'none' }}
-              disabled={!resultWindowOpen} onClick={() => openPopup('result')}>Result</button>
+          {/* Deposit 92 / Withdraw 91 / Latest result 125 (flex-grow proportional to those px widths,
+              node 14:163-14:170) - was 3 EQUAL flex:1 buttons. Height 34px (was 6.67dvh ≈ 56px - far
+              taller than the Figma pill), 16px semibold (was --fs-label), glow shadow (was the .btn
+              class's old straight-down shadow, not yet updated app-wide for this screen). "Latest
+              result" (was "Result" - the Figma's exact label). */}
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button className="btn btn-primary" style={{ flex: '92 1 0%', height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} onClick={() => openPopup('deposit')}>Deposit</button>
+            <button className="btn btn-secondary" style={{ flex: '91 1 0%', height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} onClick={() => openPopup('withdraw')}>Withdraw</button>
+            <button className="btn" style={{ flex: '125 1 0%', height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, background: 'var(--color-warning)', color: 'var(--color-content)', border: 'none', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }}
+              disabled={!resultWindowOpen} onClick={() => openPopup('result')}>Latest result</button>
           </div>
         </div>
       </div>
 
-      {/* Row 9 - Draw history, built for real: past epochs' payouts. Same light-blue box treatment and
-          height as row 2's hint strip (user decision 2026-09-08). */}
-      <div className="row-9" style={{ display: 'flex', alignItems: 'center' }}>
+      {/* Row 9 - Draw history + My history, SIDE BY SIDE (2026-09-10: the user added a second box here,
+          bringing this screen to parity with the real luckypot.cc frontend - `openMyHistory` and the
+          "My history" popup already existed below, wired only into the hamburger menu until now). Each
+          box is exactly half the content width minus the 8px gap (166px of 340px, matching Menu's
+          Withdraw/Deposit split), height = row 9 exactly (8.29dvh). */}
+      <div className="row-9" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <button onClick={openHistory} style={{
-          alignSelf: 'center', flex: 1, height: '8.82dvh' /* matches row 2's box height */,
+          flex: 1, height: '8.29dvh',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          background: 'var(--color-surface)', border: 'none', borderRadius: 10, padding: '0 14px', cursor: 'pointer',
+          background: 'var(--color-surface)', border: 'none', borderRadius: 16, padding: '0 14px', cursor: 'pointer',
         }}>
           <span style={headerStyle}>Draw history</span>
-          <Icon name="right2" size={16} color="var(--color-brand)" />
+          <Icon name="right2" size={18} color="var(--color-brand)" />
+        </button>
+        <button onClick={openMyHistory} style={{
+          flex: 1, height: '8.29dvh',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: 'var(--color-surface)', border: 'none', borderRadius: 16, padding: '0 14px', cursor: 'pointer',
+        }}>
+          <span style={headerStyle}>My history</span>
+          <Icon name="right2" size={18} color="var(--color-brand)" />
         </button>
       </div>
 
