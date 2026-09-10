@@ -139,6 +139,18 @@ SAME bug lived in the shared `.btn` class - see §5) before it was fixed at the 
 sizing anything, check the design context response for that exact node's own height/width before writing
 a percentage, a `dvh`, or a `100%` - do not default to "fill the container".**
 
+**Fourth + fifth round-trip, same day:** the user is actively iterating on the Figma file WHILE this
+rebuild is in progress, not just fixing typos - `Confirm transaction` (`1:215`) and LuckyPot's 3-button
+row were both **structurally redrawn** between one `get_design_context` call and the next, not just
+nudged: the confirm card went from 328px/4 rows to 242px/3 rows and the warning line changed from loose
+text into a real positioned 340×70 box with its own literal `rgba()` fill; LuckyPot's Deposit/Withdraw/
+Result went from a 92:91:125 proportion to exactly equal (102.66px each). Neither was an error in the
+earlier read - the frame itself changed. **⚠️ Do not trust a design-context response as still current
+just because it was fetched earlier today.** If the user says a rebuilt screen still isn't right, RE-FETCH
+`get_design_context` for that node before touching any code - diff the fresh response against what the
+component currently does, rather than re-guessing at spacing/font tweaks. Both fixes are recorded in
+commit `9dc9fa8`.
+
 #### 5. Current shared values (these changed on 2026-09-10 - §5/§6 below are older)
 
 - `--color-surface` **#E1E7ED** (was #F1F5F9) - guideline "Surface / input / card", confirmed against the
