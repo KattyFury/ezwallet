@@ -65,9 +65,17 @@ export default function HomeReceive() {
         <QRCodeCanvas value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" includeMargin />
       </div>
 
+      {/* GREY CARD BEHIND THE QR (node 1:381: top 10.19dvh, height 38.86dvh, width 338 centred) - the same
+          card Send uses for its token list. The first 2026-09-10 pass MISSED it entirely and left the QR
+          floating on white. */}
+      <div style={{
+        position: 'absolute', left: '6.67%', right: '6.67%', top: '10.19dvh', height: '38.86dvh',
+        background: 'var(--color-surface)', borderRadius: 20,
+      }} />
+
       {/* QR POSITION - CRITICAL, exact Figma pixels (node 1:398), not the old row 3-5 flex-centre (2026-09-10:
           that centred at 35dvh, a full ~8.7dvh too low now that BalanceHeader only needs ~1.5 rows, §12).
-          Centre at (66.15%, 27.09dvh), size = min(30.57dvh, 66.15% of the screen-max-capped width) - both
+          Centre at (50%, 27.09dvh), size = min(30.57dvh, 66.15% of the screen-max-capped width) - both
           the position AND the size are locked to the Figma numbers, do not approximate with the grid rows. */}
       <div style={{
         position: 'absolute', left: '50%', top: '27.09dvh', transform: 'translate(-50%, -50%)',
@@ -97,14 +105,14 @@ export default function HomeReceive() {
         fontSize: '16px', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', whiteSpace: 'nowrap',
         WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
       }}>
-        {addrCopied ? 'Copied!' : 'Tap to copy your wallet address'}
+        {addrCopied ? 'Copied!' : 'Tap to copy your address'}
       </button>
 
       {/* GREY WRAPPER CARD (2026-09-10, node 7:35 "Vector15") - identical geometry/treatment to the same
           card on Send (top 50.95dvh, height 28.67dvh), replacing the old plain row-7-8 div. */}
       <div style={{
         position: 'absolute', left: '6.41%', right: '6.41%', top: '50.95dvh', height: '28.67dvh',
-        background: 'var(--color-surface)', borderRadius: 20, padding: '12px 18px',
+        background: 'var(--color-surface)', borderRadius: 20, padding: '10px 8px',
         display: 'flex', flexDirection: 'column', minHeight: 0,
       }}>
         {/* Each line = one COMPLETE SENTENCE whose underlined keyword is TAPPABLE → going where the button of the same name
@@ -123,14 +131,17 @@ export default function HomeReceive() {
       {/* Button order 07-19 (user decision): QR Storage left · Create QR centre · Share RIGHT - most people are
           right-handed, so the most-used button (Share) sits on the right where it is easy to reach.
           Icon sizes 19.5/24 (2026-09-10, up from --is-item 17) match the side/centre pills exactly. */}
-      <div className="row-9 action-grid">
+      {/* ABSOLUTE at the exact Figma centre (723.18px of 844 = 85.68dvh, nodes 7:43-7:45), matching Send.
+          Labels are verbatim from the Figma: "QR storage" (lowercase s) and "Custom QR" (the hint block
+          above still says "Create QR" - that inconsistency is in the design itself, kept as drawn). */}
+      <div className="action-grid" style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.68dvh', transform: 'translateY(-50%)', marginBottom: 0 }}>
         <button className="action-card" onClick={() => navigate('SavedQRList')}>
           <Icon name="download" size={19.5} />
-          <span>QR Storage</span>
+          <span>QR storage</span>
         </button>
         <button className="action-card primary" onClick={() => navigate('CreateQR')}>
           <Icon name="qr" size={24} color="var(--color-white)" />
-          <span>Create QR</span>
+          <span>Custom QR</span>
         </button>
         <button className="action-card" onClick={handleShare}>
           <Icon name="share" size={19.5} />

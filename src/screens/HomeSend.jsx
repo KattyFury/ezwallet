@@ -198,7 +198,7 @@ export default function HomeSend() {
           element vs the old plain row-7-8 div, matching Send AND Receive identically. */}
       <div style={{
         position: 'absolute', left: '6.41%', right: '6.41%', top: '50.95dvh', height: '28.67dvh',
-        background: 'var(--color-surface)', borderRadius: 20, padding: '12px 18px',
+        background: 'var(--color-surface)', borderRadius: 20, padding: '10px 8px',
         display: 'flex', flexDirection: 'column', minHeight: 0,
       }}>
         <NotifArea
@@ -228,7 +228,9 @@ export default function HomeSend() {
         />
       </div>
 
-      <div className="row-9 action-grid">
+      {/* ABSOLUTE at the exact Figma centre (723.18px of 844 = 85.68dvh, nodes 1:338-1:340) - the old
+          row-9 + align-self:end placement sat ~12px too high. Swap.jsx still uses the row-9 flow variant. */}
+      <div className="action-grid" style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.68dvh', transform: 'translateY(-50%)', marginBottom: 0 }}>
         {/* Left→right order: Paste · Scan QR · Contacts (user decision 07-23: Contacts is used more
             often → on the RIGHT; the NotifArea hint uses the same order). Icon sizes 19.5/24 (2026-09-10,
             up from --is-item 17) match the side/centre pills exactly. */}

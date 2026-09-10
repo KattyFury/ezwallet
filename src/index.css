@@ -415,15 +415,19 @@ body {
 .row-2-8  { grid-row: 2 / 9; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
 /* ── NavBar ── */
-/* NAVBAR SIMPLIFIED 2026-09-10, matching the Send/Receive/Menu frames in the current Figma file
-   (GxgsMU6HAYqolckzvPWXp1): the "raised white active cell" look is GONE - all 3 frames draw the bar as
-   ONE FLAT --color-surface fill with no per-tab background/shadow, and the active tab differs ONLY by
-   colour (black vs muted), both at the SAME font-weight (semibold) - not a weight bump like before. */
+/* ⚠️ 2026-09-10, SECOND PASS. The first pass today wrongly deleted the raised white active cell because
+   the Figma MCP node list does not contain it - but the file's RENDERED pixels do: sampling the reference
+   PNGs at y=800 gives 255,255,255 across the active tab and 225,231,237 (#E1E7ED = --color-surface) across
+   the other three, with a shadow fringe darkening to 182,187,190 at the active cell's side edges. That is
+   exactly the layout FIGMA-SCREENS-SPEC.md §5 describes: a flat grey bar, the active tab a WHITE cell that
+   joins seamlessly with the white content above, its glow only visible where it meets the grey neighbours.
+   The bar also catches a shadow along its own top edge from that white block (inset shadow below). */
 .navbar {
   grid-row: 10;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   background: var(--color-surface);
+  box-shadow: inset 0 10px 12px -10px rgba(0, 0, 0, 0.45);
   margin: 0 -20px;               /* the NavBar RUNS EDGE TO EDGE with no margin (cancelling .screen's 20px padding) - user decision "except the NAVBAR" */
 }
 
@@ -431,7 +435,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* BOTTOM-aligned, not centred (2026-09-10): Figma puts the icon's top at y=785 and the label's bottom
+     at y=833.5 of 844, i.e. the block hugs the bar's bottom with ~10px to spare - centring it in row 10
+     drew everything ~7px too high. */
+  justify-content: flex-end;
+  padding-bottom: 10.5px;
   font-family: var(--font-condensed);
   font-size: 16px;              /* measured off Send/Receive/Menu (2026-09-10) - was --fs-body 19 */
   font-weight: var(--fw-semibold);
@@ -445,6 +453,8 @@ body {
 }
 
 .navbar-btn.active {
+  background: var(--color-white);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);   /* blur ~15px matches the measured fringe: 225,231,237 → 182,187,190 over ~12px */
   color: var(--color-black);
 }
 

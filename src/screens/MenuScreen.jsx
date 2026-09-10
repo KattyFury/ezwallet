@@ -7,12 +7,20 @@ import { useNav } from '../nav'
 // ⛔ 'Service Hub' REMOVED FROM HERE 08-13 (user decision): it is already TAB 1 of the NavBar, and a second door
 // in the Menu means two ways into one place - redundant for everyday users. The navbar is the way in.
 // (This entry used to live here, disabled, from 07-31 when there was no real screen yet.)
+// `top` = the row's vertical CENTRE, `rule` = the divider under it, both measured off the current Figma
+// file's rendered pixels (2026-09-10): row centres 207/293/379/465/551px of 844, dividers at
+// 241.5/327.5/414/500px. NOTE the divider is NOT the midpoint between two rows - it sits 34.5px under its
+// own row and 51.5px above the next one, so the grid-row approximation used before was up to ~12px out.
 const ITEMS = [
-  { id: 'TxHistory', label: 'Transaction history' },
-  { id: 'Security',  label: 'Security' },
-  { id: 'Currency',  label: 'Language & currency' },   // split off Security 08-04; the Language part dropped 08-25, label reworded 08-25
-  { id: 'About',     label: 'About' },
+  { id: 'TxHistory', label: 'Transaction history', top: '24.53dvh', rule: '28.61dvh' },
+  { id: 'Security',  label: 'Security',            top: '34.72dvh', rule: '38.80dvh' },
+  { id: 'Currency',  label: 'Language & currency',  top: '44.91dvh', rule: '49.05dvh' },   // split off Security 08-04; the Language part dropped 08-25, label reworded 08-25
+  { id: 'About',     label: 'About',               top: '55.09dvh', rule: '59.24dvh' },
 ]
+
+// Shared row geometry: the bullet's left edge at x=25 (6.41%), the label starting at x=46.8 - i.e. a
+// 8.8px gap after the 13px triangle. minHeight keeps a comfortable touch target around the 18px label.
+const ROW_STYLE = { position: 'absolute', left: '6.41%', right: '6.41%', transform: 'translateY(-50%)', padding: 0, gap: 8.8, minHeight: 44 }
 
 // Small filled right-pointing triangle bullet (node "Polygon 6"/"Polygon 13" in the current Figma file,
 // 2026-09-10) - REPLACES the old leading category icon (clock/shield/globe/info) + trailing chevron.
@@ -20,8 +28,8 @@ const ITEMS = [
 // Icon.jsx) since this exact shape is only ever used here.
 function Bullet({ color }) {
   return (
-    <svg width="14" height="16" viewBox="0 0 14 16" style={{ flexShrink: 0 }}>
-      <path d="M0 0 L14 8 L0 16 Z" fill={color} />
+    <svg width="13" height="15" viewBox="0 0 13 15" style={{ flexShrink: 0 }}>
+      <path d="M0 0 L13 7.5 L0 15 Z" fill={color} />
     </svg>
   )
 }
@@ -67,27 +75,25 @@ export default function MenuScreen() {
         </button>
       </div>
 
-      {/* Rows 3-6 (up from 4-7, same reason as the button row above): a small triangle bullet + label,
-          no leading category icon, no trailing chevron - matching the current Figma file's menu rows
-          exactly (it draws only a Polygon bullet before each label). A thin divider DOES sit under each
-          of these 4 rows (2026-09-10 correction: the earlier build dropped it, trusting the structured
-          node list over the rendered screenshot - the screenshot was right, the line is real, it is just
-          baked into the frame's background image rather than a separate exported node). No divider under
-          Sign out below - it is the last row. */}
-      {ITEMS.map(({ id, label, disabled }, i) => (
-        <div key={id} className={`row-${i + 3}`} style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--color-gray)' }}>
-          <button className="menu-item" style={{ width: '100%', opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
+      {/* A triangle bullet + label, no leading category icon, no trailing chevron - matching the current
+          Figma file's menu rows. The thin divider under each of these 4 rows is real (the 2026-09-10
+          first pass dropped it, trusting the structured node list over the rendered screenshot - the
+          screenshot was right; the line is simply baked into the frame's background image instead of
+          being its own exported node). No divider under Sign out - it is the last row. */}
+      {ITEMS.map(({ id, label, top, rule, disabled }) => (
+        <div key={id}>
+          <button className="menu-item" style={{ ...ROW_STYLE, top, opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
             <Bullet color="var(--color-brand)" />
             <span style={{ flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)' }}>{label}</span>
           </button>
+          <div style={{ position: 'absolute', left: '6.67%', right: '6.67%', top: rule, height: 1, background: 'var(--color-gray)' }} />
         </div>
       ))}
 
-      {/* Row 7 (up from row-8): Sign out. Service Hub removed 08-13 → rows 8-9 stay empty as the gap
-          before the NavBar. */}
-      <div className="row-7" style={{ display: 'flex', alignItems: 'center' }}>
-        <button className="menu-item" style={{ width: '100%' }} onClick={() => {
+      {/* Sign out - the last row, centre 551px of 844. */}
+      <div>
+        <button className="menu-item" style={{ ...ROW_STYLE, top: '65.28dvh' }} onClick={() => {
           // KEEP ez_email_history (the email suggestion when signing back in - the user reported losing the hint). Clear the
           // Google session too (refreshToken/email/method) for a clean sign-out; keep deviceId (it identifies the machine).
           ;['ez_user_token','ez_wallet_addr','ez_wallet_id','ez_encryption_key','ez_email','ez_notifs','ez_last_recv_ts','ez_refresh_token','ez_google_email','ez_login_method'].forEach(k => localStorage.removeItem(k))

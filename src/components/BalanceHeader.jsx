@@ -31,7 +31,12 @@ export default function BalanceHeader({ totalUsd, loading }) {
     // center so the number sits at the TOP of the row-1-2 grid area, leaving the bottom half of row 2 empty
     // as breathing room before whatever starts at row 3.
     <div className="row-1-2" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', minWidth: 0 }}>
-      <div ref={fitRef} style={{ height: '15dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', maxWidth: 'min(75vw, calc(var(--screen-max) * 0.75))' }}>
+      {/* ⚠️ `width`, NOT `maxWidth` (bug found 2026-09-10): with only a max-width this div is a flex item
+          whose width is content-driven, so useFitFontSize measured the TEXT's own width as the budget -
+          a circular measurement that collapsed the balance to the `min` floor (28px) instead of the ~48-50px
+          the design asks for. A definite width makes clientWidth the real 75%-of-screen budget.
+          height 9.72dvh (82px of 844) centres the glyph at y≈41px = the Figma baseline block (node 1:352). */}
+      <div ref={fitRef} style={{ height: '9.72dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 'min(75vw, calc(var(--screen-max) * 0.75))' }}>
         <span style={{ fontFamily: 'var(--font-condensed)', fontSize: fitSize, fontWeight: 'var(--fw-light)', color: 'var(--color-content)', lineHeight: 1, whiteSpace: 'nowrap' }}>
           {str}
         </span>

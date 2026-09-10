@@ -69,11 +69,14 @@ function pollIncoming(after) {
     }).catch(() => {}).finally(() => { polling = false })
 }
 
-// Notification style: PALE COLOURED BACKGROUND (iOS-style) + a saturated icon, black text
+// Notification style: a WHITE pill (2026-09-10, matching the current Figma file's notification row -
+// node 1:355/1:360: bg-white, radius 16, height 40, 13px text tinted with the type colour + a 19.5px
+// icon at each end). It used to be a PALE COLOURED background with black text; the colour now lives in
+// the icon and the text instead.
 const STYLE = {
-  received: { color: 'var(--color-primary)', bg: 'var(--color-primary-soft)', icon: 'down' },    // received = green
-  sent:     { color: 'var(--color-info)',    bg: 'var(--color-info-soft)',    icon: 'up' },       // sent = blue
-  error:    { color: 'var(--color-error)',   bg: 'var(--color-error-soft)',   icon: 'warning' },  // error = red
+  received: { color: 'var(--color-primary)', icon: 'down' },    // received = green
+  sent:     { color: 'var(--color-info)',    icon: 'up' },      // sent = blue
+  error:    { color: 'var(--color-error)',   icon: 'warning' }, // error = red
 }
 
 // ⚠️ CHANGED 2026-08-25 (user bug report): rows used to be forced onto ONE LINE + "…" for compactness, but the swap
@@ -90,7 +93,9 @@ const ROW_TEXT = { minWidth: 0, lineHeight: 1.3, overflowWrap: 'anywhere' }
 // --fs-item 17 was chosen (user decision 2026-07-16): big enough for older eyes, while a long notification (e.g.
 // "Faucet successful · received 20.00 EURC") still nearly fits one line - at 19px the "…" ate the AMOUNT.
 // Icons in this area use the matching --is-item.
-export const NOTIF_FS = 'var(--fs-item)'
+// ⚠️ 13px since 2026-09-10 (was --fs-item 17): the current Figma file sets every line in this area to
+// 13px, and at 17 the hint block's 4 lines wrap and overflow the card the design gives them.
+export const NOTIF_FS = '13px'
 
 // The hint = ONE multi-line notification (not several separate ones), the LOWEST priority, with NO X button and
 // not tappable - always present, pushed up by real notifications and fading out (as one block) when it runs out
@@ -115,7 +120,9 @@ function HintBlock({ lines }) {
     // padding/gap TIGHTENED 08-13 (from '8px 14px' + gap 4): adding the warning line made the block 4 lines,
     // measured at 122px while the notification area (rows 7-8) is only 120px → the fade mask licked into the top
     // line. Tightened to 6px/12px + gap 3 so 4 lines fit. Do NOT loosen it again without removing a line.
-    <div style={{ background: 'var(--color-white)', border: '1.5px solid var(--color-brand)', borderRadius: 12, padding: '6px 12px', display: 'flex', flexDirection: 'column', gap: 3, fontSize: NOTIF_FS, color: 'var(--color-brand)', textAlign: 'left' }}>
+    // 2026-09-10: WHITE card with NO border, radius 16, 13px, BLACK body text with semibold keywords -
+    // node 1:356/1:361. The blue border + all-blue 17px text was the older design.
+    <div style={{ background: 'var(--color-white)', border: 'none', borderRadius: 16, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2, fontSize: NOTIF_FS, color: 'var(--color-content)', textAlign: 'left', flexShrink: 0 }}>
       <div style={{ minWidth: 0, lineHeight: 1.35, color: 'var(--color-error)', fontWeight: 'var(--fw-semibold)' }}>
         Current Available Network: Arc Testnet
       </div>
@@ -123,8 +130,8 @@ function HintBlock({ lines }) {
         <div key={i} style={{ minWidth: 0, lineHeight: 1.35 }}>
           <span
             onClick={h.onClick ? e => { e.stopPropagation(); h.onClick() } : undefined}
-            style={{ fontWeight: 'var(--fw-medium)', cursor: h.onClick ? 'pointer' : 'default' }}
-          >{h.label}</span>{h.desc ? `: ${h.desc}` : ''}
+            style={{ fontWeight: 'var(--fw-semibold)', cursor: h.onClick ? 'pointer' : 'default' }}
+          >{h.label}:</span>{h.desc ? ` ${h.desc}` : ''}
         </div>
       ))}
     </div>
@@ -207,7 +214,8 @@ export default function NotifArea({ hints = [], warning = null, pollMs = 15000 }
       WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black calc(100dvh / 30))',
       maskImage: 'linear-gradient(to bottom, transparent 0, black calc(100dvh / 30))',
     }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minHeight: '100%', justifyContent: 'flex-end' }}>
+      {/* gap 10 = the spacing the Figma card uses between the hint block and the notification pill */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: '100%', justifyContent: 'flex-end' }}>
         {items.map(n => {
           if (n.type === 'hint') return <HintBlock key={n.id} lines={n.hints} />
           if (n.type === 'warning') return <div key={n.id}>{n.node}</div>
@@ -217,12 +225,12 @@ export default function NotifArea({ hints = [], warning = null, pollMs = 15000 }
             // MINIMUM height 40 = exactly the "Send" button in Contacts.jsx; a long sentence makes the row taller
             // (the hardcoded `height: 40` was dropped 08-25, see the ROW_TEXT note). 8px vertical padding keeps a single
             // line at exactly 40px as before.
-            <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: s.bg, borderRadius: 12, minHeight: 40, padding: '8px 14px', cursor: clickable ? 'pointer' : 'default' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: NOTIF_FS, color: 'var(--color-content)', ...ROW_TEXT }}>
-                <Icon name={s.icon} size="var(--is-item)" color={s.color} style={{ flexShrink: 0 }} />
+            <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: 'var(--color-white)', borderRadius: 16, minHeight: 40, padding: '3px 10px', flexShrink: 0, cursor: clickable ? 'pointer' : 'default' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: NOTIF_FS, color: s.color, ...ROW_TEXT }}>
+                <Icon name={s.icon} size={19.5} color={s.color} style={{ flexShrink: 0 }} />
                 <span style={ROW_TEXT}>{n.text}</span>
               </span>
-              <button onClick={e => clear(n.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: 2 }}><Icon name="x" size="var(--is-label)" color={s.color} /></button>
+              <button onClick={e => clear(n.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: 2 }}><Icon name="x" size={19.5} color={s.color} /></button>
             </div>
           )
         })}
