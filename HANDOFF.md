@@ -307,6 +307,18 @@ frame to diff against) - the denser stat boxes do NOT overflow at the larger siz
 original "app-wide sizes read as oversized here" concern that justified the old exception no longer holds
 now that the app-wide scale itself changed. `npm run build` clean, `npm test` 16/16.
 
+**Thirteenth round-trip (2026-09-10, same day): the FRAME/SPACING rules distilled into BRAND-GUIDELINE.md**,
+consolidating everything measured across all 13 round-trips today (THE GRID's exact row math, the 6.41%
+card inset vs the unrelated 20px `.screen` margin, the 8px content inset, the 0.5px `#94A3B8` divider, the
+340x586 full list-card template, the row-9 button-row geometry with its 1/2/3-button width formulas, the
+27px numpad offsets, the icon-text size pairing rule) - see BRAND-GUIDELINE.md directly for the actual
+numbers, not repeated here. Also fixed a real, previously-unnoticed drift found while writing it: the
+shared `.popup-card` class used `width:88%; max-width:340px` (effectively always 340px, the standard card
+width) - the user confirmed the GENERAL rule is actually 5/6 of the screen (325px), which LuckyPot's own
+popups already used - `.popup-card` was the outdated one, not LuckyPot's exception. Fixed at the shared
+class (`width: min(calc(100vw*5/6), calc(var(--screen-max)*5/6))`, the same idiom LuckyPot's popup and
+`.row10-single .btn` already use), so every popup app-wide picks up the correction at once.
+
 **LuckyPot note (2026-09-10):** the user redrew this frame's own Figma to bring it closer to the real
 luckypot.cc frontend, then added a "My history" box to row 9 (next to "Draw history") - the handler
 (`openMyHistory`) and its popup already existed in the code, only wired into the hamburger menu; row 9
