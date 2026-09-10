@@ -363,6 +363,12 @@ Verified with a live Playwright screenshot in mock mode (LuckyPot has no single 
 diff against) - all four changes render correctly, nothing overflows. `npm run build` clean, `npm test`
 16/16.
 
+**Sixteenth round-trip (2026-09-10, same day): the same icon/label tightening applied to `.action-card`**
+(Paste/Scan QR/Contacts on Send, QR storage/Custom QR/Share on Receive) - user decision, same pattern as
+NavBar: `gap:6px` → `2px`. `align-items:center`/`justify-content:center` were already there (these were
+never off-centre), only the icon-to-label gap needed closing. Verified with live Playwright screenshots
+of HomeSend/HomeReceive in mock mode. `npm run build` clean, `npm test` 16/16.
+
 **LuckyPot note (2026-09-10):** the user redrew this frame's own Figma to bring it closer to the real
 luckypot.cc frontend, then added a "My history" box to row 9 (next to "Draw history") - the handler
 (`openMyHistory`) and its popup already existed in the code, only wired into the hamburger menu; row 9

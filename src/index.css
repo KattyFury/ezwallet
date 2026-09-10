@@ -546,7 +546,7 @@ body {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 2px;   /* was 6px (user decision 2026-09-10, same as NavBar's icon/label tightening - centred + closer together) */
   height: 6.64dvh;      /* 56px of 844 */
   min-height: 44px;
   /* NO BORDER (2026-09-10, matching Send/Receive exactly - the shadow alone signals "tappable" here,
