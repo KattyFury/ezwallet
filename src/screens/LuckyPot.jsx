@@ -114,43 +114,40 @@ function StatRow({ label, children, span = 1, divider = false, style }) {
     </div>
   )
 }
-// "$eligible (black 16 semibold) / $total (grey 13 semibold)" - 2026-09-10: sizes measured off the
-// current Figma file (was 17/15), both weights semibold per the row's inherited base style.
+// "eligible (black, Nội dung 2 semibold) / total USDC (grey, Chú thích semibold)" - 2026-09-10 correction:
+// BOTH halves were prefixed "$" - `big` is a TICKET COUNT (eligiblePoolTotal/eligible, a plain positive
+// number, no currency symbol at all) and `small` is a real USDC amount, which reads "USDC" (unit suffix),
+// never "$" (this pool has no dollar-labelled display currency, only the real on-chain token).
 function SplitAmount({ big, small }) {
   return (
     <span className="num" style={{ fontFamily: FONT_BODY }}>
-      <span style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>${big.toFixed(2)}</span>
-      <span style={{ fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-muted-2)' }}> / ${small.toFixed(2)}</span>
+      <span style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{big.toFixed(2)}</span>
+      <span style={{ fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-muted-2)' }}> / {small.toFixed(2)} USDC</span>
     </span>
   )
 }
 
-// USDC ▾ dropdown (row 3-5's epoch box, top-right): only USDC actually works on this pool - ARC/ETH are
-// shown so the control isn't a dead end, but stay disabled until Arc mainnet has its own token (user
-// decision 2026-09-08 - "chưa click được vì chưa có token").
-// 2026-09-10 (node 13:147/13:143): WHITE pill + BLACK text + a glow shadow, height 34 - was a solid
-// brand-blue pill with white text and no shadow.
-function TokenDropdown() {
-  const [open, setOpen] = useState(false)
+// USDC / ARC toggle (row 3-5's epoch box, top-right) - 2026-09-10, user decision: was a dropdown
+// revealing ARC/ETH both disabled, changed to a 2-segment TOGGLE instead (no popup) - USDC is the
+// active/selected segment (filled brand blue), ARC sits greyed out and unclickable right next to it,
+// same "chỉ USDC hoạt động, chưa có token" reason as before, just a clearer control shape for it.
+function TokenToggle() {
   return (
-    <div style={{ position: 'relative' }}>
-      <button onClick={() => setOpen(o => !o)} style={{
-        display: 'flex', alignItems: 'center', gap: 4, fontFamily: FONT_BODY, fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', height: 34,
-        color: 'var(--color-content)', background: 'var(--color-white)', border: 'none', borderRadius: 999, padding: '0 10px', cursor: 'pointer',
-        boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)',
-      }}>
-        USDC <Icon name="down2" size={14} color="var(--color-brand)" />
-      </button>
-      {open && (
-        <div onMouseLeave={() => setOpen(false)} style={{
-          position: 'absolute', top: '110%', right: 0, zIndex: 10, minWidth: 90, overflow: 'hidden',
-          background: 'var(--color-white)', border: '1.5px solid var(--color-gray)', borderRadius: 10, boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)',
-        }}>
-          {['ARC', 'ETH'].map(sym => (
-            <div key={sym} style={{ padding: '8px 12px', fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', opacity: 0.5, cursor: 'not-allowed' }}>{sym}</div>
-          ))}
-        </div>
-      )}
+    <div style={{
+      display: 'flex', alignItems: 'center', fontFamily: FONT_BODY, height: 34,
+      background: 'var(--color-white)', borderRadius: 999, padding: 3, gap: 2,
+      boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)',
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center', height: '100%', padding: '0 10px', borderRadius: 999,
+        background: 'var(--grad-brand)', color: 'var(--color-white)',
+        fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)',
+      }}>USDC</div>
+      <div style={{
+        display: 'flex', alignItems: 'center', height: '100%', padding: '0 10px', borderRadius: 999,
+        color: 'var(--color-muted)', fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)',
+        opacity: 0.5, cursor: 'not-allowed',
+      }}>ARC</div>
     </div>
   )
 }
@@ -334,7 +331,7 @@ export default function LuckyPot() {
           sub-rows still split 1:1:2 (60.5px each), that proportion was already correct. */}
       <div style={{ gridRow: '3 / 6', alignSelf: 'center', height: '28.67dvh', background: 'var(--color-surface)', borderRadius: 16, padding: 8, display: 'flex', flexDirection: 'column' }}>
         <StatRow divider label={info ? `EPOCH #${info.epochId}` : '…'} style={{ fontSize: 'var(--fs-content-1)' }}>
-          <TokenDropdown />
+          <TokenToggle />
         </StatRow>
         {/* "Draw in:" - label 16px --color-muted-2 (was --fs-label muted), value Space Grotesk BOLD 18px
             black (was body-font 17 regular) - node 13:154/13:155. */}
@@ -352,7 +349,7 @@ export default function LuckyPot() {
           ) : info ? (
             <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)', lineHeight: 1.35 }}>
               This week's yield goes to <strong style={{ color: 'var(--color-content)', fontSize: 'var(--fs-content-1)' }}>{info.numWinners}</strong> winner{info.numWinners === 1 ? '' : 's'} out
-              of <strong style={{ color: 'var(--color-content)', fontSize: 'var(--fs-content-1)' }}>{info.participantCount}</strong> player{info.participantCount === 1 ? '' : 's'}. Winners return 5% to the protocol.
+              of <strong style={{ color: 'var(--color-content)', fontSize: 'var(--fs-content-1)' }}>{info.eligibleParticipantCount}</strong> player{info.eligibleParticipantCount === 1 ? '' : 's'}. Winners return 5% to the protocol.
             </span>
           ) : (
             <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)' }}>Loading…</span>

@@ -88,7 +88,7 @@ function mockInfo() {
     deposited: 42, eligible: 42, aprBps: 600,
     epochId: 3, epochEndTime: Math.floor(Date.now() / 1000) + 2 * 86400,
     epochDrawn: false, weeklyYieldUsd: 8.4,
-    poolTotal: 5747, eligiblePoolTotal: 5732, numWinners: 2, participantCount: 15,
+    poolTotal: 5747, eligiblePoolTotal: 5732, numWinners: 2, participantCount: 15, eligibleParticipantCount: 12,
     prevEpochId: 2, wonLastEpoch: false, owedLastEpoch: 0, hasClaimedLastEpoch: false,
     prevEpochDrawnAt: Math.floor(Date.now() / 1000) - 86400, sweepDelay: 3 * 86400,
     referrer: null, pendingReferral: 0,
@@ -123,6 +123,7 @@ export async function getLuckyPotInfo(walletAddress) {
   // for every index, then eligibleBalance(addr) for each. Fine at this participant count (testnet-scale).
   const participantCountNum = Number(participantCountRaw)
   let eligiblePoolTotalRaw = 0n
+  let eligibleParticipantCount = 0
   if (participantCountNum > 0) {
     const addresses = await multicallWithRetry(
       Array.from({ length: participantCountNum }, (_, i) => ({ ...base, functionName: 'participants', args: [BigInt(i)] }))
@@ -131,6 +132,13 @@ export async function getLuckyPotInfo(walletAddress) {
       addresses.map(addr => ({ ...base, functionName: 'eligibleBalance', args: [addr] }))
     )
     eligiblePoolTotalRaw = eligibles.reduce((sum, v) => sum + (v ?? 0n), 0n)
+    // "N winners out of M players" must count who is ELIGIBLE for the CURRENT draw, not participantCount()
+    // (a lifetime counter that never decreases and includes anyone who deposited too recently to be
+    // eligible yet). 2026-09-10 bug: verified directly against the live contract - participantCount()
+    // read 18 while only 14 addresses had eligibleBalance()>0, matching the real luckypot.cc frontend's
+    // own (lower, correct) player count exactly. Same eligibles array usePoolData.ts sums for the pool
+    // total, just counting non-zero entries instead of summing them.
+    eligibleParticipantCount = eligibles.filter(v => (v ?? 0n) > 0n).length
   }
   const weeklyYieldRaw = projectedWeeklyYield(eligiblePoolTotalRaw, aprBps)
   const numWinnersEstimate = Number(estimateNumWinners(eligiblePoolTotalRaw, weeklyYieldRaw))
@@ -160,7 +168,8 @@ export async function getLuckyPotInfo(walletAddress) {
     poolTotal: toUsdc(poolTotalRaw),
     eligiblePoolTotal: toUsdc(eligiblePoolTotalRaw),
     numWinners: numWinnersEstimate,
-    participantCount: participantCountNum,
+    participantCount: participantCountNum,   // lifetime counter, never decreases - kept for reference, NOT for the "out of N players" sentence
+    eligibleParticipantCount,                // who is actually eligible for THIS draw - use this one in the UI
     sweepDelay: Number(sweepDelay),
     prevEpochId,
     prevEpochDrawnAt: prevEpochId !== null ? Number(decodeEpoch(prevEpochRaw).drawnAt) : null,

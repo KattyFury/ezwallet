@@ -335,6 +335,34 @@ draggable thumb and `LuckyPot.jsx`'s token-dropdown panel both converted from of
 centred glow (both ARE interactive, so they keep a shadow - just the right kind). Re-verified About with
 `tools/figma-check.mjs` - clean. `npm run build` clean, `npm test` 16/16.
 
+**Fifteenth round-trip (2026-09-10, same day): NavBar spacing (user decision, not a Figma correction) +
+four real LuckyPot bugs, one of them verified directly on-chain.**
+- NavBar: `.navbar-btn` was bottom-anchored (`justify-content:flex-end; padding-bottom:10.5px`, matching a
+  2026-09-10 Figma reading of icon-top-785/label-bottom-833.5) - the user asked directly for the icon+label
+  block CENTRED in the 70px row instead, with less air between them. This is a stated design decision
+  overriding the earlier Figma reading, not a "the code was wrong" correction - noted here so a future pass
+  doesn't "fix" it back to bottom-anchored. Also dropped a redundant 2px inline `marginBottom` stacked on
+  top of the 3px CSS `gap` (5px combined) down to a single 2px gap.
+- **LuckyPot "N winners out of M players" used the wrong M** - `participantCount()` (18, a lifetime
+  counter that never decreases) instead of who is actually ELIGIBLE for the current draw. The user compared
+  against the real luckypot.cc site directly and found it disagreed (14) - **verified by calling the live
+  contract directly** (a one-off script, not guessed): of the 18 lifetime addresses, exactly 14 have
+  `eligibleBalance()>0` right now, matching the real site's number exactly. Neither number was fake - they
+  measure different things - but the sentence needs the eligible count, not the lifetime one. Fixed by
+  counting non-zero entries in the SAME `eligibleBalance` array `usePoolData.ts`'s pool-total sum already
+  computes (`lib/luckyPot.js`'s new `eligibleParticipantCount` field) instead of summing them.
+- **"Total tickets / Pool" and "My tickets / My deposit" were BOTH prefixed "$"** on both halves - the
+  first half is a TICKET COUNT (no currency symbol at all), the second is a real USDC amount (reads
+  "USDC", never "$" - this pool has no dollar display-currency, only the on-chain token). Fixed in
+  `SplitAmount`; the small half's existing 15px/grey styling (Chú thích/`--color-muted-2`) already matched
+  what was asked, no change needed there.
+- USDC/ARC control changed from a dropdown (revealing ARC/ETH, both disabled) to a 2-segment TOGGLE - USDC
+  filled/selected, ARC greyed out and unclickable right beside it, same underlying "only USDC works, no
+  token yet" reason as before, per direct user request (no popup needed for a 2-way choice).
+Verified with a live Playwright screenshot in mock mode (LuckyPot has no single static Figma frame to
+diff against) - all four changes render correctly, nothing overflows. `npm run build` clean, `npm test`
+16/16.
+
 **LuckyPot note (2026-09-10):** the user redrew this frame's own Figma to bring it closer to the real
 luckypot.cc frontend, then added a "My history" box to row 9 (next to "Draw history") - the handler
 (`openMyHistory`) and its popup already existed in the code, only wired into the hamburger menu; row 9

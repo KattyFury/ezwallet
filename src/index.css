@@ -492,11 +492,11 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  /* BOTTOM-aligned, not centred (2026-09-10): Figma puts the icon's top at y=785 and the label's bottom
-     at y=833.5 of 844, i.e. the block hugs the bar's bottom with ~10px to spare - centring it in row 10
-     drew everything ~7px too high. */
-  justify-content: flex-end;
-  padding-bottom: 10.5px;
+  /* CENTRED in the 70px row (user decision 2026-09-10, overriding the earlier bottom-anchored reading -
+     the raw Figma numbers hug the bottom with ~10.5px to spare, but the user asked directly for the
+     icon+label block centred in row 10 with less air between the icon and its label). */
+  justify-content: center;
+  gap: 2px;   /* was 3px CSS gap + a redundant inline marginBottom:2 on the icon (5px combined) - tightened per the same request */
   font-family: var(--font-condensed);
   font-size: var(--fs-content-2);   /* Nội dung 2 - raw measurement (Send/Receive/Menu) was 16px, rounded up to the new scale's 17 */
   font-weight: var(--fw-semibold);
@@ -506,7 +506,6 @@ body {
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: color 0.1s;
-  gap: 3px;
 }
 
 .navbar-btn.active {
