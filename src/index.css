@@ -269,27 +269,31 @@ body {
 
 .btn:disabled { opacity: 0.4; cursor: default; }
 
-/* A STRAIGHT-DOWN drop shadow (offset-x 0, cast vertically) for EVERY raised/tappable button. User decision 07-22d:
-   a MEDIUM shadow that does NOT spread (small 6px blur) + a uniform BLACK shadow `rgba(0,0,0,.25)` for all buttons
-   (no longer tinted per button colour). Applies to .btn-primary/success/error/secondary + .action-card(.primary). */
+/* A CENTRED GLOW, no offset - 2026-09-10 CORRECTION: this was still the pre-redesign 07-22d straight-down
+   drop shadow (`0 4px 6px`) at the SHARED class level, even though BRAND-GUIDELINE.md's Shadow rule
+   ("chỉ phần tử bấm được, glow đều quanh, không offset") and every button measured across today's full
+   rebuild agree on a centred `0 0 8px rgba(0,0,0,.48)` glow - dozens of screens got an INLINE override to
+   the right value this session, but the shared class itself, the actual DEFAULT every untouched button
+   falls back to, was never fixed - so any button without its own inline override still rendered the old
+   drop shadow. Fixed here once, for every .btn-primary/secondary/success/error app-wide. */
 .btn-primary {
   background: var(--grad-brand);
   color: var(--color-white);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35);   /* gradients need a stronger shadow than white buttons (.35 vs .25) - a dark fill swallows the shadow, so it must be deeper to look equal (user decision 07-22g) */
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.48);
 }
 
 .btn-secondary {
   background: var(--color-white);
   color: var(--color-black);
   border: 1.5px solid var(--color-gray);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.25);   /* white buttons are raised too (user decision 07-22d) - a black shadow, no spread */
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.48);
 }
 
 /* STATUS buttons - use this class, stop inlining `background: var(--color-primary)` yourself
    (a flat button looks out of place among gradient ones). Colours follow the semantic system: success/received = green,
    warning = yellow, error/delete = red. The gradient formulas are in :root --grad-*. */
-.btn-success { background: var(--grad-primary); color: var(--color-white); border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35); }
-.btn-error   { background: var(--grad-error);   color: var(--color-white); border: none; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.35); }
+.btn-success { background: var(--grad-primary); color: var(--color-white); border: none; box-shadow: 0 0 8px rgba(0, 0, 0, 0.48); }
+.btn-error   { background: var(--grad-error);   color: var(--color-white); border: none; box-shadow: 0 0 8px rgba(0, 0, 0, 0.48); }
 /* (No screen needs the yellow warning button yet - when one does: background var(--grad-warning) + BLACK text is MANDATORY,
    white on yellow is only 2.15:1 and older users cannot read it.) */
 
@@ -553,7 +557,7 @@ body {
   background: var(--color-white);
   color: var(--color-black);
   font-family: var(--font-condensed);
-  font-size: 13px;      /* measured off Paste/Contacts/QR storage/Share, 2026-09-10 */
+  font-size: var(--fs-caption);      /* raw measurement (Paste/Contacts/QR storage/Share) was 13px, folded into Chú thích */
   font-weight: var(--fw-semibold);
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
@@ -566,7 +570,7 @@ body {
   border-radius: 32px;
   background: var(--grad-brand);
   color: var(--color-white);
-  font-size: 16px;      /* measured off "Scan QR"/"Custom QR", 2026-09-10 */
+  font-size: var(--fs-content-2);      /* raw measurement ("Scan QR"/"Custom QR") was 16px, rounded up to Nội dung 2 */
 }
 
 /* ── Send flow ── */

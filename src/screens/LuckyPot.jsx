@@ -144,7 +144,7 @@ function TokenDropdown() {
       {open && (
         <div onMouseLeave={() => setOpen(false)} style={{
           position: 'absolute', top: '110%', right: 0, zIndex: 10, minWidth: 90, overflow: 'hidden',
-          background: 'var(--color-white)', border: '1.5px solid var(--color-gray)', borderRadius: 10, boxShadow: '0 4px 6px rgba(0, 0, 0, 0.25)',
+          background: 'var(--color-white)', border: '1.5px solid var(--color-gray)', borderRadius: 10, boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)',
         }}>
           {['ARC', 'ETH'].map(sym => (
             <div key={sym} style={{ padding: '8px 12px', fontFamily: FONT_BODY, fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', opacity: 0.5, cursor: 'not-allowed' }}>{sym}</div>

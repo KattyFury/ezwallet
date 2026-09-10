@@ -319,6 +319,22 @@ popups already used - `.popup-card` was the outdated one, not LuckyPot's excepti
 class (`width: min(calc(100vw*5/6), calc(var(--screen-max)*5/6))`, the same idiom LuckyPot's popup and
 `.row10-single .btn` already use), so every popup app-wide picks up the correction at once.
 
+**Fourteenth round-trip (2026-09-10, same day): the SHARED `.btn-primary`/`.btn-secondary`/`.btn-success`/
+`.btn-error` classes still carried the pre-redesign straight-down drop shadow** (`0 4px 6px rgba(...)`,
+a 07-22d decision), caught by the user asking outright why a button still cast a downward shadow instead
+of the centred glow BRAND-GUIDELINE.md's Shadow rule already states. Root cause: dozens of buttons got an
+INLINE `boxShadow:'0 0 8px rgba(0,0,0,.48)'` override during today's screen-by-screen rebuilds, but the
+shared class itself - the actual DEFAULT every untouched button falls back to - was never fixed, so any
+button without its own override (most buttons on screens not touched today, and even some inline-styled
+ones on screens that were) still rendered the old shadow. Fixed once at the shared class, closing it for
+every `.btn` app-wide. Same sweep also caught and fixed: `.action-card`'s own literal 13/16px font sizes
+(missed by the earlier typography sweep, which only scoped screen files, not index.css's own component
+classes) → `--fs-caption`/`--fs-content-2`; `ErrorToast.jsx`'s old drop shadow removed entirely (it isn't
+itself clickable, matching `NotifArea`'s notification cards, which carry no shadow either); `PctSlider.jsx`'s
+draggable thumb and `LuckyPot.jsx`'s token-dropdown panel both converted from offset drop shadows to a
+centred glow (both ARE interactive, so they keep a shadow - just the right kind). Re-verified About with
+`tools/figma-check.mjs` - clean. `npm run build` clean, `npm test` 16/16.
+
 **LuckyPot note (2026-09-10):** the user redrew this frame's own Figma to bring it closer to the real
 luckypot.cc frontend, then added a "My history" box to row 9 (next to "Draw history") - the handler
 (`openMyHistory`) and its popup already existed in the code, only wired into the hamburger menu; row 9

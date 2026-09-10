@@ -81,7 +81,7 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
           <div style={{
             position: 'absolute', left: `${pct}%`, top: '50%', transform: 'translate(-50%,-50%)',
             width: 26, height: 26, borderRadius: '50%', background: 'var(--color-white)',
-            border: `3px solid ${dim}`, boxShadow: '0 1px 4px rgba(0,0,0,.2)',
+            border: `3px solid ${dim}`, boxShadow: '0 0 4px rgba(0,0,0,.3)',   /* centred glow (was offset 0 1px) - the thumb IS draggable/clickable */
             transition: dragging ? 'none' : 'left .15s ease',
           }} />
         </div>

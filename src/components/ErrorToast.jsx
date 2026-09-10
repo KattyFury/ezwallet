@@ -21,7 +21,9 @@ export default function ErrorToast({ message }) {
       position: 'fixed', top: 14, left: '50%', transform: 'translateX(-50%)',
       width: 'calc(100% - 30px)', maxWidth: 400, zIndex: 200,
       background: 'var(--color-error-soft)', borderRadius: 12, padding: '12px 14px',
-      display: 'flex', alignItems: 'center', gap: 10, boxShadow: '0 4px 16px rgba(0,0,0,0.15)',
+      display: 'flex', alignItems: 'center', gap: 10,
+      /* NO shadow (2026-09-10 correction, was an old straight-down drop shadow) - this toast is not
+         itself clickable, matching NotifArea's own notification cards, which carry no shadow either. */
     }}>
       <Icon name="warning" size="var(--is-content-1)" color="var(--color-error)" style={{ flexShrink: 0 }} />
       <span style={{ flex: 1, fontSize: 'var(--fs-caption)', color: 'var(--color-content)' }}>{message}</span>
