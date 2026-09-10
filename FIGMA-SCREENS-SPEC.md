@@ -34,8 +34,14 @@ convention đã có trong code (`--pad`, `.screen` 10-row grid).
 
 ## 1. Grid — xác nhận lại, không đổi so với bản cũ
 
-- 10 hàng bằng nhau: mỗi hàng cao **84.4px** (844/10) — khớp chính xác với mọi mốc lặp lại trong file
-  (CTA button luôn ở hàng 9, "Exit"/NavBar luôn ở hàng 10, v.v.)
+- ⚠️ **SỬA 2026-09-10:** KHÔNG phải 10 hàng bằng nhau cao 84.4px. Theo BRAND-GUIDELINE.md, giữa 10 hàng
+  có **gutter 16px** → mỗi hàng cao **70px** (844 − 9×16 = 700, ÷10 = 70). Hàng N: `top = (N−1)×86`,
+  `bottom = top + 70`. Mọi số đo trong file Figma rơi đúng lên lưới này: hàng 1 = 0–70 (số dư),
+  hàng 2–5 = 86–414 (card token/QR), hàng 6–8 = 430–672 (card thông báo), hàng 9 = 688–758 (hàng nút),
+  hàng 10 = 774–844 (NavBar, cao đúng 70px). Con số 84.4px cũ là nguyên nhân gốc khiến mọi màn lệch ~14px.
+- Ngang: **12 cột, gutter 8px**, tính trên toàn bề rộng 390 → cột rộng (390 − 11×8)/12 = 25.167px.
+  Cột 2–11 = x 33.17–356.83 (đúng card trắng 324px); cùng vùng đó tính cả gutter ngoài = x 25.17–364.83
+  (đúng hộp xám 340px) = inset **6.45%**.
 - Lề trái/phải: **~20px** mỗi bên (390 − 2×20 = 349px = bề rộng content chuẩn của card/input full-width).
 - Header title luôn tại `y=27.28px`, cao `~30px`, full-width, căn giữa — **hằng số qua mọi frame có
   title dạng chữ** (Sign in with email / Service hub / Exchange / Send money) — không phải trùng hợp.

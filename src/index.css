@@ -128,11 +128,22 @@ body {
   body { background: #D6EAFB; }   /* a SOFT pastel blue - user decision 07-22c (the #0088FF version was still too loud) */
 }
 
-/* ── Layout: a 10-row grid ── */
+/* ── Layout: the BRAND-GUIDELINE grid ──
+   10 rows with a 16px GUTTER between them (guideline "Grid dọc: 10 hàng, spacing mỗi hàng 16px").
+   ⚠️ The gutter was missing until 2026-09-10, which made every row 84.4px (844/10) instead of the
+   70px the design is actually built on: 844 − 9×16 = 700, ÷10 = 70. Every measurement in the Figma
+   file falls exactly on this grid - row 1 = 0-70 (the balance), rows 2-5 = 86-414 (the token/QR card),
+   rows 6-8 = 430-672 (the notification card), row 9 = 688-758 (the action pills), row 10 = 774-844
+   (the navbar) - so the missing gutter was the root cause of the ~14px drift on every screen.
+   Horizontally the guideline is 12 columns with an 8px gutter across the full width: column width
+   = (390 − 11×8)/12 = 25.167px, so cols 2-11 = x 33.17-356.83 (the 324px-wide white cards) and the
+   same span including its outer gutters = x 25.17-364.83 (the 340px-wide grey boxes) = 6.45% inset.
+   That is applied per element rather than as CSS columns, so screens keep their single-column flow. */
 .screen {
   position: relative;   /* the anchor for floating buttons (e.g. Show tokens pinned to the row 6/7 boundary) */
   display: grid;
   grid-template-rows: repeat(10, 1fr);
+  row-gap: 16px;
   /* THE RIGHT COLUMN IS LOCKED TO minmax(0,1fr) - do NOT remove this line.
      Declare no columns → the implicit column = auto = it grows with the WIDEST CONTENT. A single long notification or
      address (nowrap) is enough to blow the column past the screen width → EVERY row (balance, token list, buttons, NavBar) gets
@@ -271,8 +282,11 @@ body {
                                    grid-row:auto → the origin is .screen → it lands correctly on EVERY screen. */
   left: 20px;
   right: 20px;
-  top: 85dvh;                   /* height 10dvh → the button's CENTRE at 90dvh = POSITION 9 (user decision) */
-  height: 10dvh;
+  /* ROW 9 of the guideline grid (2026-09-10): 688-758px of 844 → centre 723 = 85.66dvh, which is where
+     the current Figma file puts every bottom button row. Was top 85dvh / height 10dvh (centre 90dvh),
+     from before the 16px gutter was accounted for. */
+  top: 81.52dvh;
+  height: 8.29dvh;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -418,16 +432,23 @@ body {
 /* ⚠️ 2026-09-10, SECOND PASS. The first pass today wrongly deleted the raised white active cell because
    the Figma MCP node list does not contain it - but the file's RENDERED pixels do: sampling the reference
    PNGs at y=800 gives 255,255,255 across the active tab and 225,231,237 (#E1E7ED = --color-surface) across
-   the other three, with a shadow fringe darkening to 182,187,190 at the active cell's side edges. That is
-   exactly the layout FIGMA-SCREENS-SPEC.md §5 describes: a flat grey bar, the active tab a WHITE cell that
-   joins seamlessly with the white content above, its glow only visible where it meets the grey neighbours.
-   The bar also catches a shadow along its own top edge from that white block (inset shadow below). */
+   the other three, with a shadow fringe darkening to 182,187,190 at the active cell's side edges.
+   THE MECHANISM (measured 2026-09-10: x=146, the active column, reads 255,255,255 continuously from y=750
+   straight through y=784): the white content area above and the active tab are ONE white block, and that
+   block casts its shadow DOWN onto the grey - along the bar's top edge (172,177,181 at y=774 fading to
+   219,224,229 by y=784) and sideways onto the grey cells either side of the active tab. Hence an inset
+   shadow on the bar for the top edge plus a glow on the active cell for the sides.
+   The bar is row 10 of the guideline grid = 774-844 = exactly 70px tall (see .screen's row-gap). */
 .navbar {
   grid-row: 10;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   background: var(--color-surface);
-  box-shadow: inset 0 10px 12px -10px rgba(0, 0, 0, 0.45);
+  box-shadow: inset 0 10px 12px -8px rgba(0, 0, 0, 0.4);
+  /* ⚠️ CLIPS the active cell's glow so it cannot spill UPWARDS onto the white above. The active cell and
+     that white area are one block, so there must be no shadow between them (Figma reads 255,255,255 right
+     up to the bar's edge); without this the glow greyed the white just above the active tab. */
+  overflow: hidden;
   margin: 0 -20px;               /* the NavBar RUNS EDGE TO EDGE with no margin (cancelling .screen's 20px padding) - user decision "except the NAVBAR" */
 }
 

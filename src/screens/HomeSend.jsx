@@ -40,10 +40,13 @@ const isVolatile = symbol => !STABLECOINS.includes(symbol)
 // PRESS AND HOLD (not a sticky toggle): by default it shows $ (which everyday users understand);
 // holding reveals the real token amounts; releasing returns to $ - so nobody flips it, forgets, and is left
 // staring at "0.0001 cirBTC" with no idea what it means.
-// POSITION (2026-09-10): centre at 46.68dvh - the exact Figma value (node 1:337, "calc(40%+56.4px)"),
-// sitting right at the bottom edge of the grey token box (see the box's own top+height below), NOT row 6's
-// centre (55%) any more - the tighter BalanceHeader (max 50px, §12) pulled everything up about one row.
-function ShowTokensButton({ onHoldStart, onHoldEnd }) {
+// SHAPE (2026-09-10, measured off the Figma render, not guessed): this is a HALF-oval, not a pill.
+// Sampling the white run row by row gives width 183 at y=374 growing to 258 at y=412, then the shape is
+// cut off at y=414 - which is exactly the grey box's bottom edge, below which the page is white so the
+// rest of the shape is invisible. Fitting that curve gives a 258-wide box, top at 374, corner radius 38 on
+// the TOP CORNERS ONLY, square at the bottom. It lives INSIDE the grey box (bottom: 0) with the box
+// clipping it, so its shadow falls only on the grey and never onto the white page below.
+export function ShowTokensButton({ onHoldStart, onHoldEnd }) {
   return (
     <button
       onMouseDown={onHoldStart}
@@ -53,29 +56,26 @@ function ShowTokensButton({ onHoldStart, onHoldEnd }) {
       onTouchEnd={onHoldEnd}
       onTouchCancel={onHoldEnd}
       onContextMenu={e => e.preventDefault()}
-      style={{
-        position: 'absolute', left: '50%', top: '46.68dvh', transform: 'translate(-50%, -50%)', zIndex: 10,
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
-        // ⚠️ WIDTH HUGS THE TEXT (user decision 08-13: "I slightly regret making it this big") - the fixed
-        // 3/4-screen width from 07-29 was dropped. This pair of buttons is no longer equal because the two sentences
-        // differ in length; that is intended, do not "even them up".
-        // SAFE against the old 07-29 bug (text dropping to a second line on older iPhones once the width was fluid): there is
-        // whiteSpace:'nowrap' below, so the text CANNOT wrap. maxWidth + ellipsis are only a safety net
-        // in case some wording ends up far too long.
-        maxWidth: 'min(92vw, calc(var(--screen-max) - 24px))', overflow: 'hidden', textOverflow: 'ellipsis',
-        // The button sits INSIDE the grey box (the token area of 07-17f) → WHITE so it stands out on the surface.
-        // Glow shadow (2026-09-10, matching every button rebuilt today) instead of the old straight-down shadow + grey border.
-        padding: '0 18px', borderRadius: 50, border: 'none', background: 'var(--color-white)',
-        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
-        color: 'var(--color-content)', fontFamily: 'var(--font-condensed)', fontSize: '16px',
-        fontWeight: 'var(--fw-semibold)', cursor: 'pointer', whiteSpace: 'nowrap',
-        WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
-      }}
+      style={HALF_OVAL_STYLE}
       aria-label={'Hold to show token amounts'}
     >
       Hold to show tokens
     </button>
   )
+}
+
+// Shared by "Hold to show tokens" (Send) and "Tap to copy your address" (Receive) - the Figma draws both
+// at the identical 258×40 half-oval, so they stay one definition rather than two that can drift.
+export const HALF_OVAL_STYLE = {
+  position: 'absolute', left: '50%', bottom: 0, transform: 'translateX(-50%)', zIndex: 10,
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+  width: 'min(66.15vw, calc(var(--screen-max) * 0.6615))', height: 40,
+  borderRadius: '38px 38px 0 0', border: 'none', background: 'var(--color-white)',
+  boxShadow: '0 0 10px rgba(0, 0, 0, 0.4)',
+  padding: '0 18px', overflow: 'hidden', textOverflow: 'ellipsis',
+  color: 'var(--color-content)', fontFamily: 'var(--font-condensed)', fontSize: '16px',
+  fontWeight: 'var(--fw-semibold)', cursor: 'pointer', whiteSpace: 'nowrap',
+  WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
 }
 
 export default function HomeSend() {
@@ -117,14 +117,15 @@ export default function HomeSend() {
     <div className="screen">
       <BalanceHeader totalUsd={totalUsd} loading={loading} />
 
-      {/* GREY BOX (2026-09-10, exact Figma geometry - node 1:334): top 10.19dvh, height 38.86dvh, NOT
-          row-3-5 any more (that started a full row too low - the tighter BalanceHeader freed up the top
-          of row 2). Each token is now its OWN WHITE rounded-16 CARD (48px tall, 10px gap) instead of a
-          flat list with divider rules - matching nodes 1:357/1:365/1:369 exactly. The "Hold to show
-          tokens" pill (top 46.68dvh) sits right at this box's bottom edge, as before. */}
+      {/* GREY BOX = ROWS 2-5 of the guideline grid (86-414px of 844 → top 10.19dvh, height 38.86dvh),
+          inset 6.45% = the 12-column grid's cols 2-11 plus their outer gutters. Each token is its OWN
+          WHITE rounded-16 card (48px tall, 10px gap = the cards are cols 2-11 exactly, the box's 8px
+          padding being the gutter). overflow:hidden so the half-oval button below is clipped at the box's
+          bottom edge - shadow included, exactly as the design draws it. */}
       <div style={{
-        position: 'absolute', left: '6.41%', right: '6.41%', top: '10.19dvh', height: '38.86dvh',
+        position: 'absolute', left: '6.45%', right: '6.45%', top: '10.19dvh', height: '38.86dvh',
         background: 'var(--color-surface)', borderRadius: 20, padding: '10px 8px 0', minWidth: 0,
+        overflow: 'hidden',
       }}>
         <div className="scroll-thin" style={{
           display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto', height: '100%', paddingBottom: 44,
@@ -186,18 +187,18 @@ export default function HomeSend() {
           </>
         )}
         </div>
+
+        {/* INSIDE the grey box so the box clips its lower half + shadow - that clipping is what makes it
+            read as a half-oval sitting on the box's bottom edge. */}
+        {tokens.length > 0 && (
+          <ShowTokensButton onHoldStart={() => setShowToken(true)} onHoldEnd={() => setShowToken(false)} />
+        )}
       </div>
 
-      {/* Floats in the middle of row 6 (position:absolute inside ShowTokensButton) - it does NOT take a row of its own */}
-      {tokens.length > 0 && (
-        <ShowTokensButton onHoldStart={() => setShowToken(true)} onHoldEnd={() => setShowToken(false)} />
-      )}
-
-      {/* GREY WRAPPER CARD (2026-09-10, node 7:35/1:335 - "Vector12"): same treatment as the token box
-          above, wrapping the whole notification/hint area (top 50.95dvh, height 28.67dvh) - a new
-          element vs the old plain row-7-8 div, matching Send AND Receive identically. */}
+      {/* GREY WRAPPER CARD = ROWS 6-8 of the guideline grid (430-672px of 844), same inset as the box
+          above, wrapping the whole notification/hint area. */}
       <div style={{
-        position: 'absolute', left: '6.41%', right: '6.41%', top: '50.95dvh', height: '28.67dvh',
+        position: 'absolute', left: '6.45%', right: '6.45%', top: '50.95dvh', height: '28.67dvh',
         background: 'var(--color-surface)', borderRadius: 20, padding: '10px 8px',
         display: 'flex', flexDirection: 'column', minHeight: 0,
       }}>
@@ -230,7 +231,7 @@ export default function HomeSend() {
 
       {/* ABSOLUTE at the exact Figma centre (723.18px of 844 = 85.68dvh, nodes 1:338-1:340) - the old
           row-9 + align-self:end placement sat ~12px too high. Swap.jsx still uses the row-9 flow variant. */}
-      <div className="action-grid" style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.68dvh', transform: 'translateY(-50%)', marginBottom: 0 }}>
+      <div className="action-grid" style={{ position: 'absolute', left: '6.45%', right: '6.45%', top: '85.68dvh', transform: 'translateY(-50%)', marginBottom: 0 }}>
         {/* Left→right order: Paste · Scan QR · Contacts (user decision 07-23: Contacts is used more
             often → on the RIGHT; the NotifArea hint uses the same order). Icon sizes 19.5/24 (2026-09-10,
             up from --is-item 17) match the side/centre pills exactly. */}

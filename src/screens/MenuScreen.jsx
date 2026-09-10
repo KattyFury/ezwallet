@@ -20,7 +20,7 @@ const ITEMS = [
 
 // Shared row geometry: the bullet's left edge at x=25 (6.41%), the label starting at x=46.8 - i.e. a
 // 8.8px gap after the 13px triangle. minHeight keeps a comfortable touch target around the 18px label.
-const ROW_STYLE = { position: 'absolute', left: '6.41%', right: '6.41%', transform: 'translateY(-50%)', padding: 0, gap: 8.8, minHeight: 44 }
+const ROW_STYLE = { position: 'absolute', left: '6.45%', right: '6.45%', transform: 'translateY(-50%)', padding: 0, gap: 8.8, minHeight: 44 }
 
 // Small filled right-pointing triangle bullet (node "Polygon 6"/"Polygon 13" in the current Figma file,
 // 2026-09-10) - REPLACES the old leading category icon (clock/shield/globe/info) + trailing chevron.
@@ -66,7 +66,7 @@ export default function MenuScreen() {
           labels onto 2 lines. Going absolute sidesteps the grid entirely AND lands exactly on the
           Figma centre (14.3dvh, node 1:29/1:30) instead of only approximating it via a grid cell.
           Glow shadow (0 0 8px rgba(0,0,0,.48)) matches every button rebuilt today. */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '14.3dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div style={{ position: 'absolute', left: '6.45%', right: '6.45%', top: '14.3dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8, alignItems: 'center' }}>
         <button className="btn btn-secondary" style={{ flex: 1, opacity: 0.4, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', fontSize: 18 }} disabled>
           Withdraw
         </button>
@@ -87,7 +87,7 @@ export default function MenuScreen() {
             <Bullet color="var(--color-brand)" />
             <span style={{ flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)' }}>{label}</span>
           </button>
-          <div style={{ position: 'absolute', left: '6.67%', right: '6.67%', top: rule, height: 1, background: 'var(--color-gray)' }} />
+          <div style={{ position: 'absolute', left: '6.45%', right: '6.45%', top: rule, height: 1, background: 'var(--color-gray)' }} />
         </div>
       ))}
 

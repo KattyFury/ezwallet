@@ -5,6 +5,7 @@ import NavBar from '../components/NavBar'
 import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
 import NotifArea from '../components/NotifArea'
+import { HALF_OVAL_STYLE } from './HomeSend'
 import { useNav } from '../nav'
 import { getTokenBalances, cachedBalances } from '../chain'
 import { ensureWalletAddress } from '../circle'
@@ -65,53 +66,37 @@ export default function HomeReceive() {
         <QRCodeCanvas value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" includeMargin />
       </div>
 
-      {/* GREY CARD BEHIND THE QR (node 1:381: top 10.19dvh, height 38.86dvh, width 338 centred) - the same
-          card Send uses for its token list. The first 2026-09-10 pass MISSED it entirely and left the QR
-          floating on white. */}
+      {/* GREY CARD BEHIND THE QR = ROWS 2-5 of the guideline grid (86-414px of 844), the same card Send
+          uses for its token list. overflow:hidden clips the half-oval button at the card's bottom edge. */}
       <div style={{
-        position: 'absolute', left: '6.67%', right: '6.67%', top: '10.19dvh', height: '38.86dvh',
-        background: 'var(--color-surface)', borderRadius: 20,
-      }} />
-
-      {/* QR POSITION - CRITICAL, exact Figma pixels (node 1:398), not the old row 3-5 flex-centre (2026-09-10:
-          that centred at 35dvh, a full ~8.7dvh too low now that BalanceHeader only needs ~1.5 rows, §12).
-          Centre at (50%, 27.09dvh), size = min(30.57dvh, 66.15% of the screen-max-capped width) - both
-          the position AND the size are locked to the Figma numbers, do not approximate with the grid rows. */}
-      <div style={{
-        position: 'absolute', left: '50%', top: '27.09dvh', transform: 'translate(-50%, -50%)',
-        width: 'min(30.57dvh, calc(var(--screen-max) * 0.6615))', height: 'min(30.57dvh, calc(var(--screen-max) * 0.6615))',
+        position: 'absolute', left: '6.45%', right: '6.45%', top: '10.19dvh', height: '38.86dvh',
+        background: 'var(--color-surface)', borderRadius: 20, overflow: 'hidden',
       }}>
-        {/* ⚠️ No more bare `0x…` addresses (user decision 08-13) - EVM addresses are identical on EVERY
-            chain, so a wallet on Ethereum/Base/BSC scanning it sends on the wrong chain and the money is GONE. buildQR wraps
-            it in a private scheme + the Arc chainId; see src/qr.js.
-            Anyone who needs the plain address (topping up from an exchange or another wallet) taps the copy button under the QR. */}
-        <QRCodeSVG value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" style={{ width: '100%', height: '100%' }} />
+        {/* QR POSITION - CRITICAL, exact Figma pixels (node 1:398): centre (50%, 27.09dvh of the screen),
+            size = min(30.57dvh, 66.15% of the screen-max-capped width). Expressed against the card, whose
+            own top is 10.19dvh, the centre sits at (27.09 − 10.19)/38.86 = 43.5% of the card's height. */}
+        <div style={{
+          position: 'absolute', left: '50%', top: '43.5%', transform: 'translate(-50%, -50%)',
+          width: 'min(30.57dvh, calc(var(--screen-max) * 0.6615))', height: 'min(30.57dvh, calc(var(--screen-max) * 0.6615))',
+        }}>
+          {/* ⚠️ No more bare `0x…` addresses (user decision 08-13) - EVM addresses are identical on EVERY
+              chain, so a wallet on Ethereum/Base/BSC scanning it sends on the wrong chain and the money is GONE. buildQR wraps
+              it in a private scheme + the Arc chainId; see src/qr.js.
+              Anyone who needs the plain address (topping up from an exchange or another wallet) taps the copy button under the QR. */}
+          <QRCodeSVG value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" style={{ width: '100%', height: '100%' }} />
+        </div>
+
+        {/* The SAME half-oval as "Hold to show tokens" on Send - one shared style object (HALF_OVAL_STYLE)
+            so the pair cannot drift. Inside the card so its lower half and its shadow are clipped at the
+            card's bottom edge, which is what makes it read as a half-oval rather than a floating pill. */}
+        <button onClick={handleCopyAddr} style={{ ...HALF_OVAL_STYLE, color: addrCopied ? 'var(--color-primary)' : 'var(--color-content)' }}>
+          {addrCopied ? 'Copied!' : 'Tap to copy your address'}
+        </button>
       </div>
-      {/* Address + copy: centre at 46.68dvh (2026-09-10, exact Figma value, node 1:384 - same value as
-          "Hold to show tokens" on Send, still a matched pair, just both moved up from the old 55%).
-          07-19: the shortened address and separate copy icon were hidden, leaving one instruction line "tap to copy" -
-          FULLY MATCHING the button style of ShowTokensButton (HomeSend.jsx) so the 2 tabs form a pair (user decision:
-          same white pill, same font size, so they read as a PAIR of buttons and not floating text). */}
-      <button onClick={handleCopyAddr} style={{
-        position: 'absolute', left: '50%', top: '46.68dvh', transform: 'translate(-50%, -50%)', zIndex: 10,
-        display: 'inline-flex', alignItems: 'center', justifyContent: 'center', height: 40,
-        // ⚠️ WIDTH HUGS THE TEXT (user decision 08-13) - the fixed 3/4-screen width from 07-29 was dropped. This button and
-        // "Hold to show tokens" (HomeSend) are now UNEQUAL because the two sentences differ in length;
-        // that is intended, do not "even them up". If you change one button, change the other to the same formula.
-        maxWidth: 'min(92vw, calc(var(--screen-max) - 24px))', overflow: 'hidden', textOverflow: 'ellipsis',
-        padding: '0 18px', borderRadius: 50, border: 'none', background: 'var(--color-white)',
-        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
-        color: addrCopied ? 'var(--color-primary)' : 'var(--color-content)', fontFamily: 'var(--font-condensed)',
-        fontSize: '16px', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', whiteSpace: 'nowrap',
-        WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
-      }}>
-        {addrCopied ? 'Copied!' : 'Tap to copy your address'}
-      </button>
 
-      {/* GREY WRAPPER CARD (2026-09-10, node 7:35 "Vector15") - identical geometry/treatment to the same
-          card on Send (top 50.95dvh, height 28.67dvh), replacing the old plain row-7-8 div. */}
+      {/* GREY WRAPPER CARD = ROWS 6-8 of the guideline grid (430-672px of 844), identical to Send's. */}
       <div style={{
-        position: 'absolute', left: '6.41%', right: '6.41%', top: '50.95dvh', height: '28.67dvh',
+        position: 'absolute', left: '6.45%', right: '6.45%', top: '50.95dvh', height: '28.67dvh',
         background: 'var(--color-surface)', borderRadius: 20, padding: '10px 8px',
         display: 'flex', flexDirection: 'column', minHeight: 0,
       }}>
@@ -134,7 +119,7 @@ export default function HomeReceive() {
       {/* ABSOLUTE at the exact Figma centre (723.18px of 844 = 85.68dvh, nodes 7:43-7:45), matching Send.
           Labels are verbatim from the Figma: "QR storage" (lowercase s) and "Custom QR" (the hint block
           above still says "Create QR" - that inconsistency is in the design itself, kept as drawn). */}
-      <div className="action-grid" style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.68dvh', transform: 'translateY(-50%)', marginBottom: 0 }}>
+      <div className="action-grid" style={{ position: 'absolute', left: '6.45%', right: '6.45%', top: '85.68dvh', transform: 'translateY(-50%)', marginBottom: 0 }}>
         <button className="action-card" onClick={() => navigate('SavedQRList')}>
           <Icon name="download" size={19.5} />
           <span>QR storage</span>
