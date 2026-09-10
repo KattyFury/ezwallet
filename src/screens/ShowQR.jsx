@@ -38,9 +38,10 @@ export default function ShowQR() {
     saveImageToPhotos(await brandedQrCanvas(canvas), `ezwallet-qr-${amount}.png`)
   }
 
-  // Title (user decision 07-20e): opening a SAVED QR from the library (fromStorage) → "QR: <name>" (the word "Storage"
-  // was dropped to leave room for long names), an unnamed QR → "QR: Item". A newly created QR → "Create receive QR".
-  const title = fromStorage ? `QR: ${name || 'Item'}` : 'Create receive QR'
+  // Title, RE-VERIFIED 2026-09-10 against nodes 1:128/18:296: a newly created QR reads "Created receive QR"
+  // (past tense - the code said "Create...", missing the "d"), a saved QR's title is the NAME ITSELF, no
+  // "QR:" prefix at all (node 18:296 literally reads "Arabica", not "QR: Arabica").
+  const title = fromStorage ? (name || 'Item') : 'Created receive QR'
 
   return (
     <div className="screen">
@@ -48,36 +49,40 @@ export default function ShowQR() {
         {title}
       </div>
 
-      {/* BIG QR = the same size as the Receive screen's (min(30dvh,78vw)), exactly 3 rows tall (2-3-4). A canvas is used so
-          Share can export a PNG; rendered at size 512 then constrained in width for sharpness (user decision 07-20). */}
-      <div ref={wrapRef} style={{ gridRow: '2 / 5', display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 0 }}>
-        <QRCodeCanvas value={qrValue} size={512} level="M" style={{ width: 'min(30dvh, 78vw)', height: 'min(30dvh, 78vw)' }} />
+      {/* QR - node 1:238/18:166/18:304: a literal fixed 258x258 (was a responsive min(30dvh,78vw)), top
+          11.81dvh, centred horizontally. A canvas is used so Share can export a PNG; rendered at size 512
+          then constrained in width for sharpness (user decision 07-20). */}
+      <div ref={wrapRef} style={{ position: 'absolute', left: '50%', top: '11.81dvh', transform: 'translateX(-50%)', width: 258, height: 258 }}>
+        <QRCodeCanvas value={qrValue} size={512} level="M" style={{ width: 258, height: 258 }} />
       </div>
 
-      {/* Row 5 down: the BIG amount (like the main balance) · the caption · the Share text.
-          The caption spells out the LIMIT (USDC on Arc Testnet only) - whoever holds this QR has to know that
-          immediately, rather than sending another token/chain and losing the money. */}
-      <div style={{ gridRow: '5 / 9', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-start', gap: 10, paddingTop: 8 }}>
-        <span className="num" style={{ fontSize: 'var(--fs-amount)', fontWeight: 'var(--fw-light)', lineHeight: 1, color: 'var(--color-content)' }}>{amountText}</span>
-        {/* Font size: --fs-item 17 (user decision 08-13 "it is only a caption after all"), down from
-            --fs-md-lg 21 - 21 is the BUTTON size, using it for a caption is the wrong role and made this sentence
-            run to 3 lines. Do NOT drop it all the way to --fs-label 15 (the standard "secondary text" size): this app is
-            for older people, and 15px is the edge of legibility. 17 = the size used by the hint blocks on Send/Receive. */}
-        <span style={{ fontSize: 'var(--fs-item)', color: 'var(--color-muted)', textAlign: 'center', padding: '0 8px' }}>
-          Have the sender scan this code – currently supports only USDC on Arc Testnet
-        </span>
-        {/* Share = BLUE TEXT + icon, NOT a button (user decision 08-13): no border, no background,
-            no shadow. Still tappable - a bare <button> for correct semantics and keyboard access. */}
-        <button onClick={shareQR} style={{
-          display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 2,
-          background: 'none', border: 'none', padding: 6, cursor: 'pointer',
-          fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)',
-          color: 'var(--color-brand)', WebkitTextFillColor: 'var(--color-brand)', WebkitTapHighlightColor: 'transparent',
-        }}>
-          <Icon name="share" size="var(--is-md-lg)" color="var(--color-brand)" />
-          Share
-        </button>
+      {/* Amount - node 1:135/18:302: centre 46.66dvh, 48px SEMIBOLD (not the app's usual hero-number Light -
+          this is a RESULT display like Receipt's amount, not an input, and Figma draws it semibold here
+          same as Receipt's card row), brand blue. */}
+      <span className="num" style={{ position: 'absolute', left: '50%', top: '46.66dvh', transform: 'translate(-50%, -50%)', fontSize: 48, fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: 'var(--color-brand)', whiteSpace: 'nowrap' }}>{amountText}</span>
+
+      {/* Caption - node 1:136/18:303: centre 55.09dvh, 16px semibold, 2 lines - "Have the sender scan this
+          code" black, "Current Available Network: Arc Testnet" in --color-error (the file's OLDER, unedited
+          copies of this frame still draw the pre-09-08 red #EC221F - BRAND-GUIDELINE.md's current #FF383C
+          wins, per the two-sources rule: an unedited leftover inside Figma is not a second source). */}
+      <div style={{ position: 'absolute', left: '50%', top: '55.09dvh', transform: 'translate(-50%, -50%)', width: 324, fontSize: 16, fontWeight: 'var(--fw-semibold)', textAlign: 'center', lineHeight: '24px' }}>
+        <span>Have the sender scan this code</span><br />
+        <span style={{ color: 'var(--color-error)' }}>Current Available Network: Arc Testnet</span>
       </div>
+
+      {/* Share - node has none drawn (Figma's static mock only shows Back/Done) - kept as real, working,
+          previously-verified functionality (user decision 08-13), positioned in the blank space below the
+          caption rather than removed. */}
+      <button onClick={shareQR} style={{
+        position: 'absolute', left: '50%', top: '63dvh', transform: 'translateX(-50%)',
+        display: 'inline-flex', alignItems: 'center', gap: 8,
+        background: 'none', border: 'none', padding: 6, cursor: 'pointer',
+        fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)',
+        color: 'var(--color-brand)', WebkitTextFillColor: 'var(--color-brand)', WebkitTapHighlightColor: 'transparent',
+      }}>
+        <Icon name="share" size="var(--is-md-lg)" color="var(--color-brand)" />
+        Share
+      </button>
 
       {/* Row 10: [Back] white · [Done] blue (user fix 08-13 - it used to be [Share] white ·
           [Back] BLUE, the wrong roles: a blue button in this app is ALWAYS the primary/finishing action, which

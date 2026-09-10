@@ -2,7 +2,7 @@
 
 **Updated:** 2026-09-10 · **Local:** `D:\Files\Claude\ezwallet`
 
-### ⚠️ READ THIS FIRST - REBUILDING SCREENS FROM FIGMA (18 done, 5 to go)
+### ⚠️ READ THIS FIRST - REBUILDING SCREENS FROM FIGMA (23 done, 0 to go)
 
 **Figma file: `GxgsMU6HAYqolckzvPWXp1`.** The user's position, stated directly on 2026-09-10:
 *"toàn bộ thiết kế Figma đang chuẩn BRAND GUIDELINE chỉ có Claude là đang làm sai"* - the Figma file and
@@ -117,17 +117,23 @@ be opened without walking the flow.
 
 #### 4. Where the rebuild stands
 
-**Done (18):** Splash `1:169` · Login `1:180` · Sign in with email `1:193` · Send `1:328` · Receive `1:373`
-· Menu `1:16` · Service hub `1:43` · Exchange `1:63` (= `Swap.jsx`) · LuckyPot `1:158` · Paste address to
-send `1:205` · Confirm transaction `1:215` (= `SendConfirm.jsx`) · Receipt `1:227` (= `SendReceipt.jsx`)
-· Send money `1:88` (= `SendAmount.jsx`) · Language & currency `1:259` (= `Currency.jsx`) · Security
-`15:190` (= `Security.jsx` - the Figma frame is literally misspelled "Secutiry"; HANDOFF's old id `1:275`
-no longer exists in the file - **node ids shift, always re-check with `get_metadata` before trusting an id
-written down earlier**, not just the design content) · Contacts `1:239` · Transaction history `1:248` ·
-About `1:286`.
+**Done (23) - ALL FRAMES BUILT:** Splash `1:169` · Login `1:180` · Sign in with email `1:193` · Send
+`1:328` · Receive `1:373` · Menu `1:16` · Service hub `1:43` · Exchange `1:63` (= `Swap.jsx`) · LuckyPot
+`1:158` · Paste address to send `1:205` · Confirm transaction `1:215` (= `SendConfirm.jsx`) · Receipt
+`1:227` (= `SendReceipt.jsx`) · Send money `1:88` (= `SendAmount.jsx`) · Language & currency `1:259`
+(= `Currency.jsx`) · Security `15:190` (= `Security.jsx` - the Figma frame is literally misspelled
+"Secutiry"; HANDOFF's old id `1:275` no longer exists in the file - **node ids shift, always re-check
+with `get_metadata` before trusting an id written down earlier**, not just the design content) · Contacts
+`1:239` · Transaction history `1:248` · About `1:286` · Create receive QR `18:82` (= `CreateQR.jsx` -
+old id `1:113` no longer exists, another shifted id) · Created receive QR `1:128` (= `ShowQR.jsx`) ·
+Arabica `18:296` (= `ShowQR.jsx`, `fromStorage` - old id `1:139` no longer exists) · Scan QR `1:150`
+(= `QRScanner.jsx`) · QR storage `1:303` (= `SavedQRList.jsx`).
 
-**Left (5):** Create receive QR `1:113` · Created receive QR `1:128` · Arabica `1:139` · Scan QR `1:150` ·
-QR storage `1:303`.
+**Left: none.** Every frame in the file has been rebuilt against a fresh `get_design_context`/`get_metadata`
+pull at least once. That does not mean "finished forever" - the user has repeatedly kept editing frames
+mid-session (Send money's numpad gained digit labels between two fetches minutes apart; Security's whole
+node id changed). Before touching ANY screen again, re-fetch its node fresh - never trust this file's
+notes, or an earlier session's memory, as still current.
 
 **Seventh round-trip (2026-09-10):** Confirm transaction/Receipt's divider line, then three more screens in
 one pass - Send money, Language & currency, Security. Findings:
@@ -233,10 +239,34 @@ Re-verified About/Currency/Security/Contacts/TxHistory (the ones already rebuilt
 with `tools/figma-check.mjs` - all clean, no regression from the wider buttons. `npm run build` clean,
 `npm test` 16/16.
 
-⚠️ The `row-gap` change (§1 above) moved every screen in the app, not only the ones rebuilt so far.
-Security and SendAmount were smoke-checked (nothing overflows the frame, no console errors) but **have
-not been compared against their Figma frames yet** (Security/SendAmount have since been properly rebuilt
-above - this line only still applies to whatever remains in the "Left" list).
+**Eleventh round-trip (2026-09-10, same day): the last 5 frames - Create receive QR, Created receive QR,
+Arabica, Scan QR, QR storage.** Two node ids had shifted again (Create receive QR `1:113`→`18:82`, Arabica
+`1:139`→`18:296` - caught by re-fetching instead of trusting HANDOFF's own earlier notes, per the lesson
+above). Findings:
+- **ShowQR.jsx's title logic was wrong on both branches**: a freshly created QR reads "Create**d** receive
+  QR" (past tense - the code was missing the "d"), and a SAVED QR's title is the raw name with no prefix
+  at all (node `18:296` literally reads "Arabica", not "QR: Arabica" as the code built).
+- **ShowQR's amount is 48px SEMIBOLD**, not the app's usual hero-number Light override - this is a RESULT
+  display (like Receipt's card amount, which is also semibold), not an input, so the "big numbers are
+  Light" rule doesn't apply here either.
+- **The caption's danger colour**: `Created receive QR`/`Arabica` are older, unedited copies still drawing
+  the pre-09-08 red `#EC221F` - `BRAND-GUIDELINE.md`'s current `#FF383C` wins per the two-sources rule (an
+  unedited leftover inside Figma is not a second source of truth).
+- **CreateQR.jsx's "You receive" card sits at rows 3-4 (top 20.38dvh), not rows 2-3** like Send money's
+  "You send" - a real, one-row difference, not assumed from the sibling screen. Its own numpad/button
+  labels ("Back"/"Continue", not "Cancel"/"Create QR") and the fixed 48px-key/8px-gap/27px-offset numpad
+  geometry (same fix as Send money's own round-trip) were re-verified fresh, not copied.
+- **QRScanner/ShowQR's QR-or-camera square is a literal fixed 258x258** (was a responsive 82%/aspectRatio
+  on QRScanner, min(30dvh,78vw) on ShowQR) - the real camera feed and dynamic scan hint are kept (working
+  functionality with no Figma equivalent), only the static caption below was rewritten to match Figma's
+  exact wording/styling (16px semibold, second line in `--color-error`).
+- **SavedQRList's tiles were a `minHeight:190` approximation**, not Figma's fixed 242px, with a stale
+  1.5px grey border + old straight drop-shadow instead of the glow-only-on-clickable rule, and the name
+  label was brand-blue (should be black - blue is the amount's colour only).
+All five verified with `tools/figma-check.mjs` against fresh `get_screenshot` pulls - diff panels clean
+(ShowQR checked against BOTH its Figma frames, `amount`/`fromStorage` params matching each), `npm run
+build` clean, `npm test` 16/16. **Every frame in the file has now been rebuilt at least once** - see the
+"Left: none" note in §4 above for what that does and does not mean going forward.
 
 **LuckyPot note (2026-09-10):** the user redrew this frame's own Figma to bring it closer to the real
 luckypot.cc frontend, then added a "My history" box to row 9 (next to "Draw history") - the handler

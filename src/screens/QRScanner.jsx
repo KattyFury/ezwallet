@@ -109,27 +109,33 @@ export default function QRScanner() {
         Scan QR
       </div>
 
-      {/* The BLOCK (scan square + 2 caption lines) is centred on ROWS 2-7 (user decision 07-29 - moved down to
-          give row 1 to the title; it used to be 1-6). */}
-      <div style={{ gridRow: '2 / 8', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, minWidth: 0 }}>
-        {error ? (
-          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center', padding: '0 20px' }}>{error}</span>
-        ) : (
-          <>
-            <div style={{ position: 'relative', width: '82%', aspectRatio: '1', borderRadius: 16, overflow: 'hidden', background: '#000' }}>
-              <video ref={videoRef} autoPlay playsInline muted
-                style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
-            </div>
-            {/* Main line "medium-large" 21 + secondary line "medium" 19 (user decision 07-17f, with the network limit spelled out) */}
-            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, padding: '0 10px', textAlign: 'center' }}>
-              <span style={{ fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)' }}>{hint}</span>
-              <span style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>
-                {'Real-life QR codes are not supported yet'}<br />{'Scan Arc Testnet QRs only'}
-              </span>
-            </div>
-          </>
-        )}
-      </div>
+      {/* Scan square - node 18:168: a literal fixed 258x258 (was a responsive 82%/aspectRatio), top
+          11.81dvh, centred - the SAME position ShowQR/CreateQR's QR occupies (node 1:238/18:166 etc all
+          draw this exact 258x258 box at the same spot, RE-VERIFIED 2026-09-10, not assumed). */}
+      {error ? (
+        <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '30dvh', fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</span>
+      ) : (
+        <div style={{ position: 'absolute', left: '50%', top: '11.81dvh', transform: 'translateX(-50%)', width: 258, height: 258, borderRadius: 16, overflow: 'hidden', background: '#000' }}>
+          <video ref={videoRef} autoPlay playsInline muted
+            style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        </div>
+      )}
+
+      {/* Dynamic scan hint - real, working functionality (updates as the camera reads frames) that the
+          static Figma mock has no equivalent for, kept as its own line above the caption node draws. */}
+      {!error && (
+        <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '48.7dvh', fontSize: 'var(--fs-md-lg)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', textAlign: 'center' }}>{hint}</span>
+      )}
+
+      {/* Caption - node 1:157: centre 55.09dvh, 16px semibold, 2 lines - matches ShowQR/CreateQR's own
+          caption exactly (same node pattern, same wording "Current Available Network: Arc Testnet" in
+          --color-error, not the mismatched "Scan Arc Testnet QRs only" the old copy used). */}
+      {!error && (
+        <div style={{ position: 'absolute', left: '50%', top: '55.09dvh', transform: 'translate(-50%, -50%)', width: 340, fontSize: 16, fontWeight: 'var(--fw-semibold)', textAlign: 'center', lineHeight: '24px' }}>
+          <span>Real-life QR codes are not supported yet</span><br />
+          <span style={{ color: 'var(--color-error)' }}>Current Available Network: Arc Testnet</span>
+        </div>
+      )}
 
       <input ref={fileRef} type="file" accept="image/*" onChange={handlePickImage} style={{ display: 'none' }} />
 
