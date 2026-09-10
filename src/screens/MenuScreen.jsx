@@ -68,10 +68,14 @@ export default function MenuScreen() {
       </div>
 
       {/* Rows 3-6 (up from 4-7, same reason as the button row above): a small triangle bullet + label,
-          no leading category icon, no trailing chevron, no divider line - matching the current Figma
-          file's menu rows exactly (it draws only a Polygon bullet before each label). */}
+          no leading category icon, no trailing chevron - matching the current Figma file's menu rows
+          exactly (it draws only a Polygon bullet before each label). A thin divider DOES sit under each
+          of these 4 rows (2026-09-10 correction: the earlier build dropped it, trusting the structured
+          node list over the rendered screenshot - the screenshot was right, the line is real, it is just
+          baked into the frame's background image rather than a separate exported node). No divider under
+          Sign out below - it is the last row. */}
       {ITEMS.map(({ id, label, disabled }, i) => (
-        <div key={id} className={`row-${i + 3}`} style={{ display: 'flex', alignItems: 'center' }}>
+        <div key={id} className={`row-${i + 3}`} style={{ display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--color-gray)' }}>
           <button className="menu-item" style={{ width: '100%', opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
             <Bullet color="var(--color-brand)" />
