@@ -1,5 +1,4 @@
 import logoLong from '../../design/logo.svg'
-import Icon from '../components/Icon'
 import { useNav } from '../nav'
 import { useState, useEffect, useRef } from 'react'
 import { getCookie, setCookie, deleteCookie } from 'cookies-next'
@@ -158,38 +157,49 @@ export default function Login() {
   // Google login is REMOVED FROM THE UI (user decision 2026-07-05). The plumbing (handleGoogleLogin, cookies,
   // deviceId, refreshToken, onLoginComplete) is KEPT so it can be switched back on quickly - only the button is hidden.
 
+  // Every position below is lifted straight from the current Figma file (`GxgsMU6HAYqolckzvPWXp1`,
+  // node 1:180 "Login") as an exact px→dvh/% conversion (x/390→%, y/844→dvh), same convention as the
+  // rest of the app. Absolute + translate(-50%) so each element's Figma CENTRE lands exactly on screen,
+  // instead of the old flex-centred block (which no longer matches this redesign's tighter offsets).
   return (
     <div className="screen">
-      {/* Rows 1-5: logo + slogan, centred */}
-      <div className="row-1-5 center col" style={{ gap: '3dvh' }}>
-        {/* 50% OF THE SCREEN WIDTH (user decision 07-17). Do NOT use width:'50%' - that is 50% of the
-            .row-1-5 frame, which is inset 20px each side, giving 175px = 44.9% of the screen. The frame/screen ratio also CHANGES by
-            device, so no fixed % of the frame equals 50% of the screen. Anchor it to the screen directly:
-            .screen = min(100vw, --screen-max) → half the screen = min(50vw, --screen-max / 2). */}
-        <img src={logoLong} alt="ezwallet" style={{ width: 'min(50vw, calc(var(--screen-max) / 2))' }} />
-        {/* EXACTLY as wide as the "Sign in with Email" button (user decision 07-17): the button = width 80% of the
-            gridRow 9/11 frame, and this span = 80% of the .row-1-5 frame - both frames are grid cells in the SAME COLUMN
-            of .screen, so they share a width → 80% matches 80%. No forced <br /> any more: the text wraps by itself
-            to that width (longer/shorter wording and font sizes still break correctly). */}
-        {/* The official slogan, verbatim (CLAUDE.md Brand Voice + FIGMA-SCREENS-SPEC.md §3 Frame 2) -
-            was a different, unofficial line ("Create a wallet with email...") before 2026-09-07. */}
-        <span style={{ width: '80%', fontSize: 'var(--fs-md-lg)', color: 'var(--color-muted)', textAlign: 'center' }}>
-          {'A crypto wallet simple enough for my mom to use'}
-        </span>
-      </div>
+      {/* 50% OF THE SCREEN WIDTH (user decision 07-17, still holds - Figma's 190.91/390 = 48.95%,
+          close enough to keep the existing rule rather than special-case it). */}
+      <img src={logoLong} alt="ezwallet"
+        style={{ position: 'absolute', top: '21.28dvh', left: '50%', transform: 'translateX(-50%)', width: 'min(50vw, calc(var(--screen-max) / 2))' }} />
 
-      {/* The Sign in with Email button - on the row 9-10 boundary (the bottom edge of rows 9/11, like every other screen) */}
-      <div style={{ gridRow: '9 / 11', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '2dvh' }}>
-        {restoring && (
-          <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>Processing...</span>
-        )}
-        <button className="btn btn-primary"
-          style={{ width: '80%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 10 }}
-          onClick={() => navigate('EnterEmail')}>
-          <Icon name="mail" size="var(--is-md-lg)" />
-          <span style={{ whiteSpace: 'nowrap' }}>Sign in with Email</span>
-        </button>
-      </div>
+      {/* Slogan - node 3:10, centre at y=(258+70/2)=293px = 34.72dvh, width 258px = 66.15% of the screen.
+          NEW COPY (2026-09-10, replacing the old "A crypto wallet simple enough for my mom to use" one-liner) -
+          verbatim off the Figma text layer, 2 lines via <br/> exactly as authored there. */}
+      <span style={{
+        position: 'absolute', top: '34.72dvh', left: '50%', transform: 'translate(-50%, -50%)',
+        width: 'min(66.15vw, calc(var(--screen-max) * 0.6615))',
+        fontSize: '18px', fontWeight: 'var(--fw-semibold)', color: 'var(--color-muted-2)',
+        textAlign: 'center', lineHeight: 'normal',
+      }}>
+        Simple enough for anyone.<br />No seed phrase, just a PIN.
+      </span>
+
+      {restoring && (
+        <span style={{ position: 'absolute', top: 'calc(85.66dvh - 40px)', left: '50%', transform: 'translateX(-50%)', fontSize: 'var(--fs-label)', color: 'var(--color-muted)' }}>
+          Processing...
+        </span>
+      )}
+
+      {/* "Sign in with email" pill - node 1:191/1:192, centre at y=(699+48/2)=723px = 85.66dvh,
+          width 231.996px = 59.48% of the screen. No icon (Figma's button is text-only, unlike the old
+          mail-icon version). Glow shadow (0 0 8px rgba(0,0,0,.5), measured off the Figma layer) instead
+          of .btn-primary's straight-down shadow - per-screen shadow update, see FIGMA-SCREENS-SPEC.md §4. */}
+      <button className="btn"
+        style={{
+          position: 'absolute', top: '85.66dvh', left: '50%', transform: 'translate(-50%, -50%)',
+          width: 'min(59.48vw, calc(var(--screen-max) * 0.5948))',
+          background: 'var(--color-brand)', color: 'var(--color-white)',
+          boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: '18px',
+        }}
+        onClick={() => navigate('EnterEmail')}>
+        Sign in with email
+      </button>
     </div>
   )
 }

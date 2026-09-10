@@ -43,14 +43,13 @@
   --color-warning-soft: #FBF4E0; /* pale tint of --color-warning (15% mixed into white) */
   --color-white:        #FFFFFF;
   --color-gray:         #E3E3E3; /* borders / dividers / NavBar's flat inactive background - NOT the recessed-box colour below, kept grey on purpose */
-  /* RECESSED ("lõm xuống") BOX FILL - REVERSED 2026-09-08: back to light grey, NOT light blue any more.
-     The 09-07 decision (light blue #E3F1FF) is superseded one day later: the user is not using blue as a
-     surface fill any more and declared the Figma file `iQxFGA890VhyXkEKipCC9C` the new colour source,
-     which uses this exact grey for every card/input across Send money, Exchange, Service hub, Menu, Home.
-     This is the fill for input fields and sunken content boxes (the address input, the token-list
-     card on HomeSend, the numpad panel...) AND, per the new Figma file, ordinary content cards too. */
-  --color-surface:      #F1F5F9;
-  --color-surface-2:    #F1F5F9;
+  /* RECESSED ("lõm xuống") BOX FILL - UPDATED 2026-09-10 to #E1E7ED, matching BRAND-GUIDELINE.md's
+     "Surface / input / card" value (rewritten 2026-09-09) and confirmed pixel-for-pixel against the
+     "Sign in with email" input box in the current Figma file (`GxgsMU6HAYqolckzvPWXp1`). This is the
+     fill for input fields and sunken content boxes (the address input, the token-list card on HomeSend,
+     the numpad panel...) and ordinary content cards. */
+  --color-surface:      #E1E7ED;
+  --color-surface-2:    #E1E7ED;
 
   /* ── FONT - the system stack (2026-09-07, replacing Barlow). Character-for-character the stack this
      app used before on the since-parked `privy` branch - kept identical on purpose so the two branches

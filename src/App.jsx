@@ -8,6 +8,7 @@ import BugButton from './components/BugButton'
 // browser had to download + parse + run ALL of it before React drew the first character → a MEASURED 2.7s WHITE SCREEN on 4G.
 // The heaviest parts were what the first screen does NOT need: jsQR 130KB (scanner only), qrcode.react (QR screens only).
 // lazy() → one file per screen, downloaded only when the user actually opens it.
+const Splash      = lazy(() => import('./screens/Splash'))
 const Login       = lazy(() => import('./screens/Login'))
 const HomeSend    = lazy(() => import('./screens/HomeSend'))
 const HomeReceive = lazy(() => import('./screens/HomeReceive'))
@@ -33,6 +34,7 @@ const ForgotPin   = lazy(() => import('./screens/ForgotPin'))
 const LuckyPot    = lazy(() => import('./screens/LuckyPot'))
 
 const SCREENS = {
+  Splash,
   Login,
   HomeSend, HomeReceive, Swap, ServiceHub, MenuScreen,
   PasteAddress, SendAmount, SendConfirm, SendReceipt,
@@ -49,6 +51,10 @@ const SCREENS = {
 
 export default function App() {
   const [nav, setNav] = useState(() => {
+    // QA override for screenshotting a specific screen (e.g. ?screen=Splash) without touching the real
+    // boot logic below - only takes effect when the name is a valid registered screen.
+    const forced = new URLSearchParams(window.location.search).get('screen')
+    if (forced && SCREENS[forced]) return { screen: forced, params: {} }
     // Session exists → through the PIN GATE (wallet unlock) before HomeSend, unless this session is already unlocked
     // (ez_pin_ok - set after verifying the PIN, or right after CREATING the PIN on first login). No session → Login.
     const hasSession = localStorage.getItem('ez_user_token')

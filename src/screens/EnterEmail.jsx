@@ -134,23 +134,29 @@ export default function EnterEmail() {
     }
   }
 
+  // Node 1:193 "Sign in with email" (Figma file `GxgsMU6HAYqolckzvPWXp1`) - title 28px (up from the
+  // shared --fs-title 25px, kept as a per-screen override rather than a global token bump since only
+  // this frame was re-verified today), lowercase "email" per the exact Figma text.
   return (
     <div className="screen">
-      <div className="row-1 center screen-title" style={{ fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)' }}>
-        Sign in with Email
+      <div className="row-1 center screen-title" style={{ fontSize: '28px', fontWeight: 'var(--fw-semibold)' }}>
+        Sign in with email
       </div>
 
       <div className="row-3" style={{ position: 'relative' }}>
-        {/* The input is pinned to the middle of row-5 */}
+        {/* The input is pinned to the middle of row-5. Node 1:200: height 40 (was 52), font 19px (was 21),
+            radius 8px per BRAND-GUIDELINE.md "Input: 8px" (the shared .address-input class stays at 10px
+            for other screens - overridden here to match this exact frame). Placeholder copy fixed to match
+            the Figma text exactly ("example@gmail.com", was "email@example.com"). */}
         <input
           type="email"
           className="address-input"
-          placeholder="email@example.com"
+          placeholder="example@gmail.com"
           value={email}
           onChange={e => { setEmail(e.target.value); setError('') }}
           onKeyDown={e => e.key === 'Enter' && handleSubmit()}
           autoFocus
-          style={{ position: 'absolute', top: '50%', left: 0, right: 0, transform: 'translateY(-50%)', height: 52, fontSize: 'var(--fs-md-lg)' }}
+          style={{ position: 'absolute', top: '50%', left: 0, right: 0, transform: 'translateY(-50%)', height: 40, fontSize: 'var(--fs-body)', borderRadius: 8 }}
         />
 
         {/* Suggestions render absolutely below the input - they do not push it */}
@@ -165,7 +171,7 @@ export default function EnterEmail() {
                   border: '1.5px solid var(--color-brand)', borderRadius: 999,
                   background: 'var(--color-white)', cursor: 'pointer',
                   fontSize: 'var(--fs-item)', fontFamily: 'inherit', color: 'var(--color-brand)',
-                  fontWeight: 'var(--fw-medium)', alignSelf: 'flex-start', maxWidth: '100%',
+                  fontWeight: 'var(--fw-normal)', alignSelf: 'flex-start', maxWidth: '100%',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                 {s}
@@ -186,7 +192,7 @@ export default function EnterEmail() {
                   padding: '6px 12px', border: '1.5px solid var(--color-brand)', borderRadius: 999,
                   background: 'var(--color-white)', cursor: 'pointer',
                   fontSize: 'var(--fs-item)', fontFamily: 'inherit', color: 'var(--color-brand)',
-                  fontWeight: 'var(--fw-medium)',
+                  fontWeight: 'var(--fw-normal)',
                 }}>
                 {d}
               </button>
@@ -197,12 +203,26 @@ export default function EnterEmail() {
         {error && <span style={{ position: 'absolute', top: 'calc(50% + 32px)', left: 0, marginTop: 8, fontSize: 'var(--fs-label)', color: 'var(--color-error)' }}>{error}</span>}
       </div>
 
-      <div className="row-10 row10-dual">
-        <button className="btn btn-secondary" onClick={() => navigate('Login')}>Back</button>
-        <button className="btn btn-primary" disabled={!valid || loading} onClick={handleSubmit}>
-          {loading ? 'Processing...' : 'Continue'}
-        </button>
-      </div>
+      {/* Back/Continue - node 1:196-1:199, centre at y=(698.72+24)=722.72px = 85.63dvh (not the shared
+          .row10-dual convention's ~90dvh centre - this frame sits noticeably higher). Both buttons carry
+          the same glow shadow (0 0 8px rgba(0,0,0,.48), measured off the Figma layer); Back has no border
+          here, unlike the shared .btn-secondary. Widths/positions are exact px→% conversions (x/390, w/390). */}
+      <button className="btn" onClick={() => navigate('Login')}
+        style={{
+          position: 'absolute', top: '85.63dvh', left: '6.45%', width: '42.36%', height: 48,
+          transform: 'translateY(-50%)', background: 'var(--color-white)', color: 'var(--color-black)',
+          boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', fontSize: '18px',
+        }}>
+        Back
+      </button>
+      <button className="btn" disabled={!valid || loading} onClick={handleSubmit}
+        style={{
+          position: 'absolute', top: '85.63dvh', left: '51.03%', width: '42.31%', height: 48,
+          transform: 'translateY(-50%)', background: 'var(--color-brand)', color: 'var(--color-white)',
+          boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', fontSize: '18px',
+        }}>
+        {loading ? 'Processing...' : 'Continue'}
+      </button>
     </div>
   )
 }
