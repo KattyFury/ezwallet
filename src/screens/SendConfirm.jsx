@@ -112,11 +112,14 @@ export default function SendConfirm() {
         Confirm transaction
       </div>
 
-      {/* Card - node 1:223: rows 3-6 exactly (top 20.38dvh, height 38.86dvh = 4×70+3×16=328px), radius 16
-          (fixed on the shared .confirm-box class). Figma draws this card blank (no content detail), so
-          the rows inside keep their existing sizes/logic - only the OUTER position/size changed. */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '20.38dvh', height: '38.86dvh' }}>
-        <div className="confirm-box" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+      {/* Card - node 1:223, RE-VERIFIED 2026-09-10 (the user redrew this frame): rows 3-5 exactly
+          (centre 34.72dvh, height 242px = 3×70+2×16, was 328px/4 rows - the frame shrank one row when
+          the warning box below became a real, separately-positioned element instead of loose flow).
+          Anchored by its CENTRE, not stretched to fill - `justify-content:center` inside lets the
+          (rare) 4-row case grow past 242px slightly rather than clipping, while the common 3-row case
+          matches the Figma box exactly. */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '34.72dvh', transform: 'translateY(-50%)' }}>
+        <div className="confirm-box" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
           <div className="confirm-row">
             <span className="confirm-label">Send to</span>
             <span className="confirm-value">{name || shortenAddr(address)}</span>
@@ -124,12 +127,12 @@ export default function SendConfirm() {
           {name && (
             <div className="confirm-row">
               <span className="confirm-label">Address</span>
-              <span className="confirm-value" style={{ fontSize: 'var(--fs-body)' }}>{shortenAddr(address)}</span>
+              <span className="confirm-value">{shortenAddr(address)}</span>
             </div>
           )}
           <div className="confirm-row">
             <span className="confirm-label">Amount</span>
-            <span className="confirm-value num" style={{ fontWeight: 'var(--fw-bold)', color: 'var(--color-brand)' }}>
+            <span className="confirm-value num" style={{ fontSize: 20, fontWeight: 'var(--fw-bold)', color: 'var(--color-brand)' }}>
               {mainEl}
             </span>
           </div>
@@ -138,7 +141,7 @@ export default function SendConfirm() {
           {currency === 'VND' && (
             <div className="confirm-row">
               <span className="confirm-label">Actually sent</span>
-              <span className="confirm-value num" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>
+              <span className="confirm-value num">
                 {sendAmountStr} USDC
               </span>
             </div>
@@ -151,23 +154,29 @@ export default function SendConfirm() {
           )}
           <div className="confirm-row">
             <span className="confirm-label">Network fee</span>
-            <span className="confirm-value num" style={{ fontSize: 'var(--fs-body)', color: 'var(--color-muted)' }}>
+            <span className="confirm-value num">
               {feeEl()}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Figma draws the card blank, with nothing below it - the warning + status text keep flowing
-          right under the card's bottom edge (59.24dvh) rather than a Figma-specified position. */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '61.14dvh', display: 'flex', flexDirection: 'column', gap: 10 }}>
-        <div className="warning-badge" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-          <Icon name="warning" size="var(--is-label)" color="var(--color-warning)" />{'This transaction cannot be undone once confirmed'}
-        </div>
-
-        {loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center' }}>Opening PIN confirmation...</span>}
-        {error && !loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</span>}
+      {/* Warning box - node 15:229, RE-VERIFIED 2026-09-10: a REAL positioned box (was loose-flowing
+          text before this frame was redrawn) - row 6 exactly (centre 55.09dvh, 340×70, radius 16 on the
+          shared .warning-badge class), bg rgba(232,185,49,.25) not --color-warning-soft (visibly
+          different, see the CSS comment). Icon+text sized to sit comfortably in the 70px height. */}
+      <div className="warning-badge" style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '55.09dvh', height: '8.29dvh', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, textAlign: 'center' }}>
+        <Icon name="warning" size="var(--is-label)" color="var(--color-warning)" style={{ flexShrink: 0 }} />{'This transaction cannot be undone once confirmed'}
       </div>
+
+      {/* Status text - Figma has nothing here (it only draws the idle state); flows right under the
+          warning box's bottom edge (59.24dvh). */}
+      {(loading || (error && !loading)) && (
+        <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '61.14dvh' }}>
+          {loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-muted)', textAlign: 'center', display: 'block' }}>Opening PIN confirmation...</span>}
+          {error && !loading && <span style={{ fontSize: 'var(--fs-label)', color: 'var(--color-error)', textAlign: 'center', display: 'block' }}>{error}</span>}
+        </div>
+      )}
 
       {/* Back/Confirm PIN - node 1:218-1:221: ~165px each, i.e. (340 − 8) / 2 - flex:1 with an 8px gap.
           Centre 85.63dvh, glow shadow. "Back" (was "Edit") per the exact Figma label - functionally

@@ -331,7 +331,7 @@ export default function LuckyPot() {
 
       {/* Row 3-5 - Epoch box: radius 16 (was 10), height 28.67dvh/242px (was 28.82/243.2) - the 4
           sub-rows still split 1:1:2 (60.5px each), that proportion was already correct. */}
-      <div style={{ gridRow: '3 / 6', alignSelf: 'center', height: '28.67dvh', background: 'var(--color-surface)', borderRadius: 16, padding: 10, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ gridRow: '3 / 6', alignSelf: 'center', height: '28.67dvh', background: 'var(--color-surface)', borderRadius: 16, padding: 8, display: 'flex', flexDirection: 'column' }}>
         <StatRow divider label={info ? `EPOCH #${info.epochId}` : '…'} style={{ fontSize: 18 }}>
           <TokenDropdown />
         </StatRow>
@@ -360,7 +360,7 @@ export default function LuckyPot() {
       </div>
 
       {/* Row 6-8 - Tickets/Deposit box: radius 16 (was 10), height 28.67dvh (was 28.82). */}
-      <div style={{ gridRow: '6 / 9', alignSelf: 'center', height: '28.67dvh', background: 'var(--color-surface)', borderRadius: 16, padding: 10, display: 'flex', flexDirection: 'column' }}>
+      <div style={{ gridRow: '6 / 9', alignSelf: 'center', height: '28.67dvh', background: 'var(--color-surface)', borderRadius: 16, padding: 8, display: 'flex', flexDirection: 'column' }}>
         <StatRow divider label="Total tickets / Pool">
           {info ? <SplitAmount big={info.eligiblePoolTotal} small={info.poolTotal} /> : <span className="num" style={{ fontFamily: FONT_BODY }}>…</span>}
         </StatRow>
@@ -377,16 +377,15 @@ export default function LuckyPot() {
           <span style={{ fontFamily: FONT_BODY, fontSize: 16, fontWeight: 'var(--fw-normal)', color: 'var(--color-muted-2)' }}>
             Your balance: <span style={{ color: 'var(--color-content)' }}>{walletUsdc != null ? `${walletUsdc.toFixed(2)} USDC` : '…'}</span>
           </span>
-          {/* Deposit 92 / Withdraw 91 / Result 125 (flex-grow proportional to those px widths,
-              node 14:163-14:170) - was 3 EQUAL flex:1 buttons. Height 34px (was 6.67dvh ≈ 56px - far
-              taller than the Figma pill), 16px semibold (was --fs-label), glow shadow (was the .btn
-              class's old straight-down shadow, not yet updated app-wide for this screen). ⚠️ "Result",
-              NOT "Latest result" (user decision 2026-09-10, overriding the Figma text on purpose - do
-              not "fix" this back to match the design). */}
+          {/* RE-VERIFIED 2026-09-10 (the user redrew this row too): Deposit/Withdraw/Result are now
+              EQUAL width, 102.66px each (nodes 14:163/15:223/15:226) - the earlier 92:91:125 proportion
+              was from a stale pull. flex:1 each with an 8px gap reproduces that exactly. Height 34px,
+              16px semibold, glow shadow. ⚠️ "Result", NOT "Latest result" (user decision 2026-09-10,
+              overriding the Figma text on purpose - do not "fix" this back to match the design). */}
           <div style={{ display: 'flex', gap: 8 }}>
-            <button className="btn btn-primary" style={{ flex: '92 1 0%', height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} onClick={() => openPopup('deposit')}>Deposit</button>
-            <button className="btn btn-secondary" style={{ flex: '91 1 0%', height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} onClick={() => openPopup('withdraw')}>Withdraw</button>
-            <button className="btn" style={{ flex: '125 1 0%', height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, background: 'var(--color-warning)', color: 'var(--color-content)', border: 'none', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }}
+            <button className="btn btn-primary" style={{ flex: 1, height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} onClick={() => openPopup('deposit')}>Deposit</button>
+            <button className="btn btn-secondary" style={{ flex: 1, height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }} onClick={() => openPopup('withdraw')}>Withdraw</button>
+            <button className="btn" style={{ flex: 1, height: 34, minHeight: 0, fontFamily: FONT_BODY, fontSize: 16, background: 'var(--color-warning)', color: 'var(--color-content)', border: 'none', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)' }}
               disabled={!resultWindowOpen} onClick={() => openPopup('result')}>Result</button>
           </div>
         </div>
