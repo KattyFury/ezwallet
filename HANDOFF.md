@@ -796,7 +796,7 @@ decision one day after it shipped**. What actually changed 09-08:
 |---|---|---|
 | `design/pfp.png` | ✅ Added (dropped via Desktop, same day) | done |
 | README screenshots | ✅ Rebuilt (4-image grid, Playwright/mock, see the Brand assets section) | done |
-| `public/og.png` | ❌ Still the OLD UI/gradient (built from the now-deleted `docs/app-home.jpg`) | Needs the user's call on gradient-vs-solid before rebuilding - see the note in Brand assets |
+| `public/og.png` | ✅ Rebuilt - solid `#0B53BF`, no gradient, new screenshot | done |
 | Circle PIN: no auto-clear on wrong PIN · mobile keyboard needs a tap | **Cannot be fixed here** - see the ⛔ CIRCLE'S PIN SCREEN note in section 9 for the full API evidence | Only Circle can fix it; report alongside the `common.showPin` issue already raised |
 | `.scroll-thin` inside a grey box | Fixed on `HomeSend`; **`Contacts.jsx` and `TxHistory.jsx` still have it** | Smaller effect there (their boxes' padding is 16px/14px so the -8px push shrinks the right inset rather than zeroing it). Swap to `.scroll-hidden` when touching those screens |
 | Everything below in this section | Unchanged from the previous session | - |
@@ -1025,11 +1025,13 @@ quan và ngắn gọn") - captured fresh via Playwright in mock mode (`?screen=<
 pre-redesign set. Deliberately CONCISE per that instruction: ONE 4-image grid (`docs/app-send.png` ·
 `app-receive.png` · `app-swap.png` · `app-luckypot.png`), not the old 2-section layout (4 GIFs + 6 stills).
 No GIFs this round - stills only, faster to keep in sync with a UI that is still actively changing.
-⚠️ `public/og.png` is UNCHANGED and still wrong - it was built (07-29) from `docs/app-home.jpg`, which
-was deleted with the rest of the pre-redesign screenshots, so the card still shows the OLD UI/gradient.
-Not rebuilt this round (a design call - gradient background vs. the current solid-colour-only brand -
-that needs the user's direction, not an assumption). Rebuild it from one of the new screenshots + the new
-solid-blue brand treatment when asked, then bump `og.png?v=2` → `?v=3`.
+**`public/og.png` REBUILT 2026-09-11 (user confirmed: "nền đặc" = solid background, not the old gradient).**
+New template (rendered with Playwright from an inline HTML string, no more `C:\tmp\ezw-verify\...` - that
+path is gone): solid `#0B53BF` fill (no gradient - matches the redesign's "no more gradients" rule),
+`design/logo.svg` forced white via CSS `filter: brightness(0) invert(1)` (no separate white-logo file
+exists, so every future og-card rebuild should do the same rather than hand-drawing a white variant), the
+same tagline/pills/URL copy as before, and a REAL screenshot (`docs/app-send.png`, the new one) in a
+rounded phone frame on the right. Bumped `og.png?v=2` → `?v=3`.
 
 > 🎨 **Design: the user does the UI themselves, and draws the icons themselves (viewBox 100, stroke 10).** Do not redesign on your own; wait for the user's direction and then port it. The aesthetic reference: Coinbase Wallet - big light numbers, pale tiles, plenty of breathing room.
 
