@@ -429,14 +429,11 @@ no longer exists), and bumped the cache-busting query from `?v=2` to `?v=3` in `
 touch icons are cached hard - HANDOFF's own 09-07 note already flagged this same cache risk for the prior
 icon swap). `npm run build` clean.
 
-⚠️ **Reported same day, NOT yet fixed: the Splash screen wordmark (`design/logo.svg`, also used by
-Login/PinGate/ForgotPin/SendReceipt) still reads as the OLD logo to the user - Barlow-styled letterforms,
-not Inter.** Git history shows this file's last edit was the 09-08 "Redesign UI from BRAND-GUIDELINE.md"
-commit, so the file the app actually serves IS the one from that commit - this isn't a stale-cache/stale-
-deploy issue, the vectorized "wallet" text itself was apparently never re-drawn in Inter during that pass
-(only recoloured/rescaled). A text logotype is flattened to path outlines, not live text - it can't be
-"switched to Inter" in CSS the way body text can. Per the same rule as above, this needs a fresh
-`design/logo.svg` from the user (same as they just did for the icon), not an AI redraw of their wordmark.
+⚠️ **CORRECTED same day: `design/logo.svg` IS already the Inter wordmark - the user confirmed this
+directly ("LOGO.SVG CHÍNH LÀ BẢN INTER") after an earlier note here wrongly flagged it as still
+Barlow.** That earlier note was a misread of vectorized path outlines by eye (a text logotype is
+flattened to paths, not live text, so it can't be checked by inspecting a `font-family` - the guess was
+wrong). No file replacement needed here; `design/logo.svg` stays as-is.
 
 **LuckyPot note (2026-09-10):** the user redrew this frame's own Figma to bring it closer to the real
 luckypot.cc frontend, then added a "My history" box to row 9 (next to "Draw history") - the handler
