@@ -15,41 +15,7 @@
 
 ## Demo
 
-<div align="center">
-
-<table>
-<tr>
-<td align="center" width="50%"><img src="docs/flow-login.gif" width="240" alt="Sign in"><br><sub><b>1 · Sign in with email + PIN</b></sub></td>
-<td align="center" width="50%"><img src="docs/flow-send.gif" width="240" alt="Send"><br><sub><b>2 · Send, with a note</b></sub></td>
-</tr>
-<tr>
-<td align="center"><img src="docs/flow-receive.gif" width="240" alt="Receive"><br><sub><b>3 · Receive by QR</b></sub></td>
-<td align="center"><img src="docs/flow-swap.gif" width="240" alt="Swap"><br><sub><b>4 · Swap by % slider</b></sub></td>
-</tr>
-</table>
-
-</div>
-
----
-
-### Screens
-
-<div align="center">
-
-<table>
-<tr>
-<td align="center" width="33%"><img src="docs/app-home.jpg" width="230" alt="Home"><br><sub><b>Balance & tokens</b></sub></td>
-<td align="center" width="33%"><img src="docs/app-swap.jpg" width="230" alt="Swap"><br><sub><b>Swap by % slider</b></sub></td>
-<td align="center" width="33%"><img src="docs/app-receive.jpg" width="230" alt="Receive"><br><sub><b>Receive by QR</b></sub></td>
-</tr>
-<tr>
-<td align="center"><img src="docs/app-contacts.jpg" width="230" alt="Contacts"><br><sub><b>Contacts</b></sub></td>
-<td align="center"><img src="docs/app-qr-storage.jpg" width="230" alt="QR storage"><br><sub><b>Saved QR codes</b></sub></td>
-<td align="center"><img src="docs/app-create-qr.jpg" width="230" alt="Create QR"><br><sub><b>Create a receive QR</b></sub></td>
-</tr>
-</table>
-
-</div>
+_(screenshots/GIFs pending re-capture against the current UI - the Sep 2026 redesign replaced the old ones)_
 
 ---
 

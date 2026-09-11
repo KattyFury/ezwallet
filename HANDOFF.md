@@ -672,14 +672,20 @@ testable in mock mode or on `npm run dev`):
   - **User + Claude** → refining the UX/UI.
 - **Still pending, needs a human:** the message to Circle support was sent 08-25 (swap recovered on its own before a reply came back, so no answer is being chased any more) · **nothing from session 08-25 has been touched on a real device yet** - the deploy checklist for it is at the end of section 9.
 
-> ⚠️ **`DECK-DESIGN-SPEC.md` in the repo IS OUT OF DATE** (user confirmed 08-04) - the real deck now lives in the **YouTube video + the Canva deck** linked above, not in that .md file. **Do not use it as a source when writing introductory content, and do not spend time updating it** until the user decides whether to keep it. It stays in the repo (not deleted) because it still holds a few Brand Voice decisions. `PITCH.md` was rewritten in English on 08-25 and its facts were refreshed at the same time.
+> ⚠️ **`DECK-DESIGN-SPEC.md` and `PITCH.md` were DELETED 2026-09-11** (user instruction, repo cleanup) - both
+> described the pre-redesign brand (Barlow, `#F2F2F7`/`#E2EAF7`, flat drop-shadows, a stale "20 screens"
+> count) and no longer matched `BRAND-GUIDELINE.md`/the live app after the Sep 2026 rebuild. The stale
+> `docs/*.jpg`/`docs/*.gif` screenshots those two files embedded were deleted too - the user wants new ones
+> re-captured later, once today's remaining UI bugs are fixed (do not re-take screenshots before that).
+> If a pitch deck or messaging kit is needed again, write it fresh from the current `BRAND-GUIDELINE.md` +
+> `README.md`, not by resurrecting these.
 
 > **A stablecoin wallet for everyday people and older users.** Simple UX, mobile-first. **The user-satisfaction milestone was reached (07-18): the whole flow - login, PIN, sending, swapping real money - was tested by the user on a deploy and ran smoothly.**
 > AT THE START OF EVERY SESSION read BOTH `HANDOFF.md` (this file) and `CLAUDE.md` (how to work with the user).
 > The principle: **follow Circle/Arc properly, read the docs and verify with real API/eth_call responses before building, NEVER guess.**
 > Detailed per-session history: `git log` (the commit messages carry the detail) - this file holds only the LATEST STATE + the rules + the lessons.
 
-**EXTERNAL documents (do not put marketing content in this file):** `README.md` = the technical introduction for GitHub · **`PITCH.md` (rewritten in English 08-25) = the project spec + MESSAGING KIT** (the one-liner, a "say only this" fact sheet, 5 differentiators, 7 guardrails, ready-to-post copy for X/LinkedIn/Discord, the hard-question FAQ, a release schedule) · `DECK-DESIGN-SPEC.md` = the design system for the 9-page deck. ⚠️ Change a feature or the product's status → **update sections 2 and 6 of `PITCH.md`** or the copy that goes out will be untrue.
+**EXTERNAL documents (do not put marketing content in this file):** `README.md` = the technical introduction for GitHub. `PITCH.md` (messaging kit) and `DECK-DESIGN-SPEC.md` (deck design system) were DELETED 2026-09-11 - see the note above.
 
 AI resources: Circle [skills](https://developers.circle.com/ai/skills) · [mcp](https://developers.circle.com/ai/mcp) - Arc [skills](https://docs.arc.io/ai/skills) · [mcp](https://docs.arc.io/ai/mcp). Already installed locally: the Circle Skill (`circle:*`), Circle MCP (`mcp__circle__*`), Arc MCP (`mcp__arc-docs__*`).
 
