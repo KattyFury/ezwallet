@@ -238,6 +238,24 @@ body {
    fix titles with ad-hoc absolute positioning per screen - route them through this class instead. */
 .screen-title { font-family: var(--font-display); color: var(--color-black); font-size: var(--fs-h1); align-items: flex-end; }   /* screen titles = system font, BLACK, Header 1 */
 
+/* THE LOGO RULE (user, 2026-09-11, applies to EVERY logo-only screen app-wide): the wordmark sits at
+   top 179.58px of 844 = 21.28dvh - inside ROW 3 (172-242px) - horizontally centred, at 50% of the screen
+   width. NEVER vertically centred on the screen. Both Figma frames that draw it agree exactly: Splash
+   (node 1:169, group 1:172 at y=179.5827) and Login (node 1:180, group 3:11 at the identical y).
+   ⚠️ WHY THIS CLASS EXISTS: Splash/Login used these numbers inline while PinGate/ForgotPin invented their
+   OWN lockup (`row-1-9 center col` + width 56% = dead centre of the screen, 379/844 = 45%, and 6% too
+   wide). Since `ez_pin_ok` lives in sessionStorage, a returning user with a saved wallet boots STRAIGHT
+   into PinGate (App.jsx) and never sees Splash at all - so that centred, oversized copy was the logo
+   screen users actually got on every visit, on both iPhone and desktop, while the correct one was only
+   reachable on a fresh login. Route every logo through this class; do not re-add a per-screen variant. */
+.logo-lockup {
+  position: absolute;
+  top: 21.28dvh;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(50vw, calc(var(--screen-max) / 2));
+}
+
 /* Every number & currency symbol ($/USDC/EURC/cirBTC) → --font-condensed, regular */
 .num { font-family: var(--font-condensed); }
 

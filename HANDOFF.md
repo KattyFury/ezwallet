@@ -462,6 +462,61 @@ wrong). No file replacement needed here; `design/logo.svg` stays as-is.
    or a genuinely empty `result: []`) arrives.
 `npm run build` clean, `npm test` 16/16.
 
+**⚠️⚠️ THE LOGO SCREEN BUG - and a process failure worth more than the bug itself (2026-09-11).**
+The user reported, repeatedly and on BOTH iPhone and desktop, that the logo screen shown on entering the
+site draws the logo DEAD CENTRE instead of row 3. I measured `Splash.jsx`, found it pixel-perfect against
+Figma node 1:169 (`figma-check` diff clean, live bundle byte-checked, a real browser at 1440x900 reading
+191.5/900 = exactly 21.28%) and told the user their screenshot must be wrong. **I was measuring a screen
+the user almost never sees.**
+- `ez_pin_ok` lives in **sessionStorage**, so it is gone every time the browser is reopened. `App.jsx`
+  (lines ~66-69) then boots a returning user with a saved wallet **straight into `PinGate`** - `Splash`
+  is never rendered on that path at all. Splash is only reachable on a fresh login.
+- `PinGate.jsx`'s busy state (the default on mount, shown while Circle's PIN iframe loads) drew its own
+  lockup: `row-1-9 center col` + `width:56%` → rows 1-9 = y 0-758, centred = **379/844 = 44.9%**, and 6%
+  too wide. That is exactly the "logo in the centre" in the user's screenshots. `ForgotPin.jsx` had an
+  identical copy. So 2 of the 4 screens that draw the wordmark were correct (Splash, Login) and the 2 that
+  users actually hit every visit were not.
+- **The lesson (bigger than the fix): when a user's direct observation conflicts with my measurement, the
+  default assumption must be that I am measuring the wrong thing - not that the user is wrong.** Verifying
+  one component in isolation proves nothing about what the app actually renders; check the ROUTING
+  (`App.jsx`) first to find out which component the user is really looking at.
+- **THE FIX - one shared definition, per the same rule `.screen-title` already follows:** the lockup now
+  lives ONLY in `.logo-lockup` (`index.css`, see THE LOGO RULE written there with the measured numbers).
+  Splash/Login/PinGate(both states)/ForgotPin(both states) all render `<img className="logo-lockup">` with
+  NO inline positioning. Do not re-add a per-screen variant. Verified: all four measure top 179.59px /
+  21.28dvh / width 195px at 390x844.
+- PinGate/ForgotPin's error text moved out of the old flex block to its own absolute line at 34.72dvh -
+  the same slot Login's slogan occupies, i.e. directly under the lockup.
+⚠️ NOTE FOR TESTING: `?screen=PinGate` in mock mode does NOT show this screen - mock auto-unlocks, so
+`unlock()` resolves instantly and navigates to HomeSend. Verify the class through Splash/Login (same
+class) or on a real deploy.
+
+**Faucet hint, corrected twice in one session (2026-09-11) - final state:** shows when USDC is **strictly
+under 20** (at exactly 20.00 it is already gone - the user caught a `<= 20` version still showing on a
+$20.00 balance), and is drawn as a WHITE card with **no icon** and **semibold** `--color-warning` text,
+padding 6px/10px + radius 16, i.e. structurally identical to the hint card above it. Two rules came out
+of this, both app-wide: **(1) COLOURED TEXT IS ALWAYS SEMIBOLD** - at 13px on white, neither the red
+network line nor yellow warning text carries enough contrast at regular weight (the user: "đỏ và vàng
+phải bold cho dễ đọc"); **(2) blocks in the notification area are TEXT-ONLY** - the warning's icon made it
+the odd one out next to the icon-less hint card.
+
+**⛔ CIRCLE'S PIN SCREEN - 2 real complaints that CANNOT be fixed from this codebase (checked 2026-09-11,
+do not re-investigate without new information):** (a) entering a wrong PIN does not auto-clear the dots,
+(b) on mobile the keyboard does not open until the field is tapped. Both are behaviours INSIDE Circle's
+PIN UI, which is an iframe served from **`https://pw-auth.circle.com`** - a DIFFERENT ORIGIN from
+ezwallet.cash, so the browser blocks all DOM access: we cannot read or clear its inputs, and we cannot
+call `.focus()` on them (which is what would raise the mobile keyboard; on iOS even a same-origin
+`.focus()` needs a real user gesture, so this would likely fail anyway). The SDK's iframe field is
+`private readonly` and its **entire public API is 14 methods** - `setAppSettings`, `setAuthentication`,
+`updateConfigs`, `getDeviceId`, `performLogin`, `verifyOtp`, `execute`, `setCustomSecurityQuestions`,
+`setLocalizations`, `setResources`, `setThemeColor`, `setCustomLinks`, `setOnForgotPin`,
+`setOnResendOtpEmail` (read from `node_modules/@circle-fin/w3s-pw-web-sdk/dist/src/index.d.ts`, v1.1.11).
+The PIN screen is reachable through **text only** (`Localizations.enterPincode.headline/headline2/subhead/
+forgotPin`, `Common.retry`) and **colours only** (`ThemeColor.pinDotBase/pinDotActivated/pinDotBaseBorder`,
+`inputBorderFocused*`). There is NO hook for clearing the dots, focusing the input, or any other
+behaviour. → The only route to a fix is **Circle themselves**; add these two to the same report channel
+that `common.showPin` was already raised on (see the Current limitations list in README).
+
 **LuckyPot note (2026-09-10):** the user redrew this frame's own Figma to bring it closer to the real
 luckypot.cc frontend, then added a "My history" box to row 9 (next to "Draw history") - the handler
 (`openMyHistory`) and its popup already existed in the code, only wired into the hamburger menu; row 9

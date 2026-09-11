@@ -163,10 +163,10 @@ export default function Login() {
   // instead of the old flex-centred block (which no longer matches this redesign's tighter offsets).
   return (
     <div className="screen">
-      {/* 50% OF THE SCREEN WIDTH (user decision 07-17, still holds - Figma's 190.91/390 = 48.95%,
-          close enough to keep the existing rule rather than special-case it). */}
-      <img src={logoLong} alt="ezwallet"
-        style={{ position: 'absolute', top: '21.28dvh', left: '50%', transform: 'translateX(-50%)', width: 'min(50vw, calc(var(--screen-max) / 2))' }} />
+      {/* Shared `.logo-lockup` (node 3:11 sits at the same y as Splash's own logo) - see THE LOGO RULE
+          in index.css. 50% of the screen width (user decision 07-17, still holds - Figma's 190.91/390 =
+          48.95%, close enough to keep the existing rule rather than special-case it). */}
+      <img className="logo-lockup" src={logoLong} alt="ezwallet" />
 
       {/* Slogan - node 3:10, centre at y=(258+70/2)=293px = 34.72dvh, width 258px = 66.15% of the screen.
           NEW COPY (2026-09-10, replacing the old "A crypto wallet simple enough for my mom to use" one-liner) -

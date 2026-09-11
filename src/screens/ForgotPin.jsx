@@ -52,20 +52,22 @@ export default function ForgotPin() {
 
   useEffect(() => { if (!tried.current) { tried.current = true; restore() } }, [])
 
+  // Shared `.logo-lockup` on both states - see THE LOGO RULE in index.css (this screen used to draw its
+  // own centred, 56%-wide copy, the same drift PinGate had).
   if (busy) {
     return (
       <div className="screen">
-        <div className="row-1-9 center col"><img src={logoLong} alt="EZwallet" style={{ width: '56%' }} /></div>
+        <img className="logo-lockup" src={logoLong} alt="EZwallet" />
       </div>
     )
   }
 
   return (
     <div className="screen">
-      <div className="row-1-5 center col" style={{ gap: 16, textAlign: 'center', padding: '0 24px' }}>
-        <img src={logoLong} alt="EZwallet" style={{ width: '56%' }} />
-        {error && <div style={{ fontSize: 'var(--fs-content-1)', color: 'var(--color-error)', maxWidth: 300 }}>{error}</div>}
-      </div>
+      <img className="logo-lockup" src={logoLong} alt="EZwallet" />
+      {error && (
+        <div style={{ position: 'absolute', top: '34.72dvh', left: '6.41%', right: '6.41%', fontSize: 'var(--fs-content-1)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</div>
+      )}
       <div className="row-10 row10-dual">
         <button className="btn btn-secondary" onClick={() => navigate('PinGate', { next })}>Cancel</button>
         <button className="btn btn-primary" style={{ flex: 1 }} onClick={restore}>Try again</button>

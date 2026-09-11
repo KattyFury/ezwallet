@@ -215,25 +215,24 @@ export default function HomeSend() {
             { label: 'Contacts', desc: 'Save people you send to often' },
           ]}
           warning={
-            // Threshold raised 1 → 20 (user decision 2026-09-11): "under 20 USDC" now covers the old
-            // "just-created empty wallet" case too, not a separate rule - it disappears again only once
-            // the balance is OVER 20. Same non-dismissible standing-hint treatment as the network/QR
-            // Storage/Create QR/Share hints above (no X button - see NotifArea.jsx's warning branch).
-            !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 20 ? (
+            // Threshold 1 → UNDER 20 (user decision 2026-09-11): "under 20 USDC" now covers the old
+            // "just-created empty wallet" case too, so it is ONE rule, not two. STRICTLY less than 20 -
+            // at exactly 20.00 the hint is already gone (user correction: a $20.00 balance still showing
+            // it was a bug). Same non-dismissible standing-hint treatment as the network/QR Storage/
+            // Create QR/Share hints above (no X button - see NotifArea.jsx's warning branch).
+            !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) < 20 ? (
+              // TEXT ONLY, NO ICON, SEMIBOLD (user correction 2026-09-11): a white card with plain-weight
+              // yellow text was hard to read, and the icon made this block the odd one out next to the
+              // hint card above, which is text-only. Same treatment as HintBlock's red network line -
+              // COLOURED TEXT IS ALWAYS SEMIBOLD (red and yellow both), never regular weight, because at
+              // 13px on white neither colour carries enough contrast un-bolded.
               <div onClick={() => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } localStorage.setItem('ez_faucet_pending', String(Date.now())); window.open('https://faucet.circle.com/', '_blank') }}
-                style={{ width: '100%', background: 'var(--color-white)', borderRadius: 16, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                {/* White card + warning-coloured icon/text (user correction 2026-09-11: this was a pale-yellow
-                    card with BLACK body text - wrong, it must match the same "white card, one solid type
-                    colour for icon+text together" rule the real notification rows already use (STYLE.received/
-                    sent/error in NotifArea.jsx), not HintBlock's black-body/coloured-keyword pattern. */}
-                <Icon name="warning" size="var(--is-content-2)" color="var(--color-warning)" style={{ flexShrink: 0 }} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-                  <span style={{ fontSize: NOTIF_FS, color: 'var(--color-warning)' }}>Out of USDC for transaction fees</span>
-                  <span style={{ fontSize: NOTIF_FS, color: 'var(--color-warning)' }}>
-                    {'Tap to get testnet USDC from'}{' '}
-                    <span style={{ fontWeight: 'var(--fw-semibold)', textDecoration: 'underline' }}>Faucet</span>
-                  </span>
-                </div>
+                style={{ width: '100%', background: 'var(--color-white)', borderRadius: 16, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2, cursor: 'pointer', fontSize: NOTIF_FS, color: 'var(--color-warning)', fontWeight: 'var(--fw-semibold)' }}>
+                <span style={{ minWidth: 0, lineHeight: 1.35 }}>Out of USDC for transaction fees</span>
+                <span style={{ minWidth: 0, lineHeight: 1.35 }}>
+                  {'Tap to get testnet USDC from'}{' '}
+                  <span style={{ textDecoration: 'underline' }}>Faucet</span>
+                </span>
               </div>
             ) : null
           }
