@@ -414,6 +414,30 @@ to it. `npm run build` clean, `npm test` 16/16.
    position/size match exactly (only difference is the app's real icons vs. Figma's black placeholder
    squares, expected). `npm run build` clean, `npm test` 26/26.
 
+**Same day, a 5th bug: the Apple home-screen icon "didn't feel like the new logo (solid colour)".**
+Diagnosed by rendering `design/new-brand/icon.svg` (the 2026-09-07 source for `public/icon.svg`/
+`icon.png`/`fav_icon.png`) at its native size: the artwork was already the correct solid-blue "EZ" mark
+(no gradient), but inset ~24% from the canvas edge on all sides - fine as a favicon on a white browser
+tab, but on an iOS home-screen tile (which iOS masks/rounds at the OUTER square, not around the artwork)
+it read as a mostly-white tile with a small logo floating in the middle, not a solid brand tile. Per the
+standing rule that these brand files are the user's own, not to be redrawn by AI, this was reported back
+rather than cropped/rescaled unilaterally - the user supplied a corrected full-bleed version
+(`apple.svg`, same artwork, ~5% inset instead of ~24%). Replaced `public/icon.svg` + `design/new-brand/
+icon.svg` with it, re-rasterised `icon.png`/`fav_icon.png` at 512×512 from the new SVG (Playwright
+screenshot render, same approach as `tools/figma-check.mjs` - the old `C:\tmp\ezw-verify\render-icons.mjs`
+no longer exists), and bumped the cache-busting query from `?v=2` to `?v=3` in `index.html` (favicons/
+touch icons are cached hard - HANDOFF's own 09-07 note already flagged this same cache risk for the prior
+icon swap). `npm run build` clean.
+
+⚠️ **Reported same day, NOT yet fixed: the Splash screen wordmark (`design/logo.svg`, also used by
+Login/PinGate/ForgotPin/SendReceipt) still reads as the OLD logo to the user - Barlow-styled letterforms,
+not Inter.** Git history shows this file's last edit was the 09-08 "Redesign UI from BRAND-GUIDELINE.md"
+commit, so the file the app actually serves IS the one from that commit - this isn't a stale-cache/stale-
+deploy issue, the vectorized "wallet" text itself was apparently never re-drawn in Inter during that pass
+(only recoloured/rescaled). A text logotype is flattened to path outlines, not live text - it can't be
+"switched to Inter" in CSS the way body text can. Per the same rule as above, this needs a fresh
+`design/logo.svg` from the user (same as they just did for the icon), not an AI redraw of their wordmark.
+
 **LuckyPot note (2026-09-10):** the user redrew this frame's own Figma to bring it closer to the real
 luckypot.cc frontend, then added a "My history" box to row 9 (next to "Draw history") - the handler
 (`openMyHistory`) and its popup already existed in the code, only wired into the hamburger menu; row 9
