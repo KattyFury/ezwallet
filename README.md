@@ -13,9 +13,18 @@
 
 ---
 
-## Demo
+## Screens
 
-_(screenshots/GIFs pending re-capture against the current UI - the Sep 2026 redesign replaced the old ones)_
+<div align="center">
+<table>
+<tr>
+<td align="center" width="25%"><img src="docs/app-send.png" width="180" alt="Send"><br><sub>Balance & send</sub></td>
+<td align="center" width="25%"><img src="docs/app-receive.png" width="180" alt="Receive"><br><sub>Receive by QR</sub></td>
+<td align="center" width="25%"><img src="docs/app-swap.png" width="180" alt="Exchange"><br><sub>Swap by slider</sub></td>
+<td align="center" width="25%"><img src="docs/app-luckypot.png" width="180" alt="LuckyPot"><br><sub>LuckyPot</sub></td>
+</tr>
+</table>
+</div>
 
 ---
 

@@ -794,9 +794,9 @@ decision one day after it shipped**. What actually changed 09-08:
 
 | Item | State | Who / what unblocks it |
 |---|---|---|
-| `design/pfp.png` | Not in the repo yet | **User supplies the file** - then just drop it in `design/`, nothing to wire up |
-| README screenshots + GIFs | Deleted (they showed the pre-redesign UI); README's Demo section is a placeholder | **User's call on timing** - they asked to wait because "giao diện hôm nay vẫn có lỗi cần sửa tí". Re-capture with Playwright in mock mode once the UI settles |
-| `public/og.png` | Still the OLD UI (built from the now-deleted `docs/app-home.jpg`) | Rebuild together with the screenshots above, then bump `og.png?v=2` → `?v=3` |
+| `design/pfp.png` | ✅ Added (dropped via Desktop, same day) | done |
+| README screenshots | ✅ Rebuilt (4-image grid, Playwright/mock, see the Brand assets section) | done |
+| `public/og.png` | ❌ Still the OLD UI/gradient (built from the now-deleted `docs/app-home.jpg`) | Needs the user's call on gradient-vs-solid before rebuilding - see the note in Brand assets |
 | Circle PIN: no auto-clear on wrong PIN · mobile keyboard needs a tap | **Cannot be fixed here** - see the ⛔ CIRCLE'S PIN SCREEN note in section 9 for the full API evidence | Only Circle can fix it; report alongside the `common.showPin` issue already raised |
 | `.scroll-thin` inside a grey box | Fixed on `HomeSend`; **`Contacts.jsx` and `TxHistory.jsx` still have it** | Smaller effect there (their boxes' padding is 16px/14px so the -8px push shrinks the right inset rather than zeroing it). Swap to `.scroll-hidden` when touching those screens |
 | Everything below in this section | Unchanged from the previous session | - |
@@ -1007,18 +1007,29 @@ or is it making them adapt to crypto?". Anything that drifts from that: stop and
 **THE SLOGAN CHANGE (08-02):** the settled slogan is now **"A crypto wallet simple enough for my mom to use."** ("your grandma" / "stablecoin wallet" are gone from brand sentences - the word "stablecoin" is still used where it states a product fact). Synced across: `<title>` + `og:title` + `twitter:title` + `og:image:alt` (`index.html`) · a rebuilt `public/og.png` · `package.json` · `README.md` · `PITCH.md` (sections 1 + 8) · `DECK-DESIGN-SPEC.md` (thesis + P1 + section 3). The voice rules are settled in the **Brand Voice** section of `CLAUDE.md`. **Every em dash `—` was also changed to an en dash `–`** in everything a reader sees (html, md, package.json, .env.example); since 08-25 the code comments in `src/` and `functions/` are English too, so the same rule is easy to keep there. `og:image` was bumped to `og.png?v=2` to force X/Facebook to re-scan (they cache by URL); **when the image changes again, bump it to `?v=3`**.
 
 **Brand assets - `design/` HOLDS EXACTLY 3 FILES, NO OTHER VERSIONS (user rule, 2026-09-11: "còn lại xóa
-hết các phiên bản vớ vẩn trong repo đi"):**
+hết các phiên bản vớ vẩn trong repo đi"). ⚠️ The user replaced all 3 again later the same day with cleaner
+re-exports of the IDENTICAL artwork (dropped via Desktop, same convention as `apple.svg` before it) - if a
+future session finds different viewBox numbers than the ones below, check `git log` before assuming
+drift; the user's own re-exports are expected to change these over time.**
 | File | What it is | Used by |
 |---|---|---|
-| `design/logo.svg` | THE FULL LOGO (wordmark, viewBox **206×59**, Inter letterforms - confirmed by the user, do NOT re-flag it as Barlow) | Splash · Login · PinGate · ForgotPin · SendReceipt, all through `.logo-lockup` |
-| `design/new-brand/icon.svg` | THE APP/FAVICON ICON, full-bleed solid blue, corners already rounded 16 - copied to `public/icon.svg`, rasterised to `public/icon.png` + `public/fav_icon.png` at 512×512 | `index.html` favicon + apple-touch-icon, `manifest.json` |
-| `design/pfp.png` | ⏳ **NOT ADDED YET** - the user will supply it; kept in the repo for social profile pictures (X etc.), not referenced by the app | nothing (storage only) |
+| `design/logo.svg` | THE FULL LOGO (wordmark, viewBox **1425×406** as of the 2nd revision, Inter letterforms - confirmed by the user, do NOT re-flag it as Barlow) | Splash · Login · PinGate · ForgotPin · SendReceipt, all through `.logo-lockup` |
+| `design/new-brand/icon.svg` | THE APP/FAVICON ICON, viewBox **512×512** as of the 2nd revision - fully transparent background (no `<rect>` at all, dropped even the white square the 1st revision had) - copied to `public/icon.svg`, rasterised to `public/icon.png` + `public/fav_icon.png` at 512×512 **with a white background painted in during rasterisation** (iOS handles transparent apple-touch-icons poorly - fix the PNG step, not the SVG) | `index.html` favicon + apple-touch-icon (`?v=4`), `manifest.json` |
+| `design/pfp.png` | Added 2026-09-11 (dropped via Desktop) - the EZ mark alone, for social profile pictures (X etc.) | nothing (storage only, not referenced by the app) |
 DELETED 2026-09-11 as stale duplicates: `design/logo-icon.svg` (the pre-redesign GRADIENT icon - the brand
 is solid-colour only now) and `design/luckypot/logo-full.svg` (never imported anywhere; `LuckyPot.jsx`
 renders its name as text in Space Grotesk, it has no logo file). Do not recreate either.
-⚠️ `public/og.png` was built from `docs/app-home.jpg`, which was **deleted** 2026-09-11 with the rest of
-the pre-redesign screenshots - so og.png still shows the OLD UI and must be rebuilt (bump to `?v=3`) once
-the new screenshots exist.
+
+**README screenshots REBUILT 2026-09-11** (the user: "UI đã ổn rồi đẹp rồi, dựng lại hình ảnh... phải trực
+quan và ngắn gọn") - captured fresh via Playwright in mock mode (`?screen=<Name>`), replacing the deleted
+pre-redesign set. Deliberately CONCISE per that instruction: ONE 4-image grid (`docs/app-send.png` ·
+`app-receive.png` · `app-swap.png` · `app-luckypot.png`), not the old 2-section layout (4 GIFs + 6 stills).
+No GIFs this round - stills only, faster to keep in sync with a UI that is still actively changing.
+⚠️ `public/og.png` is UNCHANGED and still wrong - it was built (07-29) from `docs/app-home.jpg`, which
+was deleted with the rest of the pre-redesign screenshots, so the card still shows the OLD UI/gradient.
+Not rebuilt this round (a design call - gradient background vs. the current solid-colour-only brand -
+that needs the user's direction, not an assumption). Rebuild it from one of the new screenshots + the new
+solid-blue brand treatment when asked, then bump `og.png?v=2` → `?v=3`.
 
 > 🎨 **Design: the user does the UI themselves, and draws the icons themselves (viewBox 100, stroke 10).** Do not redesign on your own; wait for the user's direction and then port it. The aesthetic reference: Coinbase Wallet - big light numbers, pale tiles, plenty of breathing room.
 

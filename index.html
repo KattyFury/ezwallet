@@ -36,23 +36,22 @@
          load from Google Fonts, along with 2 preconnects to fonts.googleapis.com/fonts.gstatic.com -
          all gone on purpose: it was a third-party request in front of first paint on an app whose whole
          point is opening fast on a cheap phone. See the FONT section at the top of src/index.css. -->
-    <!-- SVG FIRST, PNG SECOND (2026-09-11, full-bleed solid-colour brand icon - source
-         design/new-brand/icon.svg, supplied by the user; replaces the 2026-09-07 version, which had the
-         same artwork but with the logo inset ~24% from the canvas edge - fine as a favicon, but on an
-         iOS home-screen tile it read as a mostly-white square with a small logo, not a solid brand tile).
-         A browser that understands `image/svg+xml` takes the vector and stays sharp at any size a
-         tab/bookmark/pinned-shortcut asks for; one that doesn't falls through to the PNG. icon.png/
-         fav_icon.png are rasterised FROM this same icon.svg at 512x512 so the raster copies can't drift
-         from the vector. `?v=3` busts the cache of anyone holding the old inset icon - favicons/touch
-         icons are cached hard and long, without it the change looks like it never shipped. -->
-    <link rel="icon" type="image/svg+xml" href="/icon.svg?v=3" />
-    <link rel="icon" type="image/png" href="/fav_icon.png?v=3" />
+    <!-- SVG FIRST, PNG SECOND (2026-09-11, THIRD icon revision - source design/new-brand/icon.svg,
+         supplied by the user, replacing the "apple.svg" version from earlier the same day). Same EZ
+         artwork again, re-exported with no background rect at all (fully transparent, vs. that version's
+         explicit white square) - even more full-bleed. icon.png/fav_icon.png are rasterised FROM this
+         same icon.svg at 512x512 with a WHITE background painted in during rasterisation (iOS handles
+         transparency in apple-touch-icon poorly - the SVG itself stays transparent, only the PNG gets a
+         fill). `?v=4` busts the cache - favicons/touch icons are cached hard and long, without it the
+         change looks like it never shipped. -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg?v=4" />
+    <link rel="icon" type="image/png" href="/fav_icon.png?v=4" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="EZwallet" />
-    <link rel="apple-touch-icon" href="/icon.png?v=3" />
+    <link rel="apple-touch-icon" href="/icon.png?v=4" />
   </head>
   <body>
     <div id="root"></div>
