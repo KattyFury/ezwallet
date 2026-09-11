@@ -122,7 +122,7 @@ body {
   font-family: var(--font-base);
   font-size: var(--fs-content-1);
   color: var(--color-content);
-  background: #D6EAFB;   /* TEMPORARY for filming a clip (so the status bar matches the pale blue) - CHANGE BACK to var(--color-white) once filming is done, see index.css:114 */
+  background: var(--color-white);
   -webkit-font-smoothing: antialiased;
 }
 

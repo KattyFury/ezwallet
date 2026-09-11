@@ -384,6 +384,36 @@ Added `reloadInfoAfterTx()` (immediate read + 2 delayed re-reads at 3s and 8s, s
 reads) and swapped all 3 tx handlers (`handleDeposit`/`handleWithdraw`/`handleClaim`) from bare `loadInfo()`
 to it. `npm run build` clean, `npm test` 16/16.
 
+**Eighteenth round-trip (2026-09-11): 4 real bugs the user found on a real iPhone/live app.**
+1. **The iOS status bar area rendered pale blue instead of white.** `body`'s background was left at
+   `#D6EAFB` - a value the file's own comment already flagged as "TEMPORARY for filming a clip... CHANGE
+   BACK to `var(--color-white)` once filming is done" (index.css:114 explains standalone-PWA status bars
+   take the body background colour). Filming was over; the temporary value never got reverted. Fixed by
+   restoring `background: var(--color-white)`.
+2. **Send screen's white token cards (USDC/EURC/...) had an 8px gap from the grey box on the left but sat
+   flush (0px) on the right.** Root cause: the inner scroll container used `.scroll-thin`, whose
+   `margin-right:-20px`/`padding-right:12px` trick pushes content 8px past the box's own 8px right
+   padding - which then gets clipped by the box's `overflow:hidden`, gluing the cards to the right edge.
+   This is the EXACT bug class `SavedQRList.jsx` already documents avoiding ("Do NOT use `.scroll-thin`
+   INSIDE a grey box... iOS does NOT support `scrollbar-gutter` to compensate") - `HomeSend.jsx` just
+   hadn't been switched over. Fixed by using `.scroll-hidden` instead (same fix SavedQRList already uses),
+   verified visually - both sides now show the same gap. ⚠️ `Contacts.jsx` and `TxHistory.jsx` also use
+   `.scroll-thin` inside an `overflow:hidden` grey box - same latent bug, smaller effect there (their boxes'
+   own padding is 16px/14px, so the -8px push shrinks the right inset rather than zeroing it) - not touched
+   this round since the user didn't flag them, but worth the same swap if noticed later.
+3. **Scan QR showed "Point the camera at a QR code"** - a string invented on an earlier pass, never
+   requested and with no Figma equivalent (the dynamic hint line itself is real, working functionality;
+   this particular default text was not). Fixed by starting `hint` as `''` instead of that sentence -
+   the line now only ever shows a REAL scan result (wrong network / own QR / invalid QR).
+4. **Service hub's two cards were resized in Figma to a fixed 112px tall** (was 156px = a full
+   double-row). Re-pulled `get_design_context` on node `1:43`: card 1 stays at top 86px (10.19dvh,
+   unchanged), card 2 moves to 214px (25.36dvh) = card 1's new bottom (86+112=198) + the standard 16px
+   gutter - re-derived from the fresh node, not assumed. Icon size/position, text gap, and padding were
+   all re-checked against the same pull and are UNCHANGED (still land on the same numbers as the existing
+   code). Verified with `tools/figma-check.mjs` against a fresh `get_screenshot` of `1:43` - card
+   position/size match exactly (only difference is the app's real icons vs. Figma's black placeholder
+   squares, expected). `npm run build` clean, `npm test` 26/26.
+
 **LuckyPot note (2026-09-10):** the user redrew this frame's own Figma to bring it closer to the real
 luckypot.cc frontend, then added a "My history" box to row 9 (next to "Draw history") - the handler
 (`openMyHistory`) and its popup already existed in the code, only wired into the hamburger menu; row 9

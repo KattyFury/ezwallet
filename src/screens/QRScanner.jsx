@@ -14,7 +14,7 @@ export default function QRScanner() {
   const loopRef = useRef(null)
   const fileRef = useRef(null)
   const [error, setError] = useState('')
-  const [hint, setHint] = useState('Point the camera at a QR code')
+  const [hint, setHint] = useState('')
 
   useEffect(() => {
     let stream = null

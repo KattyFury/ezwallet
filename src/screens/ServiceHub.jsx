@@ -3,16 +3,17 @@ import Icon from '../components/Icon'
 import { useNav } from '../nav'
 
 // ══ SERVICE HUB - the services home (navbar tab 1) ══
-// REBUILT 2026-09-10 against the current Figma file (GxgsMU6HAYqolckzvPWXp1, node 1:43) on the
-// guideline grid (70px rows + 16px gutter, see HANDOFF.md READ FIRST §1): 2 full-width cards, each
-// spanning exactly one "double row" (156px = 2×70+16) - card 1 at rows 2-3 (top 10.19dvh), card 2 at
-// rows 4-5 (top 30.57dvh), the 16px gap between them falling exactly on the grid gutter.
+// REBUILT 2026-09-11 against a fresh Figma pull (GxgsMU6HAYqolckzvPWXp1, node 1:43) - the user shrank
+// both cards to a fixed 112px tall (was 156px = a full double-row). Card 1 stays at top 86px (10.19dvh,
+// unchanged); card 2 now sits at 214px (25.36dvh) = card 1's bottom (86+112=198) + the standard 16px
+// gutter - re-derived from the fresh node, not assumed. Icon size/position, text gap, and padding all
+// re-checked against this same pull and are UNCHANGED (still land on the same numbers as before).
 //
 // ⚠️ Piggy Bank is NOT drawn in the Figma frame at all (only 2 cards: Exchange + LuckyPot) - left OUT
 // of SERVICES below rather than shown as a 3rd disabled card. Not deleted, just not listed here.
 const SERVICES = [
   { id: 'swap', icon: 'exchange', label: 'Exchange', desc: 'Swap between USDC, EURC & cirBTC', screen: 'Swap', top: '10.19dvh' },
-  { id: 'luckypot', icon: 'luckypot', label: 'LuckyPot', desc: 'Your idle money can become lottery tickets – for free', screen: 'LuckyPot', top: '30.57dvh' },
+  { id: 'luckypot', icon: 'luckypot', label: 'LuckyPot', desc: 'Your idle money can become lottery tickets – for free', screen: 'LuckyPot', top: '25.36dvh' },
 ]
 
 export default function ServiceHub() {
@@ -37,7 +38,7 @@ export default function ServiceHub() {
           // unlike almost every other secondary-text line in the app - this frame draws it solid black).
           <button key={id} disabled={soon} onClick={soon ? undefined : () => navigate(screen)}
             style={{
-              position: 'absolute', left: '6.41%', right: '6.41%', top, height: '18.48dvh',
+              position: 'absolute', left: '6.41%', right: '6.41%', top, height: '13.27dvh',
               border: 'none', borderRadius: 16, background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
               display: 'flex', alignItems: 'center', padding: '0 8px 0 10px', gap: 9, minWidth: 0,
               fontFamily: 'inherit', textAlign: 'left', opacity: soon ? 0.4 : 1, cursor: soon ? 'not-allowed' : 'pointer',

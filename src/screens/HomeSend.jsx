@@ -127,7 +127,11 @@ export default function HomeSend() {
         background: 'var(--color-surface)', borderRadius: 20, padding: '10px 8px 0', minWidth: 0,
         overflow: 'hidden',
       }}>
-        <div className="scroll-thin" style={{
+        {/* .scroll-hidden, NOT .scroll-thin - that class's margin-right:-20px trick pushes content past this
+            box's own 8px right padding and gets clipped by the box's overflow:hidden, gluing the white cards
+            to the right edge with no gap (iOS doesn't support scrollbar-gutter to compensate - the same bug
+            class already documented and avoided in SavedQRList.jsx). */}
+        <div className="scroll-hidden" style={{
           display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto', height: '100%', paddingBottom: 44,
           WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
           maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
