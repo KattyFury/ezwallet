@@ -215,16 +215,23 @@ export default function HomeSend() {
             { label: 'Contacts', desc: 'Save people you send to often' },
           ]}
           warning={
-            !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 1 ? (
+            // Threshold raised 1 → 20 (user decision 2026-09-11): "under 20 USDC" now covers the old
+            // "just-created empty wallet" case too, not a separate rule - it disappears again only once
+            // the balance is OVER 20. Same non-dismissible standing-hint treatment as the network/QR
+            // Storage/Create QR/Share hints above (no X button - see NotifArea.jsx's warning branch).
+            !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) <= 20 ? (
               <div onClick={() => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } localStorage.setItem('ez_faucet_pending', String(Date.now())); window.open('https://faucet.circle.com/', '_blank') }}
-                style={{ width: '100%', background: 'var(--color-warning-soft)', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                {/* The icon is CENTRED-LEFT against the whole 2-line block (user decision 07-17) - not stuck to line 1 */}
+                style={{ width: '100%', background: 'var(--color-white)', borderRadius: 16, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+                {/* White card + warning-coloured icon/text (user correction 2026-09-11: this was a pale-yellow
+                    card with BLACK body text - wrong, it must match the same "white card, one solid type
+                    colour for icon+text together" rule the real notification rows already use (STYLE.received/
+                    sent/error in NotifArea.jsx), not HintBlock's black-body/coloured-keyword pattern. */}
                 <Icon name="warning" size="var(--is-content-2)" color="var(--color-warning)" style={{ flexShrink: 0 }} />
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 0 }}>
-                  <span style={{ fontSize: NOTIF_FS, color: 'var(--color-content)' }}>Out of USDC for transaction fees</span>
-                  <span style={{ fontSize: NOTIF_FS, color: 'var(--color-content)' }}>
+                  <span style={{ fontSize: NOTIF_FS, color: 'var(--color-warning)' }}>Out of USDC for transaction fees</span>
+                  <span style={{ fontSize: NOTIF_FS, color: 'var(--color-warning)' }}>
                     {'Tap to get testnet USDC from'}{' '}
-                    <span style={{ color: 'var(--color-warning)', textDecoration: 'underline' }}>Faucet</span>
+                    <span style={{ fontWeight: 'var(--fw-semibold)', textDecoration: 'underline' }}>Faucet</span>
                   </span>
                 </div>
               </div>

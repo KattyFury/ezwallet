@@ -3,17 +3,21 @@ import Icon from './Icon'
 import { useNav } from '../nav'
 import { getNotifs, dismissNotif, addNotif } from '../notif'
 import { isFaucetAddress } from '../chain'
-import { findContactName } from '../store'
+import { findContactName, acct } from '../store'
 import { fmtTokenAmount } from '../data'
 
 // Detect incoming money (poll ArcScan) → create a "received" notification (shared by every screen with a NotifArea)
 // Duplicate guard: each tx hash is announced ONCE (a set of announced hashes is stored).
+// SPLIT PER WALLET (bug fix 2026-09-11, same fix as notif.js's own notification list, right above) -
+// these were global keys too, so a hash "already announced" on one account silently suppressed the
+// SAME hash's notification on a different account signed into afterward, and ez_last_recv_ts made an
+// old account look like it had no new activity when really it had just never been checked from here.
 function notifiedHashes() {
-  try { return new Set(JSON.parse(localStorage.getItem('ez_notified_hashes') || '[]')) } catch { return new Set() }
+  try { return new Set(JSON.parse(localStorage.getItem(`ez_notified_hashes_${acct()}`) || '[]')) } catch { return new Set() }
 }
 function markNotified(hash) {
   const s = notifiedHashes(); s.add(hash)
-  localStorage.setItem('ez_notified_hashes', JSON.stringify([...s].slice(-100)))
+  localStorage.setItem(`ez_notified_hashes_${acct()}`, JSON.stringify([...s].slice(-100)))
 }
 
 // Overlap guard: if the network is slow when the next tick arrives, skip that tick - never fire 2 requests in parallel.
@@ -32,8 +36,8 @@ function pollIncoming(after) {
       // (a market vendor seeing an unknown contract address would panic). The two notifications stay separate.
       const outHashes = new Set(all.filter(tx => tx.from?.toLowerCase() === lower).map(tx => tx.hash))
       const recv = all.filter(tx => tx.to?.toLowerCase() === lower)
-      const lastSeen = parseInt(localStorage.getItem('ez_last_recv_ts') || '0')
-      if (recv[0]) localStorage.setItem('ez_last_recv_ts', recv[0].timeStamp)
+      const lastSeen = parseInt(localStorage.getItem(`ez_last_recv_ts_${acct()}`) || '0')
+      if (recv[0]) localStorage.setItem(`ez_last_recv_ts_${acct()}`, recv[0].timeStamp)
       if (lastSeen) {
         const seen = notifiedHashes()
         recv.filter(tx => parseInt(tx.timeStamp) > lastSeen && !seen.has(tx.hash)).reverse().forEach(tx => {

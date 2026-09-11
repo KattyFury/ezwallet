@@ -8,7 +8,7 @@
 // `*Local()` = write PURELY local, do NOT push to the server (used right after pulling a fresh copy
 // from the server, to avoid the pull → save → push → pull loop).
 
-function acct() {
+export function acct() {
   return (localStorage.getItem('ez_wallet_addr') || 'anon').toLowerCase()
 }
 

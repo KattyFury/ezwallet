@@ -225,16 +225,26 @@ export default function TxHistory() {
     // 1000 was chosen (not 50) to KEEP the rule "history is the ledger, never truncated" (HANDOFF section 6):
     // a real user's wallet has nowhere near 1000 transactions, so they still see everything, without dragging down 10k rows.
     // ArcScan DOES honour `sort=desc` (measured) - the list renders straight in API order, without re-sorting.
-    fetch(`${ARCSCAN}/api?module=account&action=tokentx&address=${walletAddr}&sort=desc&page=1&offset=1000`)
+    //
+    // RETRY, NEVER FALL BACK TO "empty" (bug fix 2026-09-11, same lesson HomeSend's balance fetch already
+    // learned): a failed/errored request used to be swallowed by `.catch(() => {})` + `setLoading(false)`,
+    // which looks EXACTLY like a real "no transactions yet" wallet - the user reported an old account's
+    // history reading empty with no way to tell if that was real or a silently-failed fetch. On failure,
+    // keep the loading state and retry every 3s until a REAL answer (success OR a genuinely empty result[])
+    // arrives.
+    let cancelled = false
+    let timer = null
+    const load = () => fetch(`${ARCSCAN}/api?module=account&action=tokentx&address=${walletAddr}&sort=desc&page=1&offset=1000`)
       .then(r => r.json())
       // SORT IT OURSELVES, DO NOT TRUST THE API ORDER (07-31). ArcScan currently honours `sort=desc` (measured), but the
       // list renders STRAIGHT from the array order: if the API ever changes behaviour or returns something skewed, (a) new
       // transactions land in the middle, (b) DATE labels repeat → two DateHeaders with the same key → React warns about
       // "duplicated and/or omitted" and may DROP rows. Sorting on the client is the cheapest possible guard.
       .then(d => (d?.result || []).slice().sort((a, b) => Number(b.timeStamp) - Number(a.timeStamp)))
-      .then(setTxs)
-      .catch(() => {})
-      .finally(() => setLoading(false))
+      .then(list => { if (!cancelled) { setTxs(list); setLoading(false) } })
+      .catch(() => { if (!cancelled) timer = setTimeout(load, 3000) })
+    load()
+    return () => { cancelled = true; clearTimeout(timer) }
   }, [walletAddr])
 
   // Open the detail popup straight away when arriving from a notification (openHash)

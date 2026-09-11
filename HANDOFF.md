@@ -435,6 +435,33 @@ Barlow.** That earlier note was a misread of vectorized path outlines by eye (a 
 flattened to paths, not live text, so it can't be checked by inspecting a `font-family` - the guess was
 wrong). No file replacement needed here; `design/logo.svg` stays as-is.
 
+**Same day, 3 more real bugs, one of them a repeat of a bug class already fixed once before:**
+1. **The out-of-USDC faucet warning only fired at <=1 USDC and used the wrong colours** (pale-yellow card
+   + BLACK body text, only the "Faucet" word itself coloured). User decisions: (a) threshold raised to
+   <=20 - "under 20 USDC" now covers the old "freshly created empty wallet" case too, so it's one rule,
+   not two; disappears only once balance is OVER 20. (b) Card must be WHITE with the icon AND all its text
+   in `--color-warning` together - the same "white card, one solid type colour for icon+text" rule the
+   real notification rows already use (`STYLE.received/sent/error` in NotifArea.jsx), not HintBlock's
+   black-body/coloured-keyword pattern. Fixed in `HomeSend.jsx`; already non-dismissible (NotifArea's
+   `warning` branch never renders an X button - same standing-hint treatment as the network/QR Storage/
+   Create QR/Share hints).
+2. **Notifications leaked across accounts on the same device - a REPEAT of a bug class `store.js` already
+   fixed once for contacts/QR storage** (its own top comment: "It used to use shared keys... signing in
+   with another account still showed the previous account's contacts"). `notif.js`'s `ez_notifs` and
+   `NotifArea.jsx`'s `ez_notified_hashes`/`ez_last_recv_ts` were never migrated to that same per-account
+   pattern - they were still one GLOBAL key each, so signing into an old, long-unused account on a device
+   that had recently used a different account showed that OTHER account's still-under-24h notifications.
+   Exported `acct()` from `store.js` (was private) and namespaced all 3 keys by wallet address exactly
+   like `loadContacts()`/`loadSavedQRs()` already are - no sign-out cleanup needed, each account now just
+   has its own separate storage the way contacts/QR already do.
+3. **`TxHistory.jsx` could show a false "No transactions yet" on a real fetch failure** - `.catch(() => {})`
+   + `setLoading(false)` on error looks IDENTICAL to a genuinely empty wallet, and the user could not tell
+   which one an old account's blank history actually was. This is the exact "never fall back to a fake
+   empty/0 state" lesson `HomeSend`'s balance fetch already learned (section 10) but `TxHistory` never
+   applied - fixed the same way: on failure, keep loading and retry every 3s until a REAL answer (success
+   or a genuinely empty `result: []`) arrives.
+`npm run build` clean, `npm test` 16/16.
+
 **LuckyPot note (2026-09-10):** the user redrew this frame's own Figma to bring it closer to the real
 luckypot.cc frontend, then added a "My history" box to row 9 (next to "Draw history") - the handler
 (`openMyHistory`) and its popup already existed in the code, only wired into the hamburger menu; row 9
