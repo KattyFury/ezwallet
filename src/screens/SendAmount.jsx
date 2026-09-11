@@ -6,13 +6,9 @@ import ErrorToast from '../components/ErrorToast'
 import { getTokenInfo, getDisplayRates, cachedRates } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import { findContactName } from '../store'
-import { displaySymbol, spendableOf, floorTo } from '../data'
+import { displaySymbol, spendableOf, floorTo, shortenAddr } from '../data'
 import { useFitFontSize } from '../useFitFontSize'
 import { amountHints, fmtAmountHint } from '../amountHint'
-
-function shortenAddr(addr) {
-  return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
-}
 
 // USD = the friendly label, what is sent = USDC (1:1). USDC/EURC/cirBTC send that exact token.
 // ⛔ VND TURNED OFF 2026-08-12 (user decision): the app runs English/USD while a scanned QR produced VND → 'VND' was

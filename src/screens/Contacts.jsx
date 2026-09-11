@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
 import { loadContacts, saveContacts } from '../store'
+import { shortenAddr } from '../data'
 
 function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
 
@@ -144,7 +145,7 @@ export default function Contacts() {
         {contacts.length === 0 ? (
           <span style={{ fontSize: 'var(--fs-content-1)', color: 'var(--color-muted)' }}>No contacts yet</span>
         ) : (
-          <div className="scroll-thin" style={{ overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column' }}>
+          <div className="scroll-hidden" style={{ overflowY: 'auto', height: '100%', display: 'flex', flexDirection: 'column' }}>
           {contacts.map(c => {
             return (
               <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 14, width: '100%', padding: '14px 0' }}>
@@ -163,7 +164,7 @@ export default function Contacts() {
                   <button onClick={() => copyAddr(c)}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}>
                     <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted)' }}>
-                      {c.address.slice(0, 6)}...{c.address.slice(-4)}
+                      {shortenAddr(c.address)}
                     </span>
                     <Icon name={copiedId === c.id ? 'check' : 'copy'} size="var(--is-caption)" color={copiedId === c.id ? 'var(--color-primary)' : 'var(--color-muted)'} />
                   </button>

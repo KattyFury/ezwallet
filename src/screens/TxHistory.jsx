@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
-import { getDisplayCurrency, displayNum, displaySymbol } from '../data'
+import { getDisplayCurrency, displayNum, displaySymbol, shortenAddr } from '../data'
 import { TOKENS, getTxMemo, getDisplayRates, isFaucetAddress } from '../chain'
 import Icon from '../components/Icon'
 import { loadContacts } from '../store'
@@ -14,10 +14,6 @@ function loadContactMap() {
     loadContacts().forEach(c => { if (c.address) m[c.address.toLowerCase()] = c.name })
     return m
   } catch { return {} }
-}
-
-function shortAddr(addr) {
-  return addr ? addr.slice(0, 6) + '...' + addr.slice(-4) : ''
 }
 
 // DATE label for the group boundary (e.g. "28 Jun 2026") + the exact TIME on each row (e.g. "14:32").
@@ -75,7 +71,7 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, sw
   // Sending to yourself → say "yourself" plainly, do not make an older person compare 0x1234…5678 against
   // their own wallet address (07-31, the same bug as swapHashes above).
   const isSelf = counter && walletAddr && counter.toLowerCase() === walletAddr.toLowerCase()
-  const who = isSelf ? 'yourself' : name || (isFaucet ? 'Faucet' : shortAddr(counter))
+  const who = isSelf ? 'yourself' : name || (isFaucet ? 'Faucet' : shortenAddr(counter))
   // Font sizes REDUCED so the full information fits a phone screen (user decision 07-20): icon 40→34, the money on the right
   // fs-num 24→fs-md-lg 21, the secondary token fs-label→fs-tiny, vertical padding 14→11, gap 12→10.
   return (
@@ -268,7 +264,7 @@ export default function TxHistory() {
           Card radius 16 (was 20) - node 1:258, RE-VERIFIED 2026-09-10 against live Figma (blank 340x586
           placeholder, no example rows, so the row padding below has no Figma evidence and is left as-is). */}
       <div className="row-2-8" style={{ background: 'var(--color-surface)', borderRadius: 16, padding: '4px 14px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' }}>
-      <div className="scroll-thin" style={{
+      <div className="scroll-hidden" style={{
         display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start', height: '100%', overflowY: 'auto',
         WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
         maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
@@ -321,7 +317,7 @@ export default function TxHistory() {
             {d.name && <DetailRow label={d.isSend ? 'Recipient' : 'Sender'}>{d.name}</DetailRow>}
             <DetailRow label={'Wallet address'}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                {shortAddr(d.counter)}
+                {shortenAddr(d.counter)}
                 <button onClick={() => copyCounter(d.counter)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 0 }}>
                   <Icon name={copied ? 'check' : 'copy'} size="var(--is-content-2)" color={copied ? 'var(--color-primary)' : 'var(--color-muted)'} />
                 </button>

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
-import { fmtMoney } from '../data'
+import { fmtMoney, shortenAddr } from '../data'
 import { addNotif } from '../notif'
 import { saveImageToPhotos } from '../saveImage'
 import logoLong from '../../design/logo.svg'
@@ -10,10 +10,6 @@ import logoLong from '../../design/logo.svg'
 // 70px (was 76) - node 1:238's exact placeholder size.
 function CheckIcon() {
   return <Icon name="check" size={70} color="var(--color-primary)" />
-}
-
-function shortenAddr(addr) {
-  return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
 }
 
 function fmtTime(ts) {

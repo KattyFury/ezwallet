@@ -62,6 +62,11 @@ export function displaySymbol(sym) { return CURRENCY_CFG[sym]?.symbol || sym }
 export function symbolAfter(cur) { return cfgOf(cur).after }
 export function decimalsOfCurrency(cur) { return cfgOf(cur).dec }
 
+// 0x1234…5678 - the one shared "short address" format (6 leading / 4 trailing). Was copy-pasted into
+// SendAmount/SendConfirm/SendReceipt/TxHistory (TxHistory's own copy used '...' instead of the real
+// ellipsis '…', a real drift, not just duplication) plus inlined ad hoc in NotifArea/Contacts.
+export function shortenAddr(addr) { return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : '' }
+
 // A COMPLETE money string (number + symbol on the right side) from a USD value. Use this instead of
 // concatenating `${displaySymbol(cur)}${displayNum(...)}` by hand - by hand puts the VND symbol on the wrong side.
 export function fmtDisplay(usd, cur, rates) {

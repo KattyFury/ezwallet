@@ -4,7 +4,7 @@ import { useNav } from '../nav'
 import { getNotifs, dismissNotif, addNotif } from '../notif'
 import { isFaucetAddress } from '../chain'
 import { findContactName, acct } from '../store'
-import { fmtTokenAmount } from '../data'
+import { fmtTokenAmount, shortenAddr } from '../data'
 
 // Detect incoming money (poll ArcScan) → create a "received" notification (shared by every screen with a NotifArea)
 // Duplicate guard: each tx hash is announced ONCE (a set of announced hashes is stored).
@@ -63,7 +63,7 @@ function pollIncoming(after) {
             addNotif(`Faucet successful · received ${amt} ${symbol}`, 'received', tx.hash, `recv-${tx.hash}`)
           } else {
             // Show the CONTACT NAME if the sender's address is saved (matching the "Sent to <name>" notification)
-            const fromName = findContactName(tx.from) || `${tx.from.slice(0, 6)}...${tx.from.slice(-4)}`
+            const fromName = findContactName(tx.from) || shortenAddr(tx.from)
             addNotif(`Received ${amt} ${symbol} from ${fromName}`, 'received', tx.hash, `recv-${tx.hash}`)
           }
           markNotified(tx.hash)
@@ -212,7 +212,8 @@ export default function NotifArea({ hints = [], warning = null, pollMs = 15000 }
   return (
     // SCROLLABLE (overflowY:auto, not hidden) - when it fills up, drag to see more. A 1/3-row fade
     // (calc(100dvh/30)) at the TOP edge (the row 6/7 boundary) as content approaches the "Show tokens" button above,
-    // and NOT more than that or there is nowhere left to read. A thin scrollbar (.scroll-thin) keeps the layout tidy.
+    // and NOT more than that or there is nowhere left to read. Scrollbar hidden (.scroll-hidden) - a
+    // visible one here would overlap/offset the coloured notification boxes, the fade mask already hints.
     <div ref={scrollRef} className="scroll-hidden" style={{
       flex: 1, minHeight: 0, width: '100%',
       WebkitMaskImage: 'linear-gradient(to bottom, transparent 0, black calc(100dvh / 30))',

@@ -1,13 +1,9 @@
 import { useState, useEffect } from 'react'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
-import { getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency } from '../data'
+import { getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency, shortenAddr } from '../data'
 import { getDisplayRates, estimateFeeUsd } from '../chain'
 import { getSDK, executeChallenge, refreshSession, circleErrorMessage } from '../circle'
-
-function shortenAddr(addr) {
-  return addr ? addr.slice(0, 6) + '…' + addr.slice(-4) : ''
-}
 
 // Currency symbols / token names use Barlow (--font-condensed); numbers stay Barlow via .num
 function Cur({ children }) {
