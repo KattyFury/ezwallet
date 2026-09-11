@@ -115,6 +115,18 @@ Glyph-edge ghosting is expected - the app renders the system font, Figma draws I
 Also useful: `?screen=<Name>` on any URL forces that screen (a QA override in `App.jsx`), so a screen can
 be opened without walking the flow.
 
+⚠️ **BUT: verifying one component proves NOTHING about what the user actually sees - CHECK THE ROUTING
+FIRST.** `?screen=X` and a clean pixel diff only tell you that component X is correct *if it renders*.
+On 2026-09-11 a "the logo is centred" report was answered with a pixel-perfect `figma-check` of
+`Splash.jsx`, a byte-check of the live bundle and a real-browser measurement reading exactly 21.28% -
+and the user was told their screenshot must be wrong. They were right: `ez_pin_ok` is in sessionStorage,
+so `App.jsx` boots a returning wallet **straight into `PinGate`** and `Splash` is only reached on a fresh
+login - the screen being measured was one the user essentially never sees, while the one they did see
+(`PinGate`, with its own hand-rolled centred lockup) was never opened. **When a user's direct observation
+conflicts with your measurement, assume you are measuring the wrong thing.** Read `App.jsx`'s boot logic,
+find which component actually renders in their situation, and check *that*. Note also that mock mode
+auto-unlocks, so `?screen=PinGate` will NOT show PinGate - it resolves and navigates to HomeSend.
+
 #### 4. Where the rebuild stands
 
 **Done (23) - ALL FRAMES BUILT:** Splash `1:169` · Login `1:180` · Sign in with email `1:193` · Send
@@ -778,6 +790,17 @@ decision one day after it shipped**. What actually changed 09-08:
   buttons; row 9 Draw history dimmed/disabled; row 10 Exit). Referral stays OUT of scope (spec §0) -
   intentionally no `?ref=` capture, no `setReferrer` call anywhere in this pass.
 
+#### OPEN ITEMS carried out of the 2026-09-11 session
+
+| Item | State | Who / what unblocks it |
+|---|---|---|
+| `design/pfp.png` | Not in the repo yet | **User supplies the file** - then just drop it in `design/`, nothing to wire up |
+| README screenshots + GIFs | Deleted (they showed the pre-redesign UI); README's Demo section is a placeholder | **User's call on timing** - they asked to wait because "giao diện hôm nay vẫn có lỗi cần sửa tí". Re-capture with Playwright in mock mode once the UI settles |
+| `public/og.png` | Still the OLD UI (built from the now-deleted `docs/app-home.jpg`) | Rebuild together with the screenshots above, then bump `og.png?v=2` → `?v=3` |
+| Circle PIN: no auto-clear on wrong PIN · mobile keyboard needs a tap | **Cannot be fixed here** - see the ⛔ CIRCLE'S PIN SCREEN note in section 9 for the full API evidence | Only Circle can fix it; report alongside the `common.showPin` issue already raised |
+| `.scroll-thin` inside a grey box | Fixed on `HomeSend`; **`Contacts.jsx` and `TxHistory.jsx` still have it** | Smaller effect there (their boxes' padding is 16px/14px so the -8px push shrinks the right inset rather than zeroing it). Swap to `.scroll-hidden` when touching those screens |
+| Everything below in this section | Unchanged from the previous session | - |
+
 #### The real next step (do this FIRST, before anything else)
 
 Test on a real deploy, in this order (Circle's SDK cannot run on localhost, so none of this is
@@ -983,7 +1006,19 @@ or is it making them adapt to crypto?". Anything that drifts from that: stop and
 
 **THE SLOGAN CHANGE (08-02):** the settled slogan is now **"A crypto wallet simple enough for my mom to use."** ("your grandma" / "stablecoin wallet" are gone from brand sentences - the word "stablecoin" is still used where it states a product fact). Synced across: `<title>` + `og:title` + `twitter:title` + `og:image:alt` (`index.html`) · a rebuilt `public/og.png` · `package.json` · `README.md` · `PITCH.md` (sections 1 + 8) · `DECK-DESIGN-SPEC.md` (thesis + P1 + section 3). The voice rules are settled in the **Brand Voice** section of `CLAUDE.md`. **Every em dash `—` was also changed to an en dash `–`** in everything a reader sees (html, md, package.json, .env.example); since 08-25 the code comments in `src/` and `functions/` are English too, so the same rule is easy to keep there. `og:image` was bumped to `og.png?v=2` to force X/Facebook to re-scan (they cache by URL); **when the image changes again, bump it to `?v=3`**.
 
-**Brand assets:** `design/logo.svg` (Login + receipts, viewBox 1160×380) · `design/logo-icon.svg` (held in reserve) · the favicon `/fav_icon.png` · the app icon `/icon.png` 512×512.
+**Brand assets - `design/` HOLDS EXACTLY 3 FILES, NO OTHER VERSIONS (user rule, 2026-09-11: "còn lại xóa
+hết các phiên bản vớ vẩn trong repo đi"):**
+| File | What it is | Used by |
+|---|---|---|
+| `design/logo.svg` | THE FULL LOGO (wordmark, viewBox **206×59**, Inter letterforms - confirmed by the user, do NOT re-flag it as Barlow) | Splash · Login · PinGate · ForgotPin · SendReceipt, all through `.logo-lockup` |
+| `design/new-brand/icon.svg` | THE APP/FAVICON ICON, full-bleed solid blue, corners already rounded 16 - copied to `public/icon.svg`, rasterised to `public/icon.png` + `public/fav_icon.png` at 512×512 | `index.html` favicon + apple-touch-icon, `manifest.json` |
+| `design/pfp.png` | ⏳ **NOT ADDED YET** - the user will supply it; kept in the repo for social profile pictures (X etc.), not referenced by the app | nothing (storage only) |
+DELETED 2026-09-11 as stale duplicates: `design/logo-icon.svg` (the pre-redesign GRADIENT icon - the brand
+is solid-colour only now) and `design/luckypot/logo-full.svg` (never imported anywhere; `LuckyPot.jsx`
+renders its name as text in Space Grotesk, it has no logo file). Do not recreate either.
+⚠️ `public/og.png` was built from `docs/app-home.jpg`, which was **deleted** 2026-09-11 with the rest of
+the pre-redesign screenshots - so og.png still shows the OLD UI and must be rebuilt (bump to `?v=3`) once
+the new screenshots exist.
 
 > 🎨 **Design: the user does the UI themselves, and draws the icons themselves (viewBox 100, stroke 10).** Do not redesign on your own; wait for the user's direction and then port it. The aesthetic reference: Coinbase Wallet - big light numbers, pale tiles, plenty of breathing room.
 
