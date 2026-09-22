@@ -126,14 +126,40 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* DESKTOP/TABLET (wider than --screen-max 430 + margins): the area OUTSIDE the app frame turns BRAND BLUE
-   (user decision 07-22 - "the project's blue / USDC blue"), making the phone frame clearly visible.
-   ⚠️ ONLY inside this media query - do NOT change the default `body` to blue: on an iPhone PWA in standalone mode, the
-   status bar takes the body background colour → a blue body = a blue band across the top. Phones are always
+/* DESKTOP/TABLET (wider than --screen-max 430 + margins): the app is drawn as a PHONE HANDSET sitting on a
+   neutral desk-grey backdrop (user decision 2026-09-22, replacing the pastel-blue #D6EAFB fill that just left
+   the app as a bare white column in a blue void).
+   ⚠️ ONLY inside this media query - do NOT change the default `body`: on an iPhone PWA in standalone mode, the
+   status bar takes the body background colour → a tinted body = a coloured band across the top. Phones are always
    ≤430px so they never reach this 481px threshold. `.screen` has its own white background, so the app frame
-   stays white and is not tinted. */
+   stays white and is not tinted.
+
+   ⚠️ WHY `transform: scale()` AND NOT a smaller height/margin - READ BEFORE TOUCHING THIS:
+   the ENTIRE design is laid out in `dvh` (165 coordinates: top:85.68dvh, height:38.86dvh, ...), i.e. every
+   element is anchored to the VIEWPORT height, not to its parent. So #root MUST stay a full 100% of the
+   viewport tall or every one of those coordinates drifts and the NavBar collides with the content above it.
+   The handset is therefore built at full size and then uniformly SCALED DOWN, which shrinks the pixels on
+   screen while leaving every dvh number resolving to exactly what it resolved to before. Do not "simplify"
+   this into `height: calc(100dvh - 48px)` - that silently breaks all 165 of them.
+   ⚠️ The transform is also load-bearing for the OVERLAYS: `.popup-overlay` / `.sheet-overlay` are
+   `position: fixed; inset: 0`, and a transformed ancestor becomes their containing block → the dim layer and
+   the numpad sheet now stop at the handset's edges instead of covering the whole desktop window. */
 @media (min-width: 481px) {
-  body { background: #D6EAFB; }   /* a SOFT pastel blue - user decision 07-22c (the #0088FF version was still too loud) */
+  body { background: #E1E7ED; }   /* neutral desk grey - user decision 2026-09-22 */
+
+  #root {
+    width: var(--screen-max);       /* the handset is exactly one screen wide - 430px */
+    margin: 0 auto;
+    transform: scale(0.93);         /* 7% down = ~3.5dvh of backdrop above and below, enough to see the bezel */
+    border-radius: 44px;            /* the screen corners. The NavBar (row 10, edge to edge) is clipped by these
+                                       exactly as it would be on a real handset; its icons sit at x≈54px, well
+                                       clear of the 44px curve. */
+    overflow: hidden;               /* clips the app TO the rounded corners - does NOT clip #root's own shadow */
+    box-shadow:
+      0 0 0 11px #0E1216,                 /* the black bezel */
+      0 0 0 13px #3C424A,                 /* the thin metal rim around it */
+      0 26px 60px rgba(14, 18, 22, 0.30); /* the handset casting a shadow onto the desk */
+  }
 }
 
 /* ── Layout: the BRAND-GUIDELINE grid ──
