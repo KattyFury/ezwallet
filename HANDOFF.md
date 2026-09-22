@@ -1,6 +1,79 @@
 # HANDOFF – EZwallet
 
-**Updated:** 2026-09-10 · **Local:** `D:\Files\Claude\ezwallet`
+**Updated:** 2026-09-22 · **Local:** `D:\Files\Claude\Build on Arc\ezwallet`
+⚠️ The path above was WRONG in every earlier version of this file (it said `D:\Files\Claude\ezwallet`,
+with no `Build on Arc\`). Sibling projects `build-on-arc`, `luckypot` and `taptip` live in that same
+parent folder and are **separate, unrelated git repos** – never let one end up nested inside another.
+
+---
+
+## ⚠️ CURRENT STATE (2026-09-22) – READ BEFORE THE FIGMA SECTION BELOW
+
+Three things are in flight. **Nothing below this block has been superseded**, but this is where the
+project actually stands right now.
+
+**1. THE FORK HAS NOT HAPPENED.** The user's plan, stated 2026-09-22:
+   - **`ezwallet`** (this repo's name) becomes the **Arc MAINNET** project
+   - **this current repo is renamed `ezwallet-testnet`**
+   - The mainnet spec is saved verbatim at **`MAINNET-SPEC.md`** – read it before doing any fork work.
+   - **The user explicitly postponed the fork** to improve the UI first. Do not start forking unprompted.
+
+**2. THE UI REDRAW – THE USER IS DRAWING IT, NOT CLAUDE.** Asked which areas to improve and how far
+   Claude could go, the user answered: *"Thay vì bảo bạn đoán, mình sẽ vẽ"* + *"Vẽ lại tự do, tôi duyệt
+   từng màn"*. So:
+   - **Do not design, propose layouts, or "improve" screens on your own initiative.** Wait for the user's
+     drawing, build that, screenshot it to the Desktop, get it approved, then move to the next screen.
+   - The redraw IS allowed to change the locked 2026-09-09 design system – the user lifted that
+     restriction for this round. (`MAINNET-SPEC.md` still says "dùng nguyên bản đã chốt 2026-09-09,
+     không vẽ lại" – that line was written BEFORE this decision and now means "the fork inherits
+     whatever the redraw settles on", not "never change it".)
+   - Figma remains the preferred handover format, because `tools/figma-check.mjs` verifies against it.
+
+**3. LANDING PAGE CONTENT – requested 2026-09-22, nothing built.** The user asked for copy suggestions
+   and supplied **ethos.network** (mobile) as the visual reference: a full-bleed photo background, a thin
+   black hairline grid splitting the page into stacked cells, one huge serif headline, three short
+   sans-serif sentences (what it is / what you do / why it matters), and one black CTA button.
+   ⚠️ **Open question nobody has answered yet:** `ezwallet.cash` currently boots straight into the app
+   (Login). Where a landing page goes – replacing the root, on a path, or on a separate domain – has
+   **not** been decided. Ask before building anything.
+
+### Found 2026-09-22, NOT fixed (the user has not approved the fix)
+
+Leftovers from the 08-25 removal of Vietnamese. All verified by reading the code, all real:
+- `src/screens/SendReceipt.jsx:16` formats the receipt date with **`vi-VN`** (→ `22/09/2026`) while
+  `src/screens/TxHistory.jsx:21` uses **`en-GB`** (→ `22 Sept 2026`). **Two date formats in one app.**
+- `src/screens/TxHistory.jsx:332` – the transaction-detail popup also uses `vi-VN`, while the list rows
+  directly above it use `en-GB`. Inconsistent **within a single screen**.
+- `src/screens/SendReceipt.jsx:79` saves the receipt image to the user's photo library as
+  **`bien-lai-<ts>.png`** (Vietnamese for "receipt") in an English-only app.
+- The other `vi-VN` hits (`amountHint.js`, `data.js`, `SendAmount.jsx`, `SendConfirm.jsx`) are the
+  **deliberate** dead VND plumbing documented in the 08-25 log entry – leave them alone.
+
+### Shipped 2026-09-22
+
+- **`72ee40f` – the desktop handset frame.** On a desktop window the app used to be a bare white 430px
+  column on pastel blue `#D6EAFB`. It is now drawn as an iPhone-style handset (rounded screen, black
+  bezel + metal rim via box-shadow rings, drop shadow) on `#E1E7ED`. Entirely inside the existing
+  `@media (min-width: 481px)` block in `src/index.css` – **mobile is untouched**.
+  **⚠️ The rule that makes it work, do not "simplify" it away:** the handset keeps a FULL viewport
+  height and is then shrunk with `transform: scale(0.93)`, because all ~165 layout coordinates in this
+  app are `dvh` – i.e. anchored to the VIEWPORT, not to the parent. Giving `#root` a smaller height
+  (`calc(100dvh - 48px)`) silently drifts every one of them and the NavBar collides with the content
+  above it. Scaling shrinks rendered pixels while every `dvh` still resolves to exactly what it did
+  before. The full reasoning is in the comment above the rule.
+  **Deliberate side effect:** a transformed ancestor becomes the containing block for `position: fixed`
+  children, so `.popup-overlay` / `.sheet-overlay` / `ErrorToast` now stop at the handset's edges
+  instead of covering the whole desktop window.
+  **Known trade-off the user was told about:** because the layout is `dvh`-anchored, the handset's
+  aspect ratio follows the browser window's height (400×837 at a 900px-tall window, 400×1004 at 1080px).
+  Locking it to a true 430:932 iPhone ratio would mean removing `dvh` from all ~165 sites – its own
+  project, not a tweak.
+- Cloudflare Pages **auto-deploys from GitHub `main`** – confirmed 2026-09-22 by fetching the live CSS on
+  `ezwallet.cash` minutes after the push and finding `E1E7ED` already served. No manual deploy step.
+- ⚠️ **The stored wrangler OAuth token is EXPIRED** (`%APPDATA%\xdg.config\.wrangler\config\default.toml`
+  → the Cloudflare REST API answers `10000 Authentication error`). Section 1's "Claude's Cloudflare
+  access" notes are correct in method but the credential needs `npx wrangler login` again before any of
+  it works.
 
 ### ⚠️ READ THIS FIRST - REBUILDING SCREENS FROM FIGMA (23 done, 0 to go)
 

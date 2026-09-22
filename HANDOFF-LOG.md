@@ -12,6 +12,60 @@ start a session; open it only when you need the reasoning behind something `HAND
 
 ---
 
+**Session 2026-09-22: the desktop handset frame, a UI audit the user took over, and the fork plan.**
+Three separate things; only the first produced code.
+
+1. **The desktop frame (`72ee40f`, shipped and live).** The user: *"vào ezwallet.cash trên desktop, hiện
+   tại frame xấu (chiếm 1 phần nhỏ màn hình, phần dư thì màu xanh nhạt), sửa lại thành một frame mobile
+   như iphone bao quanh app còn nền trống đổi thành màu E1E7ED"*. Done in one edit to the existing
+   `@media (min-width: 481px)` block; mobile untouched. **The one non-obvious part**, now also written as
+   a warning comment in `src/index.css`: the obvious implementation (`#root { height: calc(100dvh - 48px);
+   margin: 24px auto }`) is WRONG here. This app positions ~165 elements in `dvh`, which is anchored to
+   the viewport and not to the parent, so shrinking `#root` leaves every one of those coordinates pointing
+   at the old place – content drifts down ~5% and the NavBar collides with the action pills. The handset
+   is therefore built at full viewport height and shrunk with `transform: scale(0.93)`; every `dvh` still
+   resolves to exactly what it did before. A second, deliberate benefit: a transformed ancestor is the
+   containing block for `position: fixed` descendants, so `.popup-overlay` / `.sheet-overlay` /
+   `ErrorToast` – which previously dimmed the entire desktop browser window – now stop at the handset's
+   edges. Verified: `npm test` 16/16, `npm run build` clean, Playwright at 1280×720 / 1440×900 / 1920×1080
+   with 0 console errors, and the popup overlay's bounding box measured equal to `#root`'s box rather than
+   the viewport. Also confirmed that **Cloudflare Pages auto-deploys from GitHub `main`** (the live CSS on
+   `ezwallet.cash` was serving `E1E7ED` minutes after the push) – and that **the stored wrangler OAuth
+   token has expired**, so the Cloudflare REST API rejects it.
+
+2. **A UI audit that the user cut short – deliberately, and the outcome matters more than the audit.**
+   Claude screenshotted all 18 screens at 390×844 and listed what looked weak: large dead empty areas on
+   Service hub / Confirm transaction / empty Contacts / the Home token card; the red
+   `Current Available Network: Arc Testnet` + three "Paste: … / Scan QR: … / Contacts: …" help lines on
+   both Home screens reading like developer notes; `▶` play triangles used as navigation chevrons on Menu
+   and About; a repeated "Add to Contacts" button on every Transaction history row. Offered a menu of
+   areas + how far the locked 2026-09-09 design system could be touched, the user replied **"Thay vì bảo
+   bạn đoán, mình sẽ vẽ"** and **"Vẽ lại tự do, tôi duyệt từng màn"**.
+   → **The standing instruction from this point on: the user draws, Claude builds, one screen at a time,
+   screenshot to Desktop for approval before moving on. Claude does not design.** The audit list above is
+   kept only as evidence of what the user may or may not choose to address – it is NOT a work queue.
+   ⚠️ One false alarm worth recording so nobody re-reports it: the "Invalid Date" visible on the Receipt
+   screenshot was an artefact of Claude passing fake `?params=` without a `timestamp`, not a bug.
+
+3. **The fork plan, recorded but NOT started.** `ezwallet` is to become the Arc **mainnet** project and
+   this repo is to be renamed **`ezwallet-testnet`**. The user's full mainnet spec – core belief,
+   positioning, stack, v1 scope, send/receive/swap flows, the security floor, the hard limitations for
+   the README, the mainnet deployment rules, and the three things to verify before building – was
+   supplied in chat and is now saved verbatim as **`MAINNET-SPEC.md`** so it stops living only in a
+   transcript. The user postponed the fork in order to improve the UI first.
+
+4. **Five Vietnamese leftovers found, none fixed** (offered, not taken up yet) – the date-format split
+   between `SendReceipt.jsx` (`vi-VN`) and `TxHistory.jsx` (`en-GB`), the same split *within* TxHistory
+   between its rows and its detail popup, and the `bien-lai-<ts>.png` filename the receipt image is saved
+   under. Listed with line numbers in `HANDOFF.md` § "Found 2026-09-22". They are invisible to any
+   redraw, so if they are not fixed they will be inherited by **both** repos after the fork.
+
+5. **A landing page was requested at the end of the session** (copy suggestions, with ethos.network's
+   mobile page as the visual reference). Nothing was built. The placement question – `ezwallet.cash`
+   currently boots straight into the app – is still open.
+
+---
+
 **Seventh round-trip (2026-09-10):** Confirm transaction/Receipt's divider line, then three more screens in
 one pass - Send money, Language & currency, Security. Findings:
 - **Send money is a real architecture rewrite, not a reskin, and the OLD `SEND_MONEY_FIGMA_SPEC.md` is
