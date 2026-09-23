@@ -1,5 +1,6 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { NavContext } from './nav'
+import { bootTarget, shouldOfferInstall } from './boot'
 import ErrorBoundary from './components/ErrorBoundary'
 
 // LAZY-LOAD EVERY SCREEN (2026-07-17) - the user: "why is this rubbish app so slow to load".
@@ -7,6 +8,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 // browser had to download + parse + run ALL of it before React drew the first character → a MEASURED 2.7s WHITE SCREEN on 4G.
 // The heaviest parts were what the first screen does NOT need: jsQR 130KB (scanner only), qrcode.react (QR screens only).
 // lazy() → one file per screen, downloaded only when the user actually opens it.
+const AddToHome   = lazy(() => import('./screens/AddToHome'))
 const Splash      = lazy(() => import('./screens/Splash'))
 const Login       = lazy(() => import('./screens/Login'))
 const HomeSend    = lazy(() => import('./screens/HomeSend'))
@@ -33,6 +35,7 @@ const ForgotPin   = lazy(() => import('./screens/ForgotPin'))
 const LuckyPot    = lazy(() => import('./screens/LuckyPot'))
 
 const SCREENS = {
+  AddToHome,
   Splash,
   Login,
   HomeSend, HomeReceive, Swap, ServiceHub, MenuScreen,
@@ -61,12 +64,12 @@ export default function App() {
       try { forcedParams = JSON.parse(decodeURIComponent(qs.get('params') || '{}')) } catch {}
       return { screen: forced, params: forcedParams }
     }
-    // Session exists → through the PIN GATE (wallet unlock) before HomeSend, unless this session is already unlocked
-    // (ez_pin_ok - set after verifying the PIN, or right after CREATING the PIN on first login). No session → Login.
-    const hasSession = localStorage.getItem('ez_user_token')
-    if (!hasSession) return { screen: 'Login', params: {} }
-    const unlocked = sessionStorage.getItem('ez_pin_ok')
-    return unlocked ? { screen: 'HomeSend', params: {} } : { screen: 'PinGate', params: { next: 'HomeSend' } }
+    // MOBILE BROWSER, NOT YET INSTALLED → offer the home-screen install FIRST (user's flow 2026-09-23).
+    // Its Skip button continues to bootTarget() itself, so the rules below still decide where the user lands.
+    if (shouldOfferInstall()) return { screen: 'AddToHome', params: {} }
+    // Session exists → through the PIN GATE (wallet unlock) before HomeSend, unless this session is already
+    // unlocked (ez_pin_ok). No session → Login. Lives in src/boot.js - AddToHome needs the same answer.
+    return bootTarget()
   })
 
   function navigate(screen, params = {}) {
