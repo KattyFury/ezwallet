@@ -293,12 +293,25 @@ body {
    into PinGate (App.jsx) and never sees Splash at all - so that centred, oversized copy was the logo
    screen users actually got on every visit, on both iPhone and desktop, while the correct one was only
    reachable on a fresh login. Route every logo through this class; do not re-add a per-screen variant. */
+/* THE LOGO RULE - UPDATED 2026-09-23 from Figma node 1:169 (Splash), the 2026-09-23 redesign's own
+   measurement (was 21.28dvh / 50vw / dead-centre, from the 2026-09-10 rebuild).
+   ⚠️⚠️ PAST BUG, DO NOT REPEAT (2026-09-11, "THE LOGO SCREEN BUG" in HANDOFF-LOG.md): Splash/Login
+   were fixed to share this one class, but PinGate/ForgotPin quietly kept their OWN inline lockup - so the
+   2 screens a RETURNING user actually sees every visit (ez_pin_ok is sessionStorage-only, so a reopened
+   browser boots straight into PinGate, skipping Splash) stayed on the OLD logo for a long time after
+   Splash looked "fixed". I repeated the same mistake on 2026-09-23: rebuilding Splash.jsx from the fresh
+   Figma node, I gave it its own inline position/size again instead of updating THIS class - which meant
+   Splash showed the new logo while PinGate/ForgotPin, unchanged, kept showing the OLD `design/logo.svg`.
+   The user caught it: "màn splash vẫn đang logo cũ, mình hay thấy bạn sai lầm chỗ màn splash này".
+   THE RULE: every screen with the wordmark renders `<img className="logo-lockup">` with NO per-screen
+   positioning, sizing, or asset override - ever. When Figma re-measures this element, the fix is HERE,
+   once, not in Splash.jsx (or anywhere else) with its own numbers. */
 .logo-lockup {
   position: absolute;
-  top: 21.28dvh;
-  left: 50%;
+  top: 20.38dvh;
+  left: calc(50% + 1.9px);
   transform: translateX(-50%);
-  width: min(50vw, calc(var(--screen-max) / 2));
+  width: min(51.23vw, calc(var(--screen-max) * 0.5123));
 }
 
 /* Every number & currency symbol ($/USDC/EURC/cirBTC) → --font-condensed, regular */

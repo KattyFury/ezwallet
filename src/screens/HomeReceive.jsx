@@ -77,11 +77,25 @@ export default function HomeReceive() {
         background: 'var(--color-card)', borderRadius: 16, overflow: 'hidden',
       }}>
         {/* THE QR - node 56:110 draws a flat 258x258 BLACK SQUARE, the placeholder this file uses for
-            "the real thing goes here". Centred on the card, top edge at y=99.68 of the screen, i.e.
-            13.68px below the card's own top. */}
+            "the real thing goes here".
+            ⚠️ USER CORRECTION 2026-09-23: "QR khi màn hình nhỏ đang bị button Tap to copy your address chèm".
+            The old fixed `top: 13.68` + a WIDTH-ONLY size (75.88% of the card, height only from
+            aspect-ratio) sized the QR purely off the card's WIDTH. The card's HEIGHT is `38.86dvh` -
+            it shrinks with the viewport on a short/landscape screen while the card's width barely does -
+            so the square QR kept its full size and grew taller than the shrunk card, running under the
+            "Tap to copy" pill instead of leaving room for it.
+            THE FIX - two fixed rules plus a shrink budget, exactly as specified:
+              - top edge ALWAYS 8px from the card's own top (not a Figma-derived offset any more);
+              - bottom edge ALWAYS >= 8px above the pill (HALF_OVAL_STYLE, 40 tall, pinned to bottom:0);
+              - on a normal screen the HORIZONTAL cap (66.15% of the screen, same ratio the old
+                75.88%-of-card figure worked out to) still wins, so nothing changes from before;
+              - on a short screen the VERTICAL budget - card height minus the 8+8+40 = 56px those two
+                rules reserve - wins instead, and the QR shrinks to fit it. `min()` picks whichever is
+                smaller, so this is one rule, not a media-query special case. */}
         <div style={{
-          position: 'absolute', left: '50%', top: 13.68, transform: 'translateX(-50%)',
-          width: '75.88%', aspectRatio: '1 / 1',
+          position: 'absolute', left: '50%', top: 8, transform: 'translateX(-50%)',
+          width: 'min(66.15vw, calc(var(--screen-max) * 0.6615), calc(38.86dvh - 56px))',
+          aspectRatio: '1 / 1',
           background: 'var(--color-white)', display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           {walletAddr

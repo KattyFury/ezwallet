@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNav } from '../nav'
 import { refreshSession, forceFreshSession, isTokenExpiredError, getSDK, executeChallenge, restorePinChallenge, circleErrorMessage } from '../circle'
-import logoLong from '../../design/logo.svg'
+import logoLong from '../../design/logo-lockup.svg'   // 2026-09-23: swapped to the new logo, same asset Splash uses
 
 // FORGOT PIN - reached from Circle's own "Forgot PIN" button inside the PIN-entry iframe (wired in
 // PinGate.jsx via sdk.setOnForgotPin). Structured exactly like PinGate.jsx (open Circle's iframe
