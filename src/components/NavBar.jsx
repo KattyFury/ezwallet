@@ -31,9 +31,14 @@ export default function NavBar({ active }) {
             onClick={() => navigate(tab.id)}
             aria-current={on ? 'page' : undefined}
             style={{
-              position: 'absolute', left: tab.left, top: '92.77dvh',
+              // THE BUTTON IS THE WHOLE OF ROW 10 (774-844 of 844 = 91.71dvh, 70 tall) and centres its
+              // icon+label block inside it, rather than being pinned by the block's own top edge.
+              // User correction 2026-09-23: "dời icon và chữ xuống một tí, cho ra trung tâm hàng 10".
+              // Pinning the top left the ~45px block sitting at 783-828, i.e. centred on 805.5 when
+              // row 10's centre is 809. Owning the row means the maths cannot drift again.
+              position: 'absolute', left: tab.left, top: '91.71dvh', height: 70,
               transform: 'translateX(-50%)', width: '25%',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
+              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
               background: 'none', border: 'none', padding: 0, cursor: 'pointer',
               fontFamily: 'inherit', fontSize: 16, fontWeight: 'var(--fw-semibold)', color,
               WebkitTapHighlightColor: 'transparent',
