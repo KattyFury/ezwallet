@@ -2,7 +2,7 @@
 
 > ⚠️ **SUPERSEDED BY THE LIVE FIGMA FILE (user decision 2026-09-23: "Figma là nguồn sự thật, guideline cũ rồi").**
 > This file is NO LONGER a source of truth. Where it disagrees with the Figma file
-> , **Figma wins and this file is simply out of date** - do not quote a rule
+> `GxgsMU6HAYqolckzvPWXp1`, **Figma wins and this file is simply out of date** - do not quote a rule
 > from here to refuse something the design draws. Two rules below are already known to be dead:
 > the "no gradients" rule (the Add screen draws a white-to-brand gradient) and the text scale
 > (the redesign uses 14 / 16 / 18 / 20 / 24 / 40). Kept for the colour values, which still hold.
