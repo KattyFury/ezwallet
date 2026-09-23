@@ -37,6 +37,25 @@ project actually stands right now.
    (Login). Where a landing page goes – replacing the root, on a path, or on a separate domain – has
    **not** been decided. Ask before building anything.
 
+### ⚠️ KNOWN, DEFERRED (2026-09-23) - the 2026-09-23 redesign breaks on a SQUARE-ish viewport
+
+The user, verifying the Receive QR fix: when the viewport is forced toward a **square aspect ratio**
+(not just short - specifically closer to 1:1 than a phone's usual ~9:19.5), the redesigned screens break
+down more broadly than the one QR-vs-button overlap already fixed (see `src/screens/HomeReceive.jsx`'s
+QR sizing comment for that one). **The user's own words, to be read literally when this is picked up:**
+*"khi màn hình bị ép về hình vuông thiết kế sẽ vỡ, sau này mình sẽ fix = cách giảm size chữ size box size button cho tương ứng chiều cao màn hình"*
+- i.e. the planned fix is to make FONT SIZE, BOX SIZE and BUTTON SIZE all shrink in step with viewport
+  HEIGHT (the same `min(..., calc(Xdvh - Ypx))` pattern the Receive QR fix already uses), not a one-off
+  patch per element as each breakage is found.
+- **NOT STARTED.** The user deferred it explicitly ("sau này" = later) - do not build a general
+  fix unprompted. When asked, the QR fix in `HomeReceive.jsx` is the reference pattern: read it before
+  inventing a new approach.
+- Everything built under the 2026-09-23 redesign (`GRADIENT` background, `ScreenSheet`, `NavBar`,
+  `BalanceHeader`, the token/notification cards on Send/Receive, `AddToHome`, `Login`,
+  `LoginEmailPopup`) is `dvh`-anchored the same way the pre-redesign app already was (see §6 Layout
+  Rules) - so this almost certainly affects ALL of it, not just Receive. Assume every new screen has the
+  same latent issue until it is actually tested at a square-ish viewport.
+
 ### Found 2026-09-22, NOT fixed (the user has not approved the fix)
 
 Leftovers from the 08-25 removal of Vietnamese. All verified by reading the code, all real:

@@ -1,37 +1,50 @@
-﻿import NavBar from '../components/NavBar'
+import NavBar from '../components/NavBar'
+import ScreenSheet from '../components/ScreenSheet'
 import BalanceHeader from '../components/BalanceHeader'
+import Icon from '../components/Icon'
 import { getTokenBalances, cachedBalances } from '../chain'
 import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
+import { GRADIENT } from '../brandBg'
 
-// ⛔ 'Service Hub' REMOVED FROM HERE 08-13 (user decision): it is already TAB 1 of the NavBar, and a second door
-// in the Menu means two ways into one place - redundant for everyday users. The navbar is the way in.
-// (This entry used to live here, disabled, from 07-31 when there was no real screen yet.)
-// `top` = the row's vertical CENTRE, `rule` = the divider under it, both measured off the current Figma
-// file's rendered pixels (2026-09-10): row centres 207/293/379/465/551px of 844, dividers at
-// 241.5/327.5/414/500px. NOTE the divider is NOT the midpoint between two rows - it sits 34.5px under its
-// own row and 51.5px above the next one, so the grid-row approximation used before was up to ~12px out.
+// ⛔ 'Service Hub' NOT HERE - it is already TAB 1 of the NavBar (unchanged rule from before the redesign).
+//
+// MENU - Figma node 58:164, rebuilt 2026-09-23. Row centres/dividers below are that node's own numbers,
+// converted the usual way (x = px/390 as %, y = px/844 as dvh).
+// ⚠️ THE DIVIDER OFFSET (+34.5px below each row's centre) is NOT freshly re-measured for this file - the
+// divider is baked into the frame's background image (`imgRectangle319`), same as the pre-redesign file,
+// so there is no separate node to read its y from. It is INFERRED from the 86px row-to-row step, which
+// IS re-measured and is unchanged from before the redesign (379→465→551→637, each +86) - the divider sits
+// at a fixed offset within that repeating 70px-row + 16px-gutter unit, so the old +34.5px should still
+// hold structurally even though the whole block shifted down. Flagged here so a future correction is easy
+// to spot if it turns out wrong, rather than reading as an already-verified number.
 const ITEMS = [
-  { id: 'TxHistory', label: 'Transaction history', top: '24.53dvh', rule: '28.61dvh' },
-  { id: 'Security',  label: 'Security',            top: '34.72dvh', rule: '38.80dvh' },
-  { id: 'Currency',  label: 'Language & currency',  top: '44.91dvh', rule: '49.05dvh' },   // split off Security 08-04; the Language part dropped 08-25, label reworded 08-25
-  { id: 'About',     label: 'About',               top: '55.09dvh', rule: '59.24dvh' },
+  { id: 'TxHistory', label: 'Transaction history',            top: '44.91dvh', rule: '48.99dvh' },
+  // ⚠️ Figma merges the old separate Security/Currency rows into one: "Security, language & currency".
+  // No Figma frame for a merged settings screen exists yet (only a standalone "Security" frame, 58:332,
+  // not yet built) - this still navigates to the existing 'Security' screen/route. Re-check when Security
+  // is built from its own node: it may need to absorb the currency picker to match this new label.
+  { id: 'Security',  label: 'Security, language & currency',  top: '55.09dvh', rule: '59.18dvh' },
+  // ⚠️ NEW ROW, NO DESTINATION YET. Figma draws it (node 58:220/58:221) but there is no corresponding
+  // frame anywhere in the file and no existing screen/route for it. Disabled - same standard as
+  // "Withdraw" below (drawn, not yet wired) - until the user gives it a real screen to open.
+  { id: 'LearnBlockchain', label: 'Learn about blockchain',   top: '65.28dvh', rule: '69.37dvh', disabled: true },
+  { id: 'About',      label: 'About ezwallet',                top: '75.47dvh', rule: '79.56dvh' },
 ]
 
-// Shared row geometry: the bullet's left edge at x=25 (6.41%), the label starting at x=46.8 - i.e. a
-// 8.8px gap after the 13px triangle. minHeight keeps a comfortable touch target around the 18px label.
-const ROW_STYLE = { position: 'absolute', left: '6.45%', right: '6.45%', transform: 'translateY(-50%)', padding: 0, gap: 8.8, minHeight: 44 }
+// Row geometry - left/right markers at the standard 6.41% inset (matches every other card's side margin
+// in this file), label filling the space between them with an 8px gap on each side.
+const ROW_STYLE = { position: 'absolute', left: '6.41%', right: '6.41%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 8, padding: 0, minHeight: 44 }
 
-// Small filled right-pointing triangle bullet (node "Polygon 6"/"Polygon 13" in the current Figma file,
-// 2026-09-10) - REPLACES the old leading category icon (clock/shield/globe/info) + trailing chevron.
-// The redesigned row is bullet + label only, no per-item glyph, no arrow - drawn inline (not added to
-// Icon.jsx) since this exact shape is only ever used here.
-function Bullet({ color }) {
-  return (
-    <svg width="13" height="15" viewBox="0 0 13 15" style={{ flexShrink: 0 }}>
-      <path d="M0 0 L13 7.5 L0 15 Z" fill={color} />
-    </svg>
-  )
+// The row's leading/trailing marker - nodes 58:215/58:217/58:220/58:223 (left) and 58:232-58:236
+// (right), both a flat 17.436px SQUARE, colour matching the row (black, or the danger red for Sign out).
+// ⚠️ PLACEHOLDER, drawn literally as Figma has it - same treatment as the Send/Receive token icons. The
+// PRE-redesign file drew a distinctive brand-blue TRIANGLE here instead (this file's own earlier
+// version); the new file replaces both ends with plain squares, and per the user's "Figma là nguồn sự
+// thật" rule this is NOT reverted back to the old triangle by preference. If the user wants a real icon
+// (a chevron on the right, in particular, is the obvious reading) on either end, that is theirs to say.
+function Marker({ color }) {
+  return <span style={{ width: 17.436, height: 17.436, background: color, flexShrink: 0 }} />
 }
 
 // Top up: copy the wallet address to the clipboard then open the Faucet → the user only has to paste it there.
@@ -43,68 +56,97 @@ function copyAddrThenFaucet() {
 
 export default function MenuScreen() {
   const { navigate } = useNav()
-  // Seed the total balance from cache → no "..." when switching screens. NO cache yet → null (NOT KNOWN YET),
-  // NOT 0: bug 07-16 used 0 as the initial value + a hardcoded loading={false} → the screen confidently drew
-  // "$0.00" while still loading ("switching screens makes my money go to 0 0 0").
-  // null → BalanceHeader shows "…" until a REAL number arrives.
   const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? c.reduce((s, t) => s + t.usd, 0) : null })
   useEffect(() => {
     const addr = localStorage.getItem('ez_wallet_addr')
-    // catch: on a failed read KEEP the old number, never let it collapse to 0 (getTokenBalances now throws instead of inventing 0)
     if (addr) getTokenBalances(addr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0))).catch(() => {})
   }, [])
 
+  // Same source + truncation Security.jsx already uses for this exact data - kept identical rather than
+  // inventing a second convention for the same three facts.
+  const email = localStorage.getItem('ez_email') || localStorage.getItem('ez_google_email') || '…'
+  const walletAddr = localStorage.getItem('ez_wallet_addr') || '…'
+  const shortAddr = walletAddr !== '…' ? walletAddr.slice(0, 10) + '...' + walletAddr.slice(-6) : '…'
+
   return (
-    <div className="screen">
-      {/* Rows 1-2: Balance (same as HomeSend / HomeReceive) */}
+    <div className="screen" style={{ background: GRADIENT }}>
+      <ScreenSheet active="MenuScreen" />
+
       <BalanceHeader totalUsd={totalUsd} loading={totalUsd === null} />
 
-      {/* ABSOLUTE, not className="row-2" (2026-09-10): BalanceHeader's own cell already spans grid-row
-          1/3 (rows 1-2), so a SECOND item explicitly placed at row-2 would occupy the same grid track -
-          CSS Grid resolves that overlap by silently inserting an extra implicit column and splitting
-          every row's width, which quietly squeezed every menu row below into ~133px and forced their
-          labels onto 2 lines. Going absolute sidesteps the grid entirely AND lands exactly on the
-          Figma centre (14.3dvh, node 1:29/1:30) instead of only approximating it via a grid cell.
-          Glow shadow (0 0 8px rgba(0,0,0,.48)) matches every button rebuilt today. */}
-      <div style={{ position: 'absolute', left: '6.45%', right: '6.45%', top: '14.3dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8, alignItems: 'center' }}>
-        <button className="btn btn-secondary" style={{ flex: 1, opacity: 0.4, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', fontSize: 'var(--fs-content-1)' }} disabled>
-          Withdraw
-        </button>
-        <button className="btn btn-primary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', fontSize: 'var(--fs-content-1)' }} onClick={copyAddrThenFaucet}>
-          Deposit
-        </button>
+      {/* INFO CARD - node 58:199: 340x156 at (25,86), radius 8 (NOT 16 - every other card in this
+          redesign is 16; this one is genuinely 8 in the node, kept as measured). Figma's example text
+          ("kattyfury1403@gmail.com" / "Arc" / "0xabcd...efgh") is placeholder DATA, same as Send's
+          "$10,000.00" - replaced with the real values, sourced exactly like Security.jsx already does.
+          "Arc Testnet" (not the placeholder's bare "Arc") matches the label used everywhere else in the
+          app - About.jsx's Network row, NotifArea's network line. */}
+      <div style={{
+        position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '18.48dvh',
+        background: 'var(--color-card)', borderRadius: 8,
+        display: 'flex', alignItems: 'center', padding: '0 16px',
+      }}>
+        <p style={{ margin: 0, fontSize: 18, lineHeight: '32px', color: 'var(--color-black)' }}>
+          Email: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{email}</span><br />
+          Network: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>Arc Testnet</span><br />
+          Wallet address: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{shortAddr}</span>
+        </p>
       </div>
 
-      {/* A triangle bullet + label, no leading category icon, no trailing chevron - matching the current
-          Figma file's menu rows. The thin divider under each of these 4 rows is real (the 2026-09-10
-          first pass dropped it, trusting the structured node list over the rendered screenshot - the
-          screenshot was right; the line is simply baked into the frame's background image instead of
-          being its own exported node). No divider under Sign out - it is the last row. */}
+      {/* WITHDRAW / DEPOSIT - nodes 58:208-58:210 (left, white) and 58:204-58:206 (right, brand blue),
+          both 166x70 at y=258 (30.57dvh), an 8px gap between them (25+166=191, right starts at 199).
+          ⚠️ FIGMA LABELS BOTH BUTTONS "Deposit" - almost certainly a copy-paste slip in the file (the
+          left one is white/inactive, the right one is blue/active, exactly the existing Withdraw/Deposit
+          pair's visual states). Kept as "Withdraw" here, matching its own established, still-accurate
+          behaviour (disabled - no fiat off-ramp exists) rather than shipping two buttons that say the
+          same word. Flagged to the user; revert to Figma's literal text if that duplication turns out to
+          be intentional. Icons are a flat 27px square in Figma on both; given no real destination icon is
+          established for either action, `up`/`down` are used - the same in/out arrow language the
+          NavBar and the token trend arrows already use elsewhere in this app (Send=up, Receive=down). */}
+      <button className="btn" disabled style={{
+        position: 'absolute', left: '6.41%', top: '30.57dvh', width: '42.56%', height: 70,
+        background: 'var(--color-white)', border: 'none', borderRadius: 16,
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', opacity: 0.4, cursor: 'not-allowed',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        fontFamily: 'inherit', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+      }}>
+        <Icon name="up" size={27} color="var(--color-black)" />
+        Withdraw
+      </button>
+      <button className="btn" onClick={copyAddrThenFaucet} style={{
+        position: 'absolute', left: '51.03%', top: '30.57dvh', width: '42.56%', height: 70,
+        background: 'var(--color-brand)', border: 'none', borderRadius: 16,
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', cursor: 'pointer',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        fontFamily: 'inherit', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
+      }}>
+        <Icon name="down" size={27} color="var(--color-white)" />
+        Deposit
+      </button>
+
       {ITEMS.map(({ id, label, top, rule, disabled }) => (
         <div key={id}>
-          <button className="menu-item" style={{ ...ROW_STYLE, top, opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer' }}
+          <button style={{ ...ROW_STYLE, top, opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer', border: 'none', background: 'none' }}
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
-            <Bullet color="var(--color-brand)" />
-            <span style={{ flex: 1, fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)' }}>{label}</span>
+            <Marker color="var(--color-black)" />
+            <span style={{ flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', textAlign: 'left' }}>{label}</span>
+            <Marker color="var(--color-black)" />
           </button>
-          <div style={{ position: 'absolute', left: '6.45%', right: '6.45%', top: rule, height: 1, background: 'var(--color-gray)' }} />
+          <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: rule, height: 1, background: 'var(--color-gray)' }} />
         </div>
       ))}
 
-      {/* Sign out - the last row, centre 551px of 844. */}
-      <div>
-        <button className="menu-item" style={{ ...ROW_STYLE, top: '65.28dvh' }} onClick={() => {
-          // KEEP ez_email_history (the email suggestion when signing back in - the user reported losing the hint). Clear the
-          // Google session too (refreshToken/email/method) for a clean sign-out; keep deviceId (it identifies the machine).
-          ;['ez_user_token','ez_wallet_addr','ez_wallet_id','ez_encryption_key','ez_email','ez_notifs','ez_last_recv_ts','ez_refresh_token','ez_google_email','ez_login_method'].forEach(k => localStorage.removeItem(k))
-          sessionStorage.removeItem('ez_pin_ok')   // signing in again must go through the PIN gate
-          sessionStorage.removeItem('ez_sync_token')   // the backup token is tied to this session's PIN signature
-          window.location.reload()
-        }}>
-          <Bullet color="var(--color-error)" />
-          <span style={{ flex: 1, fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)' }}>Sign out</span>
-        </button>
-      </div>
+      {/* Sign out - node 58:226/58:227/58:236: same row shape, both markers AND the label in the danger
+          red. No divider - it is the last row. */}
+      <button style={{ ...ROW_STYLE, top: '85.66dvh', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => {
+        ;['ez_user_token','ez_wallet_addr','ez_wallet_id','ez_encryption_key','ez_email','ez_notifs','ez_last_recv_ts','ez_refresh_token','ez_google_email','ez_login_method'].forEach(k => localStorage.removeItem(k))
+        sessionStorage.removeItem('ez_pin_ok')
+        sessionStorage.removeItem('ez_sync_token')
+        window.location.reload()
+      }}>
+        <Marker color="var(--color-error)" />
+        <span style={{ flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-error)', textAlign: 'left' }}>Sign out</span>
+        <Marker color="var(--color-error)" />
+      </button>
 
       <NavBar active="MenuScreen" />
     </div>

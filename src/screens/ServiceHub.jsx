@@ -1,54 +1,61 @@
 import NavBar from '../components/NavBar'
+import ScreenSheet from '../components/ScreenSheet'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
+import { GRADIENT } from '../brandBg'
 
-// ══ SERVICE HUB - the services home (navbar tab 1) ══
-// REBUILT 2026-09-11 against a fresh Figma pull (GxgsMU6HAYqolckzvPWXp1, node 1:43) - the user shrank
-// both cards to a fixed 112px tall (was 156px = a full double-row). Card 1 stays at top 86px (10.19dvh,
-// unchanged); card 2 now sits at 214px (25.36dvh) = card 1's bottom (86+112=198) + the standard 16px
-// gutter - re-derived from the fresh node, not assumed. Icon size/position, text gap, and padding all
-// re-checked against this same pull and are UNCHANGED (still land on the same numbers as before).
+// SERVICE HUB - Figma node 58:119 ("Service"), rebuilt 2026-09-23. Same gradient/sheet/barless-NavBar
+// frame as Send/Receive; this screen shows a TITLE instead of the balance (no BalanceHeader here -
+// Figma draws none).
 //
-// ⚠️ ONE CARD ONLY. LuckyPot was removed 2026-09-23: it is not drawn anywhere in the current Figma
-// file, and the user settled both points directly - "Exchange giờ sẽ là app duy nhất, vì chúng ta lên
-// mainnet nên phải đảm bảo security cho kỹ" and "Figma là nguồn sự thật, Figma k có luckypot".
-// Piggy Bank was already out for the same reason
-// of SERVICES below rather than shown as a 3rd disabled card. Not deleted, just not listed here.
+// ⚠️ ONE CARD ONLY. LuckyPot was removed 2026-09-23 - see the note this file already carried, still
+// true: the user settled it directly, twice ("Exchange giờ sẽ là app duy nhất..." then "Figma là nguồn
+// sự thật, Figma k có luckypot").
 const SERVICES = [
-  { id: 'swap', icon: 'exchange', label: 'Exchange', desc: 'Swap between USDC, EURC & cirBTC', screen: 'Swap', top: '10.19dvh' },
+  { id: 'swap', icon: 'exchange', label: 'Exchange', desc: 'Swap between USDC, EURC & cirBTC', screen: 'Swap' },
 ]
 
 export default function ServiceHub() {
   const { navigate } = useNav()
 
   return (
-    <div className="screen">
-      {/* THE HEADER RULE (see .screen-title in index.css): every screen title sits bottom-anchored,
-          centred, size 28, in the 70px row-1 box - the same shared class every other screen's title
-          uses, not an ad-hoc position. Lowercase "hub" per the exact Figma text. */}
-      <div className="row-1 center screen-title" style={{ fontWeight: 'var(--fw-semibold)' }}>
+    <div className="screen" style={{ background: GRADIENT }}>
+      <ScreenSheet active="ServiceHub" />
+
+      {/* TITLE - node 58:143: 24px semibold, bottom-anchored at y=70 (a 0-70 box, text at its bottom
+          edge), centred. NOT the old `.screen-title` class (28px, part of the pre-redesign type scale) -
+          the new scale is 14/16/18/20/24/40 and this is the 24px tier. Only one new-redesign screen uses
+          this exact title treatment so far; if Exchange/Security/TxHistory/About turn out to share it
+          when they're built, promote this to a class THEN (see the logo-lockup lesson in index.css - do
+          not promote it speculatively from a single instance). */}
+      <div style={{
+        position: 'absolute', left: 0, right: 0, top: 0, height: 70,
+        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+        fontSize: 24, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+      }}>
         Service hub
       </div>
 
-      {SERVICES.map(({ id, icon, label, desc, screen, top }) => {
-        const soon = !screen   // not built → dimmed and not tappable (the same disabled standard as MenuScreen)
+      {SERVICES.map(({ id, icon, label, desc, screen }) => {
+        const soon = !screen
         return (
-          // A RAISED WHITE CARD, radius 16, glow shadow (nodes 7:113/7:117) - not the old grey-border
-          // tile style. Icon is a real Icon component at the Figma placeholder's exact 55.844px box,
-          // inset 10px from the card's left edge and vertically centred; the label+desc block starts
-          // right after it with a 9px gap, both lines in BLACK (the description is NOT muted grey here,
-          // unlike almost every other secondary-text line in the app - this frame draws it solid black).
+          // Card - node 58:153: 340x156 at (25,86), radius 16, glow shadow. Figma draws a flat 75.906px
+          // BLACK SQUARE for the icon (node 58:159) - a placeholder, per the rule the user set on the Add
+          // screen ("tìm cái tương tự rồi add vào"). Unlike the token squares on Send/Receive (no real
+          // brand mark exists for USDC/EURC/cirBTC yet), Exchange already HAS an established icon in this
+          // app (Icon name="exchange" - the ArrowUpDown pair, used for this exact feature before the
+          // redesign), so that real icon is used here rather than a literal square.
           <button key={id} disabled={soon} onClick={soon ? undefined : () => navigate(screen)}
             style={{
-              position: 'absolute', left: '6.41%', right: '6.41%', top, height: '13.27dvh',
+              position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '18.48dvh',
               border: 'none', borderRadius: 16, background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
-              display: 'flex', alignItems: 'center', padding: '0 8px 0 10px', gap: 9, minWidth: 0,
+              display: 'flex', alignItems: 'center', padding: '0 16px 0 8.5px', gap: 9, minWidth: 0,
               fontFamily: 'inherit', textAlign: 'left', opacity: soon ? 0.4 : 1, cursor: soon ? 'not-allowed' : 'pointer',
             }}>
-            <Icon name={icon} size="min(14.32vw, calc(var(--screen-max) * 0.1432))" color="var(--color-brand)" style={{ flexShrink: 0 }} />
+            <Icon name={icon} size="min(19.46vw, calc(var(--screen-max) * 0.1946))" color="var(--color-brand)" style={{ flexShrink: 0 }} />
             <span className="col" style={{ minWidth: 0, gap: 2 }}>
-              <span style={{ fontSize: 'var(--fs-h2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', lineHeight: 1.2 }}>{label}:</span>
-              <span style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-normal)', color: 'var(--color-content)', lineHeight: 1.3 }}>{desc}</span>
+              <span style={{ fontSize: 20, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', lineHeight: 1.2 }}>{label}:</span>
+              <span style={{ fontSize: 16, fontWeight: 'var(--fw-normal)', color: 'var(--color-black)', lineHeight: 1.3 }}>{desc}</span>
             </span>
           </button>
         )
