@@ -38,11 +38,11 @@ const ROW_STYLE = { position: 'absolute', left: '6.41%', right: '6.41%', transfo
 
 // The row's leading/trailing marker - nodes 58:215/58:217/58:220/58:223 (left) and 58:232-58:236
 // (right), both a flat 17.436px SQUARE, colour matching the row (black, or the danger red for Sign out).
-// ⚠️ PLACEHOLDER, drawn literally as Figma has it - same treatment as the Send/Receive token icons. The
-// PRE-redesign file drew a distinctive brand-blue TRIANGLE here instead (this file's own earlier
-// version); the new file replaces both ends with plain squares, and per the user's "Figma là nguồn sự
-// thật" rule this is NOT reverted back to the old triangle by preference. If the user wants a real icon
-// (a chevron on the right, in particular, is the obvious reading) on either end, that is theirs to say.
+// ⚠️ RESOLVED, NOT YET BUILT - see "Menu's two row markers ARE real icons" in HANDOFF.md (2026-09-23).
+// The user confirmed both squares are real icons, deferred to a later session ("tối làm tiếp"):
+// LEFT = a per-row symbolic icon (different on every row), RIGHT = one shared right-chevron icon on
+// every row (tap-to-open). Still a plain square here only because that follow-up hasn't happened yet -
+// read HANDOFF.md before picking icons rather than guessing fresh.
 function Marker({ color }) {
   return <span style={{ width: 17.436, height: 17.436, background: color, flexShrink: 0 }} />
 }
@@ -131,7 +131,12 @@ export default function MenuScreen() {
             <span style={{ flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', textAlign: 'left' }}>{label}</span>
             <Marker color="var(--color-black)" />
           </button>
-          <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: rule, height: 1, background: 'var(--color-gray)' }} />
+          {/* 0.5px, #94A3B8 - the SAME hairline spec as AddToHome's share-sheet dividers (Figma bakes
+              this exact stroke into that screen's own asset: stroke="#94A3B8" stroke-width="0.5"). Was
+              `var(--color-gray)` (#E3E3E3, a different pre-redesign token) - the user approved having a
+              divider here at all (it isn't in the Figma node, inferred - see the comment on ITEMS above)
+              but corrected the colour to match the other one this redesign already draws. */}
+          <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: rule, height: 0.5, background: 'var(--color-muted)' }} />
         </div>
       ))}
 

@@ -56,6 +56,42 @@ QR sizing comment for that one). **The user's own words, to be read literally wh
   Rules) - so this almost certainly affects ALL of it, not just Receive. Assume every new screen has the
   same latent issue until it is actually tested at a square-ish viewport.
 
+### ⚠️ KNOWN, DEFERRED (2026-09-23) - Menu's two row markers ARE real icons, not decided yet
+
+`src/screens/MenuScreen.jsx`'s row markers (the flat squares at each end of Transaction history /
+Security, language & currency / Learn about blockchain / About) are currently a literal `Marker`
+component - a plain coloured square, built that way because Figma draws them as undifferentiated
+squares with no reference photo to go by (unlike the Add screen's share-sheet icons, which had the
+user's own iOS screenshot as ground truth).
+
+**The user confirmed what they should become, 2026-09-23, but NOT to be built tonight/this session -
+"handoff tối làm tiếp" (write it down, continue tonight):**
+*"note lại các ô vuông màn Menu chính là icon, bên trái là icon tượng trưng bên phải là icon tam giác
+hướng qua phải, để điều hướng người dùng click vào"*
+- **LEFT marker → a real, PER-ROW symbolic icon.** Not one shared glyph - each row gets its own
+  meaningful icon (a clock for Transaction history, a shield for Security, etc. - pick per row when this
+  is built, the same way the pre-redesign Menu once did before the 2026-09-10 rebuild replaced per-item
+  icons with a plain triangle bullet).
+  ⚠️ The `Icon.jsx` mapping already used Lucide equivalents for exactly this kind of thing on other
+  screens this session (see the Add screen's `bookmark`/`star`/`note`/`find`/`addSquare`) - reuse that
+  approach (import the matching Lucide component, add it to `ICONS`) rather than inventing a new pattern.
+- **RIGHT marker → ONE shared icon, the same on every row: a right-pointing chevron/triangle** (`>`),
+  a plain navigation affordance ("tap to open this row"). Lucide's `ChevronRight` is already imported in
+  `Icon.jsx` as `right2` (used for About's link rows before the redesign) - almost certainly the correct
+  choice here too, just confirm the visual weight/size against Figma once this is actually built.
+- **NOT STARTED.** Do not build this unprompted - it is deferred to a later session ("tối làm tiếp").
+  When it is picked up: `Sign out`'s markers should very likely follow the same rule (left = a real icon,
+  e.g. a logout glyph, right = the same chevron, both in the danger red) even though the user's note only
+  names the 4 items above it - confirm before assuming.
+
+**Separately, confirmed and ALREADY FIXED the same message:** the divider between rows was invented
+(not a Figma node - it's baked into that frame's background image, see the ITEMS comment in
+`MenuScreen.jsx`) using the wrong colour, `var(--color-gray)` (#E3E3E3). The user approved having a
+divider there at all, but corrected the colour: *"line xám mờ 0.5px bạn tự bịa nhưng tôi thấy ok, miễn
+là line cùng màu với line khác, màu 94A3B8 thì phải"* - now `var(--color-muted)` (#94A3B8) at 0.5px,
+matching the exact hairline spec Figma already bakes into the Add screen's own share-sheet dividers
+(`stroke="#94A3B8" stroke-width="0.5"` in that asset).
+
 ### Found 2026-09-22, NOT fixed (the user has not approved the fix)
 
 Leftovers from the 08-25 removal of Vietnamese. All verified by reading the code, all real:
