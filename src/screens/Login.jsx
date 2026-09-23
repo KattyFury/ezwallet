@@ -1,4 +1,5 @@
-import logoLong from '../../design/logo.svg'
+import arrowDown from '../../design/arrow-down.svg'
+import { GRADIENT } from '../brandBg'
 import { useNav } from '../nav'
 import { useState, useEffect, useRef } from 'react'
 import { getCookie, setCookie, deleteCookie } from 'cookies-next'
@@ -157,49 +158,91 @@ export default function Login() {
   // Google login is REMOVED FROM THE UI (user decision 2026-07-05). The plumbing (handleGoogleLogin, cookies,
   // deviceId, refreshToken, onLoginComplete) is KEPT so it can be switched back on quickly - only the button is hidden.
 
-  // Every position below is lifted straight from the current Figma file (`GxgsMU6HAYqolckzvPWXp1`,
-  // node 1:180 "Login") as an exact px→dvh/% conversion (x/390→%, y/844→dvh), same convention as the
-  // rest of the app. Absolute + translate(-50%) so each element's Figma CENTRE lands exactly on screen,
-  // instead of the old flex-centred block (which no longer matches this redesign's tighter offsets).
+  // LOGIN IS THE LANDING PAGE (user, 2026-09-23: "màn login chính là màn hình landingpage + login email").
+  // Figma node 1:180. Every coordinate is that node's own number converted the usual way:
+  // x = px/390 as a %, y = px/844 as dvh. Nothing is inherited from the pre-redesign Login.
   return (
-    <div className="screen">
-      {/* Shared `.logo-lockup` (node 3:11 sits at the same y as Splash's own logo) - see THE LOGO RULE
-          in index.css. 50% of the screen width (user decision 07-17, still holds - Figma's 190.91/390 =
-          48.95%, close enough to keep the existing rule rather than special-case it). */}
-      <img className="logo-lockup" src={logoLong} alt="ezwallet" />
+    <div className="screen" style={{ background: GRADIENT }}>
 
-      {/* Slogan - node 3:10, centre at y=(258+70/2)=293px = 34.72dvh, width 258px = 66.15% of the screen.
-          NEW COPY (2026-09-10, replacing the old "A crypto wallet simple enough for my mom to use" one-liner) -
-          verbatim off the Figma text layer, 2 lines via <br/> exactly as authored there. */}
-      <span style={{
-        position: 'absolute', top: '34.72dvh', left: '50%', transform: 'translate(-50%, -50%)',
-        width: 'min(66.15vw, calc(var(--screen-max) * 0.6615))',
-        fontSize: '18px', fontWeight: 'var(--fw-semibold)', color: 'var(--color-muted-2)',
-        textAlign: 'center', lineHeight: 'normal',
+      {/* HEADLINE - node 48:452: Bricolage Grotesque Bold 40px, line-height 44, tracking -1.6px,
+          340 wide at x=25, centred on y=164. The second line is --color-muted-2 (#667085), which is
+          what makes the claim read as one sentence with its own echo rather than two shouts.
+          ⚠️ opsz is PINNED TO 14, not left on `auto`. A variable font with an optical-size axis picks
+          a lighter, tighter cut as the size grows; the Figma node fixes opsz at 14 while setting 40px,
+          so `font-optical-sizing: auto` would render a visibly different, thinner face. */}
+      <h1 style={{
+        position: 'absolute', left: '6.41%', top: '19.43dvh', transform: 'translateY(-50%)',
+        width: '87.18%', margin: 0,
+        fontFamily: 'var(--font-brand)', fontSize: 40, fontWeight: 700,
+        lineHeight: '44px', letterSpacing: '-1.6px',
+        fontVariationSettings: '"opsz" 14, "wdth" 100',
+        color: 'var(--color-black)',
       }}>
-        Simple enough for anyone.<br />No seed phrase, just a PIN.
-      </span>
+        Six digits.<br />
+        <span style={{ color: 'var(--color-muted-2)' }}>That&apos;s the whole wallet.</span>
+      </h1>
 
-      {restoring && (
-        <span style={{ position: 'absolute', top: 'calc(85.66dvh - 40px)', left: '50%', transform: 'translateX(-50%)', fontSize: 'var(--fs-caption)', color: 'var(--color-muted)' }}>
-          Processing...
-        </span>
-      )}
+      {/* THE SIX PIN CELLS - nodes 49:453..49:462 (the 50x70 #D2DCE6 boxes, radius 8, at x = 25, 83,
+          141, 199, 257, 315 - an even 58px step, i.e. 50 wide with an 8px gap) and 50:490..50:497 (the
+          10px black dots). The dot is drawn INSIDE its cell rather than at its own absolute coordinate:
+          Figma puts each dot exactly at the cell's centre, so nesting them is the same geometry with
+          six fewer magic numbers. Decorative - this is a picture of a PIN, not an input. */}
+      {[6.41, 21.28, 36.15, 51.03, 65.90, 80.77].map((left, i) => (
+        <div key={i} aria-hidden="true" style={{
+          position: 'absolute', left: `${left}%`, top: '30.57dvh',
+          width: '12.82%', height: '8.29dvh',
+          background: '#D2DCE6', borderRadius: 8,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>
+          <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--color-black)' }} />
+        </div>
+      ))}
 
-      {/* "Sign in with email" pill - node 1:191/1:192, centre at y=(699+48/2)=723px = 85.66dvh,
-          width 231.996px = 59.48% of the screen. No icon (Figma's button is text-only, unlike the old
-          mail-icon version). Glow shadow (0 0 8px rgba(0,0,0,.5), measured off the Figma layer) instead
-          of .btn-primary's straight-down shadow - per BRAND-GUIDELINE.md's shadow rule (clickable elements only, glow not offset). */}
-      <button className="btn"
+      {/* THE LEDE - node 50:471: 20px, line-height 30, 340 wide at x=25, TOP edge at y=364.5 (this one
+          is top-anchored in Figma, not centre-anchored like the headline). The opening clause is
+          semibold and the rest regular, which is how the node splits its own runs. */}
+      <p style={{
+        position: 'absolute', left: '6.41%', top: '43.19dvh',
+        width: '87.18%', margin: 0,
+        fontSize: 20, lineHeight: '30px', color: 'var(--color-black)',
+        fontWeight: 'var(--fw-normal)',
+      }}>
+        <span style={{ fontWeight: 'var(--fw-semibold)' }}>Send and receive digital dollars </span>
+        with anyone, using an email and a six-digit PIN. No seed phrase to write down, and no wallet
+        address to copy.
+      </p>
+
+      {/* The arrow pointing at the button - node 54:2: the same 40x45.94 white arrow the Add screen
+          uses, turned -90deg so it points right. Its box is 45.938x40 at (29,703). */}
+      <div aria-hidden="true" style={{
+        position: 'absolute', left: '7.44%', top: '83.29dvh',
+        width: 45.938, height: 40,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+      }}>
+        <img src={arrowDown} alt="" style={{ width: 40, height: 45.938, transform: 'rotate(-90deg)' }} />
+      </div>
+
+      {/* THE ONLY CONTROL - nodes 50:472 (the white pill: 274x70 at x=91, radius 16, and a GLOW rather
+          than a drop shadow - Figma's filter is feOffset 0,0 + stdDeviation 5 at 50% black, i.e.
+          `0 0 10px rgba(0,0,0,.5)`) and 50:479 (the 24px semibold label centred inside it).
+          y 688-758 is row 9 of the guideline grid, where every screen puts its action row.
+          ⚠️ This still NAVIGATES to the EnterEmail screen. The user's flow of 2026-09-23 says node
+          1:193 "Log in with email" should open as a POPUP over this screen rather than replace it -
+          that conversion is its own step and has not been done yet. */}
+      <button
+        onClick={() => navigate('EnterEmail')}
         style={{
-          position: 'absolute', top: '85.66dvh', left: '50%', transform: 'translate(-50%, -50%)',
-          width: 'min(59.48vw, calc(var(--screen-max) * 0.5948))',
-          background: 'var(--color-brand)', color: 'var(--color-white)',
-          boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: '18px',
-        }}
-        onClick={() => navigate('EnterEmail')}>
-        Sign in with email
+          position: 'absolute', left: '23.33%', top: '81.52dvh',
+          width: '70.26%', height: '8.29dvh',
+          background: 'var(--color-white)', border: 'none', borderRadius: 16,
+          boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)',
+          fontSize: 24, fontWeight: 'var(--fw-semibold)', lineHeight: '30px',
+          color: 'var(--color-black)', cursor: 'pointer',
+          WebkitTapHighlightColor: 'transparent',
+        }}>
+        {restoring ? 'Processing...' : 'Log in with email'}
       </button>
+
     </div>
   )
 }

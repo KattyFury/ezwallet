@@ -18,11 +18,13 @@ const GRADIENT = 'linear-gradient(204.80096509205717deg, #FFFFFF 50%, #0B53BF 10
 // The five rows of the fake iOS share sheet (node 48:358). Only the LAST one is legible - the four
 // above it are blurred, because the point of the picture is to show the user which line to look for,
 // not to be a working menu. `blur` mirrors Figma's own per-layer blur.
-// ⚠️ "Favarites" is spelled that way in the Figma file. Kept verbatim; it sits under a 2px blur and is
-// effectively unreadable, but it is a typo - flagged to the user 2026-09-23.
+// ⚠️ The Figma file spells this "Favarites". Corrected to "Favorites" on the user's instruction
+// 2026-09-23, confirmed against their photo of the real iOS share sheet, which reads "Add to
+// Favorites". THE FIGMA FILE STILL HAS THE TYPO - so a future pixel-diff of node 48:350 will show a
+// mismatch on this row. That is the design being wrong, not the code.
 const SHEET_ROWS = [
   { label: 'Add Bookmark to...', icon: 'bookmark',  blur: true },
-  { label: 'Add to Favarites',   icon: 'star',      blur: true },
+  { label: 'Add to Favorites'  ,   icon: 'star',      blur: true },
   { label: 'Add to Quick Note',  icon: 'note',      blur: true },
   { label: 'Find on Page',       icon: 'find',      blur: true },
   { label: 'Add to Home Screen', icon: 'addSquare', blur: false },

@@ -9,11 +9,13 @@ import { useNav } from '../nav'
 // gutter - re-derived from the fresh node, not assumed. Icon size/position, text gap, and padding all
 // re-checked against this same pull and are UNCHANGED (still land on the same numbers as before).
 //
-// ⚠️ Piggy Bank is NOT drawn in the Figma frame at all (only 2 cards: Exchange + LuckyPot) - left OUT
+// ⚠️ ONE CARD ONLY. LuckyPot was removed 2026-09-23: it is not drawn anywhere in the current Figma
+// file, and the user settled both points directly - "Exchange giờ sẽ là app duy nhất, vì chúng ta lên
+// mainnet nên phải đảm bảo security cho kỹ" and "Figma là nguồn sự thật, Figma k có luckypot".
+// Piggy Bank was already out for the same reason
 // of SERVICES below rather than shown as a 3rd disabled card. Not deleted, just not listed here.
 const SERVICES = [
   { id: 'swap', icon: 'exchange', label: 'Exchange', desc: 'Swap between USDC, EURC & cirBTC', screen: 'Swap', top: '10.19dvh' },
-  { id: 'luckypot', icon: 'luckypot', label: 'LuckyPot', desc: 'Your idle money can become lottery tickets – for free', screen: 'LuckyPot', top: '25.36dvh' },
 ]
 
 export default function ServiceHub() {

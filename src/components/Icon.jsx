@@ -5,9 +5,9 @@
 // "thư viện icon dùng 1 thư viện lớn, đẹp" → Lucide, replace everything). Lucide is ~6,300 icons, MIT,
 // 24px grid / 2px stroke, and it tree-shakes: only the icons named below are bundled, not the library.
 //
-// ⚠️ THE `icon/` FOLDER IS DELIBERATELY NOT DELETED. Those are the user's own drawings. Nothing imports
-// them any more except `luckypot` (see below), but they are the fallback if a Lucide glyph turns out
-// wrong on a real device, and they are not ours to throw away.
+// ⚠️ THE `icon/` FOLDER IS DELIBERATELY NOT DELETED. Those are the user's own drawings and nothing
+// imports them any more, but they are the fallback if a Lucide glyph turns out wrong on a real device,
+// and they are not ours to throw away. (`luckypot.svg` IS gone - that feature was removed.)
 //
 // ⚠️ THE MAPPING BELOW WAS MADE BY LOOKING AT EVERY OLD GLYPH, NOT BY MATCHING NAMES. Several old names
 // lie about their shape: `right2` was a solid PLAY TRIANGLE used as a chevron, `down2` was a solid
@@ -50,14 +50,6 @@ import {
   SquarePlus,       // Add to Home Screen  - a plus inside a rounded square
 } from 'lucide-react'
 
-// ⚠️ THE ONE ICON THAT IS NOT LUCIDE. `luckypot` is a FULL-COLOUR drawing (yellow #FFCC00 bag + green
-// #16A34A ground + black outline) at viewBox 200x200. Lucide is monochrome stroke art, so there is no
-// equivalent - swapping it would silently turn the Service Hub's LuckyPot card from a colour illustration
-// into a grey outline. Kept as the user's original SVG; the `color` prop still has no effect on it.
-// (LuckyPot may be dropped entirely - the user said on 2026-09-23 that Exchange is to be the only
-// sub-app on mainnet - but that is a separate decision, so the icon stays working until then.)
-import luckypotSvg from '../../icon/luckypot.svg?raw'
-
 const ICONS = {
   add: Plus,
   check: CircleCheck,
@@ -95,17 +87,6 @@ const ICONS = {
 }
 
 export default function Icon({ name, size = 24, color, style, className }) {
-  // The colour illustration takes the old inline-SVG path; everything else is a Lucide component.
-  if (name === 'luckypot') {
-    return (
-      <span
-        className={className}
-        style={{ display: 'inline-flex', width: size, height: size, flexShrink: 0, ...style }}
-        dangerouslySetInnerHTML={{ __html: luckypotSvg }}
-      />
-    )
-  }
-
   const Glyph = ICONS[name]
   if (!Glyph) return null
   // `color` stays optional exactly as before: unset → the glyph inherits the parent's text colour,
