@@ -1,59 +1,120 @@
-// Shared icon component - inlines the SVG (currentColor) → recolour via the color prop / the parent text colour.
-// The SVGs are normalised: viewBox 100x100, stroke/fill = currentColor, width/height 100%.
-// ⚠️ 07-29 (audit): 8 icons that no screen renders had their IMPORT REMOVED here to keep the bundle light -
-// back · dca · facebook · google · hint · left · right · swap. The .svg FILES ARE STILL in `icon/`
-// (the user's drawings, not deleted). To use one again: add one import line + one name to ICONS.
-import add from '../../icon/add.svg?raw'
-import check from '../../icon/check.svg?raw'
-import clock from '../../icon/clock.svg?raw'
-import copy from '../../icon/copy.svg?raw'
-import down from '../../icon/down.svg?raw'
-import down2 from '../../icon/down2.svg?raw'
-import download from '../../icon/download.svg?raw'
-import erase from '../../icon/erase.svg?raw'
-import exchange from '../../icon/exchange.svg?raw'
-import globe from '../../icon/globe.svg?raw'
-import hub from '../../icon/hub.svg?raw'
-import human from '../../icon/human.svg?raw'
-import info from '../../icon/info.svg?raw'
-import luckypot from '../../icon/luckypot.svg?raw'
-import mail from '../../icon/mail.svg?raw'
-import menu from '../../icon/menu.svg?raw'
-import option from '../../icon/option.svg?raw'
-import out from '../../icon/out.svg?raw'
-import pencil from '../../icon/pencil.svg?raw'
-import qr from '../../icon/qr.svg?raw'
-import right2 from '../../icon/right2.svg?raw'
-import scan from '../../icon/scan.svg?raw'
-import share from '../../icon/share.svg?raw'
-import shield from '../../icon/shield.svg?raw'
-import trade from '../../icon/trade.svg?raw'
-import up from '../../icon/up.svg?raw'
-import warning from '../../icon/warning.svg?raw'
-import x from '../../icon/x.svg?raw'
+// Shared icon component. SAME API as before - `<Icon name="qr" size={24} color="..." />` - so switching
+// the whole app's icon set is this one file and NOT a change to any of the ~20 screens that render icons.
+//
+// 2026-09-23: the app moved from the user's 37 hand-drawn SVGs in `icon/` to LUCIDE (user decision:
+// "thư viện icon dùng 1 thư viện lớn, đẹp" → Lucide, replace everything). Lucide is ~6,300 icons, MIT,
+// 24px grid / 2px stroke, and it tree-shakes: only the icons named below are bundled, not the library.
+//
+// ⚠️ THE `icon/` FOLDER IS DELIBERATELY NOT DELETED. Those are the user's own drawings. Nothing imports
+// them any more except `luckypot` (see below), but they are the fallback if a Lucide glyph turns out
+// wrong on a real device, and they are not ours to throw away.
+//
+// ⚠️ THE MAPPING BELOW WAS MADE BY LOOKING AT EVERY OLD GLYPH, NOT BY MATCHING NAMES. Several old names
+// lie about their shape: `right2` was a solid PLAY TRIANGLE used as a chevron, `down2` was a solid
+// DOWN TRIANGLE used as a dropdown caret, `trade` and `exchange` were both up/down arrow pairs, and `qr`
+// was four squares rather than a QR code. Each is mapped to what it DID, not to what it was called.
+import {
+  Plus,             // add       - a thin plus
+  CircleCheck,      // check     - tick inside a circle (the Receipt's big success mark)
+  Clock,            // clock
+  Copy,             // copy      - two overlapping squares
+  ArrowDown,        // down      - a plain down arrow (money received)
+  ChevronDown,      // down2     - WAS a solid triangle; it is a dropdown caret, so a chevron is the honest shape
+  Download,         // download  - arrow into a tray
+  Delete,           // erase     - backspace key with an x (the numpad)
+  ArrowUpDown,      // exchange  - a pair of vertical arrows
+  Globe,            // globe
+  LayoutGrid,       // hub       - 2x2 rounded squares (the Services tab)
+  User,             // human     - a person (Contacts)
+  Info,             // info
+  Mail,             // mail
+  Menu,             // menu      - hamburger
+  EllipsisVertical, // option    - three vertical dots
+  LogOut,           // out       - arrow leaving a bracket (Sign out / Exit)
+  Pencil,           // pencil
+  QrCode,           // qr        - WAS four plain squares; the thing it means is a QR code
+  ChevronRight,     // right2    - WAS a solid play triangle, used as a row chevron
+  Scan,             // scan      - viewfinder corners
+  Share2,           // share     - three connected nodes
+  Shield,           // shield
+  ArrowUpDown as TradeArrows, // trade - the same up/down pair as `exchange`, drawn heavier
+  ArrowUp,          // up        - a plain up arrow (money sent)
+  CircleAlert,      // warning   - an exclamation mark inside a circle
+  X,                // x         - a plain cross
+  // New with the 2026-09-23 redesign - the fake iOS share sheet on the Add screen needs Apple's own
+  // five rows, so these match what iOS actually draws (see the user's screenshot of the real sheet).
+  BookOpen,         // Add Bookmark to...  - an open book
+  Star,             // Add to Favorites    - an outlined star
+  NotepadText,      // Add to Quick Note   - a note pad
+  FileSearch,       // Find on Page        - a document with a magnifier
+  SquarePlus,       // Add to Home Screen  - a plus inside a rounded square
+} from 'lucide-react'
 
-// ⚠️ luckypot · exchange = viewBox 200×200 (every other icon is 100×100). DELIBERATE - the user drew them
-// at double size because these render LARGE in the Service Hub, so relatively thinner strokes are the intent.
-// Do NOT "normalise" them to 100×100 or double the stroke-width. No display impact: width/height = 100%, the viewBox scales.
-// ⚠️ luckypot is a FULL-COLOUR icon (yellow #FFCC00 + green #16A34A + black outline) - the user's drawing is kept
-// as-is on purpose, NOT converted to currentColor. Consequence: the `color` prop has no effect on this one.
-// `pig` (Piggy Bank) - unregistered 2026-09-07, no screen renders it any more (see ServiceHub.jsx's note on the
-// new Figma frame dropping the card). File kept at icon/pig.svg - add the import + a name back here to reuse it.
-// (A LI.FI brand-asset icon was tried here the same day and reverted - the Exchange card actually goes through
-// Circle's Stablecoin Kit, not LI.FI directly - see ServiceHub.jsx's SERVICES description.)
+// ⚠️ THE ONE ICON THAT IS NOT LUCIDE. `luckypot` is a FULL-COLOUR drawing (yellow #FFCC00 bag + green
+// #16A34A ground + black outline) at viewBox 200x200. Lucide is monochrome stroke art, so there is no
+// equivalent - swapping it would silently turn the Service Hub's LuckyPot card from a colour illustration
+// into a grey outline. Kept as the user's original SVG; the `color` prop still has no effect on it.
+// (LuckyPot may be dropped entirely - the user said on 2026-09-23 that Exchange is to be the only
+// sub-app on mainnet - but that is a separate decision, so the icon stays working until then.)
+import luckypotSvg from '../../icon/luckypot.svg?raw'
+
 const ICONS = {
-  add, check, clock, copy, down, down2, download, erase, exchange, globe, hub,
-  human, info, luckypot, mail, menu, option, out, pencil, qr, right2, scan, share, shield, trade, up, warning, x,
+  add: Plus,
+  check: CircleCheck,
+  clock: Clock,
+  copy: Copy,
+  down: ArrowDown,
+  down2: ChevronDown,
+  download: Download,
+  erase: Delete,
+  exchange: ArrowUpDown,
+  globe: Globe,
+  hub: LayoutGrid,
+  human: User,
+  info: Info,
+  mail: Mail,
+  menu: Menu,
+  option: EllipsisVertical,
+  out: LogOut,
+  pencil: Pencil,
+  qr: QrCode,
+  right2: ChevronRight,
+  scan: Scan,
+  share: Share2,
+  shield: Shield,
+  trade: TradeArrows,
+  up: ArrowUp,
+  warning: CircleAlert,
+  x: X,
+  // the Add screen's share sheet
+  bookmark: BookOpen,
+  star: Star,
+  note: NotepadText,
+  find: FileSearch,
+  addSquare: SquarePlus,
 }
 
 export default function Icon({ name, size = 24, color, style, className }) {
-  const svg = ICONS[name]
-  if (!svg) return null
+  // The colour illustration takes the old inline-SVG path; everything else is a Lucide component.
+  if (name === 'luckypot') {
+    return (
+      <span
+        className={className}
+        style={{ display: 'inline-flex', width: size, height: size, flexShrink: 0, ...style }}
+        dangerouslySetInnerHTML={{ __html: luckypotSvg }}
+      />
+    )
+  }
+
+  const Glyph = ICONS[name]
+  if (!Glyph) return null
+  // `color` stays optional exactly as before: unset → the glyph inherits the parent's text colour,
+  // which is what every call site that omits it already relies on.
   return (
     <span
       className={className}
-      style={{ display: 'inline-flex', width: size, height: size, color, flexShrink: 0, ...style }}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+      style={{ display: 'inline-flex', width: size, height: size, color, flexShrink: 0, ...style }}>
+      <Glyph size={size} color="currentColor" absoluteStrokeWidth={false} />
+    </span>
   )
 }

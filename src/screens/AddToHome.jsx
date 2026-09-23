@@ -1,4 +1,5 @@
 import { useNav } from '../nav'
+import Icon from '../components/Icon'
 import { bootTarget, A2HS_KEY } from '../boot'
 import logoIcon from '../../design/logo-icon.svg'
 import arrowDown from '../../design/arrow-down.svg'
@@ -20,11 +21,11 @@ const GRADIENT = 'linear-gradient(204.80096509205717deg, #FFFFFF 50%, #0B53BF 10
 // ⚠️ "Favarites" is spelled that way in the Figma file. Kept verbatim; it sits under a 2px blur and is
 // effectively unreadable, but it is a typo - flagged to the user 2026-09-23.
 const SHEET_ROWS = [
-  { label: 'Add Bookmark to...', blur: true },
-  { label: 'Add to Favarites',   blur: true },
-  { label: 'Add to Quick Note',  blur: true },
-  { label: 'Find on Page',       blur: true },
-  { label: 'Add to Home Screen', blur: false },
+  { label: 'Add Bookmark to...', icon: 'bookmark',  blur: true },
+  { label: 'Add to Favarites',   icon: 'star',      blur: true },
+  { label: 'Add to Quick Note',  icon: 'note',      blur: true },
+  { label: 'Find on Page',       icon: 'find',      blur: true },
+  { label: 'Add to Home Screen', icon: 'addSquare', blur: false },
 ]
 
 // "ez" is always brand blue inside a run of black text - the wordmark rule, applied in running copy.
@@ -103,7 +104,11 @@ export default function AddToHome() {
       </ol>
 
       {/* The fake iOS share sheet - node 48:358: 274x242 @ (58,430), white, 1px brand border, radius 16.
-          Inside it, five evenly-split rows separated by hairlines. The rows are laid out with flex rather
+          Inside it, five evenly-split rows separated by hairlines - the hairlines are blurred TOO
+          (Figma bakes a gaussian filter into the divider asset itself, `filter0_f_0_4`). The user's
+          rule, 2026-09-23: the blur is deliberate and ONLY the "Add to Home Screen" row and its icon
+          stay sharp. Everything else on this picture - text, icons, rules - is soft.
+          The rows are laid out with flex rather
           than five absolute coordinates: they are one repeated object, and Figma's own y values for them
           (29.3 / 76.0 / 121.5 / 167.1 / 212.7 from the box top) are an even 45.6px step. */}
       <div style={{
@@ -117,16 +122,22 @@ export default function AddToHome() {
             {/* Hairline ABOVE every row but the first - node 48:368/369/372/373: #94A3B8, and inset to
                 start at the TEXT, not at the icon, exactly as a real iOS menu draws it. */}
             {i > 0 && (
-              <div style={{ height: 1, background: 'var(--color-muted)', marginLeft: '18.04%', marginRight: '7.86%' }} />
+              <div style={{
+                height: 1, background: 'var(--color-muted)',
+                marginLeft: '18.04%', marginRight: '7.86%',
+                filter: 'blur(2px)',
+              }} />
             )}
             <div style={{
               flex: 1, display: 'flex', alignItems: 'center',
               paddingLeft: '7.54%', gap: '3.19%',
               filter: row.blur ? 'blur(2px)' : 'none',
             }}>
-              {/* Figma draws a FLAT 20x20 BRAND-BLUE SQUARE here, with no icon inside it - nodes
-                  48:361/363/365/367/371. Reproduced as drawn. */}
-              <span style={{ width: '7.31%', aspectRatio: '1 / 1', background: 'var(--color-brand)', flex: 'none' }} />
+              {/* Figma draws a flat 20x20 blue SQUARE at each of these (nodes 48:361/363/365/367/371).
+                  The user settled what they mean on 2026-09-23: they are PLACEHOLDERS - "vào thư viện
+                  icon, tìm cái tương tự rồi add vào" - so each one carries the icon iOS actually draws
+                  on that row, matched against the user's screenshot of the real share sheet. */}
+              <Icon name={row.icon} size={20} color="var(--color-brand)" />
               <span style={{ fontSize: 14, color: 'var(--color-brand)', whiteSpace: 'nowrap' }}>{row.label}</span>
             </div>
           </div>
