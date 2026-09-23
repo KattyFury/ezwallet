@@ -146,11 +146,13 @@ export default function AddToHome() {
         ))}
       </div>
 
-      {/* The arrow pointing down at the browser's own Share button - node 52:26: 40x45.94 at (308,786),
-          white, sitting on the blue half of the gradient. */}
+      {/* The arrow pointing down at the browser's own Share button - node 52:26: 40x45.94, white,
+          sitting on the blue half of the gradient.
+          ⚠️ MOVED 2026-09-23 by the user, from (308,786) to (320,774). Re-read off the node, not nudged
+          by eye: x 320.0087 / 390 = 82.05%, y 774 / 844 = 91.71dvh. */}
       <img
         src={arrowDown} alt=""
-        style={{ position: 'absolute', left: '78.98%', top: '93.13dvh', width: 40, height: 45.94 }} />
+        style={{ position: 'absolute', left: '82.05%', top: '91.71dvh', width: 40, height: 45.94 }} />
 
     </div>
   )

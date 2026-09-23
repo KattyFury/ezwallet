@@ -20,7 +20,6 @@ const PasteAddress = lazy(() => import('./screens/PasteAddress'))
 const SendAmount  = lazy(() => import('./screens/SendAmount'))
 const SendConfirm = lazy(() => import('./screens/SendConfirm'))
 const SendReceipt = lazy(() => import('./screens/SendReceipt'))
-const EnterEmail  = lazy(() => import('./screens/EnterEmail'))
 const CreateQR    = lazy(() => import('./screens/CreateQR'))
 const ShowQR      = lazy(() => import('./screens/ShowQR'))
 const SavedQRList = lazy(() => import('./screens/SavedQRList'))
@@ -39,7 +38,7 @@ const SCREENS = {
   Login,
   HomeSend, HomeReceive, Swap, ServiceHub, MenuScreen,
   PasteAddress, SendAmount, SendConfirm, SendReceipt,
-  EnterEmail, CreateQR, ShowQR, SavedQRList,
+  CreateQR, ShowQR, SavedQRList,
   Contacts, QRScanner,
   TxHistory,
   Currency,

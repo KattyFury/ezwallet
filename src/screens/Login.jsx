@@ -2,6 +2,7 @@ import arrowDown from '../../design/arrow-down.svg'
 import { GRADIENT } from '../brandBg'
 import { useNav } from '../nav'
 import { useState, useEffect, useRef } from 'react'
+import LoginEmailPopup from '../components/LoginEmailPopup'
 import { getCookie, setCookie, deleteCookie } from 'cookies-next'
 import { createSocialToken, initializeWallet, executeChallenge, getWalletAddress, GOOGLE_CLIENT_ID, circleErrorMessage } from '../circle'
 
@@ -27,6 +28,8 @@ export default function Login() {
   const sdkRef = useRef(null)
   const [restoring, setRestoring] = useState(false)  // finishing up after the redirect
   const [googleErr, setGoogleErr] = useState('')
+  // The email popup (node 1:193). It is NOT a screen - it opens over this one, which blurs behind it.
+  const [emailOpen, setEmailOpen] = useState(false)
 
   // deviceId MUST come from sdk.getDeviceId() (Circle fingerprints it through its own iframe) - do NOT
   // invent one (e.g. crypto.randomUUID()), because Circle's backend knows nothing about a homemade ID → the error
@@ -164,18 +167,31 @@ export default function Login() {
   return (
     <div className="screen" style={{ background: GRADIENT }}>
 
-      {/* HEADLINE - node 48:452: Bricolage Grotesque Bold 40px, line-height 44, tracking -1.6px,
+      {/* EVERYTHING ON THE LANDING PAGE LIVES IN THIS LAYER so the popup can blur it (the user's rule:
+          "khi popup hiện ra thì phần màn hình trang Login sẽ bị mờ đi"). inset:0 means it is exactly the
+          screen box, so every child's % / dvh coordinate resolves to the same number as before.
+          pointerEvents is cut while the popup is open - there is no dark scrim in the design to swallow
+          taps, and a blurred button that still responds is a trap. */}
+      <div style={{
+        position: 'absolute', inset: 0,
+        filter: emailOpen ? 'blur(6px)' : 'none',
+        pointerEvents: emailOpen ? 'none' : 'auto',
+      }}>
+
+      {/* HEADLINE - node 48:452: bold 40px, line-height 44, tracking -1.6px,
           340 wide at x=25, centred on y=164. The second line is --color-muted-2 (#667085), which is
           what makes the claim read as one sentence with its own echo rather than two shouts.
-          ⚠️ opsz is PINNED TO 14, not left on `auto`. A variable font with an optical-size axis picks
-          a lighter, tighter cut as the size grows; the Figma node fixes opsz at 14 while setting 40px,
-          so `font-optical-sizing: auto` would render a visibly different, thinner face. */}
+          ⚠️ NO DISPLAY FACE - AND THE NODE NAMING ONE IS NOT A REASON TO ADD IT BACK. The Figma layer
+          declares Bricolage Grotesque; it was wired up on 2026-09-23 and removed the same day:
+          "Figma làm fully Inter, vào máy thì sẽ theo hệ thống, bỏ font display cũ đi ko dùng nữa."
+          So this inherits the system stack like every other string in the app, and Inter in the Figma
+          file stays what it has always been - a stand-in for measuring, never the real render.
+          The metrics below ARE the node's own and do stay: 40px / 700 / line-height 44 / tracking -1.6. */}
       <h1 style={{
         position: 'absolute', left: '6.41%', top: '19.43dvh', transform: 'translateY(-50%)',
         width: '87.18%', margin: 0,
-        fontFamily: 'var(--font-brand)', fontSize: 40, fontWeight: 700,
+        fontSize: 40, fontWeight: 700,
         lineHeight: '44px', letterSpacing: '-1.6px',
-        fontVariationSettings: '"opsz" 14, "wdth" 100',
         color: 'var(--color-black)',
       }}>
         Six digits.<br />
@@ -230,7 +246,7 @@ export default function Login() {
           1:193 "Log in with email" should open as a POPUP over this screen rather than replace it -
           that conversion is its own step and has not been done yet. */}
       <button
-        onClick={() => navigate('EnterEmail')}
+        onClick={() => setEmailOpen(true)}
         style={{
           position: 'absolute', left: '23.33%', top: '81.52dvh',
           width: '70.26%', height: '8.29dvh',
@@ -242,6 +258,14 @@ export default function Login() {
         }}>
         {restoring ? 'Processing...' : 'Log in with email'}
       </button>
+
+      </div>
+
+      {/* The popup carries the whole Circle hand-off: email → createSession → Circle's own PIN screen →
+          the wallet. Its three outcomes are the user's own description of the flow (2026-09-23): into
+          the wallet, or a brand-new wallet and then into it, or it fails and the user is left here on
+          Login. Back just closes it - nothing to navigate away from, because this was never a screen. */}
+      {emailOpen && <LoginEmailPopup onClose={() => setEmailOpen(false)} />}
 
     </div>
   )

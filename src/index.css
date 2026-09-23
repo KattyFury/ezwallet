@@ -54,17 +54,6 @@
   /* ── FONT - the system stack (2026-09-07, replacing Barlow). Character-for-character the stack this
      app used before on the since-parked `privy` branch - kept identical on purpose so the two branches
      don't drift on something this basic. */
-  /* BRICOLAGE GROTESQUE - the DISPLAY face, added 2026-09-23. Used ONLY where the user said: the
-     Login/landing headline, and (later) numerals. Every other string in the app stays on the system
-     stack above - that rule is unchanged.
-     ⚠️ SELF-HOSTED ON PURPOSE, not linked from Google Fonts. The whole reason Barlow was removed on
-     2026-09-07 was that a webfont on fonts.gstatic.com is a THIRD-PARTY request in front of first
-     paint on an app whose point is opening fast on a cheap phone. Serving it from our own origin
-     removes the extra DNS + TLS handshake; `font-display: swap` means it can never block paint
-     either. Measured: 38.8 KB for the latin subset of the variable font (wght 200..800 + opsz).
-     The file is public/fonts/, so the URL is absolute from the site root. */
-  --font-brand: 'Bricolage Grotesque', system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-
   --font-base:      system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";   /* CONTENT: menus, descriptions, hints, notifications, inputs, memos */
   --font-display:   system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";   /* BRAND: the logo, main screen TITLES */
   --font-condensed: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";   /* LEGACY NAME: numbers, currency symbols, BUTTONS */
@@ -112,14 +101,6 @@
   --fw-medium:    500;   /* buttons, list items, labels */
   --fw-semibold:  600;   /* titles, emphasis, active */
   --fw-bold:      600;   /* capped at 600 - the old reason was "Barlow 700 is ugly", which no longer applies now the font is the system stack, but raising it would rebalance every heading in the app, so it stays until asked */
-}
-
-@font-face {
-  font-family: 'Bricolage Grotesque';
-  src: url('/fonts/bricolage-grotesque-latin.woff2') format('woff2');
-  font-weight: 200 800;          /* variable wght axis - do not split this into separate faces */
-  font-style: normal;
-  font-display: swap;            /* never block first paint; the system stack renders until it lands */
 }
 
 /* ── Reset ── */
