@@ -1,5 +1,6 @@
 ﻿import { useState, useEffect } from 'react'
 import NavBar from '../components/NavBar'
+import ScreenSheet from '../components/ScreenSheet'
 import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
@@ -7,12 +8,13 @@ import { getDisplayCurrency, fmtDisplay } from '../data'
 import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import NotifArea, { NOTIF_FS } from '../components/NotifArea'
+import { GRADIENT } from '../brandBg'
 
 // USDC (left) and $98.59 (right) must share the SAME font and the SAME colour - one shared style object
 // so they cannot drift apart (rather than two declarations where it is easy to change only one).
 // Weight = Semibold, 18px (2026-09-10, up from Regular/24px 09-08) - the current Figma file draws each
 // token as its OWN white card (not a shared divided list), name + amount both Semibold 18.
-const TOKEN_TEXT_STYLE = { fontFamily: 'var(--font-condensed)', fontSize: '18px', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
+const TOKEN_TEXT_STYLE = { fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
 
 // Small solid triangle (▲/▼) signalling the token's 24h price move (user request 08-25) - a plain CSS/SVG
 // shape rather than a shared Icon.jsx entry since it is only ever used here, right next to the amount.
@@ -113,73 +115,75 @@ export default function HomeSend() {
 
   const totalUsd = tokens.reduce((s, t) => s + t.usd, 0)
 
+  // SEND - Figma node 1:328, rebuilt 2026-09-23. Every coordinate is that node's own number in the
+  // app's convention (x = px/390 as %, y = px/844 as dvh).
+  //
+  // What changed from the pre-redesign screen, so nobody "restores" it by accident:
+  //   - the ground is the brand GRADIENT, not white;
+  //   - the cards are #D2DCE6 (--color-card), darker than the old --color-surface;
+  //   - each token is a 308x40 RADIUS-8 white row on a 48px step, not a 48-tall radius-16 card;
+  //   - the action pills are radius-16 rectangles, not the old 28/32 ovals;
+  //   - the NavBar has no bar at all any more (see NavBar.jsx).
   return (
-    <div className="screen">
+    <div className="screen" style={{ background: GRADIENT }}>
+      {/* The white sheet the whole screen sits on. FIRST child on purpose: it must paint
+          behind every card, pill and label that follows. */}
+      <ScreenSheet active="HomeSend" />
+
       <BalanceHeader totalUsd={totalUsd} loading={loading} />
 
-      {/* GREY BOX = ROWS 2-5 of the guideline grid (86-414px of 844 → top 10.19dvh, height 38.86dvh),
-          inset 6.45% = the 12-column grid's cols 2-11 plus their outer gutters. Each token is its OWN
-          WHITE rounded-16 card (48px tall, 10px gap = the cards are cols 2-11 exactly, the box's 8px
-          padding being the gutter). overflow:hidden so the half-oval button below is clipped at the box's
-          bottom edge - shadow included, exactly as the design draws it. */}
+      {/* TOKEN CARD - node 1:334: 340x328 at (25,86), i.e. rows 2-5 of the guideline grid.
+          overflow:hidden so the "Hold to show tokens" pill is clipped at the card's bottom edge, which
+          is what makes it read as a half-oval sitting on that edge rather than a floating button. */}
       <div style={{
-        position: 'absolute', left: '6.45%', right: '6.45%', top: '10.19dvh', height: '38.86dvh',
-        background: 'var(--color-surface)', borderRadius: 20, padding: '10px 8px 0', minWidth: 0,
+        position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '38.86dvh',
+        background: 'var(--color-card)', borderRadius: 16, padding: '15.94px 16px 0', minWidth: 0,
         overflow: 'hidden',
       }}>
-        {/* .scroll-hidden, NOT .scroll-thin - that class's margin-right:-20px trick pushes content past this
-            box's own 8px right padding and gets clipped by the box's overflow:hidden, gluing the white cards
-            to the right edge with no gap (iOS doesn't support scrollbar-gutter to compensate - the same bug
-            class already documented and avoided in SavedQRList.jsx). */}
         <div className="scroll-hidden" style={{
-          display: 'flex', flexDirection: 'column', gap: 10, overflowY: 'auto', height: '100%', paddingBottom: 44,
+          display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', height: '100%', paddingBottom: 44,
           WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
           maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
         }}>
         {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-content-1)', padding: '0 2px' }}>Loading...</div>
+          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted-2)', fontSize: 18, padding: '0 2px' }}>Loading...</div>
         ) : tokens.length === 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted)', fontSize: 'var(--fs-content-1)', padding: '0 2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted-2)', fontSize: 18, padding: '0 2px' }}>
             No tokens yet
           </div>
         ) : (
           <>
+            {/* One row per token - nodes 1:357 / 56:17: 308x40, radius 8, white. Figma stacks two of them
+                at y=101.9 and y=149.9, a 48px step = 40 tall plus the 8px gap declared above. */}
             {tokens.map(tk => (
               <div key={tk.symbol} style={{
-                display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0,
-                height: 48, borderRadius: 16, background: 'var(--color-white)', padding: '0 10px',
+                display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
+                height: 40, borderRadius: 8, background: 'var(--color-white)', padding: '0 16px',
               }}>
+                {/* Figma draws a flat 26.3px BLACK SQUARE here (nodes 1:364 / 56:20) - a placeholder for
+                    the real token mark, per the user's rule about squares in this file. */}
                 <img
                   src={`/tokens/${tk.symbol.toLowerCase()}.png`}
                   alt=""
-                  style={{ width: 27, height: 27, borderRadius: '50%', flexShrink: 0 }}
+                  style={{ width: 26.325, height: 26.325, borderRadius: '50%', flexShrink: 0 }}
                   onError={e => {
                     e.target.style.display = 'none'
                     e.target.nextSibling.style.display = 'flex'
                   }}
                 />
-                <div className="token-icon" style={{ width: 27, height: 27, background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
+                <div className="token-icon" style={{ width: 26.325, height: 26.325, background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
 
                 <span style={TOKEN_TEXT_STYLE}>{tk.symbol}</span>
 
-                {/* SAME font/size/weight as "USDC" on the left (TOKEN_TEXT_STYLE), brand-blue colour - follows the
-                    shared toggle above. The 24h trend arrow (user request 08-25) is VOLATILE TOKENS ONLY - not USDC/EURC, they are
-                    stablecoins. When it applies, it sits in a fixed 15px gap right after the amount (marginLeft:15
-                    on the arrow itself, nothing added on top) - no arrow for a token → no gap, the amount sits
-                    flush at the row's edge exactly as before this feature existed. */}
+                {/* The amount is brand blue at the same size and weight as the name - node 1:363. The 24h
+                    trend arrow is VOLATILE TOKENS ONLY (USDC/EURC are stablecoins, nothing to signal). */}
                 <span style={{ display: 'flex', alignItems: 'center', marginLeft: 'auto' }}>
-                  {/* Brand-blue (matching the new Figma file's black-label/blue-value pattern used everywhere
-                      else in the app - Available:/Balance:/Fee:/Rate: lines) - same font/size/weight as the
-                      name on the left (TOKEN_TEXT_STYLE), only the colour differs. */}
                   <span style={{ ...TOKEN_TEXT_STYLE, color: 'var(--color-brand)' }}>
                     {showToken
                       ? tk.amount.toFixed(tk.symbol === 'cirBTC' ? 4 : 2)
                       : (rates ? fmtDisplay(tk.usd, cur, rates) : '…')}
                   </span>
                   {rates && isVolatile(tk.symbol) && tk.change24h != null && Math.abs(tk.change24h) >= 0.005 && (
-                    // padding 6 = a bigger touch target than the 10px triangle alone; the negative margin cancels
-                    // it on 3 sides (no added width/height) and on the left leaves EXACTLY 15px from the amount
-                    // (9px margin + 6px padding = 15, not 15+6 - the touch target must not widen the visible gap).
                     <button onClick={() => setPctPopup(tk)} aria-label={`24h price change for ${tk.symbol}`}
                       style={{ background: 'none', border: 'none', padding: 6, margin: '-6px -6px -6px 9px', display: 'flex', cursor: 'pointer' }}>
                       <TrendArrow pct={tk.change24h} />
@@ -192,42 +196,30 @@ export default function HomeSend() {
         )}
         </div>
 
-        {/* INSIDE the grey box so the box clips its lower half + shadow - that clipping is what makes it
-            read as a half-oval sitting on the box's bottom edge. */}
         {tokens.length > 0 && (
           <ShowTokensButton onHoldStart={() => setShowToken(true)} onHoldEnd={() => setShowToken(false)} />
         )}
       </div>
 
-      {/* GREY WRAPPER CARD = ROWS 6-8 of the guideline grid (430-672px of 844), same inset as the box
-          above, wrapping the whole notification/hint area. */}
+      {/* NOTIFICATION CARD - node 1:335: 340x242 at (25,430), rows 6-8 of the grid.
+          ⚠️ Figma draws ONE fixed hint box and ONE example notification inside it. The real screen has
+          0..N live notifications plus the faucet warning, so the CONTAINER is matched exactly and its
+          contents stay NotifArea, which is what actually knows about them. */}
       <div style={{
-        position: 'absolute', left: '6.45%', right: '6.45%', top: '50.95dvh', height: '28.67dvh',
-        background: 'var(--color-surface)', borderRadius: 20, padding: '10px 8px',
+        position: 'absolute', left: '6.41%', top: '50.95dvh', width: '87.18%', height: '28.67dvh',
+        background: 'var(--color-card)', borderRadius: 16, padding: 16,
         display: 'flex', flexDirection: 'column', minHeight: 0,
       }}>
         <NotifArea
-          // Each line = one COMPLETE SENTENCE whose underlined keyword is TAPPABLE → going where the button of the same
-          // name in row 9 goes (user decision 07-21).
           hints={[
             { label: 'Paste', desc: 'Paste a wallet address to send' },
             { label: 'Scan QR', desc: 'Scan a QR code to send' },
             { label: 'Contacts', desc: 'Save people you send to often' },
           ]}
           warning={
-            // Threshold 1 → UNDER 20 (user decision 2026-09-11): "under 20 USDC" now covers the old
-            // "just-created empty wallet" case too, so it is ONE rule, not two. STRICTLY less than 20 -
-            // at exactly 20.00 the hint is already gone (user correction: a $20.00 balance still showing
-            // it was a bug). Same non-dismissible standing-hint treatment as the network/QR Storage/
-            // Create QR/Share hints above (no X button - see NotifArea.jsx's warning branch).
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) < 20 ? (
-              // TEXT ONLY, NO ICON, SEMIBOLD (user correction 2026-09-11): a white card with plain-weight
-              // yellow text was hard to read, and the icon made this block the odd one out next to the
-              // hint card above, which is text-only. Same treatment as HintBlock's red network line -
-              // COLOURED TEXT IS ALWAYS SEMIBOLD (red and yellow both), never regular weight, because at
-              // 13px on white neither colour carries enough contrast un-bolded.
               <div onClick={() => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } localStorage.setItem('ez_faucet_pending', String(Date.now())); window.open('https://faucet.circle.com/', '_blank') }}
-                style={{ width: '100%', background: 'var(--color-white)', borderRadius: 16, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2, cursor: 'pointer', fontSize: NOTIF_FS, color: 'var(--color-warning)', fontWeight: 'var(--fw-semibold)' }}>
+                style={{ width: '100%', background: 'var(--color-white)', borderRadius: 8, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2, cursor: 'pointer', fontSize: NOTIF_FS, color: 'var(--color-warning)', fontWeight: 'var(--fw-semibold)' }}>
                 <span style={{ minWidth: 0, lineHeight: 1.35 }}>Out of USDC for transaction fees</span>
                 <span style={{ minWidth: 0, lineHeight: 1.35 }}>
                   {'Tap to get testnet USDC from'}{' '}
@@ -239,35 +231,63 @@ export default function HomeSend() {
         />
       </div>
 
-      {/* ABSOLUTE at the exact Figma centre (723.18px of 844 = 85.68dvh, nodes 1:338-1:340) - the old
-          row-9 + align-self:end placement sat ~12px too high. Swap.jsx still uses the row-9 flow variant. */}
-      <div className="action-grid" style={{ position: 'absolute', left: '6.45%', right: '6.45%', top: '85.68dvh', transform: 'translateY(-50%)', marginBottom: 0 }}>
-        {/* Left→right order: Paste · Scan QR · Contacts (user decision 07-23: Contacts is used more
-            often → on the RIGHT; the NotifArea hint uses the same order). Icon sizes 19.5/24 (2026-09-10,
-            up from --is-item 17) match the side/centre pills exactly. */}
-        <button className="action-card" onClick={() => navigate('PasteAddress')}><Icon name="copy" size={19.5} /><span>Paste</span></button>
-        <button className="action-card primary" onClick={() => navigate('QRScanner')}><Icon name="scan" size={24} color="var(--color-white)" /><span>Scan QR</span></button>
-        <button className="action-card" onClick={() => navigate('Contacts')}><Icon name="human" size={19.5} /><span>Contacts</span></button>
-      </div>
+      {/* ACTION ROW - nodes 1:338-1:340. Three separate absolute boxes, NOT a grid: the centre pill is
+          taller (124x70 at y=688) than its siblings (100x48 at y=699) and they share no baseline, so a
+          flex row with align-items would only approximate what the node draws. Radius 16 on all three. */}
+      <button onClick={() => navigate('PasteAddress')} style={{
+        position: 'absolute', left: '6.41%', top: '82.82dvh', width: '25.64%', height: 48,
+        background: 'var(--color-white)', border: 'none', borderRadius: 16,
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        fontFamily: 'inherit', fontSize: 14, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+      }}>
+        <Icon name="copy" size={19.709} />
+        <span>Paste</span>
+      </button>
+
+      <button onClick={() => navigate('QRScanner')} style={{
+        position: 'absolute', left: '34.10%', top: '81.52dvh', width: '31.79%', height: 70,
+        background: 'var(--color-brand)', border: 'none', borderRadius: 16,
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        fontFamily: 'inherit', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
+        cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+      }}>
+        <Icon name="scan" size={27} color="var(--color-white)" />
+        <span>Scan QR</span>
+      </button>
+
+      <button onClick={() => navigate('Contacts')} style={{
+        position: 'absolute', left: '67.95%', top: '82.82dvh', width: '25.64%', height: 48,
+        background: 'var(--color-white)', border: 'none', borderRadius: 16,
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        fontFamily: 'inherit', fontSize: 14, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+      }}>
+        <Icon name="human" size={19.709} />
+        <span>Contacts</span>
+      </button>
 
       <NavBar active="HomeSend" />
 
-      {/* 24h price-change popup (user request 08-25) - standard .popup-card, closes on outside click or the X. */}
+      {/* 24h price-change popup - unchanged, standard .popup-card. */}
       {pctPopup && rates && (
         <div className="popup-overlay" onClick={() => setPctPopup(null)}>
           <div className="popup-card" onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
             <button onClick={() => setPctPopup(null)} aria-label="Close"
               style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-              <Icon name="x" size="var(--is-content-2)" color="var(--color-muted)" />
+              <Icon name="x" size={17} color="var(--color-muted)" />
             </button>
             <div className="popup-title">{pctPopup.symbol}</div>
-            <div style={{ fontSize: 'var(--fs-content-1)', color: 'var(--color-content)' }}>
+            <div style={{ fontSize: 18, color: 'var(--color-content)' }}>
               {'24h price change: '}
               <span style={{ fontWeight: 'var(--fw-medium)', color: pctPopup.change24h > 0 ? 'var(--color-primary)' : 'var(--color-error)' }}>
                 {pctStr(pctPopup.change24h)}
               </span>
             </div>
-            <div style={{ fontSize: 'var(--fs-content-1)', color: 'var(--color-content)' }}>
+            <div style={{ fontSize: 18, color: 'var(--color-content)' }}>
               {`Value changed from ${fmtDisplay(pctPopup.usd / (1 + pctPopup.change24h / 100), cur, rates)} to ${fmtDisplay(pctPopup.usd, cur, rates)}`}
             </div>
           </div>

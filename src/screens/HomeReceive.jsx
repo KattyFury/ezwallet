@@ -2,14 +2,16 @@
 import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react'
 import { saveImageToPhotos, brandedQrCanvas } from '../saveImage'
 import NavBar from '../components/NavBar'
+import ScreenSheet from '../components/ScreenSheet'
 import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
 import NotifArea from '../components/NotifArea'
-import { HALF_OVAL_STYLE } from './HomeSend'
 import { useNav } from '../nav'
 import { getTokenBalances, cachedBalances } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import { buildQR } from '../qr'
+import { HALF_OVAL_STYLE } from './HomeSend'
+import { GRADIENT } from '../brandBg'
 
 export default function HomeReceive() {
   const { navigate } = useNav()
@@ -57,84 +59,108 @@ export default function HomeReceive() {
     setTimeout(() => setAddrCopied(false), 1500)
   }
 
+  // RECEIVE - Figma node 56:70, rebuilt 2026-09-23. Structurally the SAME frame as Send (1:328): same
+  // gradient, same 340x328 card at y=86, same 340x242 card at y=430, same three-pill action row, same
+  // barless NavBar. Only the contents of the top card and the three pills differ, which is why every
+  // shared number below is identical to HomeSend's - if one moves, both move.
   return (
-    <div className="screen">
-      <BalanceHeader totalUsd={totalUsd} loading={totalUsd === null} />
+    <div className="screen" style={{ background: GRADIENT }}>
+      {/* The white sheet the whole screen sits on. FIRST child on purpose: it must paint
+          behind every card, pill and label that follows. */}
+      <ScreenSheet active="HomeReceive" />
 
-      {/* Hidden high-quality canvas so Share can export a PNG → "Save Image" into the photo library */}
-      <div ref={qrRef} style={{ position: 'absolute', left: -9999, top: -9999 }} aria-hidden>
-        <QRCodeCanvas value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" includeMargin />
-      </div>
+      <BalanceHeader totalUsd={totalUsd} loading={totalUsd == null} />
 
-      {/* GREY CARD BEHIND THE QR = ROWS 2-5 of the guideline grid (86-414px of 844), the same card Send
-          uses for its token list. overflow:hidden clips the half-oval button at the card's bottom edge. */}
+      {/* TOP CARD - node 56:72: 340x328 at (25,86). */}
       <div style={{
-        position: 'absolute', left: '6.45%', right: '6.45%', top: '10.19dvh', height: '38.86dvh',
-        background: 'var(--color-surface)', borderRadius: 20, overflow: 'hidden',
+        position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '38.86dvh',
+        background: 'var(--color-card)', borderRadius: 16, overflow: 'hidden',
       }}>
-        {/* QR POSITION - CRITICAL, exact Figma pixels (node 1:398): centre (50%, 27.09dvh of the screen),
-            size = min(30.57dvh, 66.15% of the screen-max-capped width). Expressed against the card, whose
-            own top is 10.19dvh, the centre sits at (27.09 − 10.19)/38.86 = 43.5% of the card's height. */}
+        {/* THE QR - node 56:110 draws a flat 258x258 BLACK SQUARE, the placeholder this file uses for
+            "the real thing goes here". Centred on the card, top edge at y=99.68 of the screen, i.e.
+            13.68px below the card's own top. */}
         <div style={{
-          position: 'absolute', left: '50%', top: '43.5%', transform: 'translate(-50%, -50%)',
-          width: 'min(30.57dvh, calc(var(--screen-max) * 0.6615))', height: 'min(30.57dvh, calc(var(--screen-max) * 0.6615))',
+          position: 'absolute', left: '50%', top: 13.68, transform: 'translateX(-50%)',
+          width: '75.88%', aspectRatio: '1 / 1',
+          background: 'var(--color-white)', display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          {/* ⚠️ No more bare `0x…` addresses (user decision 08-13) - EVM addresses are identical on EVERY
-              chain, so a wallet on Ethereum/Base/BSC scanning it sends on the wrong chain and the money is GONE. buildQR wraps
-              it in a private scheme + the Arc chainId; see src/qr.js.
-              Anyone who needs the plain address (topping up from an exchange or another wallet) taps the copy button under the QR. */}
-          <QRCodeSVG value={walletAddr ? buildQR(walletAddr) : '0x'} size={512} level="M" style={{ width: '100%', height: '100%' }} />
+          {walletAddr
+            ? <QRCodeSVG value={buildQR(walletAddr)} size={256} level="M" style={{ width: '94%', height: '94%' }} />
+            : <span style={{ fontSize: 14, color: 'var(--color-muted-2)' }}>Loading...</span>}
         </div>
 
-        {/* The SAME half-oval as "Hold to show tokens" on Send - one shared style object (HALF_OVAL_STYLE)
-            so the pair cannot drift. Inside the card so its lower half and its shadow are clipped at the
-            card's bottom edge, which is what makes it read as a half-oval rather than a floating pill. */}
-        <button onClick={handleCopyAddr} style={{ ...HALF_OVAL_STYLE, color: addrCopied ? 'var(--color-primary)' : 'var(--color-content)' }}>
-          {addrCopied ? 'Copied!' : 'Tap to copy your address'}
+        {/* "Tap to copy your address" - nodes 56:74 / 56:75. IDENTICAL IN SHAPE to Send's "Hold to
+            show tokens" (the user, 2026-09-23: "phải làm cho nó y chang"), so the two share ONE
+            definition - HALF_OVAL_STYLE - instead of two that drift. They already had: this one was
+            briefly radius 16 while Send's was the 38px half-oval. */}
+        <button onClick={handleCopyAddr} style={HALF_OVAL_STYLE}>
+          {addrCopied ? 'Address copied' : 'Tap to copy your address'}
         </button>
       </div>
 
-      {/* GREY WRAPPER CARD = ROWS 6-8 of the guideline grid (430-672px of 844), identical to Send's. */}
+      {/* NOTIFICATION CARD - node 56:73: 340x242 at (25,430), identical to Send's. Figma draws one fixed
+          hint box and one example notification; the live screen has 0..N of them, so the container is
+          matched exactly and NotifArea keeps owning what goes inside it. */}
       <div style={{
-        position: 'absolute', left: '6.45%', right: '6.45%', top: '50.95dvh', height: '28.67dvh',
-        background: 'var(--color-surface)', borderRadius: 20, padding: '10px 8px',
+        position: 'absolute', left: '6.41%', top: '50.95dvh', width: '87.18%', height: '28.67dvh',
+        background: 'var(--color-card)', borderRadius: 16, padding: 16,
         display: 'flex', flexDirection: 'column', minHeight: 0,
       }}>
-        {/* Each line = one COMPLETE SENTENCE whose underlined keyword is TAPPABLE → going where the button of the same name
-            in row 9 goes (user decision 07-21). The order matches the button layout: QR Storage · Create QR · Share. */}
-        {/* pollMs 5s (user decision 08-13): this is the screen where someone HAS JUST HELD OUT THEIR QR AND IS WAITING for the
-            money → poll far more often than the Send screen (15s default). See NotifArea. */}
-        <NotifArea pollMs={5000} hints={[
-          { label: 'QR Storage', desc: 'Save your favorite QR codes', onClick: () => navigate('SavedQRList') },
-          { label: 'Create QR', desc: 'Create a QR to receive money', onClick: () => navigate('CreateQR') },
-          // "QR + address" (user fix 08-13) - describing EXACTLY the 2 things being sent: the QR IMAGE (with logo +
-          // network label) and the ADDRESS as text. See handleShare above.
-          { label: 'Share', desc: 'Share your QR + wallet address', onClick: handleShare },
-        ]} />
+        <NotifArea
+          hints={[
+            { label: 'QR Storage', desc: 'Save your favorite QR codes' },
+            { label: 'Create QR', desc: 'Create a QR to receive money' },
+            { label: 'Share', desc: 'Share your QR + wallet address' },
+          ]}
+        />
       </div>
 
-      {/* Button order 07-19 (user decision): QR Storage left · Create QR centre · Share RIGHT - most people are
-          right-handed, so the most-used button (Share) sits on the right where it is easy to reach.
-          Icon sizes 19.5/24 (2026-09-10, up from --is-item 17) match the side/centre pills exactly. */}
-      {/* ABSOLUTE at the exact Figma centre (723.18px of 844 = 85.68dvh, nodes 7:43-7:45), matching Send.
-          Labels are verbatim from the Figma: "QR storage" (lowercase s) and "Custom QR" (the hint block
-          above still says "Create QR" - that inconsistency is in the design itself, kept as drawn). */}
-      <div className="action-grid" style={{ position: 'absolute', left: '6.45%', right: '6.45%', top: '85.68dvh', transform: 'translateY(-50%)', marginBottom: 0 }}>
-        <button className="action-card" onClick={() => navigate('SavedQRList')}>
-          <Icon name="download" size={19.5} />
-          <span>QR storage</span>
-        </button>
-        <button className="action-card primary" onClick={() => navigate('CreateQR')}>
-          <Icon name="qr" size={24} color="var(--color-white)" />
-          <span>Custom QR</span>
-        </button>
-        <button className="action-card" onClick={handleShare}>
-          <Icon name="share" size={19.5} />
-          <span>{copied ? 'Copied!' : 'Share'}</span>
-        </button>
-      </div>
+      {/* ACTION ROW - nodes 56:76-56:78, the same three boxes as Send at the same coordinates: the centre
+          pill 124x70 at y=688, the two side pills 100x48 at y=699, radius 16 on all three. */}
+      <button onClick={() => navigate('SavedQRList')} style={{
+        position: 'absolute', left: '6.41%', top: '82.82dvh', width: '25.64%', height: 48,
+        background: 'var(--color-white)', border: 'none', borderRadius: 16,
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        fontFamily: 'inherit', fontSize: 14, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+      }}>
+        <Icon name="download" size={19.709} />
+        <span>QR storage</span>
+      </button>
+
+      <button onClick={() => navigate('CreateQR')} style={{
+        position: 'absolute', left: '34.10%', top: '81.52dvh', width: '31.79%', height: 70,
+        background: 'var(--color-brand)', border: 'none', borderRadius: 16,
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        fontFamily: 'inherit', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
+        cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+      }}>
+        <Icon name="qr" size={27} color="var(--color-white)" />
+        <span>Create QR</span>
+      </button>
+
+      <button onClick={handleShare} style={{
+        position: 'absolute', left: '67.95%', top: '82.82dvh', width: '25.64%', height: 48,
+        background: 'var(--color-white)', border: 'none', borderRadius: 16,
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        fontFamily: 'inherit', fontSize: 14, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
+      }}>
+        <Icon name="share" size={19.709} />
+        <span>{copied ? 'Copied' : 'Share'}</span>
+      </button>
 
       <NavBar active="HomeReceive" />
+
+      {/* OFF-SCREEN CANVAS - Share needs a raster QR to hand to the OS share sheet, and the visible one
+          above is an SVG. Kept out of the layout rather than hidden with display:none, which would stop
+          the canvas from painting at all. */}
+      <div ref={qrRef} style={{ position: 'absolute', left: -9999, top: -9999 }} aria-hidden="true">
+        {walletAddr && <QRCodeCanvas value={buildQR(walletAddr)} size={512} level="M" />}
+      </div>
     </div>
   )
 }

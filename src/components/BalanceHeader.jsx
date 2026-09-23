@@ -25,19 +25,23 @@ export default function BalanceHeader({ totalUsd, loading }) {
   // overflows. The fit budget itself is capped at 75% of the SCREEN width (not just the container minus a
   // little padding) so a long decimal amount (e.g. "$10,000.00") never draws past 3/4 of the screen, exactly
   // the overflow the user hit that prompted this rule.
-  const [fitRef, fitSize] = useFitFontSize(str, { max: 50, min: 28, weight: 300 })
+  // MAX SIZE = 40 (2026-09-23 redesign, node 1:352 on Send/Receive/Menu - down from 50). Still fitted by
+  // REAL MEASURED WIDTH on canvas rather than by counting characters: some currencies are twice as long as
+  // USD ("1.250.000 ₫" vs "$50.00"), so a long amount has to shrink rather than run off the screen.
+  const [fitRef, fitSize] = useFitFontSize(str, { max: 40, min: 24, weight: 400 })
   return (
-    // Occupies row 1 + HALF of row 2 (not the full 2 rows like before max=76 needed) - flex-start instead of
-    // center so the number sits at the TOP of the row-1-2 grid area, leaving the bottom half of row 2 empty
-    // as breathing room before whatever starts at row 3.
-    <div className="row-1-2" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'center', minWidth: 0 }}>
-      {/* ⚠️ `width`, NOT `maxWidth` (bug found 2026-09-10): with only a max-width this div is a flex item
-          whose width is content-driven, so useFitFontSize measured the TEXT's own width as the budget -
-          a circular measurement that collapsed the balance to the `min` floor (28px) instead of the ~48-50px
-          the design asks for. A definite width makes clientWidth the real 75%-of-screen budget.
-          height 9.72dvh (82px of 844) centres the glyph at y≈41px = the Figma baseline block (node 1:352). */}
-      <div ref={fitRef} style={{ height: '9.72dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 'min(75vw, calc(var(--screen-max) * 0.75))' }}>
-        <span style={{ fontFamily: 'var(--font-condensed)', fontSize: fitSize, fontWeight: 'var(--fw-light)', color: 'var(--color-content)', lineHeight: 1, whiteSpace: 'nowrap' }}>
+    // ABSOLUTE, not the old `row-1-2` grid cell. Node 1:352 is a 340x70 block whose BOTTOM edge sits on
+    // y=70 - the bottom of row 1 - with the number bottom-aligned inside it. A grid cell cannot express
+    // "bottom edge at exactly 70px" without depending on whatever else lands in the same track.
+    <div style={{
+      position: 'absolute', left: '50%', top: 0, transform: 'translateX(-50%)',
+      width: '87.18%', height: 70,
+      display: 'flex', alignItems: 'flex-end', justifyContent: 'center', minWidth: 0,
+    }}>
+      <div ref={fitRef} style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'center', width: '100%' }}>
+        {/* 40px REGULAR (weight 400), not the old Light 300 - the redesign draws the balance at the same
+            weight as ordinary text, just much bigger. */}
+        <span style={{ fontSize: fitSize, fontWeight: 'var(--fw-normal)', color: 'var(--color-content)', lineHeight: 1, whiteSpace: 'nowrap' }}>
           {str}
         </span>
       </div>

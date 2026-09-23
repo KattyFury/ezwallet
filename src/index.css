@@ -48,6 +48,10 @@
      "Sign in with email" input box in the current Figma file (`GxgsMU6HAYqolckzvPWXp1`). This is the
      fill for input fields and sunken content boxes (the address input, the token-list card on HomeSend,
      the numpad panel...) and ordinary content cards. */
+  /* The 2026-09-23 redesign's card fill - DARKER than --color-surface above. Every card on the
+     gradient screens (token list, notifications, the Add steps box, the Login PIN cells, the email
+     field) is this one value, straight off the Figma frames. */
+  --color-card:         #D2DCE6;
   --color-surface:      #E1E7ED;
   --color-surface-2:    #E1E7ED;
 
@@ -103,6 +107,11 @@
   --fw-bold:      600;   /* capped at 600 - the old reason was "Barlow 700 is ugly", which no longer applies now the font is the system stack, but raising it would rebalance every heading in the app, so it stays until asked */
 }
 
+input, textarea, [contenteditable="true"] {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -118,7 +127,17 @@ html, body, #root {
   overflow: hidden;
 }
 
+/* IT IS AN APP, NOT A WEB PAGE (user decision 2026-09-23): no text selection, no blue highlight drag,
+   no long-press "Copy/Look Up" callout on iOS. A native app does not let you smear a selection across
+   its balance, and doing so here looked broken.
+   ⚠️ FORM FIELDS ARE EXEMPT below - selection IS how editing works, and turning it off in an <input>
+   breaks caret placement, double-tap-to-select-a-word and the paste menu. Copying that the app really
+   does offer (the wallet address on Receive) goes through a button and the clipboard API, so none of
+   it depends on the user being able to select text by hand. */
 body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   font-family: var(--font-base);
   font-size: var(--fs-content-1);
   color: var(--color-content);
