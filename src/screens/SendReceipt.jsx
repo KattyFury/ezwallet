@@ -5,6 +5,9 @@ import { fmtMoney, shortenAddr } from '../data'
 import { addNotif } from '../notif'
 import { saveImageToPhotos } from '../saveImage'
 import logoLong from '../../design/logo.svg'
+import ScreenSheet from '../components/ScreenSheet'
+import ExitBar from '../components/ExitBar'
+import { GRADIENT } from '../brandBg'
 
 // Big GREEN check icon (success) - check.svg already includes the outlined circle and the tick.
 // 70px (was 76) - node 1:238's exact placeholder size.
@@ -71,7 +74,7 @@ export default function SendReceipt() {
     row('Time', fmtTime(timestamp))
     // The EZwallet logo (the standard branding - design/logo.svg, brand-blue EZ + black wallet) at the bottom -
     // anchored to the canvas BOTTOM, H already reserves 50px of breathing space after the last row (keep the logo off the divider)
-    const lw = 168, lh = lw * 59 / 206   // aspect ratio of logo.svg (viewBox 206×59, updated 2026-09-07)
+    const lw = 168, lh = lw * 71 / 201   // aspect ratio of logo.svg (viewBox 201×71)
     const img = new Image()
     img.src = logoLong
     try { await img.decode() } catch {}
@@ -80,10 +83,9 @@ export default function SendReceipt() {
   }
 
   return (
-    <div className="screen">
-      <div className="row-1 center screen-title" style={{ fontWeight: 'var(--fw-semibold)' }}>
-        Receipt
-      </div>
+    <div className="screen" style={{ background: GRADIENT }}>
+      <ScreenSheet />
+      <div className="sheet-title">Transaction completed</div>
 
       {/* Check icon - node 1:238: centre 24.53dvh (= row 3's centre exactly). */}
       <div style={{ position: 'absolute', left: '50%', top: '24.53dvh', transform: 'translate(-50%, -50%)' }}>
@@ -137,10 +139,12 @@ export default function SendReceipt() {
 
       {/* Save receipt/Done - node 1:230-1:233: both exactly 166px, i.e. (340 − 8) / 2 - flex:1 with an
           8px gap. Centre 85.63dvh, glow shadow. */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.63dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8 }}>
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.66dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8 }}>
         <button className="btn btn-secondary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} onClick={saveReceipt}>Save receipt</button>
         <button className="btn btn-primary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} onClick={() => navigate('HomeSend')}>Done</button>
       </div>
+
+      <ExitBar onClick={() => navigate('HomeSend')} />
     </div>
   )
 }

@@ -4,6 +4,9 @@ import { getDisplayCurrency, displayNum, displaySymbol, shortenAddr } from '../d
 import { TOKENS, getTxMemo, getDisplayRates, isFaucetAddress } from '../chain'
 import Icon from '../components/Icon'
 import { loadContacts } from '../store'
+import ScreenSheet from '../components/ScreenSheet'
+import ExitBar from '../components/ExitBar'
+import { GRADIENT } from '../brandBg'
 
 const ARCSCAN = 'https://testnet.arcscan.app'
 const TOKEN_MAP = Object.fromEntries(TOKENS.map(t => [t.address.toLowerCase(), t]))
@@ -254,16 +257,16 @@ export default function TxHistory() {
   const d = selected ? txInfo(selected, walletAddr, contacts, rates) : null
 
   return (
-    <div className="screen">
-      <div className="row-1 center screen-title" style={{ fontWeight: 'var(--fw-semibold)' }}>
-        Transaction history
-      </div>
+    <div className="screen" style={{ background: GRADIENT }}>
+      <ScreenSheet />
+      <div className="sheet-title">Transaction history</div>
 
       {/* SHARED GREY BOX around the whole history (user decision 07-17f "mark the boundary"). The bottom fade mask lives on the
           INNER DIV - putting it on the box would fade the grey background too and smear it into the white.
-          Card radius 16 (was 20) - node 1:258, RE-VERIFIED 2026-09-10 against live Figma (blank 340x586
-          placeholder, no example rows, so the row padding below has no Figma evidence and is left as-is). */}
-      <div className="row-2-8" style={{ background: 'var(--color-surface)', borderRadius: 16, padding: '4px 14px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' }}>
+          Card radius 16, colour #D2DCE6 (var(--color-card), was --color-surface) - node 58:445, RE-VERIFIED
+          2026-09-24 against the redesign's own gradient+sheet shell (blank 340x586 placeholder, no example
+          rows, so the row padding below has no Figma evidence and is left as-is). */}
+      <div className="row-2-8" style={{ background: 'var(--color-card)', borderRadius: 16, padding: '4px 14px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' }}>
       <div className="scroll-hidden" style={{
         display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start', height: '100%', overflowY: 'auto',
         WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
@@ -304,8 +307,10 @@ export default function TxHistory() {
           onClick={() => setFilter(f => f === 'send' ? 'all' : 'send')}>Send</button>
         <button className="btn btn-secondary" style={{ flex: 1, ...(filter === 'receive' ? activeFilter : {}) }}
           onClick={() => setFilter(f => f === 'receive' ? 'all' : 'receive')}>Receive</button>
-        <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => navigate('MenuScreen')}>Back</button>
+        <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => navigate('MenuScreen')}>Done</button>
       </div>
+
+      <ExitBar onClick={() => navigate('MenuScreen')} />
 
       {/* Transaction detail popup */}
       {selected && d && (

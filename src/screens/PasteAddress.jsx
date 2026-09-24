@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
 import { isOwnAddress } from '../data'
+import ScreenSheet from '../components/ScreenSheet'
+import ExitBar from '../components/ExitBar'
+import { GRADIENT } from '../brandBg'
 
 function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
 
@@ -34,20 +37,18 @@ export default function PasteAddress() {
   }
 
   return (
-    <div className="screen">
-      <div className="row-1 center screen-title" style={{ fontWeight: 'var(--fw-semibold)' }}>
-        Paste address to send
-      </div>
+    <div className="screen" style={{ background: GRADIENT }}>
+      <ScreenSheet />
+      <div className="sheet-title">Paste address to send</div>
 
-      {/* Input - node 1:212/1:214: centre 24.4dvh (calc(20%+37.2px) of 844), height 40 (was 52), radius 8
-          (matches BRAND-GUIDELINE "Input: 8px"), placeholder/typed text 19px (was --fs-md-lg 21). */}
+      {/* Input - node 58:286/58:287: card grey (#D2DCE6), centre 24.4dvh, height 40, radius 8. */}
       <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '24.4dvh', transform: 'translateY(-50%)' }}>
         <input
           className={`address-input${showError ? ' error' : ''}`}
           placeholder="0x..."
           value={address}
           onChange={e => { setAddress(e.target.value); setDirty(true) }}
-          style={{ width: '100%', height: 40, fontSize: 'var(--fs-content-1)', borderRadius: 8 }}
+          style={{ width: '100%', height: 40, fontSize: 'var(--fs-content-1)', borderRadius: 8, background: 'var(--color-card)' }}
         />
         {showError && (
           <span style={{ display: 'block', marginTop: 8, fontSize: 'var(--fs-caption)', color: 'var(--color-error)' }}>
@@ -56,16 +57,16 @@ export default function PasteAddress() {
         )}
       </div>
 
-      {/* Back/Paste - node 1:208-1:211: both ~166px wide, i.e. exactly (340 content width − 8px gap) / 2 -
-          flex:1 each with an 8px gap reproduces that exactly. Centre 85.63dvh (calc(80%+23.52px) of 844),
-          glow shadow (was .btn-secondary/.btn-primary's straight-down shadow, not yet updated app-wide -
-          same per-screen rollout as every other button fixed this session). */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.63dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8 }}>
+      {/* Back/Paste - node 58:289/58:262: both 166px, glow shadow, top 82.82dvh (calc(80%+23.8px) of 844
+          - re-measured 2026-09-24, was 85.63dvh from an earlier, unverified pass). */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '82.82dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8 }}>
         <button className="btn btn-secondary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} onClick={() => navigate('HomeSend')}>Back</button>
         {/* Field holds a valid EVM address → label flips "Paste" → "Confirm" (user decision 07-23: tapping goes
             straight on without reading the clipboard, so a "Paste" label would be confusing). handleDan covers both. */}
         <button className="btn btn-primary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} onClick={handleDan}>{valid ? 'Confirm' : 'Paste'}</button>
       </div>
+
+      <ExitBar onClick={() => navigate('HomeSend')} />
     </div>
   )
 }

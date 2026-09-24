@@ -283,6 +283,18 @@ body {
    fix titles with ad-hoc absolute positioning per screen - route them through this class instead. */
 .screen-title { font-family: var(--font-display); color: var(--color-black); font-size: var(--fs-h1); align-items: flex-end; }   /* screen titles = system font, BLACK, Header 1 */
 
+/* SHEET TITLE - the 2026-09-23 redesign's own title size (24px, not the pre-redesign 28px .screen-title),
+   used by every gradient+ScreenSheet screen that shows a title instead of the balance (ServiceHub node
+   58:143, Exchange 1:67, Security 58:336, About 58:428 - promoted to a class now that 4 screens share it,
+   per the rule ServiceHub's own comment already set: promote once 2+ instances exist, not speculatively
+   from one). Same bottom-anchored/centred geometry as .screen-title, absolute (not grid-row) because these
+   screens position everything in dvh, not grid rows. */
+.sheet-title {
+  position: absolute; left: 0; right: 0; top: 0; height: 70px;
+  display: flex; align-items: flex-end; justify-content: center;
+  font-family: var(--font-display); color: var(--color-black); font-size: 24px; font-weight: var(--fw-semibold);
+}
+
 /* THE LOGO RULE (user, 2026-09-11, applies to EVERY logo-only screen app-wide): the wordmark sits at
    top 179.58px of 844 = 21.28dvh - inside ROW 3 (172-242px) - horizontally centred, at 50% of the screen
    width. NEVER vertically centred on the screen. Both Figma frames that draw it agree exactly: Splash
@@ -679,10 +691,13 @@ body {
 
 .confirm-box {
   width: 100%;
-  /* radius 16 (2026-09-10 correction, was 20 - nodes 1:223/1:236 both confirm 16 in the current Figma file) */
+  /* radius 16 (2026-09-10 correction, was 20 - nodes 1:223/1:236 both confirm 16 in the current Figma file).
+     background #D2DCE6 (var(--color-card), was --color-surface #E1E7ED) - RE-VERIFIED 2026-09-24 against
+     fresh pulls of both SendConfirm (58:292) and SendReceipt (58:306), same colour every other redesign
+     card (Menu/Security/About/TxHistory/Contacts) already uses. */
   border: none;
   border-radius: 16px;
-  background: var(--color-surface);
+  background: var(--color-card);
   overflow: hidden;
 }
 

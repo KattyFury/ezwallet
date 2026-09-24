@@ -22,19 +22,9 @@ export default function ServiceHub() {
     <div className="screen" style={{ background: GRADIENT }}>
       <ScreenSheet active="ServiceHub" />
 
-      {/* TITLE - node 58:143: 24px semibold, bottom-anchored at y=70 (a 0-70 box, text at its bottom
-          edge), centred. NOT the old `.screen-title` class (28px, part of the pre-redesign type scale) -
-          the new scale is 14/16/18/20/24/40 and this is the 24px tier. Only one new-redesign screen uses
-          this exact title treatment so far; if Exchange/Security/TxHistory/About turn out to share it
-          when they're built, promote this to a class THEN (see the logo-lockup lesson in index.css - do
-          not promote it speculatively from a single instance). */}
-      <div style={{
-        position: 'absolute', left: 0, right: 0, top: 0, height: 70,
-        display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-        fontSize: 24, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
-      }}>
-        Service hub
-      </div>
+      {/* TITLE - node 58:143. `.sheet-title` (index.css) is the shared 24px-tier title class for every
+          gradient+ScreenSheet screen (promoted once Exchange/Security/About also needed it). */}
+      <div className="sheet-title">Service hub</div>
 
       {SERVICES.map(({ id, icon, label, desc, screen }) => {
         const soon = !screen

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNav } from '../nav'
 import { refreshSession, forceFreshSession, isTokenExpiredError, getSDK, executeChallenge, signMessageChallenge, circleErrorMessage } from '../circle'
-import logoLong from '../../design/logo-lockup.svg'   // 2026-09-23: swapped to the new logo, same asset Splash uses
+import logoLong from '../../design/logo.svg'
 
 // WALLET UNLOCK using the Circle PIN itself. Entering the screen opens Circle's PIN iframe IMMEDIATELY - there is
 // NO separate project-made "Enter your PIN" screen (user decision 2026-07-15: drop the project PIN screen, tapping

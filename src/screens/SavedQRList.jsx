@@ -6,6 +6,9 @@ import Numpad from '../components/Numpad'
 import { fmtMoney, getDisplayCurrency, displaySymbol } from '../data'
 import { loadSavedQRs, saveSavedQRs } from '../store'
 import { buildQR } from '../qr'
+import ScreenSheet from '../components/ScreenSheet'
+import ExitBar from '../components/ExitBar'
+import { GRADIENT } from '../brandBg'
 
 export default function SavedQRList() {
   const { navigate } = useNav()
@@ -51,10 +54,9 @@ export default function SavedQRList() {
   }
 
   return (
-    <div className="screen">
-      <div className="row-1 center screen-title" style={{ fontWeight: 'var(--fw-semibold)' }}>
-        QR Storage
-      </div>
+    <div className="screen" style={{ background: GRADIENT }}>
+      <ScreenSheet />
+      <div className="sheet-title">QR storage</div>
 
       {/* The QR area = a large GREY BOX over rows 2-8 (user decision 07-23, matching the History box style) · a 2-COLUMN grid
           (3 columns made the QRs too small) → bigger QRs and bigger text for older eyes. Each QR = a WHITE box raised off the
@@ -65,7 +67,7 @@ export default function SavedQRList() {
           margin-right -20px (a trick for full-bleed lists) → content overflows to the right; desktop has scrollbar-gutter
           to compensate so it looks fine, but iOS does NOT support it → broken layout (the mobile bug reported 07-23b). */}
       {/* Card radius 16 (was 20) - node 1:311, RE-VERIFIED 2026-09-10. */}
-      <div style={{ gridRow: '2 / 9', background: 'var(--color-surface)', borderRadius: 16, padding: 10, overflow: 'hidden' }}>
+      <div style={{ gridRow: '2 / 9', background: 'var(--color-card)', borderRadius: 16, padding: 10, overflow: 'hidden' }}>
       <div className="scroll-hidden" style={{ height: '100%' }}>
         {/* ⚠️ RIGHT COLUMN minmax(0,1fr) - with a bare '1fr' the content dictates min-width, and one big box blows the column
             open (the same lesson as .screen, section 6). Bug the user screenshotted 07-23c: 3 QRs → row 2 = [Blend | + button],
@@ -114,6 +116,8 @@ export default function SavedQRList() {
         <button className="btn btn-secondary" onClick={() => navigate('HomeReceive')}>Back</button>
         <button className="btn btn-primary" onClick={() => setAdding(true)}>Add</button>
       </div>
+
+      <ExitBar onClick={() => navigate('HomeReceive')} />
 
       {/* Add QR popup - standard .popup-card (centred over rows 2-5, leaving the bottom half for the keyboard) */}
       {adding && (

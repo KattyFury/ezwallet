@@ -3,6 +3,9 @@ import { useNav } from '../nav'
 import Icon from '../components/Icon'
 import PctSlider from '../components/PctSlider'
 import Numpad from '../components/Numpad'
+import ScreenSheet from '../components/ScreenSheet'
+import ExitBar from '../components/ExitBar'
+import { GRADIENT } from '../brandBg'
 import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress, circleErrorMessage } from '../circle'
 import { getTokenBalances, getDisplayRates, cachedRates, cachedBalances, estimateFeeUsd } from '../chain'
 import { spendableOf, floorTo, getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency } from '../data'
@@ -369,7 +372,8 @@ export default function Swap() {
   })()
 
   return (
-    <div className="screen">
+    <div className="screen" style={{ background: GRADIENT }}>
+      <ScreenSheet />
       {picker && <TokenPicker current={picker === 'from' ? fromSym : toSym} onSelect={sym => selectToken(picker, sym)} onClose={() => setPicker(null)} />}
 
       {/* The numpad bottom sheet (user's layout 07-20): slides up TAKING half of row 6 + rows
@@ -394,13 +398,8 @@ export default function Swap() {
         </div>
       )}
 
-      {/* THE HEADER RULE (see .screen-title in index.css): every screen title sits bottom-anchored,
-          centred, size 28, in the 70px row-1 box - the same shared class every other screen's title
-          uses (2026-09-10 correction: an earlier pass here guessed at a raw pixel offset instead of
-          applying the one shared rule). */}
-      <div className="row-1 center screen-title" style={{ fontWeight: 'var(--fw-semibold)' }}>
-        Exchange
-      </div>
+      {/* .sheet-title (index.css) - the 2026-09-23 redesign's shared 24px title, node 1:67. */}
+      <div className="sheet-title">Exchange</div>
 
       {/* 2026-09-10 REBUILD against the current Figma file (node 1:63): every zone below is placed on
           exact guideline-grid coordinates (see HANDOFF.md READ FIRST §1) instead of the old
@@ -522,27 +521,10 @@ export default function Swap() {
         })()}
       </div>
 
-      {/* ROW 10 = THE EXIT BUTTON, not the NavBar (08-12): Swap now opens FROM the Service Hub, so it no
-          longer has a tab of its own - it needs an obvious way out, never trapping the user in the screen. RED (user decision):
-          the row 9 Swap button is already a blue gradient, and a blue Exit would make two identical-looking buttons sitting
-          next to each other → easy to mis-tap. Red + the word "Exit" at .btn size (fs-md-lg 21) so older users spot it at once.
-          ⚠️ IT IS TEXT, NOT A PILL BUTTON (user fix 08-13): the first version used .btn-error = a huge red gradient
-          block, which looked heavy and fought with the blue gradient Swap button right above. What was wanted: the word "Exit" in red,
-          bold, centred on row 10 - the same language as the NavBar text labels it replaced.
-          ⚠️ Do NOT use .row10-single on this screen: that class is position:absolute anchored at centre 90dvh = THE
-          ROW 9 POSITION (it is for screens whose row 9 is empty - About/Currency/Security). Swap's row 9 already
-          HAS the "Swap" button → they would end up stuck together. gridRow 10 = exactly the 90-100dvh band the NavBar just
-          vacated. The touch area covers the WHOLE ROW (not just the text width) so older users can hit it easily. */}
-      <div className="row-10" style={{ display: 'flex' }}>
-        <button onClick={() => navigate('ServiceHub')}
-          style={{
-            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-            fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-bold)',
-            color: 'var(--color-error)', WebkitTextFillColor: 'var(--color-error)',
-            WebkitTapHighlightColor: 'transparent',
-          }}>Exit</button>
-      </div>
+      {/* EXIT - node 1:65: white text on the gradient reveal zone below the sheet, same as every other
+          Menu-reached sub-screen now (Security/About) - replaces the pre-redesign red-text .row-10 Exit,
+          since the shell itself changed from plain-white to gradient+sheet. */}
+      <ExitBar onClick={() => navigate('ServiceHub')} />
     </div>
   )
 }

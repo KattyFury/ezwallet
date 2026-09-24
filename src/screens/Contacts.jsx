@@ -3,6 +3,9 @@ import { useNav } from '../nav'
 import Icon from '../components/Icon'
 import { loadContacts, saveContacts } from '../store'
 import { shortenAddr } from '../data'
+import ScreenSheet from '../components/ScreenSheet'
+import ExitBar from '../components/ExitBar'
+import { GRADIENT } from '../brandBg'
 
 function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
 
@@ -130,18 +133,17 @@ export default function Contacts() {
   }
 
   return (
-    <div className="screen">
-      <div className="row-1 center screen-title" style={{ fontWeight: 'var(--fw-semibold)' }}>
-        Contacts
-      </div>
+    <div className="screen" style={{ background: GRADIENT }}>
+      <ScreenSheet />
+      <div className="sheet-title">Contacts</div>
 
       {/* SHARED GREY BOX around the whole list (user decision 07-17f: "mark the area clearly so people can see it
           is one box"). The box's horizontal padding = an EVEN margin on both sides for every row (rows used to be
           full-bleed: the PFP touched the left edge while the options button was inset 4px + the scrollbar gutter → the user called it "off to the left").
-          Card radius 16 (was 20) - node 1:247, RE-VERIFIED 2026-09-10 against live Figma (the box itself is a
-          blank 340x586 placeholder with no example rows, so the internal row padding above has no Figma
-          evidence to check against and is left as the prior user-tuned value). */}
-      <div className="row-2-8" style={{ width: '100%', ...(contacts.length ? { background: 'var(--color-surface)', borderRadius: 16, padding: '4px 16px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' } : {}) }}>
+          Card radius 16, colour #D2DCE6 (var(--color-card), was --color-surface) - node 58:376, RE-VERIFIED
+          2026-09-24 (still a blank 340x586 placeholder, no example rows, so the internal row padding above
+          has no Figma evidence to check against and is left as the prior user-tuned value). */}
+      <div className="row-2-8" style={{ width: '100%', ...(contacts.length ? { background: 'var(--color-card)', borderRadius: 16, padding: '4px 16px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' } : {}) }}>
         {contacts.length === 0 ? (
           <span style={{ fontSize: 'var(--fs-content-1)', color: 'var(--color-muted)' }}>No contacts yet</span>
         ) : (
@@ -190,6 +192,8 @@ export default function Contacts() {
             an icon on just this one looked out of place. */}
         <button className="btn btn-primary" onClick={openAdd}>Add</button>
       </div>
+
+      <ExitBar onClick={() => navigate('HomeSend')} />
 
       <input ref={fileRef} type="file" accept="image/*" onChange={pickFile} style={{ display: 'none' }} />
 

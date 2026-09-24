@@ -52,6 +52,7 @@ import {
 
 const ICONS = {
   add: Plus,
+  book: BookOpen,     // Learn about blockchain (Menu row) - same glyph as `bookmark`, different meaning
   check: CircleCheck,
   clock: Clock,
   copy: Copy,

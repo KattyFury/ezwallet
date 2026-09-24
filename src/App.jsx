@@ -26,7 +26,6 @@ const SavedQRList = lazy(() => import('./screens/SavedQRList'))
 const Contacts    = lazy(() => import('./screens/Contacts'))
 const QRScanner   = lazy(() => import('./screens/QRScanner'))
 const TxHistory   = lazy(() => import('./screens/TxHistory'))
-const Currency    = lazy(() => import('./screens/Currency'))
 const Security    = lazy(() => import('./screens/Security'))
 const About       = lazy(() => import('./screens/About'))
 const PinGate     = lazy(() => import('./screens/PinGate'))
@@ -41,7 +40,6 @@ const SCREENS = {
   CreateQR, ShowQR, SavedQRList,
   Contacts, QRScanner,
   TxHistory,
-  Currency,
   Security,
   About,
   PinGate,

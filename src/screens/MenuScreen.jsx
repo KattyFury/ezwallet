@@ -19,17 +19,16 @@ import { GRADIENT } from '../brandBg'
 // hold structurally even though the whole block shifted down. Flagged here so a future correction is easy
 // to spot if it turns out wrong, rather than reading as an already-verified number.
 const ITEMS = [
-  { id: 'TxHistory', label: 'Transaction history',            top: '44.91dvh', rule: '48.99dvh' },
-  // ⚠️ Figma merges the old separate Security/Currency rows into one: "Security, language & currency".
-  // No Figma frame for a merged settings screen exists yet (only a standalone "Security" frame, 58:332,
-  // not yet built) - this still navigates to the existing 'Security' screen/route. Re-check when Security
-  // is built from its own node: it may need to absorb the currency picker to match this new label.
-  { id: 'Security',  label: 'Security, language & currency',  top: '55.09dvh', rule: '59.18dvh' },
+  { id: 'TxHistory', label: 'Transaction history',            top: '44.91dvh', rule: '48.99dvh', icon: 'clock' },
+  // Figma merges the old separate Security/Currency rows into one: "Security, language & currency".
+  // Security.jsx (node 58:332, rebuilt 2026-09-24) now absorbs the language/currency chips inline -
+  // Currency.jsx is deleted, this still navigates to 'Security'.
+  { id: 'Security',  label: 'Security, language & currency',  top: '55.09dvh', rule: '59.18dvh', icon: 'shield' },
   // ⚠️ NEW ROW, NO DESTINATION YET. Figma draws it (node 58:220/58:221) but there is no corresponding
   // frame anywhere in the file and no existing screen/route for it. Disabled - same standard as
   // "Withdraw" below (drawn, not yet wired) - until the user gives it a real screen to open.
-  { id: 'LearnBlockchain', label: 'Learn about blockchain',   top: '65.28dvh', rule: '69.37dvh', disabled: true },
-  { id: 'About',      label: 'About ezwallet',                top: '75.47dvh', rule: '79.56dvh' },
+  { id: 'LearnBlockchain', label: 'Learn about blockchain',   top: '65.28dvh', rule: '69.37dvh', disabled: true, icon: 'book' },
+  { id: 'About',      label: 'About ezwallet',                top: '75.47dvh', rule: '79.56dvh', icon: 'info' },
 ]
 
 // Row geometry - left/right markers at the standard 6.41% inset (matches every other card's side margin
@@ -37,14 +36,12 @@ const ITEMS = [
 const ROW_STYLE = { position: 'absolute', left: '6.41%', right: '6.41%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 8, padding: 0, minHeight: 44 }
 
 // The row's leading/trailing marker - nodes 58:215/58:217/58:220/58:223 (left) and 58:232-58:236
-// (right), both a flat 17.436px SQUARE, colour matching the row (black, or the danger red for Sign out).
-// ⚠️ RESOLVED, NOT YET BUILT - see "Menu's two row markers ARE real icons" in HANDOFF.md (2026-09-23).
-// The user confirmed both squares are real icons, deferred to a later session ("tối làm tiếp"):
-// LEFT = a per-row symbolic icon (different on every row), RIGHT = one shared right-chevron icon on
-// every row (tap-to-open). Still a plain square here only because that follow-up hasn't happened yet -
-// read HANDOFF.md before picking icons rather than guessing fresh.
-function Marker({ color }) {
-  return <span style={{ width: 17.436, height: 17.436, background: color, flexShrink: 0 }} />
+// (right). Figma still draws both as a flat 17.436px SQUARE (no icon layer to read), but the user
+// resolved what they mean, 2026-09-23: LEFT = a per-row symbolic icon (different per row), RIGHT = one
+// shared right-chevron icon on every row (tap-to-open). Built 2026-09-24. Sized to the marker's own
+// footprint (18 ≈ 17.436) rather than a token, since nothing asked for a different size.
+function RowIcon({ name, color }) {
+  return <Icon name={name} size={18} color={color} />
 }
 
 // Top up: copy the wallet address to the clipboard then open the Faucet → the user only has to paste it there.
@@ -123,13 +120,13 @@ export default function MenuScreen() {
         Deposit
       </button>
 
-      {ITEMS.map(({ id, label, top, rule, disabled }) => (
+      {ITEMS.map(({ id, label, top, rule, disabled, icon }) => (
         <div key={id}>
           <button style={{ ...ROW_STYLE, top, opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer', border: 'none', background: 'none' }}
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
-            <Marker color="var(--color-black)" />
+            <RowIcon name={icon} color="var(--color-black)" />
             <span style={{ flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', textAlign: 'left' }}>{label}</span>
-            <Marker color="var(--color-black)" />
+            <RowIcon name="right2" color="var(--color-black)" />
           </button>
           {/* 0.5px, #94A3B8 - the SAME hairline spec as AddToHome's share-sheet dividers (Figma bakes
               this exact stroke into that screen's own asset: stroke="#94A3B8" stroke-width="0.5"). Was
@@ -148,9 +145,9 @@ export default function MenuScreen() {
         sessionStorage.removeItem('ez_sync_token')
         window.location.reload()
       }}>
-        <Marker color="var(--color-error)" />
+        <RowIcon name="out" color="var(--color-error)" />
         <span style={{ flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-error)', textAlign: 'left' }}>Sign out</span>
-        <Marker color="var(--color-error)" />
+        <RowIcon name="right2" color="var(--color-error)" />
       </button>
 
       <NavBar active="MenuScreen" />

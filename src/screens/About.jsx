@@ -1,13 +1,21 @@
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
+import ScreenSheet from '../components/ScreenSheet'
+import ExitBar from '../components/ExitBar'
+import { GRADIENT } from '../brandBg'
 
 const VERSION = '0.1.0'
 
-// node 1:293-1:299, RE-VERIFIED 2026-09-10: 7 rows, each occupying its OWN full 70px grid row (2-8) -
-// row centres 121/207/293/379/465/551/637px of 844 → the exact same row-centre values Menu.jsx's ITEMS
-// already use (24.53/34.72/44.91/55.09dvh etc, same shared grid), extended two rows further since About
-// has 7 items where Menu has 4. Unlike Security/Currency (2-3 items packed at the TOP of the same tall
-// card), About's 7 items fill the whole 586px card - no leftover blank space either way.
+// ABOUT - Figma node 58:424, rebuilt 2026-09-24 against the 2026-09-23 redesign's gradient+sheet shell
+// (was the pre-redesign plain-white `.screen`/row-10-single "Back" layout).
+// ⚠️ FIGMA'S CARD (node 58:430) IS EMPTY - no text layers at all, unlike Security's own card which fully
+// spells out its rows. That almost certainly means this frame's content hasn't been drawn yet (the
+// two-sources-of-truth rule treats a blank export as incomplete, not as "delete everything"; About.md's
+// own real info - version, network, links - is functional content the app still needs to show). Kept the
+// existing 7 rows and their already-correct grid positions (same 86px-cadence card this redesign uses
+// elsewhere, re-verified: they land inside the new card's 86-672 span with no change needed), migrated
+// only the shell + card colour (#D2DCE6 = var(--color-card), was --color-surface) to match Security/Menu.
+// Flag to the user if Figma is later filled in with different content than this.
 const ITEMS = [
   { label: 'App', value: 'EZwallet', top: '14.34dvh' },
   { label: 'Version', value: VERSION, top: '24.53dvh' },
@@ -22,39 +30,33 @@ export default function About() {
   const { navigate } = useNav()
 
   return (
-    <div className="screen">
-      <div className="row-1 center screen-title" style={{ fontWeight: 'var(--fw-semibold)' }}>
-        About
-      </div>
+    <div className="screen" style={{ background: GRADIENT }}>
+      <ScreenSheet />
+      <div className="sheet-title">{'About '}<span style={{ color: 'var(--color-brand)' }}>ez</span>{'wallet'}</div>
 
-      {/* Card - node 1:292: rows 2-8 (340x586, radius 16 - was 20, gridRow-based instead of this exact
-          top/height). */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '10.19dvh', height: '69.43dvh', background: 'var(--color-surface)', borderRadius: 16 }} />
+      <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 16 }} />
 
       {ITEMS.map(({ label, value, link, top }) => (
         link ? (
-          // Link rows (Github/Term of use/Privacy policy) - node 1:297-1:302: an arrow icon at 7.95%,
-          // text starting at 15.13% (after the icon), both 18px semibold black.
           <button key={label} onClick={() => window.open(link, '_blank')}
             style={{ position: 'absolute', left: '7.95%', right: '9.23%', top, transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 10, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
-            <Icon name="right2" size="var(--is-content-2)" color="var(--color-brand)" />
-            <span style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)' }}>{label}</span>
+            <Icon name="right2" size={17} color="var(--color-brand)" />
+            <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)' }}>{label}</span>
           </button>
         ) : (
-          // Plain rows (App/Version/Network/Wallet) - node 1:293-1:296: label at 9.23%, 18px semibold
-          // black. Figma's static mock draws no value at all for these (nothing to measure) - the value
-          // is real functional info the app must still show, right-aligned at the mirrored 9.23% inset,
-          // 16px muted-2 matching the "Label:"-line value colour used everywhere else in the app.
           <div key={label} style={{ position: 'absolute', left: '9.23%', right: '9.23%', top, transform: 'translateY(-50%)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', flexShrink: 0 }}>{label}</span>
-            <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)', textAlign: 'right', wordBreak: 'break-word' }}>{value}</span>
+            <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', flexShrink: 0 }}>{label}</span>
+            <span style={{ fontSize: 17, color: 'var(--color-muted-2)', textAlign: 'right', wordBreak: 'break-word' }}>{value}</span>
           </div>
         )
       ))}
 
-      <div className="row-10 row10-single">
-        <button className="btn btn-primary" onClick={() => navigate('MenuScreen')}>Back</button>
-      </div>
+      <button className="btn btn-primary" onClick={() => navigate('MenuScreen')}
+        style={{ position: 'absolute', left: '6.41%', width: '87.18%', top: '82.82dvh', height: 48, minHeight: 0 }}>
+        Done
+      </button>
+
+      <ExitBar onClick={() => navigate('MenuScreen')} />
     </div>
   )
 }

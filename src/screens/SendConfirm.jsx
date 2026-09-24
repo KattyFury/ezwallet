@@ -4,6 +4,9 @@ import { useNav } from '../nav'
 import { getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency, shortenAddr } from '../data'
 import { getDisplayRates, estimateFeeUsd } from '../chain'
 import { getSDK, executeChallenge, refreshSession, circleErrorMessage } from '../circle'
+import ScreenSheet from '../components/ScreenSheet'
+import ExitBar from '../components/ExitBar'
+import { GRADIENT } from '../brandBg'
 
 // Currency symbols / token names use Barlow (--font-condensed); numbers stay Barlow via .num
 function Cur({ children }) {
@@ -102,10 +105,9 @@ export default function SendConfirm() {
   }
 
   return (
-    <div className="screen">
-      <div className="row-1 center screen-title" style={{ fontWeight: 'var(--fw-semibold)' }}>
-        Confirm transaction
-      </div>
+    <div className="screen" style={{ background: GRADIENT }}>
+      <ScreenSheet />
+      <div className="sheet-title">Confirm transaction</div>
 
       {/* Card - node 1:223, RE-VERIFIED 2026-09-10 (the user redrew this frame): rows 3-5 exactly
           (centre 34.72dvh, height 242px = 3×70+2×16, was 328px/4 rows - the frame shrank one row when
@@ -170,16 +172,18 @@ export default function SendConfirm() {
         </div>
       )}
 
-      {/* Back/Confirm PIN - node 1:218-1:221: ~165px each, i.e. (340 − 8) / 2 - flex:1 with an 8px gap.
-          Centre 85.63dvh, glow shadow. "Back" (was "Edit") per the exact Figma label - functionally
+      {/* Back/Confirm PIN - node 58:298/58:294: ~166px each, i.e. (340 − 8) / 2 - flex:1 with an 8px gap.
+          Centre 85.66dvh, glow shadow. "Back" (was "Edit") per the exact Figma label - functionally
           unchanged, still re-opens SendAmount with the same params to adjust the transaction. */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.63dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8 }}>
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.66dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8 }}>
         <button className="btn btn-secondary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} disabled={loading || done} onClick={() => navigate('SendAmount', params)}>Back</button>
         <button className="btn btn-primary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }}
           disabled={loading || done} onClick={handleConfirm}>
           {loading ? 'Processing...' : 'Confirm PIN'}
         </button>
       </div>
+
+      <ExitBar onClick={() => navigate('HomeSend')} />
     </div>
   )
 }

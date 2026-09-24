@@ -36,21 +36,19 @@
          load from Google Fonts, along with 2 preconnects to fonts.googleapis.com/fonts.gstatic.com -
          all gone on purpose: it was a third-party request in front of first paint on an app whose whole
          point is opening fast on a cheap phone. See the FONT section at the top of src/index.css. -->
-    <!-- SVG FIRST, PNG SECOND (2026-09-23, FOURTH icon revision - source design/logo-pfp.svg, the
-         new brand mark the user supplied for the 2026-09-23 redesign, replacing THE LOGO SCREEN BUG-era
-         third revision above). Unlike that revision, this SVG is NOT transparent: it is a self-contained
-         icon TILE (a solid #0B53BF square with the white wallet mark on it), so icon.png/fav_icon.png
-         are rasterised from it VERBATIM at 512x512 - no background painted on separately during
-         rasterisation, because the source already has one. `?v=5` busts the cache - favicons/touch icons
-         are cached hard and long, without it the change looks like it never shipped. -->
-    <link rel="icon" type="image/svg+xml" href="/icon.svg?v=5" />
-    <link rel="icon" type="image/png" href="/fav_icon.png?v=5" />
+    <!-- SVG FIRST, PNG SECOND (2026-09-24, FIFTH icon revision - source design/logo-pfp.svg, a solid
+         white tile with the blue wallet mark). icon.png/fav_icon.png are rasterised from it VERBATIM at
+         512x512 - no background painted on separately during rasterisation, because the source already
+         has one. `?v=6` busts the cache - favicons/touch icons are cached hard and long, without it the
+         change looks like it never shipped. -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg?v=6" />
+    <link rel="icon" type="image/png" href="/fav_icon.png?v=6" />
     <link rel="manifest" href="/manifest.json" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="EZwallet" />
-    <link rel="apple-touch-icon" href="/icon.png?v=5" />
+    <link rel="apple-touch-icon" href="/icon.png?v=6" />
   </head>
   <body>
     <div id="root"></div>
