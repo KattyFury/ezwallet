@@ -1,4 +1,4 @@
-# HANDOFF LOG – EZwallet (history)
+# HANDOFF LOG – ezwallet (history)
 
 Chronological build log, split out of `HANDOFF.md` on 2026-09-11 to keep that file short enough to read
 in full every session (it had grown to 1581 lines / 213KB and was getting silently truncated on read -

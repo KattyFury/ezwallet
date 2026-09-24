@@ -3,7 +3,7 @@ import jsQR from 'jsqr'
 import { useNav } from '../nav'
 import { isOwnAddress } from '../data'
 // parseQR lives in src/qr.js - SHARED with the QR drawing code, so the format has one source of truth.
-// It returns { wrongChain } for an EZwallet QR from ANOTHER chain → that must be caught separately, it
+// It returns { wrongChain } for an ezwallet QR from ANOTHER chain → that must be caught separately, it
 // must NOT fall into the "valid" branch (it has no .address, so going on lands on the amount screen with undefined).
 import { parseQR } from '../qr'
 import ScreenSheet from '../components/ScreenSheet'

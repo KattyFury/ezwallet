@@ -8,7 +8,6 @@ import * as session from './functions/api/session.js'
 import * as wallet from './functions/api/wallet.js'
 import * as send from './functions/api/send.js'
 import * as swap from './functions/api/swap.js'
-import * as luckypot from './functions/api/luckypot.js'
 import * as sync from './functions/api/sync.js'
 
 const PORT = 8787
@@ -54,7 +53,6 @@ const ROUTES = {
   '/api/wallet': wallet,
   '/api/send': send,
   '/api/swap': swap,
-  '/api/luckypot': luckypot,
   '/api/sync': sync,
 }
 

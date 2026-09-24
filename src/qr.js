@@ -5,7 +5,7 @@
 // ⚠️ LOCKED TO THE ARC NETWORK (user decision 08-13: "make it Arc only, other networks must not be able to scan it").
 // The problem: the default Receive QR drew a BARE `0x…` address. EVM addresses are identical on EVERY chain, so any
 // wallet (MetaMask sitting on Ethereum/Base/BSC…) could scan that QR and send - and money sent on another chain is
-// GONE, with nobody able to retrieve it. EZwallet users are older people; they have no way of noticing the wrong chain
+// GONE, with nobody able to retrieve it. ezwallet users are older people; they have no way of noticing the wrong chain
 // on their own.
 //
 // How it is locked: wrap it in a PRIVATE scheme `ezwallet:` plus `@<chainId>`.
@@ -34,7 +34,7 @@ export function buildQR(addr, { amount, currency } = {}) {
 }
 
 // ── READ ──────────────────────────────────────────────────────────────────────────────────────
-// Returns { address, amount, currency } · null if unreadable · { wrongChain: <id> } if it is an EZwallet QR
+// Returns { address, amount, currency } · null if unreadable · { wrongChain: <id> } if it is an ezwallet QR
 // from ANOTHER chain (so the scan screen can say why, instead of a vague "invalid QR").
 //
 // Accepts 3 shapes, in order:

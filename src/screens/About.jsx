@@ -17,7 +17,7 @@ const VERSION = '0.1.0'
 // only the shell + card colour (#D2DCE6 = var(--color-card), was --color-surface) to match Security/Menu.
 // Flag to the user if Figma is later filled in with different content than this.
 const ITEMS = [
-  { label: 'App', value: 'EZwallet', top: '14.34dvh' },
+  { label: 'App', value: 'ezwallet', top: '14.34dvh' },
   { label: 'Version', value: VERSION, top: '24.53dvh' },
   { label: 'Network', value: 'Arc Testnet', top: '34.72dvh' },
   { label: 'Wallet', value: 'Circle Wallet', top: '44.91dvh' },
@@ -32,7 +32,7 @@ export default function About() {
   return (
     <div className="screen" style={{ background: GRADIENT }}>
       <ScreenSheet />
-      <div className="sheet-title">{'About '}<span style={{ color: 'var(--color-brand)' }}>ez</span>{'wallet'}</div>
+      <div className="sheet-title">About</div>
 
       <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 16 }} />
 

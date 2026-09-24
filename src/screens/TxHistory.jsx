@@ -36,13 +36,6 @@ function DateHeader({ date, first }) {
   )
 }
 
-// Style of an active filter button: white background + brand blue border + brand blue text (not a solid fill)
-const activeFilter = {
-  borderColor: 'var(--color-brand)',
-  color: 'var(--color-brand)',
-  WebkitTextFillColor: 'var(--color-brand)',
-}
-
 // Compute the shared facts of one transaction. VND is converted from the SAME rates SOURCE as the display column
 // (it used to use the cached token.vndRate from a different source → 1 USDC showed as $0.95 - user bug report).
 function txInfo(tx, walletAddr, contacts, rates) {
@@ -143,7 +136,6 @@ export default function TxHistory() {
   const { navigate, params } = useNav()
   const [txs, setTxs] = useState([])
   const [loading, setLoading] = useState(true)
-  const [filter, setFilter] = useState('all') // 'all' | 'send' | 'receive'
   const [selected, setSelected] = useState(null)
   const [memo, setMemo] = useState(null)
   const [memoLoading, setMemoLoading] = useState(false)
@@ -179,8 +171,9 @@ export default function TxHistory() {
 
   // HISTORY IS ALWAYS SHOWN IN FULL (user decision 07-20: only NOTIFICATIONS are limited to a day,
   // transaction history is the reconciliation ledger - no 24h cut-off, no hints).
-  const isSendTx = tx => tx.from?.toLowerCase() === walletAddr?.toLowerCase()
-  const filtered = txs.filter(tx => filter === 'all' ? true : filter === 'send' ? isSendTx(tx) : !isSendTx(tx))
+  // Send/Receive filter tabs REMOVED (user decision 2026-09-24 - the 3-button row looked cluttered);
+  // `filtered` is kept as a name (not renamed to `txs` everywhere below) to keep this diff small.
+  const filtered = txs
   // A hash the wallet both SENT and RECEIVED (2 transfers in one tx) = a SWAP → the row says "Swapped", not "from [stranger]".
   const swapHashes = (() => {
     const dir = {}, lower = walletAddr?.toLowerCase()
@@ -214,7 +207,7 @@ export default function TxHistory() {
     })
     return m
   })()
-  const emptyMsg = filter === 'send' ? 'No sent transactions' : filter === 'receive' ? 'No received transactions' : 'No transactions yet'
+  const emptyMsg = 'No transactions yet'
 
   useEffect(() => {
     if (!walletAddr) { setLoading(false); return }
@@ -296,18 +289,10 @@ export default function TxHistory() {
       </div>
       </div>
 
-      {/* 3 equal buttons, node 1:253/15:213/15:218: 108px each (340px card width - 2x8px gap, ÷3) - reuses
-          the shared .row10-dual class (position/gap now match Figma exactly after the 2026-09-10 fix; the
-          class doesn't care how many .btn children it has, "dual" is a name not a hard count) instead of
-          duplicating the same absolute top/height/gap inline - `flex:1` on 3 children lands on 108px
-          automatically the same way it lands on 166px for 2. */}
-      <div className="row10-dual">
-        {/* An active filter = white background + BLUE BORDER (no solid fill) */}
-        <button className="btn btn-secondary" style={{ flex: 1, ...(filter === 'send' ? activeFilter : {}) }}
-          onClick={() => setFilter(f => f === 'send' ? 'all' : 'send')}>Send</button>
-        <button className="btn btn-secondary" style={{ flex: 1, ...(filter === 'receive' ? activeFilter : {}) }}
-          onClick={() => setFilter(f => f === 'receive' ? 'all' : 'receive')}>Receive</button>
-        <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => navigate('MenuScreen')}>Done</button>
+      {/* ONE full-width Done button (user decision 2026-09-24: the 3-button Send/Receive/Done row looked
+          cluttered - the Send/Receive filter feature is removed entirely, not just visually). */}
+      <div className="row10-single">
+        <button className="btn btn-primary" onClick={() => navigate('MenuScreen')}>Done</button>
       </div>
 
       <ExitBar onClick={() => navigate('MenuScreen')} />

@@ -1,4 +1,4 @@
-# EZwallet Brand Guideline
+# ezwallet Brand Guideline
 
 > ⚠️ **SUPERSEDED BY THE LIVE FIGMA FILE (user decision 2026-09-23: "Figma là nguồn sự thật, guideline cũ rồi").**
 > This file is NO LONGER a source of truth. Where it disagrees with the Figma file

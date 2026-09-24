@@ -1,6 +1,6 @@
 <div align="center">
 
-# EZwallet
+# ezwallet
 
 **A crypto wallet simple enough for my mom to use.**
 
@@ -18,10 +18,9 @@
 <div align="center">
 <table>
 <tr>
-<td align="center" width="25%"><img src="docs/app-send.png" width="180" alt="Send"><br><sub>Balance & send</sub></td>
-<td align="center" width="25%"><img src="docs/app-receive.png" width="180" alt="Receive"><br><sub>Receive by QR</sub></td>
-<td align="center" width="25%"><img src="docs/app-swap.png" width="180" alt="Exchange"><br><sub>Swap by slider</sub></td>
-<td align="center" width="25%"><img src="docs/app-luckypot.png" width="180" alt="LuckyPot"><br><sub>LuckyPot</sub></td>
+<td align="center" width="33%"><img src="docs/app-send.png" width="180" alt="Send"><br><sub>Balance & send</sub></td>
+<td align="center" width="33%"><img src="docs/app-receive.png" width="180" alt="Receive"><br><sub>Receive by QR</sub></td>
+<td align="center" width="33%"><img src="docs/app-swap.png" width="180" alt="Exchange"><br><sub>Swap by slider</sub></td>
 </tr>
 </table>
 </div>
@@ -30,7 +29,7 @@
 
 ## Core belief
 
-> EZwallet was built on a simple belief: everyone should be able to own their
+> ezwallet was built on a simple belief: everyone should be able to own their
 > own money, without needing to become a crypto expert.
 >
 > Self-custody shouldn't mean memorizing seed phrases, copying long wallet
@@ -52,7 +51,7 @@ just wants to send money to their family.
 
 ## The approach
 
-EZwallet removes the crypto vocabulary from the surface:
+ezwallet removes the crypto vocabulary from the surface:
 
 - **No seed phrase.** Sign in with an email and a PIN.
 - **No separate gas token.** Arc uses USDC as its native gas currency, so a user
@@ -166,7 +165,7 @@ Being upfront about what this is not, yet:
 
 ## How this was built
 
-EZwallet was built end to end in collaboration with AI – mostly Claude – by
+ezwallet was built end to end in collaboration with AI – mostly Claude – by
 someone with no professional programming background. The product decisions, the
 UX rules and the design direction are human; the implementation was written
 through conversation, then verified by actually running the flows and reading

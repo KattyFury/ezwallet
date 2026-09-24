@@ -2,10 +2,10 @@
 
 ## Scope and current status
 
-EZwallet runs on **Arc Testnet only**. Balances are test money with no real-world
+ezwallet runs on **Arc Testnet only**. Balances are test money with no real-world
 value. The app is **not audited**, and there is no mainnet deployment.
 
-**Key custody:** EZwallet does not hold or store private keys. Keys are managed by
+**Key custody:** ezwallet does not hold or store private keys. Keys are managed by
 [Circle User-Controlled Wallets](https://developers.circle.com/wallets/user-controlled)
 using 2-of-2 MPC, and every signature is authorised by the user's PIN, entered in
 Circle's own cross-origin iframe. This project never sees the PIN. This is

@@ -72,7 +72,7 @@ export default function SendReceipt() {
     row('Amount', realAmountText)
     if (memo) row('Note', memo)
     row('Time', fmtTime(timestamp))
-    // The EZwallet logo (the standard branding - design/logo.svg, brand-blue EZ + black wallet) at the bottom -
+    // The ezwallet logo (the standard branding - design/logo.svg, brand-blue EZ + black wallet) at the bottom -
     // anchored to the canvas BOTTOM, H already reserves 50px of breathing space after the last row (keep the logo off the divider)
     const lw = 168, lh = lw * 71 / 201   // aspect ratio of logo.svg (viewBox 201×71)
     const img = new Image()

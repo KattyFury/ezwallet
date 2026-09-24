@@ -53,8 +53,8 @@ const json = (obj, status = 200) => new Response(JSON.stringify(obj), { status, 
 
 // The sentence to be signed. ALWAYS rebuilt on the server from the nonce - NEVER accept a message string sent by the client
 // (accepting the client's string would allow pre-signing a different sentence and replaying it here).
-// The wording "Unlock EZwallet" is kept because that is genuinely the PIN unlocking the app.
-const messageFor = (nonce) => `Unlock EZwallet. Nonce: ${nonce}`;
+// The wording "Unlock ezwallet" is kept because that is genuinely the PIN unlocking the app.
+const messageFor = (nonce) => `Unlock ezwallet. Nonce: ${nonce}`;
 
 // Keep ONLY the necessary fields - stopping any client (including a future version) from pushing avatars or unknown fields into KV.
 function clean(payload) {

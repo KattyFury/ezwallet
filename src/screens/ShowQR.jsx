@@ -7,7 +7,6 @@ import { saveImageToPhotos, brandedQrCanvas } from '../saveImage'
 import { loadSavedQRs, saveSavedQRs } from '../store'
 import { buildQR } from '../qr'
 import ScreenSheet from '../components/ScreenSheet'
-import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
 
 export default function ShowQR() {
@@ -41,10 +40,11 @@ export default function ShowQR() {
     saveImageToPhotos(await brandedQrCanvas(canvas), `ezwallet-qr-${amount}.png`)
   }
 
-  // Title, RE-VERIFIED 2026-09-10 against nodes 1:128/18:296: a newly created QR reads "Created receive QR"
-  // (past tense - the code said "Create...", missing the "d"), a saved QR's title is the NAME ITSELF, no
-  // "QR:" prefix at all (node 18:296 literally reads "Arabica", not "QR: Arabica").
-  const title = fromStorage ? (name || 'Item') : 'Created receive QR'
+  // Title, RE-VERIFIED 2026-09-24 against nodes 58:588/58:632: a newly created QR reads "QR created"
+  // (was "Created receive QR" - the fresh redesign frame shortened it), a saved QR's title is the NAME
+  // ITSELF, no "QR:" prefix at all (node 58:635 literally reads "QR: Arabica" in the LAYER name but its
+  // own title TEXT is just "Arabica").
+  const title = fromStorage ? (name || 'Item') : 'QR created'
 
   return (
     <div className="screen" style={{ background: GRADIENT }}>
@@ -75,10 +75,11 @@ export default function ShowQR() {
           <Icon name="share" size="var(--is-content-1)" />
           Share
         </button>
-        <button className="btn btn-primary" onClick={() => navigate('HomeReceive')}>Done</button>
+        {/* Done = navigate(back), not a hardcoded HomeReceive (user decision 2026-09-24: no separate Exit -
+            "Done cũng là tắt, Exit cũng là tắt" - Done alone now covers both "finished" and "return to
+            where I came from", library vs Receive alike). */}
+        <button className="btn btn-primary" onClick={() => navigate(back)}>Done</button>
       </div>
-
-      <ExitBar onClick={() => navigate(back)} />
     </div>
   )
 }

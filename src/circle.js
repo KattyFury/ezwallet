@@ -55,7 +55,7 @@ export async function createSession(email) {
 
 // Verify the PIN to UNLOCK THE WALLET (access is gated by the Circle PIN itself - no second code invented). Create a challenge
 // signing an empty message; executeChallenge then opens the PIN screen. A successful signature = correct PIN = wallet unlocked.
-export async function signMessageChallenge(userToken, walletId, message = 'Unlock EZwallet') {
+export async function signMessageChallenge(userToken, walletId, message = 'Unlock ezwallet') {
   const res = await fetch('/api/wallet', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

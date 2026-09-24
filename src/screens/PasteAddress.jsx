@@ -57,9 +57,11 @@ export default function PasteAddress() {
         )}
       </div>
 
-      {/* Back/Paste - node 58:289/58:262: both 166px, glow shadow, top 82.82dvh (calc(80%+23.8px) of 844
-          - re-measured 2026-09-24, was 85.63dvh from an earlier, unverified pass). */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '82.82dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8 }}>
+      {/* Back/Paste - node 58:289/58:262: both 166px, glow shadow. Centre 85.66dvh (723/844 - the rect's
+          own top is 699/82.82dvh, but this row uses translateY(-50%) so it needs the CENTRE, not the top
+          edge - fixed 2026-09-24, an earlier pass here used 82.82dvh as if it were the centre, landing the
+          row visibly higher than every other screen's button row). */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.66dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8 }}>
         <button className="btn btn-secondary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} onClick={() => navigate('HomeSend')}>Back</button>
         {/* Field holds a valid EVM address → label flips "Paste" → "Confirm" (user decision 07-23: tapping goes
             straight on without reading the clipboard, so a "Paste" label would be confusing). handleDan covers both. */}

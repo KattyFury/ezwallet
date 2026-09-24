@@ -20,7 +20,7 @@ import { addNotif } from '../notif'
 const SWAP_ENABLED = true
 
 // ══ THE SWAP SCREEN - % slider + suggestion chips + a NUMPAD BOTTOM SHEET ══
-// EZwallet's audience = newcomers and older people → by default they are NOT made to type digits: a SLIDER
+// ezwallet's audience = newcomers and older people → by default they are NOT made to type digits: a SLIDER
 // picks a % OF THE BALANCE ("how much of my money") + row 7 offers TAPPABLE ROUND NUMBERS.
 // ADDED 07-20 (user request, overriding the earlier 07-17 "do not bring the numpad back"): tapping the AMOUNT on the
 // "You pay" card → the numpad SLIDES UP FROM THE BOTTOM (like the PIN screen) for exact entry; as you type, the amount, the

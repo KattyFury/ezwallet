@@ -17,10 +17,12 @@ import { GRADIENT } from '../brandBg'
 // ⛔ VND TURNED OFF 2026-08-12 (user decision): the app runs English/USD while a scanned QR produced VND → 'VND' was
 // removed from this list so it CANNOT be selected and CANNOT arrive from a QR (params.currency='VND' falls back
 // to USD on the line below). The VND maths further down (isVnd/vndRate/amount suggestions) is KEPT and not
-// deleted - re-enabling only needs 'VND' back in this array + the locked flags removed in Currency.jsx + data.js.
+// deleted - re-enabling only needs 'VND' back in this array + the locked flags removed in Security.jsx + data.js
+// (the language/currency picker moved there when Currency.jsx was deleted 2026-09-24).
 // The original reason (user decision 08-04): "type VND directly, let the app convert to USDC" for Vietnamese users.
 const CURRENCIES = ['USD', 'USDC', 'EURC', 'cirBTC']
 const effectiveToken = c => (c === 'USD' || c === 'VND' ? 'USDC' : c)
+const tokenIconFor = c => (effectiveToken(c) === 'USDC' ? 'usdc' : effectiveToken(c).toLowerCase())
 
 export default function SendAmount() {
   const { navigate, params } = useNav()
@@ -155,11 +157,12 @@ export default function SendAmount() {
 
       <span style={{ position: 'absolute', left: '8.46%', top: '13.55dvh', transform: 'translateY(-50%)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)' }}>You send</span>
 
-      {/* Chip - node 1:94: centre 19.4dvh. Icon (1:95) is a literal 24x24 BLACK SQUARE, no rounding -
-          Figma draws no real token icon here, so draw exactly what it draws, not a borrowed round one. */}
+      {/* Chip - node 1:94: centre 19.4dvh. Figma draws a flat 24x24 BLACK SQUARE placeholder (1:95, no
+          real icon layer) - replaced with the real token logo (2026-09-24, user decision), same
+          /tokens/<sym>.png files Swap's TokenRow already uses. */}
       <button onClick={() => setShowCur(true)}
         style={{ position: 'absolute', left: '8.46%', top: '19.4dvh', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'var(--color-white)', borderRadius: 999, height: 42, padding: '0 14px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', cursor: 'pointer' }}>
-        <div style={{ width: 24, height: 24, background: 'var(--color-black)', flexShrink: 0 }} />
+        <img src={`/tokens/${tokenIconFor(cur)}.png`} alt="" style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
         {cur}
         <Icon name="down2" size="var(--is-content-2)" color="var(--color-brand)" />
       </button>
@@ -170,9 +173,11 @@ export default function SendAmount() {
       </span>
 
       {/* Amount - node 1:99: top-anchored (no y-centring in Figma) at 16.72dvh, right-aligned to the same
-          8.46% inset as everything else in this card. */}
+          8.46% inset as everything else in this card. Idle colour --color-content (was --color-faint,
+          nearly invisible white-on-white - user decision 2026-09-24: "ít ra phải màu đen", the blinking
+          caret already signals "not typed yet"). */}
       <div ref={fitRef} style={{ position: 'absolute', left: '51%', right: '8.46%', top: '16.72dvh', textAlign: 'right' }}>
-        <span className="num" style={{ fontSize: fitSize, fontWeight: 'var(--fw-light)', lineHeight: 1, whiteSpace: 'nowrap', color: overBalance ? 'var(--color-error)' : digits ? 'var(--color-content)' : 'var(--color-faint)' }}>
+        <span className="num" style={{ fontSize: fitSize, fontWeight: 'var(--fw-light)', lineHeight: 1, whiteSpace: 'nowrap', color: overBalance ? 'var(--color-error)' : 'var(--color-content)' }}>
           {amountStr}<span className="caret">_</span>
         </span>
       </div>
@@ -213,9 +218,10 @@ export default function SendAmount() {
       )}
 
       {/* Message row - node 1:101/1:103: top 42.57dvh, input 40 tall / radius 8 (Figma-specific overrides
-          on the shared .address-input class, which defaults to 52/10). The icon button is now WHITE with
-          a glow shadow (was flat grey, no shadow) - matches the app rule "shadow only on clickable
-          elements", and Figma draws it that way (node 1:103's own rect). */}
+          on the shared .address-input class, which defaults to --color-surface/radius 10). Background
+          overridden to #D2DCE6 (var(--color-card)) here - node 58:413 draws this exact colour, matching
+          the "You send"/"To" cards above it (user decision 2026-09-24: all 4 grey boxes on this screen
+          should read as ONE colour, they were drifting - surface/card/surface-2 are 3 different tokens). */}
       <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '42.57dvh', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
         <input
           className="address-input"
@@ -225,7 +231,7 @@ export default function SendAmount() {
           onBlur={() => setTypingText(false)}
           onChange={e => { setMemo(e.target.value); setNoteTouched(true) }}
           maxLength={100}
-          style={{ flex: 1, minWidth: 0, height: 40, borderRadius: 8, fontSize: 'var(--fs-content-1)' }}
+          style={{ flex: 1, minWidth: 0, height: 40, borderRadius: 8, fontSize: 'var(--fs-content-1)', background: 'var(--color-card)' }}
         />
         <button onClick={openNotePopup} aria-label={'Set your default note'}
           style={{ flexShrink: 0, width: 33, height: 40, borderRadius: 8, border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -244,7 +250,7 @@ export default function SendAmount() {
           after adding ScreenSheet - CreateQR.jsx has the identical pattern but no ScreenSheet, so it never
           hit this). */}
       {!typingText && !showNote && (
-      <div className="numpad-gray" style={{ position: 'relative', gridRow: '6 / 11', margin: '0 -20px 0', padding: '27px 20px 0', background: 'var(--color-surface-2)', borderRadius: '20px 20px 0 0' }}>
+      <div className="numpad-gray" style={{ position: 'relative', gridRow: '6 / 11', margin: '0 -20px 0', padding: '27px 20px 0', background: 'var(--color-card)', borderRadius: '20px 20px 0 0' }}>
         {/* AMOUNT SUGGESTIONS (VND only) - placed DIRECTLY ABOVE the numpad so the typing finger reaches them instantly, one tap
             instead of counting zeroes. Height only reserved WHILE hints are actually showing - VND is
             unreachable in practice (see the file header comment), so this never actually pushes the numpad

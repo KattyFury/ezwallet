@@ -1,4 +1,4 @@
-# EZwallet Mainnet – Spec
+# ezwallet Mainnet – Spec
 
 > **Status 2026-09-22: NOT STARTED.** This is the user's own spec, recorded verbatim so it stops living
 > only inside a chat transcript. The fork it describes has not happened yet – see `HANDOFF.md`
@@ -9,7 +9,7 @@
 
 ## Core belief
 
-EZwallet was built on a simple belief: people shouldn't have to adapt to crypto. Crypto should adapt to
+ezwallet was built on a simple belief: people shouldn't have to adapt to crypto. Crypto should adapt to
 people. That means no memorizing seed phrases, no copying long wallet addresses, no worrying about gas
 tokens – those are technical barriers, not the value of crypto. Simple should never come at the cost of
 safety, so every transaction is protected by a PIN, and no one can move your money without you. And in

@@ -57,14 +57,14 @@ export default function ForgotPin() {
   if (busy) {
     return (
       <div className="screen">
-        <img className="logo-lockup" src={logoLong} alt="EZwallet" />
+        <img className="logo-lockup" src={logoLong} alt="ezwallet" />
       </div>
     )
   }
 
   return (
     <div className="screen">
-      <img className="logo-lockup" src={logoLong} alt="EZwallet" />
+      <img className="logo-lockup" src={logoLong} alt="ezwallet" />
       {error && (
         <div style={{ position: 'absolute', top: '34.72dvh', left: '6.41%', right: '6.41%', fontSize: 'var(--fs-content-1)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</div>
       )}
