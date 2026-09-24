@@ -93,7 +93,7 @@ export default function CreateQR() {
       {/* position:relative - the ScreenSheet SVG (sibling, position:absolute) otherwise paints over this
           plain grid-row panel (same fix as SendAmount.jsx). */}
       {!typingText && (
-      <div className="numpad-gray" style={{ position: 'relative', gridRow: '6 / 11', margin: '0 -20px 0', padding: '27px 20px 0', background: 'var(--color-surface-2)', borderRadius: '20px 20px 0 0' }}>
+      <div className="numpad-gray" style={{ position: 'relative', gridRow: '6 / 11', margin: '0 -20px 0', padding: '27px 20px 0', background: 'var(--color-card)', borderRadius: '20px 20px 0 0' }}>
         <div style={{ height: 216 }}>
           <Numpad onKey={handleKey} showComma />
         </div>

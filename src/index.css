@@ -53,7 +53,6 @@
      field) is this one value, straight off the Figma frames. */
   --color-card:         #D2DCE6;
   --color-surface:      #E1E7ED;
-  --color-surface-2:    #E1E7ED;
 
   /* ── FONT - the system stack (2026-09-07, replacing Barlow). Character-for-character the stack this
      app used before on the since-parked `privy` branch - kept identical on purpose so the two branches
@@ -522,7 +521,10 @@ body {
   width: 100%;
   max-width: var(--screen-max);
   height: 45dvh;
-  background: var(--color-surface-2);   /* mid grey (user decision 07-22g) */
+  /* #D2DCE6 (var(--color-card)) - was --color-surface-2 (#E1E7ED, an older grey). User decision
+     2026-09-24: the numpad sheet should match the SAME grey every text box/card in the app now uses,
+     not a leftover separate tone. */
+  background: var(--color-card);
   border-radius: 20px 20px 0 0;
   padding: 0 20px;
   display: flex;
