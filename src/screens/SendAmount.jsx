@@ -22,6 +22,10 @@ import { GRADIENT } from '../brandBg'
 // The original reason (user decision 08-04): "type VND directly, let the app convert to USDC" for Vietnamese users.
 const CURRENCIES = ['USD', 'USDC', 'EURC', 'cirBTC']
 const effectiveToken = c => (c === 'USD' || c === 'VND' ? 'USDC' : c)
+// USD/VND are FIAT LABELS, not tokens - no coin logo for them (user decision 2026-09-24: "USD, EUR
+// tụi mình k dùng logo, còn token thì mới dùng" - showing USDC's logo under "USD" implied the user had
+// picked the token USDC, when they picked the fiat label). Only a real token (USDC/EURC/cirBTC) gets one.
+const isFiatLabel = c => c === 'USD' || c === 'VND'
 const tokenIconFor = c => (effectiveToken(c) === 'USDC' ? 'usdc' : effectiveToken(c).toLowerCase())
 
 export default function SendAmount() {
@@ -158,11 +162,11 @@ export default function SendAmount() {
       <span style={{ position: 'absolute', left: '8.46%', top: '13.55dvh', transform: 'translateY(-50%)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)' }}>You send</span>
 
       {/* Chip - node 1:94: centre 19.4dvh. Figma draws a flat 24x24 BLACK SQUARE placeholder (1:95, no
-          real icon layer) - replaced with the real token logo (2026-09-24, user decision), same
-          /tokens/<sym>.png files Swap's TokenRow already uses. */}
+          real icon layer) - replaced with the real token logo for an actual token; USD (a fiat label,
+          not a token) shows no logo at all. */}
       <button onClick={() => setShowCur(true)}
         style={{ position: 'absolute', left: '8.46%', top: '19.4dvh', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'var(--color-white)', borderRadius: 999, height: 42, padding: '0 14px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', cursor: 'pointer' }}>
-        <img src={`/tokens/${tokenIconFor(cur)}.png`} alt="" style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
+        {!isFiatLabel(cur) && <img src={`/tokens/${tokenIconFor(cur)}.png`} alt="" style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />}
         {cur}
         <Icon name="down2" size="var(--is-content-2)" color="var(--color-brand)" />
       </button>

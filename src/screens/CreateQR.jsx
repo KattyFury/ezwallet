@@ -10,6 +10,8 @@ import { GRADIENT } from '../brandBg'
 
 // Consistent with the Send screen: USD (friendly label, backed by USDC) by default + USDC/EURC/cirBTC.
 const CURRENCIES = ['USD', 'USDC', 'EURC', 'cirBTC']
+// USD is a FIAT LABEL, not a token - no coin logo for it (same rule as SendAmount.jsx).
+const isFiatLabel = c => c === 'USD'
 const tokenIconFor = c => (c === 'USD' ? 'usdc' : c.toLowerCase())
 
 export default function CreateQR() {
@@ -48,11 +50,11 @@ export default function CreateQR() {
       <span style={{ position: 'absolute', left: '8.46%', top: '23.74dvh', transform: 'translateY(-50%)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)' }}>You receive</span>
 
       {/* Chip - node 18:88: centre 29.6dvh. Figma draws a flat 24x24 BLACK SQUARE placeholder (18:89, no
-          real icon layer) - the app already has real token logos (Swap's TokenRow uses the same
-          /tokens/<sym>.png files), so the real logo is used here instead of the placeholder square. */}
+          real icon layer) - a real token logo is used instead, EXCEPT for USD (a fiat label, not a token
+          - no coin logo, same rule as SendAmount.jsx). */}
       <button onClick={() => setShowCur(true)}
         style={{ position: 'absolute', left: '8.46%', top: '29.6dvh', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'var(--color-white)', borderRadius: 999, height: 42, padding: '0 14px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', cursor: 'pointer' }}>
-        <img src={`/tokens/${tokenIconFor(cur)}.png`} alt="" style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />
+        {!isFiatLabel(cur) && <img src={`/tokens/${tokenIconFor(cur)}.png`} alt="" style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />}
         {cur}
         <Icon name="down2" size="var(--is-content-2)" color="var(--color-brand)" />
       </button>
