@@ -157,7 +157,7 @@ export default function SendAmount() {
           not approximated with flexbox space-between/flex-end like the first pass - that approximation is
           exactly what put the chip/icon/numbers at the wrong y and made them impossible to pixel-diff
           cleanly. Same per-element absolute placement Confirm transaction/Receipt already use. */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '10.19dvh', height: '18.48dvh', background: 'var(--color-card)', borderRadius: 8 }} />
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '10.19dvh', height: '18.48dvh', background: 'var(--color-card)', borderRadius: 16 }} />
 
       <span style={{ position: 'absolute', left: '8.46%', top: '13.55dvh', transform: 'translateY(-50%)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)' }}>You send</span>
 
@@ -197,7 +197,7 @@ export default function SendAmount() {
       </div>
 
       {/* "To" card - node 1:91: row 4 (340x70, top 30.57dvh). "To:" 18px + the name 22px, both semibold. */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '30.57dvh', height: '8.29dvh', background: 'var(--color-card)', borderRadius: 8, display: 'flex', alignItems: 'center', padding: '0 8px', minWidth: 0 }}>
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '30.57dvh', height: '8.29dvh', background: 'var(--color-card)', borderRadius: 16, display: 'flex', alignItems: 'center', padding: '0 8px', minWidth: 0 }}>
         <span style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {'To: '}<span style={{ fontSize: 'var(--fs-h2)' }}>{name || shortenAddr(address)}</span>
         </span>
@@ -235,7 +235,7 @@ export default function SendAmount() {
           onBlur={() => setTypingText(false)}
           onChange={e => { setMemo(e.target.value); setNoteTouched(true) }}
           maxLength={100}
-          style={{ flex: 1, minWidth: 0, height: 40, borderRadius: 8, fontSize: 'var(--fs-content-1)', background: 'var(--color-card)' }}
+          style={{ flex: 1, minWidth: 0, height: 40, borderRadius: 16, fontSize: 'var(--fs-content-1)', background: 'var(--color-card)' }}
         />
         <button onClick={openNotePopup} aria-label={'Set your default note'}
           style={{ flexShrink: 0, width: 33, height: 40, borderRadius: 16, border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -254,7 +254,7 @@ export default function SendAmount() {
           after adding ScreenSheet - CreateQR.jsx has the identical pattern but no ScreenSheet, so it never
           hit this). */}
       {!typingText && !showNote && (
-      <div className="numpad-gray" style={{ position: 'relative', gridRow: '6 / 11', margin: '0 -20px 0', padding: '27px 20px 0', background: 'var(--color-card)', borderRadius: '8px 8px 0 0' }}>
+      <div className="numpad-gray" style={{ position: 'relative', gridRow: '6 / 11', margin: '0 -20px 0', padding: 'calc(27 * var(--u)) 20px 0', background: 'var(--color-card)', borderRadius: '16px 16px 0 0' }}>
         {/* AMOUNT SUGGESTIONS (VND only) - placed DIRECTLY ABOVE the numpad so the typing finger reaches them instantly, one tap
             instead of counting zeroes. Height only reserved WHILE hints are actually showing - VND is
             unreachable in practice (see the file header comment), so this never actually pushes the numpad
@@ -272,7 +272,7 @@ export default function SendAmount() {
             a fraction of whatever space is left. Panel padding-top 27px above + this 216px block put the
             last key row's bottom 27px above the Back/Continue row (699dvh, independently positioned via
             .row10-dual), matching Figma's own 27px gap on both sides of the numpad exactly. */}
-        <div style={{ height: 216 }}>
+        <div style={{ height: 'calc(216 * var(--u))' }}>
           <Numpad onKey={handleKey} showComma={!isVnd} />
         </div>
       </div>

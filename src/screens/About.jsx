@@ -37,7 +37,7 @@ export default function About() {
       <ScreenSheet />
       <div className="sheet-title">About</div>
 
-      <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 8 }} />
+      <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 16 }} />
 
       {ITEMS.map(({ label, value, link, top }) => (
         link ? (
@@ -55,7 +55,7 @@ export default function About() {
       ))}
 
       <button className="btn btn-primary" onClick={() => navigate('MenuScreen')}
-        style={{ position: 'absolute', left: '6.41%', width: '87.18%', top: '82.82dvh', height: 48, minHeight: 0 }}>
+        style={{ position: 'absolute', left: '6.41%', width: '87.18%', top: 'calc(85.665dvh - 24 * var(--u))', height: 'calc(48 * var(--u))', minHeight: 0 }}>
         Done
       </button>
 

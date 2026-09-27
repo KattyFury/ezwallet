@@ -13,6 +13,15 @@ import { buildQR } from '../qr'
 import { HALF_OVAL_STYLE } from './HomeSend'
 import { GRADIENT } from '../brandBg'
 
+// ROW 9 ACTION BAND (fix 2026-09-27, user: "16px nha"): the notification card ends at 79.62dvh
+// (50.95 + 28.67) and row 10 starts at 91.71dvh. The big pill fills the band with EXACTLY 16px to each
+// side at every viewport (70px at 844); the old fixed 70px on a dvh top drifted to 17.8/24.9px on a
+// 932px phone and overlapped the NavBar on a 667px one. The side pills stay 48px, centred in the band.
+// Gaps: 16 design px, never below 8px on a very short screen (user rule 2026-09-27).
+const GAP = 'max(8px, calc(16 * var(--u)))'
+const BIG_BTN = { top: `calc(79.62dvh + ${GAP})`, height: `calc(12.09dvh - 2 * ${GAP})` }
+const SIDE_BTN = { top: 'calc(85.665dvh - 24 * var(--u))', height: 'calc(48 * var(--u))' }
+
 export default function HomeReceive() {
   const { navigate } = useNav()
   const [copied, setCopied] = useState(false)
@@ -74,7 +83,7 @@ export default function HomeReceive() {
       {/* TOP CARD - node 56:72: 340x328 at (25,86). */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '38.86dvh',
-        background: 'var(--color-card)', borderRadius: 8, overflow: 'hidden',
+        background: 'var(--color-card)', borderRadius: 16, overflow: 'hidden',
       }}>
         {/* THE QR - node 56:110 draws a flat 258x258 BLACK SQUARE, the placeholder this file uses for
             "the real thing goes here".
@@ -117,7 +126,7 @@ export default function HomeReceive() {
           matched exactly and NotifArea keeps owning what goes inside it. */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '50.95dvh', width: '87.18%', height: '28.67dvh',
-        background: 'var(--color-card)', borderRadius: 8, padding: 16,
+        background: 'var(--color-card)', borderRadius: 16, padding: 16,
         display: 'flex', flexDirection: 'column', minHeight: 0,
       }}>
         <NotifArea
@@ -132,38 +141,38 @@ export default function HomeReceive() {
       {/* ACTION ROW - nodes 56:76-56:78, the same three boxes as Send at the same coordinates: the centre
           pill 124x70 at y=688, the two side pills 100x48 at y=699, radius 16 on all three. */}
       <button onClick={() => navigate('SavedQRList')} style={{
-        position: 'absolute', left: '6.41%', top: '82.82dvh', width: '25.64%', height: 48,
+        position: 'absolute', left: '6.41%', top: SIDE_BTN.top, width: '25.64%', height: SIDE_BTN.height,
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-        fontFamily: 'inherit', fontSize: 14, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        fontFamily: 'inherit', fontSize: 'calc(14 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
-        <Icon name="download" size={19.709} />
+        <Icon name="download" size="calc(19.709 * var(--u))" />
         <span>QR storage</span>
       </button>
 
       <button onClick={() => navigate('CreateQR')} style={{
-        position: 'absolute', left: '34.10%', top: '81.52dvh', width: '31.79%', height: 70,
+        position: 'absolute', left: '34.10%', top: BIG_BTN.top, width: '31.79%', height: BIG_BTN.height,
         background: 'var(--color-brand)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-        fontFamily: 'inherit', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
+        fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
-        <Icon name="qr" size={27} color="var(--color-white)" />
+        <Icon name="qr" size="calc(27 * var(--u))" color="var(--color-white)" />
         <span>Create QR</span>
       </button>
 
       <button onClick={handleShare} style={{
-        position: 'absolute', left: '67.95%', top: '82.82dvh', width: '25.64%', height: 48,
+        position: 'absolute', left: '67.95%', top: SIDE_BTN.top, width: '25.64%', height: SIDE_BTN.height,
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-        fontFamily: 'inherit', fontSize: 14, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        fontFamily: 'inherit', fontSize: 'calc(14 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
-        <Icon name="share" size={19.709} />
+        <Icon name="share" size="calc(19.709 * var(--u))" />
         <span>{copied ? 'Copied' : 'Share'}</span>
       </button>
 

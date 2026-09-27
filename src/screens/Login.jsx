@@ -207,7 +207,7 @@ export default function Login() {
         <div key={i} aria-hidden="true" style={{
           position: 'absolute', left: `${left}%`, top: '30.57dvh',
           width: '12.82%', height: '8.29dvh',
-          background: '#D2DCE6', borderRadius: 8,
+          background: '#D2DCE6', borderRadius: 16,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--color-black)' }} />
@@ -252,7 +252,7 @@ export default function Login() {
           width: '70.26%', height: '8.29dvh',
           background: 'var(--color-white)', border: 'none', borderRadius: 16,
           boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)',
-          fontSize: 24, fontWeight: 'var(--fw-semibold)', lineHeight: '30px',
+          fontSize: 'calc(24 * var(--u))', fontWeight: 'var(--fw-semibold)', lineHeight: 'calc(30 * var(--u))',
           color: 'var(--color-black)', cursor: 'pointer',
           WebkitTapHighlightColor: 'transparent',
         }}>

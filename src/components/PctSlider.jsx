@@ -57,7 +57,7 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
         <div style={{
           position: 'absolute', left: `${pct}%`, transform: 'translateX(-50%)',
           background: disabled ? 'var(--color-gray)' : 'var(--grad-brand)', color: 'var(--color-white)',
-          borderRadius: 8, padding: '2px 10px', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)',
+          borderRadius: 16, padding: '2px 10px', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)',
           whiteSpace: 'nowrap', transition: dragging ? 'none' : 'left .15s ease',
         }}>
           {pct}%

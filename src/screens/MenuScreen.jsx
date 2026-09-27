@@ -88,7 +88,7 @@ export default function MenuScreen() {
           app - About.jsx's Network row, NotifArea's network line. */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '18.48dvh',
-        background: 'var(--color-card)', borderRadius: 8,
+        background: 'var(--color-card)', borderRadius: 16,
         display: 'flex', alignItems: 'center', padding: '0 16px',
       }}>
         <p style={{ margin: 0, fontSize: 18, lineHeight: '32px', color: 'var(--color-black)' }}>

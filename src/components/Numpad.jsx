@@ -24,7 +24,7 @@ export default function Numpad({ onKey, showComma = false, disabled = false }) {
                 onClick={() => !isEmpty && onKey(key)}
               >
                 {key === 'BACK'
-                  ? <Icon name="erase" size={24} />
+                  ? <Icon name="erase" size="calc(24 * var(--u))" />
                   : isEmpty ? '' : key}
               </button>
             )

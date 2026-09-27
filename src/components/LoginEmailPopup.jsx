@@ -38,7 +38,7 @@ function Chip({ label, onClick, top }) {
     <button onClick={onClick} title={label}
       style={{
         position: 'absolute', left: '10.51%', top, height: 32, maxWidth: '79%',
-        padding: '0 12px', border: '1px solid var(--color-brand)', borderRadius: 8,
+        padding: '0 12px', border: '1px solid var(--color-brand)', borderRadius: 16,
         background: 'var(--color-white)', cursor: 'pointer',
         fontFamily: 'inherit', fontSize: 14, color: 'var(--color-brand)',
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
@@ -202,7 +202,7 @@ export default function LoginEmailPopup({ onClose }) {
         style={{
           position: 'absolute', left: '50%', top: '22.04dvh', transform: 'translateX(-50%)',
           width: '78.96%', height: 40,
-          background: '#D2DCE6', border: 'none', borderRadius: 8,
+          background: '#D2DCE6', border: 'none', borderRadius: 16,
           // The browser draws a BLACK FOCUS RING on an autofocused input. The design has no such line
           // anywhere, so it read as a drawing mistake rather than as focus. Killed here, not app-wide.
           outline: 'none',

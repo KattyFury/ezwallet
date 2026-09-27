@@ -96,7 +96,9 @@ export default function Icon({ name, size = 24, color, style, className }) {
     <span
       className={className}
       style={{ display: 'inline-flex', width: size, height: size, color, flexShrink: 0, ...style }}>
-      <Glyph size={size} color="currentColor" absoluteStrokeWidth={false} />
+      {/* A CSS-string size (var(--is-*) or calc(N * var(--u))) is valid on the span but NOT as an SVG
+          width/height attribute - so the glyph fills the span instead. Numbers pass through unchanged. */}
+      <Glyph size={typeof size === 'number' ? size : '100%'} color="currentColor" absoluteStrokeWidth={false} />
     </span>
   )
 }

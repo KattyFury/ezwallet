@@ -95,7 +95,7 @@ export default function AddToHome() {
       <ol style={{
         position: 'absolute', left: '6.41%', top: '40.76dvh',
         width: '87.18%', height: '8.29dvh',
-        background: '#D2DCE6', borderRadius: 8,
+        background: '#D2DCE6', borderRadius: 16,
         display: 'flex', flexDirection: 'column', justifyContent: 'center',
         listStyle: 'decimal', listStylePosition: 'inside',
         fontSize: 18, fontWeight: 'var(--fw-semibold)', lineHeight: '32px',

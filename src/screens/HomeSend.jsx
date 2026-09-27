@@ -80,6 +80,15 @@ export const HALF_OVAL_STYLE = {
   WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
 }
 
+// ROW 9 ACTION BAND (fix 2026-09-27, user: "16px nha"): the notification card ends at 79.62dvh
+// (50.95 + 28.67) and row 10 starts at 91.71dvh. The big pill fills the band with EXACTLY 16px to each
+// side at every viewport (70px at 844); the old fixed 70px on a dvh top drifted to 17.8/24.9px on a
+// 932px phone and overlapped the NavBar on a 667px one. The side pills stay 48px, centred in the band.
+// Gaps: 16 design px, never below 8px on a very short screen (user rule 2026-09-27).
+const GAP = 'max(8px, calc(16 * var(--u)))'
+const BIG_BTN = { top: `calc(79.62dvh + ${GAP})`, height: `calc(12.09dvh - 2 * ${GAP})` }
+const SIDE_BTN = { top: 'calc(85.665dvh - 24 * var(--u))', height: 'calc(48 * var(--u))' }
+
 export default function HomeSend() {
   const { navigate } = useNav()
   // Seeded from the module-level cache → switching screens shows the number IMMEDIATELY (no "..." flash), with a background fetch updating it.
@@ -137,7 +146,7 @@ export default function HomeSend() {
           is what makes it read as a half-oval sitting on that edge rather than a floating button. */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '38.86dvh',
-        background: 'var(--color-card)', borderRadius: 8, padding: '15.94px 16px 0', minWidth: 0,
+        background: 'var(--color-card)', borderRadius: 16, padding: '15.94px 16px 0', minWidth: 0,
         overflow: 'hidden',
       }}>
         <div className="scroll-hidden" style={{
@@ -158,7 +167,7 @@ export default function HomeSend() {
             {tokens.map(tk => (
               <div key={tk.symbol} style={{
                 display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
-                height: 40, borderRadius: 8, background: 'var(--color-white)', padding: '0 16px',
+                height: 40, borderRadius: 16, background: 'var(--color-white)', padding: '0 16px',
               }}>
                 {/* Figma draws a flat 26.3px BLACK SQUARE here (nodes 1:364 / 56:20) - a placeholder for
                     the real token mark, per the user's rule about squares in this file. */}
@@ -207,7 +216,7 @@ export default function HomeSend() {
           contents stay NotifArea, which is what actually knows about them. */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '50.95dvh', width: '87.18%', height: '28.67dvh',
-        background: 'var(--color-card)', borderRadius: 8, padding: 16,
+        background: 'var(--color-card)', borderRadius: 16, padding: 16,
         display: 'flex', flexDirection: 'column', minHeight: 0,
       }}>
         <NotifArea
@@ -219,7 +228,7 @@ export default function HomeSend() {
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) < 20 ? (
               <div onClick={() => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } localStorage.setItem('ez_faucet_pending', String(Date.now())); window.open('https://faucet.circle.com/', '_blank') }}
-                style={{ width: '100%', background: 'var(--color-white)', borderRadius: 8, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2, cursor: 'pointer', fontSize: NOTIF_FS, color: 'var(--color-warning)', fontWeight: 'var(--fw-semibold)' }}>
+                style={{ width: '100%', background: 'var(--color-white)', borderRadius: 16, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2, cursor: 'pointer', fontSize: NOTIF_FS, color: 'var(--color-warning)', fontWeight: 'var(--fw-semibold)' }}>
                 <span style={{ minWidth: 0, lineHeight: 1.35 }}>Out of USDC for transaction fees</span>
                 <span style={{ minWidth: 0, lineHeight: 1.35 }}>
                   {'Tap to get testnet USDC from'}{' '}
@@ -235,38 +244,38 @@ export default function HomeSend() {
           taller (124x70 at y=688) than its siblings (100x48 at y=699) and they share no baseline, so a
           flex row with align-items would only approximate what the node draws. Radius 16 on all three. */}
       <button onClick={() => navigate('PasteAddress')} style={{
-        position: 'absolute', left: '6.41%', top: '82.82dvh', width: '25.64%', height: 48,
+        position: 'absolute', left: '6.41%', top: SIDE_BTN.top, width: '25.64%', height: SIDE_BTN.height,
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-        fontFamily: 'inherit', fontSize: 14, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        fontFamily: 'inherit', fontSize: 'calc(14 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
-        <Icon name="copy" size={19.709} />
+        <Icon name="copy" size="calc(19.709 * var(--u))" />
         <span>Paste</span>
       </button>
 
       <button onClick={() => navigate('QRScanner')} style={{
-        position: 'absolute', left: '34.10%', top: '81.52dvh', width: '31.79%', height: 70,
+        position: 'absolute', left: '34.10%', top: BIG_BTN.top, width: '31.79%', height: BIG_BTN.height,
         background: 'var(--color-brand)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-        fontFamily: 'inherit', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
+        fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
-        <Icon name="scan" size={27} color="var(--color-white)" />
+        <Icon name="scan" size="calc(27 * var(--u))" color="var(--color-white)" />
         <span>Scan QR</span>
       </button>
 
       <button onClick={() => navigate('Contacts')} style={{
-        position: 'absolute', left: '67.95%', top: '82.82dvh', width: '25.64%', height: 48,
+        position: 'absolute', left: '67.95%', top: SIDE_BTN.top, width: '25.64%', height: SIDE_BTN.height,
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-        fontFamily: 'inherit', fontSize: 14, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        fontFamily: 'inherit', fontSize: 'calc(14 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
-        <Icon name="human" size={19.709} />
+        <Icon name="human" size="calc(19.709 * var(--u))" />
         <span>Contacts</span>
       </button>
 

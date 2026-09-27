@@ -45,7 +45,7 @@ export default function CreateQR() {
       {/* "You receive" card - node 18:84: rows 3-4 (340x156, top 20.38dvh, radius 16 - ONE row lower than
           Send money's "You send" card). Colour #D2DCE6 (var(--color-card)), matching every other card in
           this redesign. */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '20.38dvh', height: '18.48dvh', background: 'var(--color-card)', borderRadius: 8 }} />
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '20.38dvh', height: '18.48dvh', background: 'var(--color-card)', borderRadius: 16 }} />
 
       <span style={{ position: 'absolute', left: '8.46%', top: '23.74dvh', transform: 'translateY(-50%)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)' }}>You receive</span>
 
@@ -93,8 +93,8 @@ export default function CreateQR() {
       {/* position:relative - the ScreenSheet SVG (sibling, position:absolute) otherwise paints over this
           plain grid-row panel (same fix as SendAmount.jsx). */}
       {!typingText && (
-      <div className="numpad-gray" style={{ position: 'relative', gridRow: '6 / 11', margin: '0 -20px 0', padding: '27px 20px 0', background: 'var(--color-card)', borderRadius: '8px 8px 0 0' }}>
-        <div style={{ height: 216 }}>
+      <div className="numpad-gray" style={{ position: 'relative', gridRow: '6 / 11', margin: '0 -20px 0', padding: 'calc(27 * var(--u)) 20px 0', background: 'var(--color-card)', borderRadius: '16px 16px 0 0' }}>
+        <div style={{ height: 'calc(216 * var(--u))' }}>
           <Numpad onKey={handleKey} showComma />
         </div>
       </div>

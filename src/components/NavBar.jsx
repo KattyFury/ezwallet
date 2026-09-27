@@ -48,7 +48,7 @@ export default function NavBar({ active }) {
               WebkitTapHighlightColor: 'transparent',
             }}
             aria-label={tab.label}>
-            <Icon name={tab.icon} size={30} color={color} />
+            <Icon name={tab.icon} size="calc(30 * var(--u))" color={color} />
           </button>
         )
       })}

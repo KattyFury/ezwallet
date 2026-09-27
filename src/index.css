@@ -10,6 +10,13 @@
    FONT SIZES: UNLOCKED - the scale below is a guide, px values may be tuned per place.
    ══════════════════════════════════════════════════════════ */
 :root {
+  /* ── ONE DESIGN PIXEL (2026-09-27, user: "khi thiết kế bị nhỏ lại ... co lại đúng tỉ lệ, text và shape").
+     = 1px on a viewport 844px tall or taller, and exactly 1/844 of the height on a shorter one - so a
+     size written as calc(N * var(--u)) shrinks in step with every dvh-anchored position instead of
+     overflowing its row (row 9's buttons used to spill into row 10 on short/square viewports).
+     Applied to rows 9-10 (buttons, their text/icons, NavBar, Exit) and to .btn app-wide. */
+  --u: min(1px, calc(100dvh / 844));
+
   /* ── THE 7 BRAND-GUIDELINE COLOURS ──
      Brand #0B53BF · white · black · text phụ #757575 · box/input #E3E3E3 · danger #EC221F ·
      warning #E8B931 · tích cực #14AE5C. NO GRADIENTS anywhere (guideline: "tất cả là màu SOLID"). */
@@ -198,7 +205,7 @@ body {
   position: relative;   /* the anchor for floating buttons (e.g. Show tokens pinned to the row 6/7 boundary) */
   display: grid;
   grid-template-rows: repeat(10, 1fr);
-  row-gap: 16px;
+  row-gap: calc(16 * var(--u));   /* 16 design px - scales with --u so grid rows stay proportional to the dvh positions */
   /* THE RIGHT COLUMN IS LOCKED TO minmax(0,1fr) - do NOT remove this line.
      Declare no columns → the implicit column = auto = it grows with the WIDEST CONTENT. A single long notification or
      address (nowrap) is enough to blow the column past the screen width → EVERY row (balance, token list, buttons, NavBar) gets
@@ -341,7 +348,7 @@ body {
      Menu Deposit/Withdraw, Exchange's CTA) was actually 18px, not 19 - but the user's new 5-tier scale
      (15-17-19-22-28) deliberately rounds button text to the same "Nội dung 1" tier as card labels, a
      one-pixel consolidation choice made on purpose, not a fresh measurement. */
-  font-size: var(--fs-content-1);
+  font-size: calc(19 * var(--u));   /* = --fs-content-1 (19) in design px */
   font-weight: var(--fw-semibold);
   line-height: 1;   /* 2026-09-10: without this, the browser's "normal" line-height adds asymmetric leading
                         above/below the glyphs - invisible on the standard 48px button (enough headroom to
@@ -357,8 +364,8 @@ body {
      "Button height: 48/40/32 — bội số của 8" - and every button measured this session confirms 48.
      This is the SAME class of bug the user caught on Exchange's CTA (height:'100%' instead of a fixed
      48px); fixing it here at the shared-class level closes it for every .btn in the app at once. */
-  height: 48px;
-  min-height: 48px;        /* the minimum touch area for older users - now equal to height, kept as a safety net */
+  height: calc(48 * var(--u));      /* 48 design px - shrinks with a short viewport (see --u) */
+  min-height: calc(48 * var(--u));        /* the minimum touch area for older users - now equal to height, kept as a safety net */
   transition: opacity 0.15s;
 }
 
@@ -485,13 +492,13 @@ body {
   align-items: center;
   justify-content: center;
   font-family: var(--font-condensed);
-  font-size: 26px;
+  font-size: calc(26 * var(--u));
   font-weight: var(--fw-medium);
   color: var(--color-black);
   background: none;
   border: none;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: 16px;
   -webkit-tap-highlight-color: transparent;
   user-select: none;
 }
@@ -528,7 +535,7 @@ body {
      2026-09-24: the numpad sheet should match the SAME grey every text box/card in the app now uses,
      not a leftover separate tone. */
   background: var(--color-card);
-  border-radius: 8px 8px 0 0;   /* grey box = radius 8 (user rule 2026-09-27) */
+  border-radius: 16px 16px 0 0;   /* radius 16 (user rule 2026-09-27: every 8px radius -> 16) */
   padding: 0 20px;
   display: flex;
   flex-direction: column;
@@ -540,8 +547,8 @@ body {
    Radius 16 + glow shadow (was 12/no shadow) - 2026-09-10: Send money's own key nodes (18:16 etc, part of
    the same numpad component) draw radius 16 and the app's standard `0 0 8px rgba(0,0,0,.48)` clickable-glow,
    fixing all three screens' numpad at once per the "one shared definition" rule. */
-.numpad-gray .numpad { gap: 8px; }
-.numpad-gray .numpad-row { gap: 8px; }
+.numpad-gray .numpad { gap: calc(8 * var(--u)); }
+.numpad-gray .numpad-row { gap: calc(8 * var(--u)); }
 .numpad-gray .numpad-key { background: var(--color-white); border-radius: 16px; box-shadow: 0 0 8px rgba(0, 0, 0, 0.48); }
 .numpad-gray .numpad-key:active { background: rgba(0,0,0,0.06); }
 .numpad-gray .numpad-key.empty { background: transparent; box-shadow: none; }
@@ -678,7 +685,7 @@ body {
   /* The Swap standard: input fields = a surface fill with no border (user decision 07-17); small fields keep radius 10 */
   border: none;
   background: var(--color-surface);
-  border-radius: 8px;   /* grey box = radius 8 (user rule 2026-09-27) */
+  border-radius: 16px;   /* radius 16 (user rule 2026-09-27: every 8px radius -> 16) */
   padding: 8px 12px;
 }
 
@@ -701,7 +708,7 @@ body {
      fresh pulls of both SendConfirm (58:292) and SendReceipt (58:306), same colour every other redesign
      card (Menu/Security/About/TxHistory/Contacts) already uses. */
   border: none;
-  border-radius: 8px;   /* grey box = radius 8 (user rule 2026-09-27) */
+  border-radius: 16px;   /* radius 16 (user rule 2026-09-27: every 8px radius -> 16) */
   background: var(--color-card);
   overflow: hidden;
 }
@@ -772,7 +779,7 @@ body {
   /* The Swap standard: input fields = a surface fill with no border (user decision 07-17); small fields keep radius 10 */
   border: none;
   background: var(--color-surface);
-  border-radius: 8px;   /* grey box = radius 8 (user rule 2026-09-27) */
+  border-radius: 16px;   /* radius 16 (user rule 2026-09-27: every 8px radius -> 16) */
   padding: 10px 12px;
   font-family: var(--font-base);
   font-size: var(--fs-caption);

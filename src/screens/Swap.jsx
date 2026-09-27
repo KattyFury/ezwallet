@@ -272,7 +272,7 @@ export default function Swap() {
 
   // The card = a PALE GREY BACKGROUND, NO BORDER, NO SHADOW (nodes 1:68/1:69, 2026-09-10: radius 16,
   // was 20 - the token chip inside stays WHITE so it stands out on the grey without needing a border).
-  const CARD = { border: 'none', borderRadius: 8, background: 'var(--color-surface)', padding: '14px 16px' }
+  const CARD = { border: 'none', borderRadius: 16, background: 'var(--color-surface)', padding: '14px 16px' }
 
   // ONE MINIMAL 3-row card (user decision 07-20 "strip it back so the text can be bigger for older users"):
   //   the You pay/receive label
@@ -501,7 +501,7 @@ export default function Swap() {
           return (
         <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
           style={{
-            width: '100%', height: 48, minHeight: 0, borderRadius: 38, overflow: 'hidden',
+            width: '100%', height: 'calc(48 * var(--u))', minHeight: 0, borderRadius: 38, overflow: 'hidden',
             boxShadow: error || success ? undefined : '0 0 20px rgba(0, 0, 0, 0.32)',
             ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
             ...(success ? { opacity: confirmed ? 1 : 0.6 } : null),
