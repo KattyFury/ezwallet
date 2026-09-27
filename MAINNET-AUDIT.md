@@ -55,7 +55,7 @@ confirm with a LIVE API key and set `circleBlockchain` in `src/network.js` (left
 provider, short TTL, attempt limit), then keep `userId=email` + PIN exactly as today. Circle's own Email-OTP
 auth mode is NOT an option (it removes the PIN - see HANDOFF). Add rate limiting on `/api/session`.
 
-### C2. Hard-coded testnet addresses silently "succeed" on mainnet
+### C2. Hard-coded testnet addresses silently "succeed" on mainnet — ✅ FIXED 2026-09-27 (`src/network.js`, `/api/health`)
 On mainnet the testnet **Swap Adapter** and **EURC** addresses have **no code**. EVM calls to a code-less address
 succeed without doing anything, so:
 - **Swap:** the batch `approve(tokenIn → 0xBBD7…) + execute()` would succeed, move nothing, and leave an
@@ -93,7 +93,10 @@ of the batch from the user's address, and require the tokenOut balance to rise.
 
 ## 🟠 High
 
-### H1. Amount rounding differs from what the user confirmed
+### H1. Amount rounding differs from what the user confirmed — ✅ FIXED 2026-09-27
+> Worse than first written: the KEYPAD had no decimal limit either, so a typed `0.004` was sent as 0 too.
+> Fixed by `src/money.js` (strings end to end, `parseUnits` on the server, reject instead of round; keypad capped
+> at the token's decimals; QR amounts dropped unless clean) - locked by `test/money.test.mjs`.
 `SendConfirm` sends `toFixed(2)` for USDC/EURC. The keypad limits input to 2 decimals, but a **QR-supplied
 amount** (`qr.js` → `SendAmount` `digits = String(params.amount)`) is not limited: `0.004` is sent as **0**
 ("Sent $0.004" shown), `12.345` as `12.35`. The server also converts with floats
@@ -124,7 +127,7 @@ Multi-sig is NOT required: ezwallet deploys no contracts and never holds custome
 PIN), so the spec's "deploy with multi-sig" rule does not apply. A wallet whose key the owner controls safely
 (hardware wallet or an offline seed) is enough.
 
-### H6. Addresses are not checksum-validated
+### H6. Addresses are not checksum-validated — ✅ FIXED 2026-09-27 (Paste, QR, Contacts, server)
 `/^0x[0-9a-fA-F]{40}$/` accepts a mixed-case address with a typo. **Fix:** `viem.isAddress(addr, { strict: true })`
 on every entry path (Paste, QR, Contacts) and on the server.
 

@@ -11,6 +11,7 @@
 //   + approve(tokenIn→adapter, amount) FIRST. Batching [approve, execute] through Multicall3From = 1 PIN.
 // ⚠️ Unpacking the instructions and running them by hand (the old S11-14 approach) SKIPS settlement → the USDC is stranded in the adapter, MONEY LOST.
 import { encodeFunctionData } from 'viem'
+import { toBaseUnits } from '../../src/money.js'
 
 export const CIRCLE_API = 'https://api.circle.com'
 
@@ -28,7 +29,8 @@ export const FEE_BPS       = 10   // 10 bps = 0.1%
 // ⚠️ The Kit expects amount = an INTEGER IN BASE UNITS (a decimal → 400; a small number → "No route"). The client sends
 // decimals, the server converts to base units before calling the Kit, and converts estimatedAmount back on the way out.
 export const tokenOf = (net, sym) => net.tokens[sym] || null
-export const toBase = (net, decStr, sym) => BigInt(Math.round(parseFloat(decStr) * 10 ** net.tokens[sym].decimals))
+// Throws on a bad amount (too many decimals, zero, negative, exponent...) instead of rounding - MAINNET-AUDIT H1.
+export const toBase = (net, decStr, sym) => toBaseUnits(decStr, net.tokens[sym].decimals)
 export const fromBase = (net, baseStr, sym) => (Number(baseStr) / 10 ** net.tokens[sym].decimals).toString()
 
 // IAdapter.execute - the ABI copied verbatim from @circle-fin/adapter-viem-v2 (adapterContractAbi).

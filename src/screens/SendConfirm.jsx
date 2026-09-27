@@ -17,7 +17,7 @@ function Cur({ children }) {
 export default function SendConfirm() {
   const { navigate, params } = useNav()
   // currency = 'USD' (the friendly label, USDC is sent) or a real token (USDC/EURC/cirBTC) - comes from SendAmount.
-  const { address, name, amount, memo, currency = 'USD' } = params
+  const { address, name, amount, amountStr, memo, currency = 'USD' } = params
   const [feeUsd, setFeeUsd] = useState(null)      // the real gas fee (USD, null = still calculating)
   // A separate rate for the FEE (USD per unit of the display currency - USDC:1, EURC:~1.08)
   const [feeRates, setFeeRates] = useState({ USDC: 1, EURC: 1.08, VND: 1 / 26300 })
@@ -41,10 +41,12 @@ export default function SendConfirm() {
   // time makes the number the user just saw ("≈ 19.00 USDC") differ from the one that ACTUALLY leaves the wallet.
   // People must get exactly what they confirmed.
   const sendUnits = currency === 'VND' ? (params.tokenAmount ?? 0) : amount
-  const sendAmountStr = token === 'cirBTC' ? sendUnits.toFixed(8) : sendUnits.toFixed(2)
-  const mainEl = currency === 'USD' ? <>{displaySymbol('USDC')}{amount}</>
+  // MAINNET-AUDIT H1: send EXACTLY the string the user typed/confirmed (validated again by the server) - the old
+  // toFixed(2) turned "0.004" into "0.00". VND is unreachable (see HANDOFF §4) and keeps its old conversion.
+  const sendAmountStr = currency === 'VND' ? sendUnits.toFixed(2) : (amountStr ?? String(amount))
+  const mainEl = currency === 'USD' ? <>{displaySymbol('USDC')}{sendAmountStr}</>
     : currency === 'VND' ? <>{amount.toLocaleString('vi-VN')} <Cur>₫</Cur></>
-    : <>{amount} <Cur>{currency}</Cur></>
+    : <>{sendAmountStr} <Cur>{currency}</Cur></>
 
   // Network fee in the DEFAULT CURRENCY from Settings (USDC/EURC/VND)
   const displayCur = getDisplayCurrency()

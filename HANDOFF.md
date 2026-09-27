@@ -23,7 +23,10 @@ proposed order of work. Nothing in it is fixed yet.
   checks chainId + contract code at every address; `SendConfirm`/`Swap` call `assertNetworkReady()` and refuse
   to create a challenge if it fails or the two sides disagree. Mainnet build: USDC+EURC only, label "Arc", no
   faucet (Deposit disabled), `circleBlockchain: null` → `/api/wallet` answers 503 until B1 is resolved.
-- ⏳ Next: H1/H6 (amount + address validation), then C3/C4 (refId-tracked transaction status, no double send,
+- ✅ **H1/H6 done** - `src/money.js`: amounts are decimal strings end to end, `parseUnits` on the server, anything
+  unclean is rejected (never rounded); keypad capped at token decimals; EIP-55 checksum on every address path.
+  Tests: `test/money.test.mjs`.
+- ⏳ Next: C3/C4 (refId-tracked transaction status, no double send,
   receipt only after `COMPLETE`). Circle API facts for C3 are verified: contractExecution accepts `refId`;
   `GET /v1/w3s/transactions` (X-User-Token, filters walletIds/from/operation) returns refId/state/txHash.
 - "Email OTP" wording: Circle's Email-OTP **auth mode** removes the PIN (never use it). C1's fix is different -

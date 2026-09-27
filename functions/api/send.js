@@ -1,4 +1,5 @@
 import { netFrom, netError } from './_net.js'
+import { toBaseUnits, isValidAddress } from '../../src/money.js'
 
 const CIRCLE_API = 'https://api.circle.com/v1/w3s'
 
@@ -55,8 +56,14 @@ export async function onRequestPost(ctx) {
   const tokenInfo = net.tokens[token]   // a token this network does not list → rejected below
   if (!tokenInfo) return new Response(JSON.stringify({ error: 'unknown token' }), { status: 400, headers: JSON_HEADERS })
 
-  // Convert decimal amount to smallest unit (uint256)
-  const amountRaw = BigInt(Math.round(parseFloat(amountDecimal) * Math.pow(10, tokenInfo.decimals))).toString()
+  // MAINNET-AUDIT H1/H6: validate, never round. The memo path hand-encodes calldata, so a malformed address
+  // must never reach encodeTransfer (padStart would silently turn it into a DIFFERENT address).
+  if (!isValidAddress(toAddress)) {
+    return new Response(JSON.stringify({ error: 'invalid recipient address' }), { status: 400, headers: JSON_HEADERS })
+  }
+  let amountRaw
+  try { amountRaw = toBaseUnits(amountDecimal, tokenInfo.decimals).toString() }
+  catch (e) { return new Response(JSON.stringify({ error: e.message }), { status: 400, headers: JSON_HEADERS }) }
 
   const memoText = (memo || '').trim()
   let execBody

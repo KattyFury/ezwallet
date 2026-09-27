@@ -8,6 +8,7 @@ import {
   fetchSwapIntent, buildSwapBatch, simulateSwap,
 } from './_swapCore.js'
 import { netFrom, netError } from './_net.js'
+import { amountProblem } from '../../src/money.js'
 
 const W3S_API = 'https://api.circle.com/v1/w3s'
 const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
@@ -25,6 +26,11 @@ export async function onRequestPost(ctx) {
 
     const fromAddr = tokenOf(net, tokenIn)?.address
     const toAddr   = tokenOf(net, tokenOut)?.address
+    if (action === 'estimate' || action === 'simulate' || action === 'execute') {
+      if (!fromAddr || !toAddr) return err('unknown token', null, 400)
+      const problem = amountProblem(amountIn, net.tokens[tokenIn].decimals)
+      if (problem) return err(problem, null, 400)
+    }
 
     if (action === 'estimate') {
       if (!kitKey) return err('KIT_KEY not configured')

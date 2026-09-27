@@ -13,6 +13,8 @@ import { useFitFontSize } from '../useFitFontSize'
 import { roundHints, fmtHint } from '../roundHint'
 import { addNotif } from '../notif'
 import { assertNetworkReady } from '../clientNet'
+import { NET } from '../clientNet'
+import { toAmountString } from '../money'
 
 // ✅ SWAP executes through ADAPTER.execute(a signed intent) - the correct path, and adapter settlement records
 // the USDC arriving in the wallet (see the SWAP section of HANDOFF + functions/api/_swapCore.js). VERIFIED with eth_simulateV1
@@ -155,7 +157,7 @@ export default function Swap() {
     if (!amountNum || amountNum <= 0) { setEstAmt(null); return }
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await estimateSwap({ walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
+        const res = await estimateSwap({ walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: toAmountString(amountNum, NET.tokens[fromSym]?.decimals ?? 6) })
         // amountOut = the real token decimal (the server already converted from base units - the raw estimatedAmount is base units, do NOT show it directly)
         if (res?.amountOut) { setEstAmt(res.amountOut); setError('') }
         else if (res?.error) { setEstAmt(null); setError(res.error) }
@@ -234,7 +236,7 @@ export default function Swap() {
       await assertNetworkReady()   // MAINNET-AUDIT C2 - no challenge unless the network self-check passed
       // A 60' token may have expired mid-session → refresh it BEFORE creating a challenge that needs the PIN
       const { userToken, encryptionKey } = await refreshSession()
-      const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })
+      const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: toAmountString(amountNum, NET.tokens[fromSym]?.decimals ?? 6) })
       if (res.error) throw new Error(res.error)
       setStatus('Enter PIN...')
       await executeChallenge(await getSDK(), userToken, encryptionKey, res.challengeId)
