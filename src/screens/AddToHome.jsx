@@ -55,8 +55,8 @@ export default function AddToHome() {
         onClick={skip}
         style={{
           position: 'absolute', left: '83.49%', top: '4.15dvh', transform: 'translate(-50%, -50%)',
-          background: 'none', border: 'none', padding: 8, cursor: 'pointer',
-          fontSize: 16, lineHeight: '20px', letterSpacing: '-0.64px', color: 'var(--color-muted-2)',
+          background: 'none', border: 'none', padding: 'calc(8 * var(--u))', cursor: 'pointer',
+          fontSize: 'calc(16 * var(--u))', lineHeight: 'calc(20 * var(--u))', letterSpacing: '-0.64px', color: 'var(--color-muted-2)',
           WebkitTapHighlightColor: 'transparent',
         }}>
         Skip →
@@ -75,7 +75,7 @@ export default function AddToHome() {
       <div style={{
         position: 'absolute', left: '50%', top: '32.64dvh', transform: 'translate(-50%, -50%)',
         width: '87.18%', textAlign: 'center',
-        fontSize: 20, fontWeight: 'var(--fw-semibold)', lineHeight: '30px', color: 'var(--color-black)',
+        fontSize: 'calc(20 * var(--u))', fontWeight: 'var(--fw-semibold)', lineHeight: 'calc(30 * var(--u))', color: 'var(--color-black)',
       }}>
         <Ez />wallet works best as an app
       </div>
@@ -84,7 +84,7 @@ export default function AddToHome() {
       <div style={{
         position: 'absolute', left: '50%', top: '36.79dvh', transform: 'translate(-50%, -50%)',
         width: '87.18%', textAlign: 'center',
-        fontSize: 16, fontWeight: 'var(--fw-normal)', lineHeight: '24px', color: 'var(--color-black)',
+        fontSize: 'calc(16 * var(--u))', fontWeight: 'var(--fw-normal)', lineHeight: 'calc(24 * var(--u))', color: 'var(--color-black)',
       }}>
         Add <Ez />wallet to your home screen:
       </div>
@@ -98,7 +98,7 @@ export default function AddToHome() {
         background: '#D2DCE6', borderRadius: 16,
         display: 'flex', flexDirection: 'column', justifyContent: 'center',
         listStyle: 'decimal', listStylePosition: 'inside',
-        fontSize: 18, fontWeight: 'var(--fw-semibold)', lineHeight: '32px',
+        fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', lineHeight: 'calc(32 * var(--u))',
         color: 'var(--color-black)', textAlign: 'center',
       }}>
         <li>Tap Options, then tap Share</li>
@@ -117,7 +117,7 @@ export default function AddToHome() {
         position: 'absolute', left: '14.87%', top: '50.95dvh',
         width: '70.26%', height: '28.67dvh',
         background: 'var(--color-white)', border: '1px solid var(--color-brand)', borderRadius: 16,
-        padding: '5px 0', display: 'flex', flexDirection: 'column', overflow: 'hidden',
+        padding: 'calc(5 * var(--u)) 0', display: 'flex', flexDirection: 'column', overflow: 'hidden',
       }}>
         {SHEET_ROWS.map((row, i) => (
           <div key={row.label} style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
@@ -139,8 +139,8 @@ export default function AddToHome() {
                   The user settled what they mean on 2026-09-23: they are PLACEHOLDERS - "vào thư viện
                   icon, tìm cái tương tự rồi add vào" - so each one carries the icon iOS actually draws
                   on that row, matched against the user's screenshot of the real share sheet. */}
-              <Icon name={row.icon} size={20} color="var(--color-brand)" />
-              <span style={{ fontSize: 14, color: 'var(--color-brand)', whiteSpace: 'nowrap' }}>{row.label}</span>
+              <Icon name={row.icon} size="calc(20 * var(--u))" color="var(--color-brand)" />
+              <span style={{ fontSize: 'calc(14 * var(--u))', color: 'var(--color-brand)', whiteSpace: 'nowrap' }}>{row.label}</span>
             </div>
           </div>
         ))}
@@ -152,7 +152,7 @@ export default function AddToHome() {
           by eye: x 320.0087 / 390 = 82.05%, y 774 / 844 = 91.71dvh. */}
       <img
         src={arrowDown} alt=""
-        style={{ position: 'absolute', left: '82.05%', top: '91.71dvh', width: 40, height: 45.94 }} />
+        style={{ position: 'absolute', left: '82.05%', top: '91.71dvh', width: 'calc(40 * var(--u))', height: 'calc(45.94 * var(--u))' }} />
 
     </div>
   )

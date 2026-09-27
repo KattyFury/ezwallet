@@ -53,11 +53,11 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
   return (
     <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', height: '100%', userSelect: 'none', padding: `0 ${EDGE}px` }}>
       {/* The % bubble - follows the thumb. translateX(-50%) keeps the bubble centred on the thumb at EVERY position. */}
-      <div style={{ position: 'relative', height: 30, marginBottom: 2 }}>
+      <div style={{ position: 'relative', height: 'calc(30 * var(--u))', marginBottom: 'calc(2 * var(--u))' }}>
         <div style={{
           position: 'absolute', left: `${pct}%`, transform: 'translateX(-50%)',
           background: disabled ? 'var(--color-gray)' : 'var(--grad-brand)', color: 'var(--color-white)',
-          borderRadius: 16, padding: '2px 10px', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)',
+          borderRadius: 16, padding: 'calc(2 * var(--u)) calc(10 * var(--u))', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)',
           whiteSpace: 'nowrap', transition: dragging ? 'none' : 'left .15s ease',
         }}>
           {pct}%
@@ -66,21 +66,21 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
 
       {/* The TOUCH area is 44px tall (fingers) while the drawn bar is thin - big hitbox, slim look */}
       <div onPointerDown={down} onPointerMove={move} onPointerUp={up} onPointerCancel={up}
-        style={{ position: 'relative', height: 44, display: 'flex', alignItems: 'center', cursor: disabled ? 'default' : 'pointer', touchAction: 'none' }}>
-        <div ref={trackRef} style={{ position: 'relative', width: '100%', height: 4, borderRadius: 2, background: 'var(--color-gray)' }}>
+        style={{ position: 'relative', height: 'calc(44 * var(--u))', display: 'flex', alignItems: 'center', cursor: disabled ? 'default' : 'pointer', touchAction: 'none' }}>
+        <div ref={trackRef} style={{ position: 'relative', width: '100%', height: 'calc(4 * var(--u))', borderRadius: 2, background: 'var(--color-gray)' }}>
           {/* The selected portion */}
           <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: dim, borderRadius: 2, transition: dragging ? 'none' : 'width .15s ease' }} />
           {/* The 5 marks - bigger (07-20: 8→14) so older users can aim at them */}
           {MARKERS.map(m => (
             <div key={m} style={{
               position: 'absolute', left: `${m}%`, top: '50%', transform: 'translate(-50%,-50%)',
-              width: 14, height: 14, borderRadius: '50%', background: pct >= m ? dim : 'var(--color-gray)',
+              width: 'calc(14 * var(--u))', height: 'calc(14 * var(--u))', borderRadius: '50%', background: pct >= m ? dim : 'var(--color-gray)',
             }} />
           ))}
           {/* Thumb */}
           <div style={{
             position: 'absolute', left: `${pct}%`, top: '50%', transform: 'translate(-50%,-50%)',
-            width: 26, height: 26, borderRadius: '50%', background: 'var(--color-white)',
+            width: 'calc(26 * var(--u))', height: 'calc(26 * var(--u))', borderRadius: '50%', background: 'var(--color-white)',
             border: `3px solid ${dim}`, boxShadow: '0 0 4px rgba(0,0,0,.3)',   /* centred glow (was offset 0 1px) - the thumb IS draggable/clickable */
             transition: dragging ? 'none' : 'left .15s ease',
           }} />
@@ -89,10 +89,10 @@ export default function PctSlider({ pct, onChange, onDragStart, onDragEnd, disab
 
       {/* % labels - bigger (07-20: fs-label 15 → fs-item 17) and TAPPABLE (tapping a label jumps to that mark,
           hitbox widened with 6px padding for older fingers). No money labels (user decision). */}
-      <div style={{ position: 'relative', height: 26, marginTop: 4 }}>
+      <div style={{ position: 'relative', height: 'calc(26 * var(--u))', marginTop: 'calc(4 * var(--u))' }}>
         {MARKERS.map(m => (
           <span key={m} onClick={() => !disabled && onChange(m)} style={{
-            position: 'absolute', left: `${m}%`, transform: 'translateX(-50%)', padding: '4px 6px',
+            position: 'absolute', left: `${m}%`, transform: 'translateX(-50%)', padding: 'calc(4 * var(--u)) calc(6 * var(--u))',
             fontSize: 'var(--fs-content-2)', color: pct === m ? 'var(--color-brand)' : 'var(--color-muted)',
             fontWeight: pct === m ? 'var(--fw-semibold)' : 'var(--fw-normal)', whiteSpace: 'nowrap',
             cursor: disabled ? 'default' : 'pointer', WebkitUserSelect: 'none', userSelect: 'none',

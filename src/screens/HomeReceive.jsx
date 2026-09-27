@@ -102,14 +102,14 @@ export default function HomeReceive() {
                 rules reserve - wins instead, and the QR shrinks to fit it. `min()` picks whichever is
                 smaller, so this is one rule, not a media-query special case. */}
         <div style={{
-          position: 'absolute', left: '50%', top: 8, transform: 'translateX(-50%)',
-          width: 'min(66.15vw, calc(var(--screen-max) * 0.6615), calc(38.86dvh - 56px))',
+          position: 'absolute', left: '50%', top: 'calc(8 * var(--u))', transform: 'translateX(-50%)',
+          width: 'min(66.15vw, calc(var(--screen-max) * 0.6615), calc(38.86dvh - calc(56 * var(--u))))',
           aspectRatio: '1 / 1',
           background: 'var(--color-white)', display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
           {walletAddr
             ? <QRCodeSVG value={buildQR(walletAddr)} size={256} level="M" style={{ width: '94%', height: '94%' }} />
-            : <span style={{ fontSize: 14, color: 'var(--color-muted-2)' }}>Loading...</span>}
+            : <span style={{ fontSize: 'calc(14 * var(--u))', color: 'var(--color-muted-2)' }}>Loading...</span>}
         </div>
 
         {/* "Tap to copy your address" - nodes 56:74 / 56:75. IDENTICAL IN SHAPE to Send's "Hold to
@@ -126,7 +126,7 @@ export default function HomeReceive() {
           matched exactly and NotifArea keeps owning what goes inside it. */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '50.95dvh', width: '87.18%', height: '28.67dvh',
-        background: 'var(--color-card)', borderRadius: 16, padding: 16,
+        background: 'var(--color-card)', borderRadius: 16, padding: 'calc(16 * var(--u))',
         display: 'flex', flexDirection: 'column', minHeight: 0,
       }}>
         <NotifArea
@@ -144,7 +144,7 @@ export default function HomeReceive() {
         position: 'absolute', left: '6.41%', top: SIDE_BTN.top, width: '25.64%', height: SIDE_BTN.height,
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'calc(14 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
@@ -156,7 +156,7 @@ export default function HomeReceive() {
         position: 'absolute', left: '34.10%', top: BIG_BTN.top, width: '31.79%', height: BIG_BTN.height,
         background: 'var(--color-brand)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
@@ -168,7 +168,7 @@ export default function HomeReceive() {
         position: 'absolute', left: '67.95%', top: SIDE_BTN.top, width: '25.64%', height: SIDE_BTN.height,
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'calc(14 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>

@@ -34,7 +34,7 @@ const ITEMS = [
 
 // Row geometry - left/right markers at the standard 6.41% inset (matches every other card's side margin
 // in this file), label filling the space between them with an 8px gap on each side.
-const ROW_STYLE = { position: 'absolute', left: '6.41%', right: '6.41%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 8, padding: 0, minHeight: 44 }
+const ROW_STYLE = { position: 'absolute', left: '6.41%', right: '6.41%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 'calc(8 * var(--u))', padding: 0, minHeight: 'calc(44 * var(--u))' }
 
 // The row's leading/trailing marker - nodes 58:215/58:217/58:220/58:223 (left) and 58:232-58:236
 // (right). Figma still draws both as a flat 17.436px SQUARE (no icon layer to read), but the user
@@ -42,7 +42,7 @@ const ROW_STYLE = { position: 'absolute', left: '6.41%', right: '6.41%', transfo
 // shared right-chevron icon on every row (tap-to-open). Built 2026-09-24. Sized to the marker's own
 // footprint (18 ≈ 17.436) rather than a token, since nothing asked for a different size.
 function RowIcon({ name, color }) {
-  return <Icon name={name} size={18} color={color} />
+  return <Icon name={name} size="calc(18 * var(--u))" color={color} />
 }
 
 // Top up: copy the wallet address to the clipboard then open the Faucet → the user only has to paste it there.
@@ -89,15 +89,15 @@ export default function MenuScreen() {
       <div style={{
         position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '18.48dvh',
         background: 'var(--color-card)', borderRadius: 16,
-        display: 'flex', alignItems: 'center', padding: '0 16px',
+        display: 'flex', alignItems: 'center', padding: '0 calc(16 * var(--u))',
       }}>
-        <p style={{ margin: 0, fontSize: 18, lineHeight: '32px', color: 'var(--color-black)' }}>
+        <p style={{ margin: 0, fontSize: 'calc(18 * var(--u))', lineHeight: 'calc(32 * var(--u))', color: 'var(--color-black)' }}>
           Email: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{email}</span><br />
           Network: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>Arc Testnet</span><br />
           Wallet address: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{shortAddr}</span>
           <button onClick={copyAddr} aria-label="Copy wallet address"
-            style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 8, padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}>
-            <Icon name={copied ? 'check' : 'copy'} size={18} color={copied ? 'var(--color-primary)' : 'var(--color-brand)'} />
+            style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 'calc(8 * var(--u))', padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}>
+            <Icon name={copied ? 'check' : 'copy'} size="calc(18 * var(--u))" color={copied ? 'var(--color-primary)' : 'var(--color-brand)'} />
           </button>
         </p>
       </div>
@@ -113,23 +113,23 @@ export default function MenuScreen() {
           established for either action, `up`/`down` are used - the same in/out arrow language the
           NavBar and the token trend arrows already use elsewhere in this app (Send=up, Receive=down). */}
       <button className="btn" disabled style={{
-        position: 'absolute', left: '6.41%', top: '30.57dvh', width: '42.56%', height: 70,
+        position: 'absolute', left: '6.41%', top: '30.57dvh', width: '42.56%', height: 'calc(70 * var(--u))',
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', opacity: 0.4, cursor: 'not-allowed',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-        fontFamily: 'inherit', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
+        fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
       }}>
-        <Icon name="up" size={27} color="var(--color-black)" />
+        <Icon name="up" size="calc(27 * var(--u))" color="var(--color-black)" />
         Withdraw
       </button>
       <button className="btn" onClick={copyAddrThenFaucet} style={{
-        position: 'absolute', left: '51.03%', top: '30.57dvh', width: '42.56%', height: 70,
+        position: 'absolute', left: '51.03%', top: '30.57dvh', width: '42.56%', height: 'calc(70 * var(--u))',
         background: 'var(--color-brand)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', cursor: 'pointer',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
-        fontFamily: 'inherit', fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
+        fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
       }}>
-        <Icon name="down" size={27} color="var(--color-white)" />
+        <Icon name="down" size="calc(27 * var(--u))" color="var(--color-white)" />
         Deposit
       </button>
 
@@ -138,7 +138,7 @@ export default function MenuScreen() {
           <button style={{ ...ROW_STYLE, top, opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer', border: 'none', background: 'none' }}
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
             <RowIcon name={icon} color="var(--color-black)" />
-            <span style={{ flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', textAlign: 'left' }}>{label}</span>
+            <span style={{ flex: 1, fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', textAlign: 'left' }}>{label}</span>
             <RowIcon name="right2" color="var(--color-black)" />
           </button>
           {/* 0.5px, #94A3B8 - the SAME hairline spec as AddToHome's share-sheet dividers (Figma bakes
@@ -159,7 +159,7 @@ export default function MenuScreen() {
         window.location.reload()
       }}>
         <RowIcon name="out" color="var(--color-error)" />
-        <span style={{ flex: 1, fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-error)', textAlign: 'left' }}>Sign out</span>
+        <span style={{ flex: 1, fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-error)', textAlign: 'left' }}>Sign out</span>
         <RowIcon name="right2" color="var(--color-error)" />
       </button>
 

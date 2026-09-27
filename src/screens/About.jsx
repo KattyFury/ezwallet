@@ -42,14 +42,14 @@ export default function About() {
       {ITEMS.map(({ label, value, link, top }) => (
         link ? (
           <button key={label} onClick={() => window.open(link, '_blank')}
-            style={{ position: 'absolute', left: '7.95%', right: '9.23%', top, transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 10, border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
-            <Icon name="right2" size={17} color="var(--color-brand)" />
-            <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)' }}>{label}</span>
+            style={{ position: 'absolute', left: '7.95%', right: '9.23%', top, transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', gap: 'calc(10 * var(--u))', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}>
+            <Icon name="right2" size="calc(17 * var(--u))" color="var(--color-brand)" />
+            <span style={{ fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)' }}>{label}</span>
           </button>
         ) : (
-          <div key={label} style={{ position: 'absolute', left: '9.23%', right: '9.23%', top, transform: 'translateY(-50%)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', flexShrink: 0 }}>{label}</span>
-            <span style={{ fontSize: 17, color: 'var(--color-muted-2)', textAlign: 'right', wordBreak: 'break-word' }}>{value}</span>
+          <div key={label} style={{ position: 'absolute', left: '9.23%', right: '9.23%', top, transform: 'translateY(-50%)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 'calc(12 * var(--u))' }}>
+            <span style={{ fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', flexShrink: 0 }}>{label}</span>
+            <span style={{ fontSize: 'calc(17 * var(--u))', color: 'var(--color-muted-2)', textAlign: 'right', wordBreak: 'break-word' }}>{value}</span>
           </div>
         )
       ))}

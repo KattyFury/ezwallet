@@ -165,8 +165,8 @@ export default function SendAmount() {
           real icon layer) - replaced with the real token logo for an actual token; USD (a fiat label,
           not a token) shows no logo at all. */}
       <button onClick={() => setShowCur(true)}
-        style={{ position: 'absolute', left: '8.46%', top: '19.4dvh', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 6, border: 'none', background: 'var(--color-white)', borderRadius: 999, height: 42, padding: '0 14px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', cursor: 'pointer' }}>
-        {!isFiatLabel(cur) && <img src={`/tokens/${tokenIconFor(cur)}.png`} alt="" style={{ width: 24, height: 24, borderRadius: '50%', flexShrink: 0 }} />}
+        style={{ position: 'absolute', left: '8.46%', top: '19.4dvh', transform: 'translateY(-50%)', display: 'inline-flex', alignItems: 'center', gap: 'calc(6 * var(--u))', border: 'none', background: 'var(--color-white)', borderRadius: 999, height: 'calc(42 * var(--u))', padding: '0 calc(14 * var(--u)) 0 calc(8 * var(--u))', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', cursor: 'pointer' }}>
+        {!isFiatLabel(cur) && <img src={`/tokens/${tokenIconFor(cur)}.png`} alt="" style={{ width: 'calc(24 * var(--u))', height: 'calc(24 * var(--u))', borderRadius: '50%', flexShrink: 0 }} />}
         {cur}
         <Icon name="down2" size="var(--is-content-2)" color="var(--color-brand)" />
       </button>
@@ -192,12 +192,12 @@ export default function SendAmount() {
           clickable (2026-09-08 decision: same component slot as Swap's reverse button, but nothing to
           reverse on a one-way send). Sits at the literal midpoint of the gutter between the two cards
           (29.62dvh) - the SAME value Swap's own reverse button uses for the identical rule. */}
-      <div aria-hidden style={{ position: 'absolute', left: '50%', top: '29.62dvh', transform: 'translate(-50%, -50%)', zIndex: 3, width: 50, height: 50, borderRadius: '50%', background: 'var(--grad-brand)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <div aria-hidden style={{ position: 'absolute', left: '50%', top: '29.62dvh', transform: 'translate(-50%, -50%)', zIndex: 3, width: 'calc(50 * var(--u))', height: 'calc(50 * var(--u))', borderRadius: '50%', background: 'var(--grad-brand)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <Icon name="down" size="var(--is-num)" color="var(--color-white)" />
       </div>
 
       {/* "To" card - node 1:91: row 4 (340x70, top 30.57dvh). "To:" 18px + the name 22px, both semibold. */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '30.57dvh', height: '8.29dvh', background: 'var(--color-card)', borderRadius: 16, display: 'flex', alignItems: 'center', padding: '0 8px', minWidth: 0 }}>
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '30.57dvh', height: '8.29dvh', background: 'var(--color-card)', borderRadius: 16, display: 'flex', alignItems: 'center', padding: '0 calc(8 * var(--u))', minWidth: 0 }}>
         <span style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
           {'To: '}<span style={{ fontSize: 'var(--fs-h2)' }}>{name || shortenAddr(address)}</span>
         </span>
@@ -226,7 +226,7 @@ export default function SendAmount() {
           overridden to #D2DCE6 (var(--color-card)) here - node 58:413 draws this exact colour, matching
           the "You send"/"To" cards above it (user decision 2026-09-24: all 4 grey boxes on this screen
           should read as ONE colour, they were drifting - surface/card/surface-2 are 3 different tokens). */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '42.57dvh', display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '42.57dvh', display: 'flex', alignItems: 'center', gap: 'calc(8 * var(--u))', minWidth: 0 }}>
         <input
           className="address-input"
           placeholder={'Message (optional)'}
@@ -235,10 +235,10 @@ export default function SendAmount() {
           onBlur={() => setTypingText(false)}
           onChange={e => { setMemo(e.target.value); setNoteTouched(true) }}
           maxLength={100}
-          style={{ flex: 1, minWidth: 0, height: 40, borderRadius: 16, fontSize: 'var(--fs-content-1)', background: 'var(--color-card)' }}
+          style={{ flex: 1, minWidth: 0, height: 'calc(40 * var(--u))', borderRadius: 16, fontSize: 'var(--fs-content-1)', background: 'var(--color-card)' }}
         />
         <button onClick={openNotePopup} aria-label={'Set your default note'}
-          style={{ flexShrink: 0, width: 33, height: 40, borderRadius: 16, border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          style={{ flexShrink: 0, width: 'calc(33 * var(--u))', height: 'calc(40 * var(--u))', borderRadius: 16, border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="option" size="var(--is-caption)" color="var(--color-muted)" />
         </button>
       </div>
@@ -254,15 +254,15 @@ export default function SendAmount() {
           after adding ScreenSheet - CreateQR.jsx has the identical pattern but no ScreenSheet, so it never
           hit this). */}
       {!typingText && !showNote && (
-      <div className="numpad-gray" style={{ position: 'relative', gridRow: '6 / 11', margin: '0 -20px 0', padding: 'calc(27 * var(--u)) 20px 0', background: 'var(--color-card)', borderRadius: '16px 16px 0 0' }}>
+      <div className="numpad-gray" style={{ position: 'relative', gridRow: '6 / 11', margin: '0 calc(-20 * var(--u)) 0', padding: 'calc(27 * var(--u)) 20px 0', background: 'var(--color-card)', borderRadius: '16px 16px 0 0' }}>
         {/* AMOUNT SUGGESTIONS (VND only) - placed DIRECTLY ABOVE the numpad so the typing finger reaches them instantly, one tap
             instead of counting zeroes. Height only reserved WHILE hints are actually showing - VND is
             unreachable in practice (see the file header comment), so this never actually pushes the numpad
             down against the verified 27px offset below. */}
-        <div style={{ height: hints.length ? 44 : 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, flexShrink: 0, overflow: 'hidden' }}>
+        <div style={{ height: hints.length ? 44 : 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'calc(8 * var(--u))', flexShrink: 0, overflow: 'hidden' }}>
           {hints.map(v => (
             <button key={v} onClick={() => setDigits(String(v))}
-              style={{ border: '1.5px solid var(--color-gray)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
+              style={{ border: '1.5px solid var(--color-gray)', background: 'var(--color-white)', borderRadius: 999, padding: 'calc(6 * var(--u)) calc(14 * var(--u))', cursor: 'pointer', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', whiteSpace: 'nowrap' }}>
               {fmtAmountHint(v)}
             </button>
           ))}
@@ -302,7 +302,7 @@ export default function SendAmount() {
             <div className="popup-title">Set your default note</div>
             <input className="address-input" placeholder={'Type here'} value={draftNote}
               onChange={e => setDraftNote(e.target.value)} maxLength={100} autoFocus
-              style={{ width: '100%', height: 52, fontSize: 'var(--fs-content-1)' }} />
+              style={{ width: '100%', height: 'calc(52 * var(--u))', fontSize: 'var(--fs-content-1)' }} />
             <div className="popup-actions">
               <button className="btn btn-secondary" onClick={() => setShowNote(false)}>Back</button>
               <button className="btn btn-primary" onClick={saveDefaultNote}>Save</button>

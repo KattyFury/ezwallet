@@ -190,8 +190,8 @@ export default function Login() {
       <h1 style={{
         position: 'absolute', left: '6.41%', top: '19.43dvh', transform: 'translateY(-50%)',
         width: '87.18%', margin: 0,
-        fontSize: 40, fontWeight: 700,
-        lineHeight: '44px', letterSpacing: '-1.6px',
+        fontSize: 'calc(40 * var(--u))', fontWeight: 700,
+        lineHeight: 'calc(44 * var(--u))', letterSpacing: '-1.6px',
         color: 'var(--color-black)',
       }}>
         Six digits.<br />
@@ -210,7 +210,7 @@ export default function Login() {
           background: '#D2DCE6', borderRadius: 16,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
         }}>
-          <span style={{ width: 10, height: 10, borderRadius: '50%', background: 'var(--color-black)' }} />
+          <span style={{ width: 'calc(10 * var(--u))', height: 'calc(10 * var(--u))', borderRadius: '50%', background: 'var(--color-black)' }} />
         </div>
       ))}
 
@@ -220,7 +220,7 @@ export default function Login() {
       <p style={{
         position: 'absolute', left: '6.41%', top: '43.19dvh',
         width: '87.18%', margin: 0,
-        fontSize: 20, lineHeight: '30px', color: 'var(--color-black)',
+        fontSize: 'calc(20 * var(--u))', lineHeight: 'calc(30 * var(--u))', color: 'var(--color-black)',
         fontWeight: 'var(--fw-normal)',
       }}>
         <span style={{ fontWeight: 'var(--fw-semibold)' }}>Send and receive digital dollars </span>
@@ -232,10 +232,10 @@ export default function Login() {
           uses, turned -90deg so it points right. Its box is 45.938x40 at (29,703). */}
       <div aria-hidden="true" style={{
         position: 'absolute', left: '7.44%', top: '83.29dvh',
-        width: 45.938, height: 40,
+        width: 'calc(45.938 * var(--u))', height: 'calc(40 * var(--u))',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        <img src={arrowDown} alt="" style={{ width: 40, height: 45.938, transform: 'rotate(-90deg)' }} />
+        <img src={arrowDown} alt="" style={{ width: 'calc(40 * var(--u))', height: 'calc(45.938 * var(--u))', transform: 'rotate(-90deg)' }} />
       </div>
 
       {/* THE ONLY CONTROL - nodes 50:472 (the white pill: 274x70 at x=91, radius 16, and a GLOW rather

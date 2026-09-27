@@ -12,7 +12,7 @@ import { GRADIENT } from '../brandBg'
 // Big GREEN check icon (success) - check.svg already includes the outlined circle and the tick.
 // 70px (was 76) - node 1:238's exact placeholder size.
 function CheckIcon() {
-  return <Icon name="check" size={70} color="var(--color-primary)" />
+  return <Icon name="check" size="calc(70 * var(--u))" color="var(--color-primary)" />
 }
 
 function fmtTime(ts) {
@@ -100,7 +100,7 @@ export default function SendReceipt() {
 
       {/* Amount - node 1:237: top-anchored, 48px semibold (was --fs-amount 52) - its box ends exactly
           where the card below begins (344px = card top). */}
-      <span className="num" style={{ position: 'absolute', left: '50%', top: '33.29dvh', transform: 'translateX(-50%)', fontSize: 48, fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
+      <span className="num" style={{ position: 'absolute', left: '50%', top: '33.29dvh', transform: 'translateX(-50%)', fontSize: 'calc(48 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
         {amountText}
       </span>
 
@@ -139,7 +139,7 @@ export default function SendReceipt() {
 
       {/* Save receipt/Done - node 1:230-1:233: both exactly 166px, i.e. (340 − 8) / 2 - flex:1 with an
           8px gap. Centre 85.63dvh, glow shadow. */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.66dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8 }}>
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.66dvh', transform: 'translateY(-50%)', display: 'flex', gap: 'calc(8 * var(--u))' }}>
         <button className="btn btn-secondary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} onClick={saveReceipt}>Save receipt</button>
         <button className="btn btn-primary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} onClick={() => navigate('HomeSend')}>Done</button>
       </div>

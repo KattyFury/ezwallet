@@ -37,10 +37,10 @@ function Chip({ label, onClick, top }) {
   return (
     <button onClick={onClick} title={label}
       style={{
-        position: 'absolute', left: '10.51%', top, height: 32, maxWidth: '79%',
-        padding: '0 12px', border: '1px solid var(--color-brand)', borderRadius: 16,
+        position: 'absolute', left: '10.51%', top, height: 'calc(32 * var(--u))', maxWidth: '79%',
+        padding: '0 calc(12 * var(--u))', border: '1px solid var(--color-brand)', borderRadius: 16,
         background: 'var(--color-white)', cursor: 'pointer',
-        fontFamily: 'inherit', fontSize: 14, color: 'var(--color-brand)',
+        fontFamily: 'inherit', fontSize: 'calc(14 * var(--u))', color: 'var(--color-brand)',
         overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
       }}>
       {label}
@@ -183,7 +183,7 @@ export default function LoginEmailPopup({ onClose }) {
       <div style={{
         position: 'absolute', left: '50%', top: '14.34dvh', transform: 'translate(-50%, -50%)',
         width: '87.18%', textAlign: 'center',
-        fontSize: 24, fontWeight: 'var(--fw-semibold)', lineHeight: '30px', color: 'var(--color-black)',
+        fontSize: 'calc(24 * var(--u))', fontWeight: 'var(--fw-semibold)', lineHeight: 'calc(30 * var(--u))', color: 'var(--color-black)',
       }}>
         Log in with email
       </div>
@@ -201,12 +201,12 @@ export default function LoginEmailPopup({ onClose }) {
         autoFocus
         style={{
           position: 'absolute', left: '50%', top: '22.04dvh', transform: 'translateX(-50%)',
-          width: '78.96%', height: 40,
+          width: '78.96%', height: 'calc(40 * var(--u))',
           background: '#D2DCE6', border: 'none', borderRadius: 16,
           // The browser draws a BLACK FOCUS RING on an autofocused input. The design has no such line
           // anywhere, so it read as a drawing mistake rather than as focus. Killed here, not app-wide.
           outline: 'none',
-          padding: '0 12px', fontSize: 18, color: 'var(--color-black)',
+          padding: '0 calc(12 * var(--u))', fontSize: 'calc(18 * var(--u))', color: 'var(--color-black)',
         }} />
 
       {chips.map((c, i) => (
@@ -216,7 +216,7 @@ export default function LoginEmailPopup({ onClose }) {
       {error && (
         <div style={{
           position: 'absolute', left: '10.51%', right: '10.51%', top: '46.5dvh',
-          fontSize: 14, color: 'var(--color-error)',
+          fontSize: 'calc(14 * var(--u))', color: 'var(--color-error)',
         }}>
           {error}
         </div>
@@ -227,19 +227,19 @@ export default function LoginEmailPopup({ onClose }) {
           rather than navigating anywhere - the popup never was a screen. */}
       <button onClick={onClose}
         style={{
-          position: 'absolute', left: '10.54%', top: '50.95dvh', width: '38.43%', height: 48,
+          position: 'absolute', left: '10.54%', top: '50.95dvh', width: '38.43%', height: 'calc(48 * var(--u))',
           background: 'var(--color-white)', color: 'var(--color-black)', border: 'none', borderRadius: 16,
           boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
-          fontFamily: 'inherit', fontSize: 18, fontWeight: 'var(--fw-semibold)', cursor: 'pointer',
+          fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', cursor: 'pointer',
         }}>
         Back
       </button>
       <button onClick={handleSubmit} disabled={!valid || loading}
         style={{
-          position: 'absolute', left: '51.03%', top: '50.95dvh', width: '38.46%', height: 48,
+          position: 'absolute', left: '51.03%', top: '50.95dvh', width: '38.46%', height: 'calc(48 * var(--u))',
           background: 'var(--color-brand)', color: 'var(--color-white)', border: 'none', borderRadius: 16,
           boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
-          fontFamily: 'inherit', fontSize: 18, fontWeight: 'var(--fw-semibold)',
+          fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)',
           cursor: valid && !loading ? 'pointer' : 'not-allowed',
           opacity: valid && !loading ? 1 : 0.5,
         }}>

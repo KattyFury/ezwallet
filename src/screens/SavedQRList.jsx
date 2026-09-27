@@ -70,12 +70,12 @@ export default function SavedQRList() {
           ⚠️ ABSOLUTE, not gridRow '2 / 9' (fixed 2026-09-27): as a plain grid item it painted UNDER the
           absolutely-positioned ScreenSheet, so the grey box was invisible (user report). Same 340x586
           card at (25,86) as Security/About. padding 8 = QR tiles sit 8px from the box edge (user decision 2026-09-27). */}
-      <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 16, padding: 8, overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 16, padding: 'calc(8 * var(--u))', overflow: 'hidden' }}>
       <div className="scroll-hidden" style={{ height: '100%' }}>
         {/* ⚠️ RIGHT COLUMN minmax(0,1fr) - with a bare '1fr' the content dictates min-width, and one big box blows the column
             open (the same lesson as .screen, section 6). Bug the user screenshotted 07-23c: 3 QRs → row 2 = [Blend | + button],
             and the + button with aspectRatio 1 was stretched as tall as the Blend box → so it INFLATED SIDEWAYS → the 2 columns went badly uneven. */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, alignContent: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'calc(8 * var(--u))', alignContent: 'start' }}>
           {list.map(q => {
             const c = q.currency || 'USD'
             const label = fmtMoney(q.amount, c)
@@ -86,20 +86,22 @@ export default function SavedQRList() {
               // straight drop-shadow). Name is BLACK 16px semibold (was brand-blue 17px - that colour
               // belongs to the amount line only), amount stays brand-blue 18px semibold (was 15px).
               <button key={q.id} onClick={() => navigate('ShowQR', { amount: q.amount, currency: c, name: q.name, fromStorage: true, saveToLibrary: false, back: 'SavedQRList' })}
-                style={{ position: 'relative', minWidth: 0, height: 242, border: 'none', borderRadius: 16, background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '16px 10px 12px', fontFamily: 'inherit' }}>
-                <span onClick={e => askDelete(q, e)} style={{ position: 'absolute', top: 8, right: 8, display: 'flex' }}><Icon name="x" size={16} color="var(--color-muted)" /></span>
+                style={{ position: 'relative', minWidth: 0, height: 'calc(242 * var(--u))', border: 'none', borderRadius: 16, background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(6 * var(--u))', padding: 'calc(16 * var(--u)) calc(10 * var(--u)) calc(12 * var(--u))', fontFamily: 'inherit' }}>
+                <span onClick={e => askDelete(q, e)} style={{ position: 'absolute', top: 'calc(8 * var(--u))', right: 'calc(8 * var(--u))', display: 'flex' }}><Icon name="x" size="calc(16 * var(--u))" color="var(--color-muted)" /></span>
                 {/* THE QR SCALES WITH THE BOX (user decision 07-23b "do not fix the size, follow the grey"): a square frame with
                     aspectRatio 1 taking the full box width (minus 20px of margin and room for the X, matching
                     Figma's 138px QR inside a 158px tile), svg fill 100% (the viewBox scales, no distortion);
                     flexShrink 0 stops the grid squashing it (the old distortion bug). */}
-                <div style={{ alignSelf: 'stretch', margin: '0 10px', flexShrink: 0 }}>
+                {/* 118 DESIGN px square (was alignSelf:stretch = the tile's WIDTH): the tile height scales with the
+                    viewport (--u) but its width does not, so a width-driven QR pushed the amount out of a short tile. */}
+                <div style={{ width: 'calc(118 * var(--u))', flexShrink: 0 }}>
                   {/* height auto = the svg keeps itself square via the viewBox (forcing height 100% was 3px off) */}
                   <QRCodeSVG value={buildQR(walletAddr, { amount: q.amount, currency: c })} size={104} level="M" style={{ width: '100%', height: 'auto', display: 'block' }} />
                 </div>
                 {/* Name area ALWAYS reserves 2 lines (user decision 2026-09-27) so every tile lines up; a
                     short name is centred vertically inside it, a long one wraps to 2 lines then clamps with "…". */}
-                <span style={{ height: 42, width: '100%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <span style={{ fontSize: 'var(--fs-content-2)', lineHeight: '21px', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', textAlign: 'center', overflowWrap: 'anywhere', display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2, overflow: 'hidden' }}>{q.name}</span>
+                <span style={{ height: 'calc(42 * var(--u))', width: '100%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: 'var(--fs-content-2)', lineHeight: 'calc(21 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', textAlign: 'center', overflowWrap: 'anywhere', display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2, overflow: 'hidden' }}>{q.name}</span>
                 </span>
                 <span className="num" style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{label}</span>
               </button>
@@ -109,8 +111,8 @@ export default function SavedQRList() {
               the QR tiles (was minHeight:190, an aspect-ratio approximation) - Do NOT use aspectRatio (bug
               07-23c: aspectRatio plus stretch inflated it sideways). */}
           <button onClick={() => setAdding(true)}
-            style={{ minWidth: 0, height: 242, border: '2px dashed var(--color-muted)', borderRadius: 16, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <Icon name="add" size={40} color="var(--color-muted)" />
+            style={{ minWidth: 0, height: 'calc(242 * var(--u))', border: '2px dashed var(--color-muted)', borderRadius: 16, background: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Icon name="add" size="calc(40 * var(--u))" color="var(--color-muted)" />
           </button>
         </div>
       </div>
@@ -160,11 +162,11 @@ export default function SavedQRList() {
       {pad && (
         <div className="sheet-overlay" onClick={() => setPad(false)}>
           <div className="sheet numpad-gray" onClick={e => e.stopPropagation()}>
-            <div style={{ flex: 5.5, minHeight: 0, paddingTop: 24 }}>
+            <div style={{ flex: 5.5, minHeight: 0, paddingTop: 'calc(24 * var(--u))' }}>
               <Numpad onKey={handlePadKey} showComma />
             </div>
             <div style={{ flex: 0.5 }} />
-            <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+            <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'calc(12 * var(--u))' }}>
               <button className="btn btn-secondary" style={{ width: '44%' }} onClick={cancelPad}>Back</button>
               <button className="btn btn-primary" style={{ width: '44%' }} onClick={() => setPad(false)}>Done</button>
             </div>
@@ -178,7 +180,7 @@ export default function SavedQRList() {
         <div className="popup-overlay" onClick={() => setPendingDelete(null)}>
           <div className="popup-card" style={{ textAlign: 'center' }} onClick={e => e.stopPropagation()}>
             <div className="popup-title">{'Delete QR:'} {pendingDelete.name || fmtMoney(pendingDelete.amount, pendingDelete.currency || 'USD')}</div>
-            <div className="popup-actions" style={{ marginTop: 4 }}>
+            <div className="popup-actions" style={{ marginTop: 'calc(4 * var(--u))' }}>
               <button className="btn btn-secondary" onClick={() => setPendingDelete(null)}>Back</button>
               <button className="btn btn-error" onClick={confirmDelete}>Confirm</button>
             </div>

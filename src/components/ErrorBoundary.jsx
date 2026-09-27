@@ -11,9 +11,9 @@ export default class ErrorBoundary extends Component {
   render() {
     if (!this.state.error) return this.props.children
     return (
-      <div style={{ height: '100dvh', maxWidth: 430, margin: '0 auto', background: 'var(--color-white)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24, textAlign: 'center' }}>
+      <div style={{ height: '100dvh', maxWidth: 430, margin: '0 auto', background: 'var(--color-white)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(16 * var(--u))', padding: 'calc(24 * var(--u))', textAlign: 'center' }}>
         <div className="screen-title" style={{ fontSize: 'var(--fs-h1)', fontWeight: 'var(--fw-medium)' }}>Something went wrong</div>
-        <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', maxWidth: 300 }}>
+        <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', maxWidth: 'calc(300 * var(--u))' }}>
           The app hit an unexpected error. Your wallet and funds are safe. Please reload.
         </div>
         {/* A button standing alone → 3/4 of the screen like .row10-single (user decision 07-29). This

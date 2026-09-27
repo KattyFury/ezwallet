@@ -37,10 +37,10 @@ const decimalsFor = sym => (sym === 'cirBTC' ? 6 : 2)
 function TokenRow({ sym, onClick }) {
   return (
     <button onClick={onClick}
-      style={{ display: 'flex', alignItems: 'center', gap: 8, border: 'none', borderRadius: 999, height: 42, background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'inherit', padding: '0 12px 0 8px', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', flexShrink: 0 }}>
-      <img src={`/tokens/${sym.toLowerCase()}.png`} alt={sym} style={{ width: 24, height: 24, borderRadius: '50%' }} />
+      style={{ display: 'flex', alignItems: 'center', gap: 'calc(8 * var(--u))', border: 'none', borderRadius: 999, height: 'calc(42 * var(--u))', background: 'var(--color-white)', cursor: 'pointer', fontFamily: 'inherit', padding: '0 calc(12 * var(--u)) 0 calc(8 * var(--u))', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', flexShrink: 0 }}>
+      <img src={`/tokens/${sym.toLowerCase()}.png`} alt={sym} style={{ width: 'calc(24 * var(--u))', height: 'calc(24 * var(--u))', borderRadius: '50%' }} />
       <span className="num" style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{sym}</span>
-      <Icon name="down2" size={15} color="var(--color-brand)" />
+      <Icon name="down2" size="calc(15 * var(--u))" color="var(--color-brand)" />
     </button>
   )
 }
@@ -55,8 +55,8 @@ function TokenPicker({ current, onSelect, onClose }) {
         <div className="popup-title">Select token</div>
         {SWAP_TOKENS.map(sym => (
           <button key={sym} onClick={() => { onSelect(sym); onClose() }} className={`btn ${sym === current ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
-            <img src={`/tokens/${sym.toLowerCase()}.png`} alt="" style={{ width: 24, height: 24, borderRadius: '50%' }} />
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'calc(10 * var(--u))' }}>
+            <img src={`/tokens/${sym.toLowerCase()}.png`} alt="" style={{ width: 'calc(24 * var(--u))', height: 'calc(24 * var(--u))', borderRadius: '50%' }} />
             {sym}
           </button>
         ))}
@@ -272,7 +272,7 @@ export default function Swap() {
 
   // The card = a PALE GREY BACKGROUND, NO BORDER, NO SHADOW (nodes 1:68/1:69, 2026-09-10: radius 16,
   // was 20 - the token chip inside stays WHITE so it stands out on the grey without needing a border).
-  const CARD = { border: 'none', borderRadius: 16, background: 'var(--color-surface)', padding: '14px 16px' }
+  const CARD = { border: 'none', borderRadius: 16, background: 'var(--color-surface)', padding: 'calc(14 * var(--u)) calc(16 * var(--u))' }
 
   // ONE MINIMAL 3-row card (user decision 07-20 "strip it back so the text can be bigger for older users"):
   //   the You pay/receive label
@@ -308,10 +308,10 @@ export default function Swap() {
     {/* 44px max (was 52), node 1:82's "_" caret - measured at 44 on this Figma pull */}
     const [fitRef, fitSize] = useFitFontSize((showZero ? '' : amtStr) + (showCaret ? '_' : ''), { max: 44, min: 18 })
     return (
-      <div style={{ ...CARD, minWidth: 0, height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 10 }}>
+      <div style={{ ...CARD, minWidth: 0, height: '100%', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 'calc(10 * var(--u))' }}>
         {/* 2026-09-10: 18px semibold BLACK (was --fs-body 19 medium muted) - nodes 1:70/1:76 */}
         <span style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>{label}</span>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'calc(8 * var(--u))', minWidth: 0 }}>
           <TokenRow sym={sym} onClick={onPick} />
           {/* THE AMOUNT FIELD. The white box's COLOUR/BORDER around the number was REMOVED (user decision 07-22: a bordered box looks rigid and long
               numbers easily spill outside the frame = ugly) - BUT ITS DIMENSIONS ARE KEPT (minHeight 56 + padding
@@ -325,7 +325,7 @@ export default function Swap() {
           <div ref={fitRef} onClick={onAmount} style={{
             flex: 1, minWidth: 0, overflow: 'hidden', display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
             cursor: onAmount ? 'pointer' : 'default',
-            ...(onAmount ? { padding: '2px 12px', minHeight: 56 } : null),
+            ...(onAmount ? { padding: 'calc(2 * var(--u)) calc(12 * var(--u))', minHeight: 'calc(56 * var(--u))' } : null),
           }}>
             <span className="num" style={{ fontSize: fitSize, fontWeight: 'var(--fw-light)', lineHeight: 1.05, color: amtColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {showZero ? null : amtStr}
@@ -335,7 +335,7 @@ export default function Swap() {
         </div>
         {/* 2026-09-10: 16px (was --fs-item 17), label colour --color-muted-2 #667085 (was --color-muted) -
             node 1:71's "Available:" span. Available and ~$ share the same size. */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'calc(8 * var(--u))', minWidth: 0 }}>
           <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
             {/* balLabel: You receive = "Balance", You pay = null (hidden - user decision 07-22f: the Available line was
                 dropped from You pay). A balance that cannot be read yet → "…", NEVER a drawn 0 (bug 07-17). */}
@@ -385,11 +385,11 @@ export default function Swap() {
           <div className="sheet numpad-gray" onClick={e => e.stopPropagation()}>
             {/* 24px of grey padding on top + SHORTER keys (07-20c: numpad 5.5 parts instead of 6 - the old keys were too big),
                 a 0.5 gap before the button row; Back/Done KEEP the row 9-10 edge (flex 2 = 85-95dvh). */}
-            <div style={{ flex: 5.5, minHeight: 0, paddingTop: 24 }}>
+            <div style={{ flex: 5.5, minHeight: 0, paddingTop: 'calc(24 * var(--u))' }}>
               <Numpad onKey={onPadKey} showComma />
             </div>
             <div style={{ flex: 0.5 }} />
-            <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+            <div style={{ flex: 2, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'calc(12 * var(--u))' }}>
               <button className="btn btn-secondary" style={{ width: '44%' }} onClick={cancelPad}>Back</button>
               <button className="btn btn-primary" style={{ width: '44%' }} onClick={() => setPad(false)}>Done</button>
             </div>
@@ -425,7 +425,7 @@ export default function Swap() {
       <button onClick={swapDir} aria-label={'Reverse direction'}
         style={{
           position: 'absolute', left: '50%', top: '29.62dvh', transform: `translate(-50%, -50%) rotate(${flip}deg)`, zIndex: 3,
-          width: 50, height: 50, borderRadius: '50%', border: 'none', background: 'var(--grad-brand)',
+          width: 'calc(50 * var(--u))', height: 'calc(50 * var(--u))', borderRadius: '50%', border: 'none', background: 'var(--grad-brand)',
           boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center',
           cursor: 'pointer', transition: 'transform .3s ease',
         }}>
@@ -439,7 +439,7 @@ export default function Swap() {
       {/* Rate + Fee - node 1:83/10:123: raw Figma reading was 13px, rounded up to Chú thích (15px) - the
           new 5-tier scale (2026-09-10) has no tier below 15, absorbing the old --fs-tiny. Label colour
           --color-muted-2 #667085, figures BLACK semibold. Alone in row 6, centred at 51.4dvh. */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '51.4dvh', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '0 11px' }}>
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '51.4dvh', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'calc(8 * var(--u))', padding: '0 calc(11 * var(--u))' }}>
         <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted-2)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
           Rate: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-semibold)' }}>{rateTxt}</span>
         </span>
@@ -456,9 +456,9 @@ export default function Swap() {
       <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '61.14dvh', height: '18.48dvh', display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '1dvh', minWidth: 0 }}>
         {/* NO amount chosen → the row stays EMPTY (user decision 07-23: the "Slide to adjust…" hint pill was dropped, the
             instruction MOVED ONTO THE SWAP BUTTON as "Slide or tap here to enter", which opens the numpad). */}
-        <div style={{ height: 40, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minWidth: 0 }}>
+        <div style={{ height: 'calc(40 * var(--u))', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'calc(8 * var(--u))', minWidth: 0 }}>
           {hints.length ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(8 * var(--u))', minWidth: 0 }}>
               {hints.map(v => (
                 // 2026-09-10 CORRECTION: this chip still carried the OLD --fs-item (17px) value,
                 // unchanged from before today's rebuild since the Figma mockup has no live-typing state
@@ -468,7 +468,7 @@ export default function Swap() {
                 // chip should follow instead of the stale 17. Both spans now match (semibold, brand blue)
                 // as one value, not a differently-weighted label:value pair.
                 <button key={v} onClick={() => pickHint(v)}
-                  style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: '6px 14px', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}>
+                  style={{ border: '1.5px solid var(--color-brand)', background: 'var(--color-white)', borderRadius: 999, padding: 'calc(6 * var(--u)) calc(14 * var(--u))', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', minWidth: 0 }}>
                   <span className="num" style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{fmtHint(v, decimalsFor(fromSym))}</span>
                   <span className="num" style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}> {fromSym}</span>
                 </button>
@@ -512,7 +512,7 @@ export default function Swap() {
               ⚠️ "enter", NOT "input": the Figma text reads "Slide or tap here to input", but the user
               explicitly decided (2026-09-08) to keep "enter" regardless of what Figma draws -
               this is a deliberate standing override, not an oversight, so it is NOT changed to match. */}
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', ...(needAmount ? { fontSize: 'var(--fs-content-2)' } : null) }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'calc(6 * var(--u))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', ...(needAmount ? { fontSize: 'var(--fs-content-2)' } : null) }}>
             {success && <Icon name="check" size="var(--is-content-1)" color="var(--color-white)" />}
             {error || status || (needAmount ? 'Slide or tap here to enter' : 'Swap')}
           </span>

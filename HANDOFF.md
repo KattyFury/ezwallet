@@ -55,7 +55,19 @@ project actually stands right now.
    (Login). Where a landing page goes – replacing the root, on a path, or on a separate domain – has
    **not** been decided. Ask before building anything.
 
-### ⚠️ KNOWN, DEFERRED (2026-09-23) - the 2026-09-23 redesign breaks on a SQUARE-ish viewport
+### ✅ DONE 2026-09-27 - the whole design scales (the deferred item below is resolved)
+
+`--u` in `src/index.css` = one DESIGN pixel = `min(1px, 100dvh/844, 100vw/390)`. Every font size, box/
+button height, icon, padding and gap is written as `calc(N * var(--u))` (≈250 sites, converted by
+script); radii, borders, shadows and 0.5px hairlines stay fixed. `useFitFontSize` scales its max/min by
+the same factor (read off a probe element). Gaps that must stay readable use `max(8px, calc(16 * var(--u)))`.
+- On a viewport >= 844 tall and >= 390 wide `--u` = 1px: verified PIXEL-IDENTICAL to before on 25
+  screens/popups (only History's live timestamps differed).
+- Checked at 375x667, 390x560, 360x780, 390x440: nothing spills into row 10 or out of its own box.
+  Screenshots were sent to the user's Desktop (`ezwallet-2026-09-27/scale_*`).
+- **New code must follow it:** write sizes as `calc(N * var(--u))`, not bare px numbers.
+
+### ⚠️ (RESOLVED 2026-09-27, see above) KNOWN, DEFERRED (2026-09-23) - the 2026-09-23 redesign breaks on a SQUARE-ish viewport
 
 The user, verifying the Receive QR fix: when the viewport is forced toward a **square aspect ratio**
 (not just short - specifically closer to 1:1 than a phone's usual ~9:19.5), the redesigned screens break

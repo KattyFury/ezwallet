@@ -48,10 +48,10 @@ export default function PasteAddress() {
           placeholder="0x..."
           value={address}
           onChange={e => { setAddress(e.target.value); setDirty(true) }}
-          style={{ width: '100%', height: 40, fontSize: 'var(--fs-content-1)', borderRadius: 16, background: 'var(--color-card)' }}
+          style={{ width: '100%', height: 'calc(40 * var(--u))', fontSize: 'var(--fs-content-1)', borderRadius: 16, background: 'var(--color-card)' }}
         />
         {showError && (
-          <span style={{ display: 'block', marginTop: 8, fontSize: 'var(--fs-caption)', color: 'var(--color-error)' }}>
+          <span style={{ display: 'block', marginTop: 'calc(8 * var(--u))', fontSize: 'var(--fs-caption)', color: 'var(--color-error)' }}>
             {self ? "That's your own wallet – you can't send to yourself" : 'Invalid address – must start with 0x, 42 chars'}
           </span>
         )}
@@ -61,7 +61,7 @@ export default function PasteAddress() {
           own top is 699/82.82dvh, but this row uses translateY(-50%) so it needs the CENTRE, not the top
           edge - fixed 2026-09-24, an earlier pass here used 82.82dvh as if it were the centre, landing the
           row visibly higher than every other screen's button row). */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.66dvh', transform: 'translateY(-50%)', display: 'flex', gap: 8 }}>
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.66dvh', transform: 'translateY(-50%)', display: 'flex', gap: 'calc(8 * var(--u))' }}>
         <button className="btn btn-secondary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} onClick={() => navigate('HomeSend')}>Back</button>
         {/* Field holds a valid EVM address → label flips "Paste" → "Confirm" (user decision 07-23: tapping goes
             straight on without reading the clipboard, so a "Paste" label would be confusing). handleDan covers both. */}

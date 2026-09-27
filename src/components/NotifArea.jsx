@@ -102,7 +102,7 @@ const ROW_TEXT = { minWidth: 0, lineHeight: 1.3, overflowWrap: 'anywhere' }
 // Icons in this area use the matching --is-item.
 // ⚠️ 13px since 2026-09-10 (was --fs-item 17): the current Figma file sets every line in this area to
 // 13px, and at 17 the hint block's 4 lines wrap and overflow the card the design gives them.
-export const NOTIF_FS = '13px'
+export const NOTIF_FS = 'calc(13 * var(--u))'   // 13 design px (scales, see --u)
 
 // The hint = ONE multi-line notification (not several separate ones), the LOWEST priority, with NO X button and
 // not tappable - always present, pushed up by real notifications and fading out (as one block) when it runs out
@@ -129,7 +129,7 @@ function HintBlock({ lines }) {
     // line. Tightened to 6px/12px + gap 3 so 4 lines fit. Do NOT loosen it again without removing a line.
     // 2026-09-10: WHITE card with NO border, radius 16, 13px, BLACK body text with semibold keywords -
     // node 1:356/1:361. The blue border + all-blue 17px text was the older design.
-    <div style={{ background: 'var(--color-white)', border: 'none', borderRadius: 16, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2, fontSize: NOTIF_FS, color: 'var(--color-content)', textAlign: 'left', flexShrink: 0 }}>
+    <div style={{ background: 'var(--color-white)', border: 'none', borderRadius: 16, padding: 'calc(6 * var(--u)) calc(10 * var(--u))', display: 'flex', flexDirection: 'column', gap: 'calc(2 * var(--u))', fontSize: NOTIF_FS, color: 'var(--color-content)', textAlign: 'left', flexShrink: 0 }}>
       <div style={{ minWidth: 0, lineHeight: 1.35, color: 'var(--color-error)', fontWeight: 'var(--fw-semibold)' }}>
         Current Available Network: Arc Testnet
       </div>
@@ -223,7 +223,7 @@ export default function NotifArea({ hints = [], warning = null, pollMs = 15000 }
       maskImage: 'linear-gradient(to bottom, transparent 0, black calc(100dvh / 30))',
     }}>
       {/* gap 10 = the spacing the Figma card uses between the hint block and the notification pill */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, minHeight: '100%', justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 'calc(10 * var(--u))', minHeight: '100%', justifyContent: 'flex-end' }}>
         {items.map(n => {
           if (n.type === 'hint') return <HintBlock key={n.id} lines={n.hints} />
           if (n.type === 'warning') return <div key={n.id}>{n.node}</div>
@@ -233,12 +233,12 @@ export default function NotifArea({ hints = [], warning = null, pollMs = 15000 }
             // MINIMUM height 40 = exactly the "Send" button in Contacts.jsx; a long sentence makes the row taller
             // (the hardcoded `height: 40` was dropped 08-25, see the ROW_TEXT note). 8px vertical padding keeps a single
             // line at exactly 40px as before.
-            <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: 'var(--color-white)', borderRadius: 16, minHeight: 40, padding: '3px 10px', flexShrink: 0, cursor: clickable ? 'pointer' : 'default' }}>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: NOTIF_FS, color: s.color, ...ROW_TEXT }}>
-                <Icon name={s.icon} size={19.5} color={s.color} style={{ flexShrink: 0 }} />
+            <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'calc(10 * var(--u))', background: 'var(--color-white)', borderRadius: 16, minHeight: 'calc(40 * var(--u))', padding: 'calc(3 * var(--u)) calc(10 * var(--u))', flexShrink: 0, cursor: clickable ? 'pointer' : 'default' }}>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 'calc(8 * var(--u))', fontSize: NOTIF_FS, color: s.color, ...ROW_TEXT }}>
+                <Icon name={s.icon} size="calc(19.5 * var(--u))" color={s.color} style={{ flexShrink: 0 }} />
                 <span style={ROW_TEXT}>{n.text}</span>
               </span>
-              <button onClick={e => clear(n.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: 2 }}><Icon name="x" size={19.5} color={s.color} /></button>
+              <button onClick={e => clear(n.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: 'calc(2 * var(--u))' }}><Icon name="x" size="calc(19.5 * var(--u))" color={s.color} /></button>
             </div>
           )
         })}

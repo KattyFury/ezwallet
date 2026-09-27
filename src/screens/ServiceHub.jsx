@@ -39,13 +39,13 @@ export default function ServiceHub() {
             style={{
               position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '18.48dvh',
               border: 'none', borderRadius: 16, background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
-              display: 'flex', alignItems: 'center', padding: '0 16px 0 8.5px', gap: 9, minWidth: 0,
+              display: 'flex', alignItems: 'center', padding: '0 calc(16 * var(--u)) 0 calc(8.5 * var(--u))', gap: 'calc(9 * var(--u))', minWidth: 0,
               fontFamily: 'inherit', textAlign: 'left', opacity: soon ? 0.4 : 1, cursor: soon ? 'not-allowed' : 'pointer',
             }}>
             <Icon name={icon} size="min(19.46vw, calc(var(--screen-max) * 0.1946))" color="var(--color-brand)" style={{ flexShrink: 0 }} />
-            <span className="col" style={{ minWidth: 0, gap: 2 }}>
-              <span style={{ fontSize: 20, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', lineHeight: 1.2 }}>{label}:</span>
-              <span style={{ fontSize: 16, fontWeight: 'var(--fw-normal)', color: 'var(--color-black)', lineHeight: 1.3 }}>{desc}</span>
+            <span className="col" style={{ minWidth: 0, gap: 'calc(2 * var(--u))' }}>
+              <span style={{ fontSize: 'calc(20 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', lineHeight: 1.2 }}>{label}:</span>
+              <span style={{ fontSize: 'calc(16 * var(--u))', fontWeight: 'var(--fw-normal)', color: 'var(--color-black)', lineHeight: 1.3 }}>{desc}</span>
             </span>
           </button>
         )

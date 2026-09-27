@@ -23,8 +23,8 @@ const CUR_SHORT = { USDC: 'USD', EURC: 'EUR' }
 const LANGUAGE_OPTIONS = [{ code: 'en', label: 'English', locked: true }]
 
 // Value chip - node 58:362/58:364/58:366: white pill, glow shadow, no border, 42px tall.
-const CHIP = { border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', borderRadius: 999, height: 42, padding: '0 14px', fontSize: 18, fontWeight: 'var(--fw-semibold)', cursor: 'pointer', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }
-const ROW = { position: 'absolute', left: '9.23%', right: '9.23%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }
+const CHIP = { border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', borderRadius: 999, height: 'calc(42 * var(--u))', padding: '0 calc(14 * var(--u))', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 'calc(6 * var(--u))', fontFamily: 'inherit' }
+const ROW = { position: 'absolute', left: '9.23%', right: '9.23%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'calc(12 * var(--u))' }
 // Row centres - user decision 2026-09-27: EVERY item (Network, Email, Wallet address, PIN, Language,
 // Default currency) is its own line on ONE even step, so Network→Email is the same gap as Wallet→PIN.
 // First centre 14.34dvh (121px, the middle of grid row 2), step 7.58dvh (64px). About.jsx uses the SAME
@@ -32,8 +32,8 @@ const ROW = { position: 'absolute', left: '9.23%', right: '9.23%', transform: 't
 export const ROW_TOP = i => `${(14.34 + i * 7.58).toFixed(2)}dvh`
 // Info rows (Network/Email/Wallet address) use About.jsx's row style (user decision 2026-09-27): bold label
 // on the left, value on the right in 17px --color-muted-2 - same look as PIN/Language/Currency's labels.
-const LABEL = { fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', flexShrink: 0 }
-const VALUE = { fontSize: 17, color: 'var(--color-muted-2)', textAlign: 'right', minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
+const LABEL = { fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', flexShrink: 0 }
+const VALUE = { fontSize: 'calc(17 * var(--u))', color: 'var(--color-muted-2)', textAlign: 'right', minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
 
 function Picker({ title, options, active, onPick, onClose }) {
   return (
@@ -44,7 +44,7 @@ function Picker({ title, options, active, onPick, onClose }) {
           <button key={o.code} disabled={o.locked}
             onClick={() => { if (!o.locked) onPick(o.code) }}
             className={`btn ${o.code === active ? 'btn-primary' : 'btn-secondary'}`}
-            style={{ width: '100%', justifyContent: 'flex-start', paddingLeft: 18 }}>
+            style={{ width: '100%', justifyContent: 'flex-start', paddingLeft: 'calc(18 * var(--u))' }}>
             {o.label}
           </button>
         ))}
@@ -112,13 +112,13 @@ export default function Security() {
       <div style={{ ...ROW, top: ROW_TOP(4) }}>
         <span style={LABEL}>Language</span>
         <button style={CHIP} onClick={() => setLangPicker(true)}>
-          English<Icon name="down2" size={17} color="var(--color-brand)" />
+          English<Icon name="down2" size="calc(17 * var(--u))" color="var(--color-brand)" />
         </button>
       </div>
       <div style={{ ...ROW, top: ROW_TOP(5) }}>
         <span style={LABEL}>Default currency</span>
         <button style={CHIP} onClick={() => setCurPicker(true)}>
-          {CUR_SHORT[currency] || 'USD'}<Icon name="down2" size={17} color="var(--color-brand)" />
+          {CUR_SHORT[currency] || 'USD'}<Icon name="down2" size="calc(17 * var(--u))" color="var(--color-brand)" />
         </button>
       </div>
 

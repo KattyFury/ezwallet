@@ -14,7 +14,7 @@ import { GRADIENT } from '../brandBg'
 // so they cannot drift apart (rather than two declarations where it is easy to change only one).
 // Weight = Semibold, 18px (2026-09-10, up from Regular/24px 09-08) - the current Figma file draws each
 // token as its OWN white card (not a shared divided list), name + amount both Semibold 18.
-const TOKEN_TEXT_STYLE = { fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
+const TOKEN_TEXT_STYLE = { fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
 
 // Small solid triangle (▲/▼) signalling the token's 24h price move (user request 08-25) - a plain CSS/SVG
 // shape rather than a shared Icon.jsx entry since it is only ever used here, right next to the amount.
@@ -71,11 +71,11 @@ export function ShowTokensButton({ onHoldStart, onHoldEnd }) {
 export const HALF_OVAL_STYLE = {
   position: 'absolute', left: '50%', bottom: 0, transform: 'translateX(-50%)', zIndex: 10,
   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-  width: 'min(66.15vw, calc(var(--screen-max) * 0.6615))', height: 40,
+  width: 'min(66.15vw, calc(var(--screen-max) * 0.6615))', height: 'calc(40 * var(--u))',
   borderRadius: '38px 38px 0 0', border: 'none', background: 'var(--color-white)',
   boxShadow: '0 0 10px rgba(0, 0, 0, 0.4)',
-  padding: '0 18px', overflow: 'hidden', textOverflow: 'ellipsis',
-  color: 'var(--color-content)', fontFamily: 'var(--font-condensed)', fontSize: '16px',
+  padding: '0 calc(18 * var(--u))', overflow: 'hidden', textOverflow: 'ellipsis',
+  color: 'var(--color-content)', fontFamily: 'var(--font-condensed)', fontSize: 'calc(16 * var(--u))',
   fontWeight: 'var(--fw-semibold)', cursor: 'pointer', whiteSpace: 'nowrap',
   WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
 }
@@ -146,18 +146,18 @@ export default function HomeSend() {
           is what makes it read as a half-oval sitting on that edge rather than a floating button. */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '38.86dvh',
-        background: 'var(--color-card)', borderRadius: 16, padding: '15.94px 16px 0', minWidth: 0,
+        background: 'var(--color-card)', borderRadius: 16, padding: 'calc(15.94 * var(--u)) calc(16 * var(--u)) 0', minWidth: 0,
         overflow: 'hidden',
       }}>
         <div className="scroll-hidden" style={{
-          display: 'flex', flexDirection: 'column', gap: 8, overflowY: 'auto', height: '100%', paddingBottom: 44,
+          display: 'flex', flexDirection: 'column', gap: 'calc(8 * var(--u))', overflowY: 'auto', height: '100%', paddingBottom: 'calc(44 * var(--u))',
           WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
           maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
         }}>
         {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted-2)', fontSize: 18, padding: '0 2px' }}>Loading...</div>
+          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted-2)', fontSize: 'calc(18 * var(--u))', padding: '0 calc(2 * var(--u))' }}>Loading...</div>
         ) : tokens.length === 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted-2)', fontSize: 18, padding: '0 2px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted-2)', fontSize: 'calc(18 * var(--u))', padding: '0 calc(2 * var(--u))' }}>
             No tokens yet
           </div>
         ) : (
@@ -166,21 +166,21 @@ export default function HomeSend() {
                 at y=101.9 and y=149.9, a 48px step = 40 tall plus the 8px gap declared above. */}
             {tokens.map(tk => (
               <div key={tk.symbol} style={{
-                display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
-                height: 40, borderRadius: 16, background: 'var(--color-white)', padding: '0 16px',
+                display: 'flex', alignItems: 'center', gap: 'calc(8 * var(--u))', flexShrink: 0,
+                height: 'calc(40 * var(--u))', borderRadius: 16, background: 'var(--color-white)', padding: '0 calc(16 * var(--u))',
               }}>
                 {/* Figma draws a flat 26.3px BLACK SQUARE here (nodes 1:364 / 56:20) - a placeholder for
                     the real token mark, per the user's rule about squares in this file. */}
                 <img
                   src={`/tokens/${tk.symbol.toLowerCase()}.png`}
                   alt=""
-                  style={{ width: 26.325, height: 26.325, borderRadius: '50%', flexShrink: 0 }}
+                  style={{ width: 'calc(26.325 * var(--u))', height: 'calc(26.325 * var(--u))', borderRadius: '50%', flexShrink: 0 }}
                   onError={e => {
                     e.target.style.display = 'none'
                     e.target.nextSibling.style.display = 'flex'
                   }}
                 />
-                <div className="token-icon" style={{ width: 26.325, height: 26.325, background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
+                <div className="token-icon" style={{ width: 'calc(26.325 * var(--u))', height: 'calc(26.325 * var(--u))', background: tk.color, flexShrink: 0, display: 'none' }}>{tk.symbol.slice(0, 2)}</div>
 
                 <span style={TOKEN_TEXT_STYLE}>{tk.symbol}</span>
 
@@ -194,7 +194,7 @@ export default function HomeSend() {
                   </span>
                   {rates && isVolatile(tk.symbol) && tk.change24h != null && Math.abs(tk.change24h) >= 0.005 && (
                     <button onClick={() => setPctPopup(tk)} aria-label={`24h price change for ${tk.symbol}`}
-                      style={{ background: 'none', border: 'none', padding: 6, margin: '-6px -6px -6px 9px', display: 'flex', cursor: 'pointer' }}>
+                      style={{ background: 'none', border: 'none', padding: 'calc(6 * var(--u))', margin: 'calc(-6 * var(--u)) calc(-6 * var(--u)) calc(-6 * var(--u)) calc(9 * var(--u))', display: 'flex', cursor: 'pointer' }}>
                       <TrendArrow pct={tk.change24h} />
                     </button>
                   )}
@@ -216,7 +216,7 @@ export default function HomeSend() {
           contents stay NotifArea, which is what actually knows about them. */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '50.95dvh', width: '87.18%', height: '28.67dvh',
-        background: 'var(--color-card)', borderRadius: 16, padding: 16,
+        background: 'var(--color-card)', borderRadius: 16, padding: 'calc(16 * var(--u))',
         display: 'flex', flexDirection: 'column', minHeight: 0,
       }}>
         <NotifArea
@@ -228,7 +228,7 @@ export default function HomeSend() {
           warning={
             !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) < 20 ? (
               <div onClick={() => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } localStorage.setItem('ez_faucet_pending', String(Date.now())); window.open('https://faucet.circle.com/', '_blank') }}
-                style={{ width: '100%', background: 'var(--color-white)', borderRadius: 16, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2, cursor: 'pointer', fontSize: NOTIF_FS, color: 'var(--color-warning)', fontWeight: 'var(--fw-semibold)' }}>
+                style={{ width: '100%', background: 'var(--color-white)', borderRadius: 16, padding: 'calc(6 * var(--u)) calc(10 * var(--u))', display: 'flex', flexDirection: 'column', gap: 'calc(2 * var(--u))', cursor: 'pointer', fontSize: NOTIF_FS, color: 'var(--color-warning)', fontWeight: 'var(--fw-semibold)' }}>
                 <span style={{ minWidth: 0, lineHeight: 1.35 }}>Out of USDC for transaction fees</span>
                 <span style={{ minWidth: 0, lineHeight: 1.35 }}>
                   {'Tap to get testnet USDC from'}{' '}
@@ -247,7 +247,7 @@ export default function HomeSend() {
         position: 'absolute', left: '6.41%', top: SIDE_BTN.top, width: '25.64%', height: SIDE_BTN.height,
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'calc(14 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
@@ -259,7 +259,7 @@ export default function HomeSend() {
         position: 'absolute', left: '34.10%', top: BIG_BTN.top, width: '31.79%', height: BIG_BTN.height,
         background: 'var(--color-brand)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
@@ -271,7 +271,7 @@ export default function HomeSend() {
         position: 'absolute', left: '67.95%', top: SIDE_BTN.top, width: '25.64%', height: SIDE_BTN.height,
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
-        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+        display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'calc(14 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
@@ -286,17 +286,17 @@ export default function HomeSend() {
         <div className="popup-overlay" onClick={() => setPctPopup(null)}>
           <div className="popup-card" onClick={e => e.stopPropagation()} style={{ position: 'relative' }}>
             <button onClick={() => setPctPopup(null)} aria-label="Close"
-              style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
-              <Icon name="x" size={17} color="var(--color-muted)" />
+              style={{ position: 'absolute', top: 'calc(12 * var(--u))', right: 'calc(12 * var(--u))', background: 'none', border: 'none', cursor: 'pointer', padding: 'calc(4 * var(--u))' }}>
+              <Icon name="x" size="calc(17 * var(--u))" color="var(--color-muted)" />
             </button>
             <div className="popup-title">{pctPopup.symbol}</div>
-            <div style={{ fontSize: 18, color: 'var(--color-content)' }}>
+            <div style={{ fontSize: 'calc(18 * var(--u))', color: 'var(--color-content)' }}>
               {'24h price change: '}
               <span style={{ fontWeight: 'var(--fw-medium)', color: pctPopup.change24h > 0 ? 'var(--color-primary)' : 'var(--color-error)' }}>
                 {pctStr(pctPopup.change24h)}
               </span>
             </div>
-            <div style={{ fontSize: 18, color: 'var(--color-content)' }}>
+            <div style={{ fontSize: 'calc(18 * var(--u))', color: 'var(--color-content)' }}>
               {`Value changed from ${fmtDisplay(pctPopup.usd / (1 + pctPopup.change24h / 100), cur, rates)} to ${fmtDisplay(pctPopup.usd, cur, rates)}`}
             </div>
           </div>

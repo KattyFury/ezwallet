@@ -72,13 +72,13 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, sw
   // fs-num 24→fs-md-lg 21, the secondary token fs-label→fs-tiny, vertical padding 14→11, gap 12→10.
   return (
     <button onClick={onClick} style={{
-      display: 'flex', alignItems: 'flex-start', gap: 10, width: '100%',
-      padding: '11px 0', border: 'none', background: 'none', cursor: 'pointer',
+      display: 'flex', alignItems: 'flex-start', gap: 'calc(10 * var(--u))', width: '100%',
+      padding: 'calc(11 * var(--u)) 0', border: 'none', background: 'none', cursor: 'pointer',
       fontFamily: 'inherit', textAlign: 'left',
     }}>
       {/* Sent/received icon - anchored to rows 1-2 (top-aligned) */}
       <div style={{
-        width: 34, height: 34, borderRadius: '50%', flexShrink: 0, marginTop: 2,
+        width: 'calc(34 * var(--u))', height: 'calc(34 * var(--u))', borderRadius: '50%', flexShrink: 0, marginTop: 'calc(2 * var(--u))',
         background: isSend ? 'var(--color-info-soft)' : 'var(--color-primary-soft)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
@@ -91,31 +91,31 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, sw
           {isSwap ? swapTitle : `${isSend ? 'Sent to' : 'Received from'} ${who}`}
         </div>
         {/* row 2: status/time + the [+ Add] button. Swap → "Swap completed · At <time>" (user decision 07-20d) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(8 * var(--u))', marginTop: 'calc(2 * var(--u))' }}>
           <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)' }}>
             {isSwap ? 'Swap completed · ' : ''}At <span className="num">{timeLabel(tx.timeStamp)}</span>
           </span>
           {!isSwap && !name && !isFaucet && counter && (   /* the faucet is a test-money machine, saving it as a contact is pointless */
             <span onClick={e => { e.stopPropagation(); onAdd(counter) }}
-              style={{ flexShrink: 0, fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-medium)', color: 'var(--color-brand)', border: '1px solid var(--color-brand)', borderRadius: 16, padding: '1px 8px', whiteSpace: 'nowrap', background: 'var(--color-white)' }}>
+              style={{ flexShrink: 0, fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-medium)', color: 'var(--color-brand)', border: '1px solid var(--color-brand)', borderRadius: 16, padding: 'calc(1 * var(--u)) calc(8 * var(--u))', whiteSpace: 'nowrap', background: 'var(--color-white)' }}>
               Add to Contacts
             </span>
           )}
         </div>
         {/* rows 3-4: Note (if any) - free to wrap when long */}
         {memo && (
-          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', marginTop: 2, lineHeight: 1.4, wordBreak: 'break-word' }}>
+          <div style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', marginTop: 'calc(2 * var(--u))', lineHeight: 1.4, wordBreak: 'break-word' }}>
             Note: {memo}
           </div>
         )}
       </div>
 
       {/* The money block - anchored to rows 1-2 (top-aligned). Primary: display money ($). Secondary: the real token, grey */}
-      <div style={{ textAlign: 'right', flexShrink: 0, marginTop: 2 }}>
+      <div style={{ textAlign: 'right', flexShrink: 0, marginTop: 'calc(2 * var(--u))' }}>
         <div className="num" style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: isSend ? 'var(--color-error)' : 'var(--color-primary)', whiteSpace: 'nowrap' }}>
           {isSend ? '-' : '+'}{rates ? `${displaySymbol(cur)}${displayNum(usd, cur, rates)}` : '…'}
         </div>
-        <div className="num" style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', marginTop: 2, whiteSpace: 'nowrap' }}>
+        <div className="num" style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', marginTop: 'calc(2 * var(--u))', whiteSpace: 'nowrap' }}>
           {amount.toFixed(amount < 0.01 ? 6 : 2)} {symbol}
         </div>
       </div>
@@ -125,7 +125,7 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, sw
 
 function DetailRow({ label, children }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, padding: '7px 0' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 'calc(12 * var(--u))', padding: 'calc(7 * var(--u)) 0' }}>
       <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', flexShrink: 0 }}>{label}</span>
       <span style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', textAlign: 'right', wordBreak: 'break-word' }}>{children}</span>
     </div>
@@ -261,16 +261,16 @@ export default function TxHistory() {
           rows, so the row padding below has no Figma evidence and is left as-is). */}
       {/* ⚠️ ABSOLUTE card (fix 2026-09-27), not className="row-2-8": as a plain grid item it painted UNDER the
           absolutely-positioned ScreenSheet - the same bug SavedQRList had - so the grey box never showed. */}
-      <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--color-card)', borderRadius: 16, padding: '4px 14px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' }}>
+      <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--color-card)', borderRadius: 16, padding: 'calc(4 * var(--u)) calc(14 * var(--u))', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' }}>
       <div className="scroll-hidden" style={{
         display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start', height: '100%', overflowY: 'auto',
         WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
         maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
       }}>
         {loading ? (
-          <div style={{ width: '100%', textAlign: 'center', paddingTop: 40, color: 'var(--color-muted)', fontSize: 'var(--fs-caption)' }}>Loading...</div>
+          <div style={{ width: '100%', textAlign: 'center', paddingTop: 'calc(40 * var(--u))', color: 'var(--color-muted)', fontSize: 'var(--fs-caption)' }}>Loading...</div>
         ) : filtered.length === 0 ? (
-          <div style={{ width: '100%', textAlign: 'center', paddingTop: 40 }}>
+          <div style={{ width: '100%', textAlign: 'center', paddingTop: 'calc(40 * var(--u))' }}>
             <div style={{ fontSize: 'var(--fs-content-1)', color: 'var(--color-muted)' }}>{emptyMsg}</div>
           </div>
         ) : (() => {
@@ -304,11 +304,11 @@ export default function TxHistory() {
         <div className="popup-overlay" onClick={() => setSelected(null)}>
           {/* display:block - DetailRow brings its own padding+border, so the flex gap of .popup-card is NOT used */}
           <div className="popup-card" style={{ display: 'block' }} onClick={e => e.stopPropagation()}>
-            <div className="popup-title" style={{ marginBottom: 8 }}>Transaction details</div>
+            <div className="popup-title" style={{ marginBottom: 'calc(8 * var(--u))' }}>Transaction details</div>
             <DetailRow label={'Type'}>{d.isSend ? 'Sent' : 'Received'} {d.symbol}</DetailRow>
             {d.name && <DetailRow label={d.isSend ? 'Recipient' : 'Sender'}>{d.name}</DetailRow>}
             <DetailRow label={'Wallet address'}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'calc(8 * var(--u))' }}>
                 {shortenAddr(d.counter)}
                 <button onClick={() => copyCounter(d.counter)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 0 }}>
                   <Icon name={copied ? 'check' : 'copy'} size="var(--is-content-2)" color={copied ? 'var(--color-primary)' : 'var(--color-muted)'} />
@@ -323,11 +323,11 @@ export default function TxHistory() {
             <DetailRow label={'Converted'}><span className="num">{rates ? `${displaySymbol(cur)}${displayNum(d.usd, cur, rates)}` : '…'}</span></DetailRow>
             <DetailRow label={'Time'}>{new Date(selected.timeStamp * 1000).toLocaleString('vi-VN')}</DetailRow>
             {memoLoading ? <DetailRow label={'Note'}>Loading...</DetailRow> : memo ? <DetailRow label={'Note'}>{memo}</DetailRow> : null}
-            <button className="btn btn-secondary" style={{ width: '100%', marginTop: 14 }}
+            <button className="btn btn-secondary" style={{ width: '100%', marginTop: 'calc(14 * var(--u))' }}
               onClick={() => window.open(`${ARCSCAN}/tx/${selected.hash}`, '_blank')}>
               View on ArcScan
             </button>
-            <button className="btn btn-primary" style={{ width: '100%', marginTop: 8 }} onClick={() => setSelected(null)}>Close</button>
+            <button className="btn btn-primary" style={{ width: '100%', marginTop: 'calc(8 * var(--u))' }} onClick={() => setSelected(null)}>Close</button>
           </div>
         </div>
       )}
