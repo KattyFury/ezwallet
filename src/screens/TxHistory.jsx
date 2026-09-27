@@ -1,14 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
 import { getDisplayCurrency, displayNum, displaySymbol, shortenAddr } from '../data'
-import { TOKENS, getTxMemo, getDisplayRates, isFaucetAddress } from '../chain'
+import { TOKENS, getTxMemo, getDisplayRates, isFaucetAddress, EXPLORER } from '../chain'
 import Icon from '../components/Icon'
 import { loadContacts } from '../store'
 import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
 
-const ARCSCAN = 'https://testnet.arcscan.app'
+const ARCSCAN = EXPLORER
 const TOKEN_MAP = Object.fromEntries(TOKENS.map(t => [t.address.toLowerCase(), t]))
 
 function loadContactMap() {

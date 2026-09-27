@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import Icon from './Icon'
 import { useNav } from '../nav'
 import { getNotifs, dismissNotif, addNotif } from '../notif'
-import { isFaucetAddress } from '../chain'
+import { isFaucetAddress, EXPLORER } from '../chain'
 import { findContactName, acct } from '../store'
 import { fmtTokenAmount, shortenAddr } from '../data'
 
@@ -27,7 +27,10 @@ function pollIncoming(after) {
   const addr = localStorage.getItem('ez_wallet_addr')
   if (!addr || polling) return
   polling = true
-  fetch(`https://testnet.arcscan.app/api?module=account&action=tokentx&address=${addr}&sort=desc&limit=20`)
+  // page=1&offset=20, NOT limit=20 (fix 2026-09-27): the Etherscan-style API has no `limit` param, it was
+  // silently ignored and EVERY poll downloaded the wallet's ENTIRE token history (8.3MB / 11s measured on
+  // a busy address), every 5-15s. offset=20 → the newest 20 only (16KB / ~1s on the same address).
+  fetch(`${EXPLORER}/api?module=account&action=tokentx&address=${addr}&sort=desc&page=1&offset=20`)
     .then(r => r.json()).then(d => {
       const all = d?.result || []
       const lower = addr.toLowerCase()

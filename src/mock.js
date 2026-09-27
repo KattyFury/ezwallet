@@ -56,7 +56,7 @@ export function installMockFetch() {
   const orig = window.fetch.bind(window)
   window.fetch = async (input, init) => {
     const url = typeof input === 'string' ? input : (input?.url || '')
-    if (url.includes('arcscan.app') && url.includes('tokentx')) return jsonRes({ result: MOCK_TX })
+    if ((url.includes('arcscan.app') || url.includes('explorer.testnet.arc.io')) && url.includes('tokentx')) return jsonRes({ result: MOCK_TX })
     if (url.includes('/api/send'))    return jsonRes({ challengeId: 'mock-challenge' })
     if (url.includes('/api/session')) return jsonRes({ userToken: 'mock-token', encryptionKey: 'mock-key' })
     if (url.includes('/api/wallet'))  return jsonRes({ address: MOCK_ADDR, walletId: 'mock-wallet' })

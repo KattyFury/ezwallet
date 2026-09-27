@@ -9,12 +9,18 @@ import { ARC_CHAIN_ID } from './qr'
 // The standard Multicall3 is already deployed on Arc Testnet (Arc docs → Network → Contract addresses:
 // "Aggregates multiple read calls into a single call for efficient data retrieval").
 // Declared on the chain so publicClient.multicall() can fold N reads into 1 request - see getTokenBalances.
+// THE BLOCK EXPLORER - one constant for every API call and tx link. ⚠️ Changed 2026-09-27: ArcScan moved
+// from testnet.arcscan.app to explorer.testnet.arc.io. The old host answers 301 WITHOUT CORS headers, so
+// every browser fetch() to it failed outright ("Failed to fetch", measured from ezwallet.cash) - History
+// sat on "Loading..." forever and incoming-money notifications stopped. Call this host directly.
+export const EXPLORER = 'https://explorer.testnet.arc.io'
+
 export const arcTestnet = defineChain({
   id: ARC_CHAIN_ID,
   name: 'Arc Testnet',
   nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
   rpcUrls: { default: { http: ['https://rpc.testnet.arc.network'] } },
-  blockExplorers: { default: { name: 'ArcScan', url: 'https://testnet.arcscan.app' } },
+  blockExplorers: { default: { name: 'ArcScan', url: EXPLORER } },
   contracts: { multicall3: { address: '0xcA11bde05977b3631167028862bE2a173976CA11' } },
 })
 
