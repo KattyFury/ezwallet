@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>ezwallet – a crypto wallet simple enough for my mom to use</title>
+
+    <!-- SEO + LINK PREVIEW CARDS (2026-07-29). The page used to have NO meta tags at all →
+         pasting ezwallet.cash into X/Telegram/Facebook produced an empty box, no image and no text.
+         ⚠️ og:image MUST be an ABSOLUTE URL (a /og.png path does not work) and the image must open
+         WITHOUT a login. When changing the image, remember X/Facebook cache it - use their debug tools
+         to force a re-scan, or rename the file.
+         ⚠️ BRAND VOICE: the official slogan is "A crypto wallet simple enough for my mom to use."
+         and ONLY en dashes (U+2013) may be used, NEVER em dashes (U+2014), in anything a reader sees. -->
+    <meta name="description" content="Send and receive stablecoins with just an email and a 6-digit PIN. No seed phrase, no separate gas token – USDC pays its own fees on Arc. Running on Arc Testnet." />
+    <link rel="canonical" href="https://ezwallet.cash/" />
+    <meta name="theme-color" content="#0B53BF" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="ezwallet" />
+    <meta property="og:url" content="https://ezwallet.cash/" />
+    <meta property="og:title" content="ezwallet – a crypto wallet simple enough for my mom to use" />
+    <meta property="og:description" content="Email + PIN, no seed phrase. USDC pays its own gas on Arc. Swap by dragging a slider. Live on Arc Testnet." />
+    <meta property="og:image" content="https://ezwallet.cash/og.png?v=3" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="ezwallet – email + PIN crypto wallet on Arc" />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:creator" content="@0xhieuxyz" />
+    <meta name="twitter:title" content="ezwallet – a crypto wallet simple enough for my mom to use" />
+    <meta name="twitter:description" content="Email + PIN, no seed phrase. USDC pays its own gas on Arc. Swap by dragging a slider. Live on Arc Testnet." />
+    <meta name="twitter:image" content="https://ezwallet.cash/og.png?v=3" />
+
+    <!-- NO WEBFONT (2026-09-07, brand guideline: system font stack only). This is where Barlow used to
+         load from Google Fonts, along with 2 preconnects to fonts.googleapis.com/fonts.gstatic.com -
+         all gone on purpose: it was a third-party request in front of first paint on an app whose whole
+         point is opening fast on a cheap phone. See the FONT section at the top of src/index.css. -->
+    <!-- SVG FIRST, PNG SECOND (2026-09-24, FIFTH icon revision - source design/logo-pfp.svg, a solid
+         white tile with the blue wallet mark). icon.png/fav_icon.png are rasterised from it VERBATIM at
+         512x512 - no background painted on separately during rasterisation, because the source already
+         has one. `?v=6` busts the cache - favicons/touch icons are cached hard and long, without it the
+         change looks like it never shipped. -->
+    <link rel="icon" type="image/svg+xml" href="/icon.svg?v=6" />
+    <link rel="icon" type="image/png" href="/fav_icon.png?v=6" />
+    <link rel="manifest" href="/manifest.json" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="ezwallet" />
+    <link rel="apple-touch-icon" href="/icon.png?v=6" />
+  </head>
+  <body>
+    <!-- SPLASH, painted by the HTML itself (fix 2026-09-27): Splash.jsx was never shown in the real app -
+         only reachable via ?screen=Splash - so launch showed a blank white page while the JS loaded. This
+         markup is Splash.jsx's exact output (same .screen/.logo-lockup classes, same GRADIENT as src/brandBg.js);
+         React replaces it on first render, and App.jsx keeps showing <Splash/> until the first screen is loaded. -->
+    <div id="root"><div class="screen" style="background: linear-gradient(204.80096509205717deg, #FFFFFF 50%, #0B53BF 100%)"><img class="logo-lockup" src="/design/logo.svg" alt="ezwallet" /></div></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

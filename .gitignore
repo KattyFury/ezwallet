@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.wrangler/
+.env
+.env.txt
+.env.local
+.env.*.local
+.dev.vars
+*.local
+
+.DS_Store
+Thumbs.db
+
+# output of tools/figma-check.mjs (regenerable) - comment on its OWN line: gitignore has no inline comments
+figma-check/

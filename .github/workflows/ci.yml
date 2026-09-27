@@ -1,0 +1,25 @@
+name: CI
+
+# Runs tests + a build on every push/PR to main. The point: someone new to the repo can see
+# "this code checks itself", and I cannot push a broken build to Pages by accident
+# (Cloudflare auto-deploys from main - broken means broken straight on production).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Unit tests (roundHint + sync API)
+        run: npm test
+      - name: Production build
+        run: npm run build

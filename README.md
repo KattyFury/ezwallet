@@ -1,0 +1,184 @@
+<div align="center">
+
+# ezwallet
+
+**A crypto wallet simple enough for my mom to use.**
+
+[![Live demo](https://img.shields.io/badge/live%20demo-testnet.ezwallet.cash-0B53BF?style=flat-square)](https://testnet.ezwallet.cash)
+[![Network](https://img.shields.io/badge/network-Arc%20Testnet-16A34A?style=flat-square)](https://explorer.testnet.arc.io)
+[![Pitch deck](https://img.shields.io/badge/pitch%20deck-slides-F59E0B?style=flat-square)](https://docs.google.com/presentation/d/1-MuqJeSV1Riwg3Bx6IXZSuNumqbtM83dmzG48-vIRDQ/edit?usp=sharing)
+[![License](https://img.shields.io/badge/license-MIT-black?style=flat-square)](./LICENSE)
+
+</div>
+
+> 🚧 **Mainnet port – not started yet.** This repo is where ezwallet moves to **Arc Mainnet** (spec:
+> [`MAINNET-SPEC.md`](./MAINNET-SPEC.md)). Until then its code is an exact copy of the testnet build.
+> The working app today is **[testnet.ezwallet.cash](https://testnet.ezwallet.cash)**, source
+> **[KattyFury/ezwallet-testnet](https://github.com/KattyFury/ezwallet-testnet)**.
+
+---
+
+## Screens
+
+<div align="center">
+<table>
+<tr>
+<td align="center" width="33%"><img src="docs/app-send.png" width="180" alt="Send"><br><sub>Balance & send</sub></td>
+<td align="center" width="33%"><img src="docs/app-receive.png" width="180" alt="Receive"><br><sub>Receive by QR</sub></td>
+<td align="center" width="33%"><img src="docs/app-swap.png" width="180" alt="Exchange"><br><sub>Swap by slider</sub></td>
+</tr>
+</table>
+</div>
+
+---
+
+## Core belief
+
+> ezwallet was built on a simple belief: everyone should be able to own their
+> own money, without needing to become a crypto expert.
+>
+> Self-custody shouldn't mean memorizing seed phrases, copying long wallet
+> addresses, or worrying about gas tokens. Those are technical barriers, not
+> the value of crypto.
+>
+> We believe people shouldn't have to adapt to crypto. Crypto should adapt to
+> people, making it simple enough for anyone to use while preserving full
+> ownership of their money.
+
+Every product decision in this repo traces back to this belief.
+
+## The problem
+
+Most crypto wallets are built for people who already understand crypto. Seed
+phrases, gas tokens, hex addresses, network switching – every one of those is a
+wall for a first-time user, and an outright dealbreaker for someone older who
+just wants to send money to their family.
+
+## The approach
+
+ezwallet removes the crypto vocabulary from the surface:
+
+- **No seed phrase.** Sign in with an email and a PIN.
+- **No separate gas token.** Arc uses USDC as its native gas currency, so a user
+  never has to buy a second coin just to move the first one.
+- **Big type, few choices per screen.** Every screen is laid out on a fixed
+  10-row grid with large text and one primary action, aimed at users with
+  weaker eyesight and low tolerance for clutter.
+
+## Features
+
+| | |
+|---|---|
+| 🔑 **Email + PIN login** | No seed phrase to write down or lose. Keys are held in Circle's MPC infrastructure; the PIN authorises every signature. |
+| 💸 **Send with a note** | Attach a short message to a transfer, so the receiver knows what the money is for. |
+| 📷 **Receive by QR** | Show a QR to get paid. Optionally set an exact amount, name it, and keep it in a QR library for reuse. |
+| 🔄 **Swap with a % slider** | Choose how much of your balance to convert by dragging a slider instead of typing decimals. Round-number shortcuts are offered as chips. |
+| 👥 **Contacts** | Save addresses under a name (with an avatar) so you never paste a raw `0x…` twice. |
+| 🧾 **History + receipts** | Full transaction history with per-transaction detail and a saveable receipt image. |
+| 🌐 **Multi-currency display** | Show balances in USDC, EURC or Vietnamese dong; with VND you can also type the amount you want to send and the app converts it to USDC. The underlying token is always labelled honestly. |
+
+## Tech stack
+
+| Layer | What it uses |
+|---|---|
+| **Wallet** | [Circle User-Controlled Wallets](https://developers.circle.com/w3s/programmable-wallets) – MPC key management, PIN-based signing (`@circle-fin/w3s-pw-web-sdk`) |
+| **Chain** | [Arc](https://docs.arc.io) L1 testnet (`chainId 5042002`) – **USDC is the native gas token** |
+| **Swap** | Circle Stablecoin Kit, routed through LiFi |
+| **Frontend** | React 18 + Vite 5, `viem` for on-chain reads, `qrcode.react` / `jsqr` for QR |
+| **Backend** | Cloudflare Pages + Pages Functions (`functions/api/*`) – keeps the Circle API key server-side |
+
+Tokens on Arc Testnet: **USDC**, **EURC**, **cirBTC**. Transfer notes are written
+on-chain through Arc's Memo precompile.
+
+## Try it
+
+1. Open **[testnet.ezwallet.cash](https://testnet.ezwallet.cash)**.
+2. Create a wallet with your **email** – you'll receive a one-time code, then set
+   a 6-digit PIN.
+3. Get test money: **Menu → Deposit**. This copies your wallet address and opens
+   the [Circle faucet](https://faucet.circle.com/) – paste the address there.
+4. Send some to a friend, or have them show you their QR.
+
+> Everything runs on **Arc Testnet**. The money is test money and is worth nothing.
+
+## Local setup
+
+**Requirements:** Node.js 18+ (developed on Node 22), a
+[Circle console](https://console.circle.com) account for API keys.
+
+```bash
+git clone https://github.com/KattyFury/ezwallet.git
+cd ezwallet
+npm install
+```
+
+Create your env file and fill in the keys:
+
+```bash
+cp .env.example .env.txt      # .env.txt is gitignored
+```
+
+| Variable | Needed for |
+|---|---|
+| `API_KEY` | Circle Programmable Wallets (login, PIN, send). `CIRCLE_API_KEY` also accepted. |
+| `KIT_KEY` | Circle Stablecoin Kit – only needed for Swap. |
+
+Then run the two processes in **separate terminals**:
+
+```bash
+npm run api     # Circle API proxy on http://localhost:8787
+npm run dev     # Vite dev server on http://localhost:5173
+```
+
+Vite proxies `/api/*` to the local proxy, which mirrors what Cloudflare Pages
+Functions do in production.
+
+> ⚠️ **The Circle Web SDK does not run on `localhost`.** Login, PIN entry and
+> swap can only be exercised on a deployed build. For local UI work use mock
+> mode instead.
+
+**Mock mode** – full UI with a fake wallet and fake balances, no Circle account
+required:
+
+```bash
+npm run mock    # skips login/PIN, stubs the API and chain reads
+```
+
+Other scripts:
+
+```bash
+npm run build   # production build
+npm test        # unit tests (node:test)
+```
+
+## Current limitations
+
+Being upfront about what this is not, yet:
+
+- **Testnet only.** Runs on Arc Testnet; balances have no real-world value.
+- **No mainnet deployment.**
+- **English by default.** Vietnamese is fully translated – including Circle's PIN
+  and security-question screens – and selectable under Language & Currency, but the
+  app does not auto-switch on it. A few strings inside Circle's iframe stay English
+  regardless: runtime error messages have no localization field in the SDK, and
+  `common.showPin` is currently ignored (reported to Circle).
+- **Google sign-in is not supported.** Email + PIN only.
+- **QR scanning is limited to crypto wallet QR codes.** Real-world QR codes
+  (product barcodes, bank QRs, etc.) are not handled.
+- **Not audited.** See [SECURITY.md](./SECURITY.md) for the custody model, the known
+  limitations, and how to report a vulnerability privately.
+
+## How this was built
+
+ezwallet was built end to end in collaboration with AI – mostly Claude – by
+someone with no professional programming background. The product decisions, the
+UX rules and the design direction are human; the implementation was written
+through conversation, then verified by actually running the flows and reading
+the results.
+
+If you're in the same boat: it's doable. Be specific about what you want, insist
+on seeing it actually work, and don't accept "it should work" as an answer.
+
+## License
+
+[MIT](./LICENSE)

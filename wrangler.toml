@@ -1,0 +1,5 @@
+# Pages project for MAINNET - deliberately NOT "ezwallet" (that project serves the testnet build on
+# testnet.ezwallet.cash). Created when mainnet is first deployed.
+name = "ezwallet-mainnet"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
