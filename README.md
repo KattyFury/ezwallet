@@ -5,11 +5,14 @@
 **A crypto wallet simple enough for my mom to use.**
 
 [![Live demo](https://img.shields.io/badge/live%20demo-testnet.ezwallet.cash-0B53BF?style=flat-square)](https://testnet.ezwallet.cash)
-[![Network](https://img.shields.io/badge/network-Arc%20Testnet-16A34A?style=flat-square)](https://testnet.arcscan.app)
+[![Network](https://img.shields.io/badge/network-Arc%20Testnet-16A34A?style=flat-square)](https://explorer.testnet.arc.io)
 [![Pitch deck](https://img.shields.io/badge/pitch%20deck-slides-F59E0B?style=flat-square)](https://docs.google.com/presentation/d/1-MuqJeSV1Riwg3Bx6IXZSuNumqbtM83dmzG48-vIRDQ/edit?usp=sharing)
 [![License](https://img.shields.io/badge/license-MIT-black?style=flat-square)](./LICENSE)
 
 </div>
+
+> This is the **Arc Testnet** build. The Arc Mainnet version is being built in
+> **[KattyFury/ezwallet](https://github.com/KattyFury/ezwallet)**.
 
 ---
 

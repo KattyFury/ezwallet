@@ -1,11 +1,8 @@
 # ezwallet Mainnet – Spec
 
-> **Status 2026-09-22: NOT STARTED.** This is the user's own spec, recorded verbatim so it stops living
-> only inside a chat transcript. The fork it describes has not happened yet – see `HANDOFF.md`
-> § CURRENT STATE. Do not treat anything here as built.
->
-> The plan: **`ezwallet` becomes the Arc MAINNET project**, and **this current repo is renamed
-> `ezwallet-testnet`**. The user asked to improve the UI BEFORE forking, so the fork waits.
+> **Status 2026-09-27: FORK DONE.** This repo is now **`ezwallet-testnet`** (the finished testnet build on
+> testnet.ezwallet.cash). The mainnet port lives in **`KattyFury/ezwallet`**, which carries the maintained
+> copy of this spec - edit it there, not here. Kept here for reference only.
 
 ## Core belief
 
