@@ -39,8 +39,11 @@ name `ezwallet-mainnet`, and this header.
   - Full testnet-repo history kept HERE as tags: `archive/testnet-main` (558 commits since 2026-06-16),
     `archive/testnet-privy`, `archive/testnet-feature-otp`, `archive/feature-*`. Its `.env.txt` keys are in the
     central secrets file (`EZWALLET_TELEGRAM_*`, `EZWALLET_PRIVY_*`).
-  - Next: owner confirms deleting the `KattyFury/ezwallet-testnet` repo, its local folder and the old Pages
-    project `ezwallet-testnet`; then phase 2 (mainnet v1 work).
+  - **`KattyFury/ezwallet-testnet` repo and its local folder DELETED by the owner (2026-09-27). THIS is the only
+    ezwallet repo now.** (One public fork of the old repo exists on someone else's account - not ours to delete.)
+    The old Pages project `ezwallet-testnet` (no domains any more) is left for the owner to delete in the dashboard
+    - never touch `ezwallet-test`, it serves testnet.ezwallet.cash.
+  - Next: phase 2 (mainnet v1 work, `MAINNET-V1-PLAN.md`) - ask the owner before starting.
 - **Plan, in order (ask the owner before each step):**
   1. Bring the testnet repo's post-fork code (C1 email code) into this repo; per-network flags in `src/network.js`
      (App ID, swap on/off, cirBTC, faucet); set mainnet `circleBlockchain: 'ARC'`.
