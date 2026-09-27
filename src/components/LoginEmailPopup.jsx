@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
+import { NET } from '../clientNet'
 import { createSession, startEmailCode, verifyEmailCode, createEmailToken, getSDK, initializeWallet, executeChallenge, getWalletAddress, circleErrorMessage } from '../circle'
 
 // "LOG IN WITH EMAIL" - Figma node 1:193. A POPUP OVER THE LOGIN SCREEN, not a screen of its own; the
@@ -11,7 +12,7 @@ import { createSession, startEmailCode, verifyEmailCode, createEmailToken, getSD
 // as dvh), measured against the SCREEN rather than the card, exactly like every other screen.
 
 const DOMAINS = ['@gmail.com', '@yahoo.com', '@icloud.com']
-const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
+const APP_ID = NET.circleAppId   // per network (src/network.js)
 // ✅ Email OTP: signing in requires the CODE mailed to you → only the mailbox owner gets in (closing the "anyone who
 // types your email is in" hole). Needs SMTP configured in Circle Console (done 2026-07-05). Flag off = back to the old
 // direct-email flow (PIN, NO email verification) if OTP has problems.

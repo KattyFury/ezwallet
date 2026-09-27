@@ -1,4 +1,5 @@
 import { MOCK, MOCK_RATES } from './mock'
+import { NET } from './clientNet'
 
 let sdk = null
 
@@ -24,7 +25,7 @@ export async function getSDK() {
   if (MOCK) return {}   // mock: do not init the real SDK
   if (!sdk) {
     const W3SSdk = await loadW3SSdk()
-    sdk = new W3SSdk({ appSettings: { appId: '518fec6a-4680-5175-9de6-0810fb3dfd04' } })
+    sdk = new W3SSdk({ appSettings: { appId: NET.circleAppId } })
   }
   return sdk
 }

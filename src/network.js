@@ -18,8 +18,10 @@ export const NETWORKS = {
     rpc: 'https://rpc.testnet.arc.network',
     explorer: 'https://explorer.testnet.arc.io',
     circleBlockchain: 'ARC-TESTNET',   // Circle W3S wallet identifier
+    circleAppId: '518fec6a-4680-5175-9de6-0810fb3dfd04',   // Circle Console (Testnet) → User Controlled → App ID
     kitChain: 'Arc_Testnet',           // Circle Stablecoin/App Kit identifier
     faucet: true,
+    swap: true,
     tokens: {
       USDC:   { address: '0x3600000000000000000000000000000000000000', decimals: 6 },
       EURC:   { address: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', decimals: 6 },
@@ -38,12 +40,14 @@ export const NETWORKS = {
     chainId: 5042,
     rpc: 'https://rpc.mainnet.arc.io',
     explorer: 'https://explorer.arc.io',
-    // ⚠️ UNVERIFIED - left null ON PURPOSE (fails closed). Circle's supported-blockchains page lists only
-    // ARC-TESTNET, and @circle-fin/adapter-circle-wallets@1.8.0 maps only 'ARC-TESTNET'. Set this only after
-    // a LIVE Circle API key proves the code works (see MAINNET-AUDIT.md B1).
-    circleBlockchain: null,
+    // Verified 2026-09-27 with a LIVE Circle key: user/initialize blockchains:["ARC"] → 201 (MAINNET-AUDIT.md B1).
+    circleBlockchain: 'ARC',
+    circleAppId: '5ffb6dbb-ea01-5758-8780-2eb6b8cb2996',   // Circle Console (Mainnet) → User Controlled → App ID
     kitChain: 'Arc',                   // @circle-fin/adapter-viem-v2: SwapChain["Arc"]
     faucet: false,
+    // v1 scope (owner, 2026-09-27): send/receive only. Swap waits for C5/H2 and for
+    // @circle-fin/adapter-circle-wallets to map 'ARC' (1.8.0 maps only 'ARC-TESTNET').
+    swap: false,
     // v1 scope (MAINNET-SPEC.md): USDC + EURC only - no cirBTC.
     tokens: {
       USDC: { address: '0x3600000000000000000000000000000000000000', decimals: 6 },

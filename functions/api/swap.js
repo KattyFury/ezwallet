@@ -18,6 +18,7 @@ const err = (msg, detail, status = 500) =>
 export async function onRequestPost(ctx) {
   let net
   try { net = netFrom(ctx) } catch (e) { return netError(e) }
+  if (!net.swap) return err('Swap is not available on this network yet', null, 503)   // mainnet v1: send/receive only
   try {
     const apiKey = ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY
     const kitKey = ctx.env.KIT_KEY

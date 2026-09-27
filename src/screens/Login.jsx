@@ -1,12 +1,13 @@
 import arrowDown from '../../design/arrow-down.svg'
 import { GRADIENT } from '../brandBg'
 import { useNav } from '../nav'
+import { NET } from '../clientNet'
 import { useState, useEffect, useRef } from 'react'
 import LoginEmailPopup from '../components/LoginEmailPopup'
 import { getCookie, setCookie, deleteCookie } from 'cookies-next'
 import { createSocialToken, initializeWallet, executeChallenge, getWalletAddress, GOOGLE_CLIENT_ID, circleErrorMessage } from '../circle'
 
-const APP_ID = '518fec6a-4680-5175-9de6-0810fb3dfd04'
+const APP_ID = NET.circleAppId   // per network (src/network.js)
 
 // Translate Circle error codes → a message that names the cause (instead of the baffling
 // "Failed to validate..." string). 155140 is almost always a redirect URI missing from the Circle Console
