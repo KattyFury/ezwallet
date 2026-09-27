@@ -11,4 +11,5 @@ dist/
 .DS_Store
 Thumbs.db
 
-figma-check/   # output of tools/figma-check.mjs
+# output of tools/figma-check.mjs (regenerable) - comment on its OWN line: gitignore has no inline comments
+figma-check/

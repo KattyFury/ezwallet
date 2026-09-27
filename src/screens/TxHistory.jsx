@@ -321,7 +321,7 @@ export default function TxHistory() {
               </span>
             </DetailRow>
             <DetailRow label={'Converted'}><span className="num">{rates ? `${displaySymbol(cur)}${displayNum(d.usd, cur, rates)}` : '…'}</span></DetailRow>
-            <DetailRow label={'Time'}>{new Date(selected.timeStamp * 1000).toLocaleString('vi-VN')}</DetailRow>
+            <DetailRow label={'Time'}>{new Date(selected.timeStamp * 1000).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</DetailRow>
             {memoLoading ? <DetailRow label={'Note'}>Loading...</DetailRow> : memo ? <DetailRow label={'Note'}>{memo}</DetailRow> : null}
             <button className="btn btn-secondary" style={{ width: '100%', marginTop: 'calc(14 * var(--u))' }}
               onClick={() => window.open(`${ARCSCAN}/tx/${selected.hash}`, '_blank')}>

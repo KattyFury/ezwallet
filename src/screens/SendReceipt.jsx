@@ -16,9 +16,8 @@ function CheckIcon() {
 }
 
 function fmtTime(ts) {
-  return new Date(ts).toLocaleString('vi-VN', {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  })
+  // en-GB, the same "27 Sept 2026, 14:05" style History uses (was vi-VN "27/09/2026" - an 08-25 leftover)
+  return new Date(ts).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 }
 
 export default function SendReceipt() {
@@ -79,7 +78,7 @@ export default function SendReceipt() {
     img.src = logoLong
     try { await img.decode() } catch {}
     x.drawImage(img, (W - lw) / 2, H - 22 - lh, lw, lh)
-    saveImageToPhotos(cv, `bien-lai-${timestamp}.png`)
+    saveImageToPhotos(cv, `receipt-${timestamp}.png`)
   }
 
   return (
