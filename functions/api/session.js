@@ -1,3 +1,6 @@
+import { readToken, requireSecret } from './_auth.js';
+import { JSON_CORS } from './_net.js';
+
 const CIRCLE_API = 'https://api.circle.com/v1/w3s';
 
 async function circlePost(path, body, apiKey) {
@@ -74,13 +77,19 @@ export async function onRequestPost(ctx) {
     }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
   }
 
-  const { email } = body;
-
+  // MAINNET-AUDIT C1: a Circle token is minted ONLY for the email inside a valid auth token (the user proved
+  // they own it with the emailed code - /api/auth). A bare { email } is refused: it used to hand ANYONE a token
+  // for ANY email. The email in the body, if any, is ignored.
+  let secret;
+  try { secret = requireSecret(ctx.env); } catch (e) {
+    return new Response(JSON.stringify({ error: `Sign-in is not configured: ${e.message}` }), { status: 503, headers: JSON_CORS });
+  }
+  const email = await readToken(secret, body.authToken);
   if (!email) {
-    return new Response(JSON.stringify({ error: 'email required' }), { status: 400 });
+    return new Response(JSON.stringify({ error: 'Please sign in again', code: 'AUTH_REQUIRED' }), { status: 401, headers: JSON_CORS });
   }
 
-  const userId = email.toLowerCase().trim();
+  const userId = email;
 
   await circlePost('/users', { userId }, apiKey);
 

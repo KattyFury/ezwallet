@@ -156,7 +156,7 @@ export default function MenuScreen() {
       {/* Sign out - node 58:226/58:227/58:236: same row shape, both markers AND the label in the danger
           red. No divider - it is the last row. */}
       <button style={{ ...ROW_STYLE, top: '85.66dvh', border: 'none', background: 'none', cursor: 'pointer' }} onClick={() => {
-        ;['ez_user_token','ez_wallet_addr','ez_wallet_id','ez_encryption_key','ez_email','ez_notifs','ez_last_recv_ts','ez_refresh_token','ez_google_email','ez_login_method'].forEach(k => localStorage.removeItem(k))
+        ;['ez_user_token','ez_wallet_addr','ez_wallet_id','ez_encryption_key','ez_email','ez_auth_token','ez_notifs','ez_last_recv_ts','ez_refresh_token','ez_google_email','ez_login_method'].forEach(k => localStorage.removeItem(k))
         sessionStorage.removeItem('ez_pin_ok')
         sessionStorage.removeItem('ez_sync_token')
         window.location.reload()
