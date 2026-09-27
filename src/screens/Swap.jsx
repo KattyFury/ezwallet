@@ -272,7 +272,7 @@ export default function Swap() {
 
   // The card = a PALE GREY BACKGROUND, NO BORDER, NO SHADOW (nodes 1:68/1:69, 2026-09-10: radius 16,
   // was 20 - the token chip inside stays WHITE so it stands out on the grey without needing a border).
-  const CARD = { border: 'none', borderRadius: 16, background: 'var(--color-surface)', padding: '14px 16px' }
+  const CARD = { border: 'none', borderRadius: 8, background: 'var(--color-surface)', padding: '14px 16px' }
 
   // ONE MINIMAL 3-row card (user decision 07-20 "strip it back so the text can be bigger for older users"):
   //   the You pay/receive label

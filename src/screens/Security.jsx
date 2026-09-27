@@ -97,7 +97,7 @@ export default function Security() {
       {/* Card - node 1:265: 340x586 at (25,86), radius 16. Network/Email/Wallet address are plain
           "Label: value" lines (brand-blue value, same as MenuScreen's info card); PIN/Language/Default
           currency are rows with a value chip. */}
-      <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 16 }} />
+      <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 8 }} />
 
       <div style={{ ...ROW, top: ROW_TOP(0) }}><span style={LABEL}>Network</span><span style={VALUE}>Arc Testnet</span></div>
       <div style={{ ...ROW, top: ROW_TOP(1) }}><span style={LABEL}>Email</span><span style={VALUE}>{email}</span></div>

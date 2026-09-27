@@ -259,7 +259,9 @@ export default function TxHistory() {
           Card radius 16, colour #D2DCE6 (var(--color-card), was --color-surface) - node 58:445, RE-VERIFIED
           2026-09-24 against the redesign's own gradient+sheet shell (blank 340x586 placeholder, no example
           rows, so the row padding below has no Figma evidence and is left as-is). */}
-      <div className="row-2-8" style={{ background: 'var(--color-card)', borderRadius: 16, padding: '4px 14px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' }}>
+      {/* ⚠️ ABSOLUTE card (fix 2026-09-27), not className="row-2-8": as a plain grid item it painted UNDER the
+          absolutely-positioned ScreenSheet - the same bug SavedQRList had - so the grey box never showed. */}
+      <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--color-card)', borderRadius: 8, padding: '4px 14px', alignItems: 'stretch', justifyContent: 'flex-start', overflow: 'hidden' }}>
       <div className="scroll-hidden" style={{
         display: 'flex', flexDirection: 'column', alignItems: 'stretch', justifyContent: 'flex-start', height: '100%', overflowY: 'auto',
         WebkitMaskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',

@@ -74,7 +74,7 @@ export default function HomeReceive() {
       {/* TOP CARD - node 56:72: 340x328 at (25,86). */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '38.86dvh',
-        background: 'var(--color-card)', borderRadius: 16, overflow: 'hidden',
+        background: 'var(--color-card)', borderRadius: 8, overflow: 'hidden',
       }}>
         {/* THE QR - node 56:110 draws a flat 258x258 BLACK SQUARE, the placeholder this file uses for
             "the real thing goes here".
@@ -117,7 +117,7 @@ export default function HomeReceive() {
           matched exactly and NotifArea keeps owning what goes inside it. */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '50.95dvh', width: '87.18%', height: '28.67dvh',
-        background: 'var(--color-card)', borderRadius: 16, padding: 16,
+        background: 'var(--color-card)', borderRadius: 8, padding: 16,
         display: 'flex', flexDirection: 'column', minHeight: 0,
       }}>
         <NotifArea

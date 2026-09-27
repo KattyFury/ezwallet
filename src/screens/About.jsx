@@ -37,7 +37,7 @@ export default function About() {
       <ScreenSheet />
       <div className="sheet-title">About</div>
 
-      <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 16 }} />
+      <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 8 }} />
 
       {ITEMS.map(({ label, value, link, top }) => (
         link ? (

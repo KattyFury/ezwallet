@@ -528,7 +528,7 @@ body {
      2026-09-24: the numpad sheet should match the SAME grey every text box/card in the app now uses,
      not a leftover separate tone. */
   background: var(--color-card);
-  border-radius: 20px 20px 0 0;
+  border-radius: 8px 8px 0 0;   /* grey box = radius 8 (user rule 2026-09-27) */
   padding: 0 20px;
   display: flex;
   flex-direction: column;
@@ -678,7 +678,7 @@ body {
   /* The Swap standard: input fields = a surface fill with no border (user decision 07-17); small fields keep radius 10 */
   border: none;
   background: var(--color-surface);
-  border-radius: 10px;
+  border-radius: 8px;   /* grey box = radius 8 (user rule 2026-09-27) */
   padding: 8px 12px;
 }
 
@@ -701,7 +701,7 @@ body {
      fresh pulls of both SendConfirm (58:292) and SendReceipt (58:306), same colour every other redesign
      card (Menu/Security/About/TxHistory/Contacts) already uses. */
   border: none;
-  border-radius: 16px;
+  border-radius: 8px;   /* grey box = radius 8 (user rule 2026-09-27) */
   background: var(--color-card);
   overflow: hidden;
 }
@@ -772,7 +772,7 @@ body {
   /* The Swap standard: input fields = a surface fill with no border (user decision 07-17); small fields keep radius 10 */
   border: none;
   background: var(--color-surface);
-  border-radius: 10px;
+  border-radius: 8px;   /* grey box = radius 8 (user rule 2026-09-27) */
   padding: 10px 12px;
   font-family: var(--font-base);
   font-size: var(--fs-caption);

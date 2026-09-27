@@ -137,7 +137,7 @@ export default function HomeSend() {
           is what makes it read as a half-oval sitting on that edge rather than a floating button. */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '38.86dvh',
-        background: 'var(--color-card)', borderRadius: 16, padding: '15.94px 16px 0', minWidth: 0,
+        background: 'var(--color-card)', borderRadius: 8, padding: '15.94px 16px 0', minWidth: 0,
         overflow: 'hidden',
       }}>
         <div className="scroll-hidden" style={{
@@ -207,7 +207,7 @@ export default function HomeSend() {
           contents stay NotifArea, which is what actually knows about them. */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '50.95dvh', width: '87.18%', height: '28.67dvh',
-        background: 'var(--color-card)', borderRadius: 16, padding: 16,
+        background: 'var(--color-card)', borderRadius: 8, padding: 16,
         display: 'flex', flexDirection: 'column', minHeight: 0,
       }}>
         <NotifArea
