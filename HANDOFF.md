@@ -28,12 +28,25 @@ name `ezwallet-mainnet`, and this header.
      `KattyFury/ezwallet-testnet` will be ARCHIVED (not deleted) once testnet.ezwallet.cash deploys from here.
 - **Testnet `main` now has the email sign-in code (C1)** - merged + live 2026-09-27 (commit `f60b1b9` in the testnet
   repo; `/api/session` without an auth token → `AUTH_REQUIRED`). Port it FROM the testnet repo `main`, not `wip/otp`.
+- **DONE later the same day (phase 1 of the owner-approved plan, spec = `MAINNET-V1-PLAN.md`, owner-approved with Claude Chat):**
+  - C1 email code brought over (`bc80527`); `src/`, `functions/`, `test/` were then byte-identical to the testnet repo.
+  - `src/network.js`: `circleAppId` per network, mainnet `circleBlockchain: 'ARC'`, `swap` flag (mainnet false →
+    `/api/swap` 503). App ID no longer hard-coded (`23c5ee4`).
+  - **New Pages project `ezwallet-test`** (repo `KattyFury/ezwallet`, branch `main`, NETWORK/VITE_NETWORK=testnet,
+    SAME testnet API key / KIT_KEY / AUTH_SECRET / RESEND key / KV `EZ_SYNC` as the old project, so testers stay
+    signed in). **testnet.ezwallet.cash now serves from it** (domain moved + CNAME → `ezwallet-test.pages.dev`,
+    owner-approved and owner-verified on a phone: same wallet, balance, history).
+  - Full testnet-repo history kept HERE as tags: `archive/testnet-main` (558 commits since 2026-06-16),
+    `archive/testnet-privy`, `archive/testnet-feature-otp`, `archive/feature-*`. Its `.env.txt` keys are in the
+    central secrets file (`EZWALLET_TELEGRAM_*`, `EZWALLET_PRIVY_*`).
+  - Next: owner confirms deleting the `KattyFury/ezwallet-testnet` repo, its local folder and the old Pages
+    project `ezwallet-testnet`; then phase 2 (mainnet v1 work).
 - **Plan, in order (ask the owner before each step):**
   1. Bring the testnet repo's post-fork code (C1 email code) into this repo; per-network flags in `src/network.js`
      (App ID, swap on/off, cirBTC, faucet); set mainnet `circleBlockchain: 'ARC'`.
   2. New Pages project for TESTNET built from this repo (`NETWORK`/`VITE_NETWORK=testnet`), move
      testnet.ezwallet.cash to it, verify testers see the same wallets; then archive the testnet repo.
-  3. Mainnet v1 work (spec on the owner's Desktop: `ezwallet-mainnet-v1-spec.md`) → Pages project for mainnet →
+  3. Mainnet v1 work (spec: `MAINNET-V1-PLAN.md`) → Pages project for mainnet →
      tiny-amount tests (≤ $1) → ezwallet.cash.
 
 ## ▶ WHERE WE ARE (end of session 2026-09-27) - read this first
