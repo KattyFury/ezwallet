@@ -2,6 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!-- TESTNET MOVED (2026-09-27): this build now lives on testnet.ezwallet.cash; the apex ezwallet.cash is
+         reserved for the mainnet app. Until mainnet takes the apex, anyone opening the old link lands here.
+         A tiny inline script (not a Cloudflare redirect rule: the API token has no Rules permission) - it
+         runs before anything else loads. Remove it once ezwallet.cash is attached to the mainnet project. -->
+    <script>
+      if (/^(www\.)?ezwallet\.cash$/.test(location.hostname)) location.replace('https://testnet.ezwallet.cash' + location.pathname + location.search + location.hash)
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>ezwallet – a crypto wallet simple enough for my mom to use</title>
 
@@ -13,15 +20,15 @@
          ⚠️ BRAND VOICE: the official slogan is "A crypto wallet simple enough for my mom to use."
          and ONLY en dashes (U+2013) may be used, NEVER em dashes (U+2014), in anything a reader sees. -->
     <meta name="description" content="Send and receive stablecoins with just an email and a 6-digit PIN. No seed phrase, no separate gas token – USDC pays its own fees on Arc. Running on Arc Testnet." />
-    <link rel="canonical" href="https://ezwallet.cash/" />
+    <link rel="canonical" href="https://testnet.ezwallet.cash/" />
     <meta name="theme-color" content="#0B53BF" />
 
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="ezwallet" />
-    <meta property="og:url" content="https://ezwallet.cash/" />
+    <meta property="og:url" content="https://testnet.ezwallet.cash/" />
     <meta property="og:title" content="ezwallet – a crypto wallet simple enough for my mom to use" />
     <meta property="og:description" content="Email + PIN, no seed phrase. USDC pays its own gas on Arc. Swap by dragging a slider. Live on Arc Testnet." />
-    <meta property="og:image" content="https://ezwallet.cash/og.png?v=3" />
+    <meta property="og:image" content="https://testnet.ezwallet.cash/og.png?v=3" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="ezwallet – email + PIN crypto wallet on Arc" />
@@ -30,7 +37,7 @@
     <meta name="twitter:creator" content="@0xhieuxyz" />
     <meta name="twitter:title" content="ezwallet – a crypto wallet simple enough for my mom to use" />
     <meta name="twitter:description" content="Email + PIN, no seed phrase. USDC pays its own gas on Arc. Swap by dragging a slider. Live on Arc Testnet." />
-    <meta name="twitter:image" content="https://ezwallet.cash/og.png?v=3" />
+    <meta name="twitter:image" content="https://testnet.ezwallet.cash/og.png?v=3" />
 
     <!-- NO WEBFONT (2026-09-07, brand guideline: system font stack only). This is where Barlow used to
          load from Google Fonts, along with 2 preconnects to fonts.googleapis.com/fonts.gstatic.com -
