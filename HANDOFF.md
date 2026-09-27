@@ -7,6 +7,23 @@ parent folder and are **separate, unrelated git repos** – never let one end up
 
 ---
 
+## ✅ VISUAL RULES SETTLED 2026-09-27 (user) – apply to every new screen
+
+- **Exactly 3 greys.** Background/box `#D2DCE6` (`--color-card`; `--color-surface`, `--color-gray`,
+  `--color-faint` are now aliases of it) · disabled/placeholder text + all hairlines `#94A3B8`
+  (`--color-muted`) · secondary text `#667085` (`--color-muted-2`). Do not add a fourth.
+- **Radius:** every grey box = **8px**; every button = **16px or fully rounded** (pill/circle).
+- **Thin lines:** always **0.5px `#94A3B8`**.
+- **Full cards must be `position: absolute`** (left 6.41%, top 10.19dvh, 87.18% × 69.43dvh). A plain
+  grid item (`gridRow`, `.row-2-8`) paints UNDER the absolute `ScreenSheet` and vanishes – this hid
+  QR storage's grey, History's grey and the ENTIRE Contacts list until 2026-09-27.
+- NavBar is icon-only (30px). Menu shows the address as `0xabcd...efgh` + copy button.
+- Boot is gradient all the way: `index.html` paints the Splash, `App.jsx` falls back to `<Splash/>`
+  while booting, and PinGate/ForgotPin use `GRADIENT` (they were white = "gradient flashes then white").
+- Block explorer moved to `explorer.testnet.arc.io` (`EXPLORER` in `src/chain.js`); the old host
+  301s without CORS, which had broken History + incoming notifications. Use `page=1&offset=N`, never `limit`.
+- Not done, offered to the user: load the Circle SDK only when a PIN is needed (it prefetches ~1MB on boot).
+
 ## ⚠️ CURRENT STATE (2026-09-22) – READ BEFORE THE FIGMA SECTION BELOW
 
 Three things are in flight. **Nothing below this block has been superseded**, but this is where the
