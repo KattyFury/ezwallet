@@ -125,7 +125,7 @@ export default function AddToHome() {
                 start at the TEXT, not at the icon, exactly as a real iOS menu draws it. */}
             {i > 0 && (
               <div style={{
-                height: 1, background: 'var(--color-muted)',
+                height: 0.5, background: 'var(--color-muted)',   // 0.5px muted hairline (app rule 2026-09-27)
                 marginLeft: '18.04%', marginRight: '7.86%',
                 filter: 'blur(2px)',
               }} />

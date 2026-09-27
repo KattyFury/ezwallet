@@ -64,7 +64,15 @@ export default function MenuScreen() {
   // inventing a second convention for the same three facts.
   const email = localStorage.getItem('ez_email') || localStorage.getItem('ez_google_email') || '…'
   const walletAddr = localStorage.getItem('ez_wallet_addr') || '…'
-  const shortAddr = walletAddr !== '…' ? walletAddr.slice(0, 10) + '...' + walletAddr.slice(-6) : '…'
+  // 0xabcd...efgh (user decision 2026-09-27: the old 10+6 cut ran too long) - Figma's own placeholder
+  // format: "0x" + 4 chars, "...", last 4 chars. The copy button next to it copies the FULL address.
+  const shortAddr = walletAddr !== '…' ? walletAddr.slice(0, 6) + '...' + walletAddr.slice(-4) : '…'
+  const [copied, setCopied] = useState(false)
+  function copyAddr() {
+    if (walletAddr === '…') return
+    navigator.clipboard?.writeText(walletAddr).catch(() => {})
+    setCopied(true); setTimeout(() => setCopied(false), 1200)   // same check-mark feedback as Contacts
+  }
 
   return (
     <div className="screen" style={{ background: GRADIENT }}>
@@ -87,6 +95,10 @@ export default function MenuScreen() {
           Email: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{email}</span><br />
           Network: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>Arc Testnet</span><br />
           Wallet address: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{shortAddr}</span>
+          <button onClick={copyAddr} aria-label="Copy wallet address"
+            style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 8, padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}>
+            <Icon name={copied ? 'check' : 'copy'} size={18} color={copied ? 'var(--color-primary)' : 'var(--color-brand)'} />
+          </button>
         </p>
       </div>
 
