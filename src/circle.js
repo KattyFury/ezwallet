@@ -42,15 +42,42 @@ export async function createSocialToken(deviceId) {
   return data
 }
 
-export async function createSession(email) {
+// MAINNET-AUDIT C1: the server mints a Circle token only for the email inside a valid auth token - the proof
+// that this person received the 6-digit code at that address (/api/auth). A bare email is refused.
+export async function createSession(authToken) {
   const res = await fetch('/api/session', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email }),
+    body: JSON.stringify({ authToken }),
   })
+  const data = await res.json()
+  if (data.error) throw Object.assign(new Error(data.error), { code: data.code })
+  return data
+}
+
+// Our own email code (NOT Circle's Email-OTP mode, which would remove the PIN). start → the code is emailed.
+export async function startEmailCode(email) {
+  const res = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'start', email }) })
   const data = await res.json()
   if (data.error) throw new Error(data.error)
   return data
+}
+// verify → { authToken } (30 days), kept in localStorage.ez_auth_token.
+export async function verifyEmailCode(email, code) {
+  const res = await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'verify', email, code }) })
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
+  return data
+}
+
+// Every session key a sign-out removes. One list, shared by every sign-out path.
+export const SESSION_KEYS = ['ez_user_token', 'ez_wallet_addr', 'ez_wallet_id', 'ez_encryption_key', 'ez_email', 'ez_auth_token', 'ez_refresh_token', 'ez_google_email', 'ez_login_method']
+
+// The auth token is missing/expired (30 days, or a session from before the email code existed) → back to Login.
+function expireToLogin() {
+  SESSION_KEYS.forEach(k => localStorage.removeItem(k))
+  sessionStorage.removeItem('ez_pin_ok'); sessionStorage.removeItem('ez_sync_token')
+  location.replace('/')
 }
 
 // Verify the PIN to UNLOCK THE WALLET (access is gated by the Circle PIN itself - no second code invented). Create a challenge
@@ -146,14 +173,17 @@ export async function refreshSession() {
   const email = localStorage.getItem('ez_email')
   const fallback = { userToken: localStorage.getItem('ez_user_token'), encryptionKey: localStorage.getItem('ez_encryption_key') }
 
-  // EMAIL flow: mint a new token with userId = email (Circle allows it any time).
+  // EMAIL flow: mint a new token with the stored auth token (proof of email ownership, 30 days).
   if (email) {
+    const authToken = localStorage.getItem('ez_auth_token')
+    if (!authToken) { expireToLogin(); return fallback }   // a session from before the email code existed
     try {
-      const { userToken, encryptionKey } = await createSession(email)
+      const { userToken, encryptionKey } = await createSession(authToken)
       localStorage.setItem('ez_user_token', userToken)
       localStorage.setItem('ez_encryption_key', encryptionKey)
       return { userToken, encryptionKey }
-    } catch {
+    } catch (e) {
+      if (e?.code === 'AUTH_REQUIRED') { expireToLogin(); return fallback }
       return fallback
     }
   }
@@ -187,7 +217,10 @@ export async function forceFreshSession() {
   const email = localStorage.getItem('ez_email')
   let s
   if (email) {
-    s = await createSession(email)   // { userToken, encryptionKey } - throws on error
+    const authToken = localStorage.getItem('ez_auth_token')
+    if (!authToken) throw new Error('no-session')   // → the caller sends the user back to Login
+    try { s = await createSession(authToken) }      // { userToken, encryptionKey } - throws on error
+    catch (e) { if (e?.code === 'AUTH_REQUIRED') throw new Error('no-session'); throw e }
   } else {
     const refreshToken = localStorage.getItem('ez_refresh_token')
     const deviceId = localStorage.getItem('ez_google_deviceId')

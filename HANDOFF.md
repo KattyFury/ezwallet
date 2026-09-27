@@ -77,6 +77,24 @@ The code fixes from `KattyFury/ezwallet` were applied here verbatim (code only, 
   Note: the Pages **preview** env already holds a `RESEND_API_KEY` secret (from the Privy branch era).
 See `MAINNET-AUDIT.md` (copied from the mainnet repo) for the full findings.
 
+## 0c. Email sign-in code (MAINNET-AUDIT C1) - branch `feature/otp`, 2026-09-27
+
+- **Where it sits:** ONE visible step, inside the existing "Log in with email" popup, between the email and the
+  first `createSession`. Account creation and login are the same code path, so it covers both. The user types a
+  code only on a new device, after Sign out, or after 30 days; opening the app and sending money stay PIN-only.
+- **Server:** `functions/api/_auth.js` (6-digit code, 10 min, 5 tries, 45 s between sends, 5/h per email, 20/h per
+  IP, HMAC auth token 30 days), `_mail.js` (Resend, from `no-reply@ezwallet.cash` - domain verified 2026-09-27,
+  DNS: `resend._domainkey`, `send` MX+TXT, `rsend` CNAME), `auth.js` (`start`/`verify`). `session.js` now mints a
+  Circle token ONLY for the email inside a valid auth token (401 `AUTH_REQUIRED` otherwise).
+- **Client:** `circle.js` `createSession(authToken)`, `startEmailCode`/`verifyEmailCode`, `SESSION_KEYS` (shared
+  by every sign-out), `ez_auth_token`. A stored session without an auth token (made before this) is sent back to
+  Login once.
+- **Secrets on Pages `ezwallet-testnet`:** `AUTH_SECRET` (also in the local testnet `.env.txt`), `RESEND_API_KEY`.
+- This is NOT Circle's Email-OTP auth mode (which removes the PIN) - Circle still sees `userId=email` + PIN.
+- **Verified so far:** tests (auth 8 cases), local API against real Resend (sent to `delivered@resend.dev`), rate
+  limit, 5-try lockout, bare-email and forged-token session requests refused, popup UI. **Not yet verified:** a real
+  login on the preview deploy (code received in a real inbox, then Circle's PIN screen) - the owner tests that.
+
 ## 1. Open items (not built - ask before starting any of them)
 
 | Item | State |

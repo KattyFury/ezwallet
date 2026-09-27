@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNav } from '../nav'
-import { refreshSession, forceFreshSession, isTokenExpiredError, getSDK, executeChallenge, signMessageChallenge, circleErrorMessage } from '../circle'
+import { refreshSession, forceFreshSession, isTokenExpiredError, getSDK, executeChallenge, signMessageChallenge, circleErrorMessage, SESSION_KEYS } from '../circle'
 import logoLong from '../../design/logo.svg'
 import { GRADIENT } from '../brandBg'
 
@@ -72,7 +72,7 @@ export default function PinGate() {
   useEffect(() => { if (!tried.current) { tried.current = true; unlock() } }, [])
 
   function signOut() {
-    ;['ez_user_token', 'ez_wallet_addr', 'ez_wallet_id', 'ez_encryption_key', 'ez_email', 'ez_refresh_token', 'ez_google_email', 'ez_login_method'].forEach(k => localStorage.removeItem(k))
+    SESSION_KEYS.forEach(k => localStorage.removeItem(k))   // incl. ez_auth_token (circle.js)
     sessionStorage.removeItem('ez_pin_ok')
     sessionStorage.removeItem('ez_sync_token')
     navigate('Login')
