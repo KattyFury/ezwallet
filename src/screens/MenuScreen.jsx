@@ -20,10 +20,11 @@ import { GRADIENT } from '../brandBg'
 // to spot if it turns out wrong, rather than reading as an already-verified number.
 const ITEMS = [
   { id: 'TxHistory', label: 'Transaction history',            top: '44.91dvh', rule: '48.99dvh', icon: 'clock' },
-  // Figma merges the old separate Security/Currency rows into one: "Security, language & currency".
+  // Figma merges the old separate Security/Currency rows into one: "Security, language & currency",
+  // renamed "Security & Region" (user decision 2026-09-27).
   // Security.jsx (node 58:332, rebuilt 2026-09-24) now absorbs the language/currency chips inline -
   // Currency.jsx is deleted, this still navigates to 'Security'.
-  { id: 'Security',  label: 'Security, language & currency',  top: '55.09dvh', rule: '59.18dvh', icon: 'shield' },
+  { id: 'Security',  label: 'Security & Region',  top: '55.09dvh', rule: '59.18dvh', icon: 'shield' },
   // ⚠️ NEW ROW, NO DESTINATION YET. Figma draws it (node 58:220/58:221) but there is no corresponding
   // frame anywhere in the file and no existing screen/route for it. Disabled - same standard as
   // "Withdraw" below (drawn, not yet wired) - until the user gives it a real screen to open.

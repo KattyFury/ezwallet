@@ -66,13 +66,16 @@ export default function SavedQRList() {
           + INNER scrolling via .scroll-hidden. ⚠️ Do NOT use .scroll-thin INSIDE a grey box: that class has
           margin-right -20px (a trick for full-bleed lists) → content overflows to the right; desktop has scrollbar-gutter
           to compensate so it looks fine, but iOS does NOT support it → broken layout (the mobile bug reported 07-23b). */}
-      {/* Card radius 16 (was 20) - node 1:311, RE-VERIFIED 2026-09-10. */}
-      <div style={{ gridRow: '2 / 9', background: 'var(--color-card)', borderRadius: 16, padding: 10, overflow: 'hidden' }}>
+      {/* Card radius 16 (was 20) - node 1:311, RE-VERIFIED 2026-09-10.
+          ⚠️ ABSOLUTE, not gridRow '2 / 9' (fixed 2026-09-27): as a plain grid item it painted UNDER the
+          absolutely-positioned ScreenSheet, so the grey box was invisible (user report). Same 340x586
+          card at (25,86) as Security/About. padding 8 = QR tiles sit 8px from the box edge (user decision 2026-09-27). */}
+      <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 16, padding: 8, overflow: 'hidden' }}>
       <div className="scroll-hidden" style={{ height: '100%' }}>
         {/* ⚠️ RIGHT COLUMN minmax(0,1fr) - with a bare '1fr' the content dictates min-width, and one big box blows the column
             open (the same lesson as .screen, section 6). Bug the user screenshotted 07-23c: 3 QRs → row 2 = [Blend | + button],
             and the + button with aspectRatio 1 was stretched as tall as the Blend box → so it INFLATED SIDEWAYS → the 2 columns went badly uneven. */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 10, alignContent: 'start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, alignContent: 'start' }}>
           {list.map(q => {
             const c = q.currency || 'USD'
             const label = fmtMoney(q.amount, c)
@@ -93,7 +96,11 @@ export default function SavedQRList() {
                   {/* height auto = the svg keeps itself square via the viewBox (forcing height 100% was 3px off) */}
                   <QRCodeSVG value={buildQR(walletAddr, { amount: q.amount, currency: c })} size={104} level="M" style={{ width: '100%', height: 'auto', display: 'block' }} />
                 </div>
-                {q.name && <span style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{q.name}</span>}
+                {/* Name area ALWAYS reserves 2 lines (user decision 2026-09-27) so every tile lines up; a
+                    short name is centred vertically inside it, a long one wraps to 2 lines then clamps with "…". */}
+                <span style={{ height: 42, width: '100%', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ fontSize: 'var(--fs-content-2)', lineHeight: '21px', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', textAlign: 'center', overflowWrap: 'anywhere', display: '-webkit-box', WebkitBoxOrient: 'vertical', WebkitLineClamp: 2, overflow: 'hidden' }}>{q.name}</span>
+                </span>
                 <span className="num" style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{label}</span>
               </button>
             )

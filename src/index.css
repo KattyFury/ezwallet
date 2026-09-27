@@ -52,7 +52,10 @@
      gradient screens (token list, notifications, the Add steps box, the Login PIN cells, the email
      field) is this one value, straight off the Figma frames. */
   --color-card:         #D2DCE6;
-  --color-surface:      #E1E7ED;
+  /* ONE grey app-wide (user decision 2026-09-27: "toàn bộ màu xám trong thiết kế là một"): the old
+     recessed-box grey #E1E7ED is retired - --color-surface is now just an alias of --color-card, so every
+     input/memo/popup field/Swap card that still says --color-surface renders the same #D2DCE6. */
+  --color-surface:      var(--color-card);
 
   /* ── FONT - the system stack (2026-09-07, replacing Barlow). Character-for-character the stack this
      app used before on the since-parked `privy` branch - kept identical on purpose so the two branches

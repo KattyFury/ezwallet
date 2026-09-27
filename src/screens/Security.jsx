@@ -25,6 +25,13 @@ const LANGUAGE_OPTIONS = [{ code: 'en', label: 'English', locked: true }]
 // Value chip - node 58:362/58:364/58:366: white pill, glow shadow, no border, 42px tall.
 const CHIP = { border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', borderRadius: 999, height: 42, padding: '0 14px', fontSize: 18, fontWeight: 'var(--fw-semibold)', cursor: 'pointer', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }
 const ROW = { position: 'absolute', left: '9.23%', right: '9.23%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }
+// Row centres - user decision 2026-09-27: EVERY item (Network, Email, Wallet address, PIN, Language,
+// Default currency) is its own line on ONE even step, so Network→Email is the same gap as Wallet→PIN.
+// First centre 14.34dvh (121px, the middle of grid row 2), step 7.58dvh (64px). About.jsx uses the SAME
+// ROW_TOP so the two screens stay in sync - change both or neither.
+export const ROW_TOP = i => `${(14.34 + i * 7.58).toFixed(2)}dvh`
+const INFO = { fontSize: 18, color: 'var(--color-black)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }
+const VALUE = { fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }
 
 function Picker({ title, options, active, onPick, onClose }) {
   return (
@@ -83,32 +90,30 @@ export default function Security() {
   return (
     <div className="screen" style={{ background: GRADIENT }}>
       <ScreenSheet />
-      <div className="sheet-title">Security, language & currency</div>
+      <div className="sheet-title">Security & Region</div>
 
       {/* Card - node 1:265: 340x586 at (25,86), radius 16. Network/Email/Wallet address are plain
           "Label: value" lines (brand-blue value, same as MenuScreen's info card); PIN/Language/Default
           currency are rows with a value chip. */}
       <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 16 }} />
 
-      <p style={{ position: 'absolute', left: '9.23%', right: '9.23%', top: '13.21dvh', margin: 0, fontSize: 18, lineHeight: '32px', color: 'var(--color-black)' }}>
-        Network: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>Arc Testnet</span><br />
-        Email: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{email}</span><br />
-        Wallet address: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{shortAddr}</span>
-      </p>
+      <div style={{ ...ROW, top: ROW_TOP(0) }}><span style={INFO}>Network: <span style={VALUE}>Arc Testnet</span></span></div>
+      <div style={{ ...ROW, top: ROW_TOP(1) }}><span style={INFO}>Email: <span style={VALUE}>{email}</span></span></div>
+      <div style={{ ...ROW, top: ROW_TOP(2) }}><span style={INFO}>Wallet address: <span style={VALUE}>{shortAddr}</span></span></div>
 
-      <div style={{ ...ROW, top: '36.84dvh' }}>
+      <div style={{ ...ROW, top: ROW_TOP(3) }}>
         <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)' }}>PIN</span>
         <button style={{ ...CHIP, color: pinStatus ? (pinErr ? 'var(--color-error)' : 'var(--color-primary)') : 'var(--color-black)' }} disabled={!!pinStatus} onClick={handleResetPin}>
           {pinStatus || 'Change PIN'}
         </button>
       </div>
-      <div style={{ ...ROW, top: '44.39dvh' }}>
+      <div style={{ ...ROW, top: ROW_TOP(4) }}>
         <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)' }}>Language</span>
         <button style={CHIP} onClick={() => setLangPicker(true)}>
           English<Icon name="down2" size={17} color="var(--color-brand)" />
         </button>
       </div>
-      <div style={{ ...ROW, top: '51.95dvh' }}>
+      <div style={{ ...ROW, top: ROW_TOP(5) }}>
         <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)' }}>Default currency</span>
         <button style={CHIP} onClick={() => setCurPicker(true)}>
           {CUR_SHORT[currency] || 'USD'}<Icon name="down2" size={17} color="var(--color-brand)" />

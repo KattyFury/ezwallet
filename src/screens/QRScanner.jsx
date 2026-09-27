@@ -109,31 +109,31 @@ export default function QRScanner() {
       <ScreenSheet />
       <div className="sheet-title">Scan QR to send</div>
 
-      {/* Scan square - node 18:168: a literal fixed 258x258 (was a responsive 82%/aspectRatio), top
-          11.81dvh, centred - the SAME position ShowQR/CreateQR's QR occupies (node 1:238/18:166 etc all
-          draw this exact 258x258 box at the same spot, RE-VERIFIED 2026-09-10, not assumed). */}
+      {/* Scan box - user decision 2026-09-27: the SAME box as HomeSend's token card (left 6.41%, top
+          10.19dvh, 87.18% x 38.86dvh, radius 16 - rows 2-5, ~4/10 of the screen height), replacing the
+          fixed 258x258 square, which read as too small. The camera feed covers the whole box. */}
       {error ? (
         <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '30dvh', fontSize: 'var(--fs-caption)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</span>
       ) : (
-        <div style={{ position: 'absolute', left: '50%', top: '11.81dvh', transform: 'translateX(-50%)', width: 258, height: 258, borderRadius: 16, overflow: 'hidden', background: '#000' }}>
+        <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '38.86dvh', borderRadius: 16, overflow: 'hidden', background: '#000' }}>
           <video ref={videoRef} autoPlay playsInline muted
             style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         </div>
       )}
 
-      {/* Dynamic scan hint - real, working functionality (updates as the camera reads frames) that the
-          static Figma mock has no equivalent for, kept as its own line above the caption node draws. */}
+      {/* Caption - one line, 16px semibold, --color-error. 16px (user decision 2026-09-27): it is a
+          notification-type message. Sits 16px below the scan box's bottom edge (10.19 + 38.86 = 49.05dvh) -
+          it used to be glued to the old square. */}
       {!error && (
-        <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '48.7dvh', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', textAlign: 'center' }}>{hint}</span>
-      )}
-
-      {/* Caption - node 58:614: top-anchored 43.32dvh, ONE line only (RE-VERIFIED 2026-09-24 - Figma
-          dropped the second "Real-life QR codes are not supported yet" line entirely, same single-line
-          pattern ShowQR's own caption now uses). 14px semibold, --color-error. */}
-      {!error && (
-        <div style={{ position: 'absolute', left: '50%', top: '43.32dvh', transform: 'translateX(-50%)', width: 340, fontSize: 14, fontWeight: 'var(--fw-semibold)', textAlign: 'center', color: 'var(--color-error)' }}>
+        <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: 'calc(49.05dvh + 16px)', fontSize: 16, lineHeight: '20px', fontWeight: 'var(--fw-semibold)', textAlign: 'center', color: 'var(--color-error)' }}>
           Current Available Network: Arc Testnet
         </div>
+      )}
+
+      {/* Dynamic scan hint - real, working functionality (updates as the camera reads frames) that the
+          static Figma mock has no equivalent for, kept as its own line under the caption, same 16px. */}
+      {!error && (
+        <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: 'calc(49.05dvh + 44px)', fontSize: 16, lineHeight: '20px', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', textAlign: 'center' }}>{hint}</span>
       )}
 
       <input ref={fileRef} type="file" accept="image/*" onChange={handlePickImage} style={{ display: 'none' }} />

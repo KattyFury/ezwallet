@@ -3,6 +3,7 @@ import Icon from '../components/Icon'
 import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
+import { ROW_TOP } from './Security'
 
 const VERSION = '0.1.0'
 
@@ -16,15 +17,17 @@ const VERSION = '0.1.0'
 // elsewhere, re-verified: they land inside the new card's 86-672 span with no change needed), migrated
 // only the shell + card colour (#D2DCE6 = var(--color-card), was --color-surface) to match Security/Menu.
 // Flag to the user if Figma is later filled in with different content than this.
+// Row spacing - user decision 2026-09-27: the SAME even step as Security & Region (ROW_TOP, 64px), no
+// longer one full 86px grid row per item, so the two screens read as one system.
 const ITEMS = [
-  { label: 'App', value: 'ezwallet', top: '14.34dvh' },
-  { label: 'Version', value: VERSION, top: '24.53dvh' },
-  { label: 'Network', value: 'Arc Testnet', top: '34.72dvh' },
-  { label: 'Wallet', value: 'Circle Wallet', top: '44.91dvh' },
-  { label: 'Github', link: 'https://github.com/KattyFury/ezwallet', top: '55.09dvh' },
-  { label: 'Term of use', link: 'https://www.circle.com/en/legal/privacy-policy', top: '65.28dvh' },
-  { label: 'Privacy policy', link: 'https://www.circle.com/en/legal/privacy-policy', top: '75.47dvh' },
-]
+  { label: 'App', value: 'ezwallet' },
+  { label: 'Version', value: VERSION },
+  { label: 'Network', value: 'Arc Testnet' },
+  { label: 'Wallet', value: 'Circle Wallet' },
+  { label: 'Github', link: 'https://github.com/KattyFury/ezwallet' },
+  { label: 'Term of use', link: 'https://www.circle.com/en/legal/privacy-policy' },
+  { label: 'Privacy policy', link: 'https://www.circle.com/en/legal/privacy-policy' },
+].map((it, i) => ({ ...it, top: ROW_TOP(i) }))
 
 export default function About() {
   const { navigate } = useNav()
