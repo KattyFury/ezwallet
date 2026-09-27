@@ -199,8 +199,9 @@ Email login → wallet (PIN + security questions) · PinGate unlock on reopen ·
 contract when there is a note) · receive (QR + address) · QR create/scan/library · contacts (per account,
 avatar cropper) · history (grouped by day, swaps as 2 rows, self-sends labelled) · swap (Service hub →
 Exchange) · in-app notifications · receipts (canvas → Photos via Web Share) · change PIN · KV backup.
-Google login and Email OTP are hidden: Circle only allows a PIN with the plain `userId=email` flow, so OTP
-would mean losing the PIN - **never propose turning Email OTP on**. Sending to your own wallet is blocked in
+Google login and Circle's Email-OTP auth mode are hidden: Circle only allows a PIN with the plain `userId=email`
+flow, so CIRCLE's OTP would mean losing the PIN - **never turn Circle's Email OTP on**. (A verification code sent by
+OUR server before asking Circle for a token is a different thing and keeps the PIN - see MAINNET-AUDIT C1.) Sending to your own wallet is blocked in
 PasteAddress, QRScanner and SendAmount (`isOwnAddress()`).
 
 ## 6. Swap (⚠️ real money)
