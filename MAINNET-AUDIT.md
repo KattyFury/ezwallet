@@ -30,7 +30,12 @@ Severity: 🔴 can lose customer or owner money · 🟠 can mislead people about
 
 ## ⛔ Blocker
 
-### B1. Circle user-controlled wallets do not (yet) support Arc mainnet
+### B1. Circle user-controlled wallets do not (yet) support Arc mainnet — ✅ RESOLVED 2026-09-27
+**Update:** Circle now lists `Arc (ARC / ARC-TESTNET)` for user-controlled wallets (EOA + SCA), and a LIVE key
+confirmed it: `POST /v1/w3s/user/initialize` with `blockchains:["ARC"]` → 201 + challengeId (made-up chain → 400,
+code 156027). Still open for swap (v1.1): `@circle-fin/adapter-circle-wallets@1.8.0` maps only `ARC-TESTNET`.
+Original finding kept below.
+
 Circle's supported-blockchains page lists only `ARC-TESTNET`, and Circle's own
 `@circle-fin/adapter-circle-wallets@1.8.0` maps only `'ARC-TESTNET'` to a chain (no Arc mainnet entry). The PIN
 wallet is the core of ezwallet, so **mainnet cannot launch until Circle ships native Arc mainnet support**.

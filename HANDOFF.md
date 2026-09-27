@@ -9,9 +9,22 @@
 
 ---
 
+## ▶▶ LATEST (2026-09-27, later session) - THIS REPO IS BEING RETIRED
+
+- **Owner decision: one repo for both networks.** Work moves to `KattyFury/ezwallet`
+  (`D:\Files\Claude\Build on Arc\ezwallet`) - read ITS `HANDOFF.md` "LATEST" section for the full plan. This repo
+  will be ARCHIVED (not deleted) once testnet.ezwallet.cash deploys from `KattyFury/ezwallet`. Until then only
+  urgent fixes here, and every fix must also land in `KattyFury/ezwallet`.
+- **`feature/otp` MERGED to `main` and live** (commit `f60b1b9`): the owner tested on a phone (code email arrives,
+  Circle's PIN + security-question setup follows). Production already had `AUTH_SECRET`, `RESEND_API_KEY` and KV
+  `EZ_SYNC`; after deploy `/api/session` without an auth token returns `AUTH_REQUIRED`. Every tester signs in once
+  more with a code; the code is then remembered for 30 days (fixed from verification, not sliding).
+- **B1 resolved** (Circle PIN wallets on Arc mainnet, confirmed with a LIVE key) - details in the ezwallet repo.
+- Secrets now live in `D:\Files\Claude\.secrets\keys.env` (outside every repo); `.env.txt` here is a backup.
+
 ## ▶ WHERE WE ARE (end of session 2026-09-27) - read this first
 
-**Owner decision:** keep building on TESTNET; mainnet waits for Circle (MAINNET-AUDIT.md B1).
+**Owner decision (superseded - see LATEST):** keep building on TESTNET; mainnet waits for Circle (MAINNET-AUDIT.md B1).
 
 **Live now on testnet.ezwallet.cash (`main`, Pages project `ezwallet-testnet`):** the money-safety fixes C2 (network
 config + `/api/health`), H1/H6 (exact amounts, checksum addresses), C3/C4 (refId-tracked sends/swaps, no double
