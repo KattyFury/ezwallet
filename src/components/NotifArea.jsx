@@ -129,7 +129,7 @@ function HintBlock({ lines }) {
     // line. Tightened to 6px/12px + gap 3 so 4 lines fit. Do NOT loosen it again without removing a line.
     // 2026-09-10: WHITE card with NO border, radius 16, 13px, BLACK body text with semibold keywords -
     // node 1:356/1:361. The blue border + all-blue 17px text was the older design.
-    <div style={{ background: 'var(--color-white)', border: 'none', borderRadius: 16, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2, fontSize: NOTIF_FS, color: 'var(--color-content)', textAlign: 'left', flexShrink: 0 }}>
+    <div style={{ background: 'var(--color-white)', border: 'none', borderRadius: 8, padding: '6px 10px', display: 'flex', flexDirection: 'column', gap: 2, fontSize: NOTIF_FS, color: 'var(--color-content)', textAlign: 'left', flexShrink: 0 }}>
       <div style={{ minWidth: 0, lineHeight: 1.35, color: 'var(--color-error)', fontWeight: 'var(--fw-semibold)' }}>
         Current Available Network: Arc Testnet
       </div>
@@ -233,7 +233,7 @@ export default function NotifArea({ hints = [], warning = null, pollMs = 15000 }
             // MINIMUM height 40 = exactly the "Send" button in Contacts.jsx; a long sentence makes the row taller
             // (the hardcoded `height: 40` was dropped 08-25, see the ROW_TEXT note). 8px vertical padding keeps a single
             // line at exactly 40px as before.
-            <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: 'var(--color-white)', borderRadius: 16, minHeight: 40, padding: '3px 10px', flexShrink: 0, cursor: clickable ? 'pointer' : 'default' }}>
+            <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, background: 'var(--color-white)', borderRadius: 8, minHeight: 40, padding: '3px 10px', flexShrink: 0, cursor: clickable ? 'pointer' : 'default' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: NOTIF_FS, color: s.color, ...ROW_TEXT }}>
                 <Icon name={s.icon} size={19.5} color={s.color} style={{ flexShrink: 0 }} />
                 <span style={ROW_TEXT}>{n.text}</span>

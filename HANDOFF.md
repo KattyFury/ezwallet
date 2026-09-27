@@ -12,7 +12,7 @@ parent folder and are **separate, unrelated git repos** – never let one end up
 - **Exactly 3 greys.** Background/box `#D2DCE6` (`--color-card`; `--color-surface`, `--color-gray`,
   `--color-faint` are now aliases of it) · disabled/placeholder text + all hairlines `#94A3B8`
   (`--color-muted`) · secondary text `#667085` (`--color-muted-2`). Do not add a fourth.
-- **Radius:** every grey box = **8px**; every button = **16px or fully rounded** (pill/circle).
+- **Radius:** every grey box = **8px** (and the white boxes inside one: token rows, notifications, hint block); every button = **16px or fully rounded** (pill/circle).
 - **Thin lines:** always **0.5px `#94A3B8`**.
 - **Full cards must be `position: absolute`** (left 6.41%, top 10.19dvh, 87.18% × 69.43dvh). A plain
   grid item (`gridRow`, `.row-2-8`) paints UNDER the absolute `ScreenSheet` and vanishes – this hid
