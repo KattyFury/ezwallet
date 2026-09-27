@@ -1,7 +1,7 @@
 # HANDOFF – ezwallet-testnet
 
 **Updated:** 2026-09-27 · **Repo:** `KattyFury/ezwallet-testnet` · **Local:** `D:\Files\Claude\Build on Arc\ezwallet-testnet`
-**Live:** https://testnet.ezwallet.cash (Cloudflare Pages project `ezwallet`, auto-deploys from `main`)
+**Live:** https://testnet.ezwallet.cash (Cloudflare Pages project `ezwallet-testnet`, auto-deploys from `main`)
 
 > **Start of every session:** read `CLAUDE.md` (how to work with the user) and this file, then `git pull`.
 > Full history - every dated decision, round-trip and the pre-2026-09-27 version of this file - lives in
@@ -113,12 +113,12 @@ See `MAINNET-AUDIT.md` (copied from the mainnet repo) for the full findings.
   The Circle SDK does not run on localhost → PIN/login/swap only testable on a deploy.
 - **Mock mode:** `npm run mock` - fake wallet/balances/history, skips Login/PIN, never reaches production.
   Playwright: `npm i --no-save playwright && npx playwright install chromium`.
-- **Pages ↔ GitHub link - ⚠️ CORRECTED 2026-09-27:** the project is triggered by repo **id** (`1271272056` =
-  `ezwallet-testnet`) but CLONES by the stored **name** `KattyFury/ezwallet` - which became the new MAINNET repo.
-  Since then every testnet deploy fails at `clone_repo` (the commits are not in that repo); the live site kept
-  serving the last good build (`00885e8`). The earlier note "do not reconnect" was WRONG. Fix = in the Cloudflare
-  dashboard, Workers & Pages → ezwallet → Settings → Build → Git repository → reconnect to
-  `KattyFury/ezwallet-testnet` (the API ignores `repo_name` changes).
+- **Pages projects (2026-09-27):** this repo deploys through the NEW project **`ezwallet-testnet`**
+  (GitHub `KattyFury/ezwallet-testnet`, created via API; env `API_KEY`/`KIT_KEY` secrets, `NETWORK`/`VITE_NETWORK`
+  = testnet, KV `EZ_SYNC` = the same namespace as before, so backups are intact). `testnet.ezwallet.cash` moved to
+  it (DNS CNAME → `ezwallet-testnet.pages.dev`). The OLD project `ezwallet` can no longer deploy (it clones by the
+  name `KattyFury/ezwallet`, now the mainnet repo) - it only still holds `ezwallet.cash` + `www`, whose frozen
+  build redirects to testnet. Retire it once the apex goes to mainnet.
 - **CI:** `.github/workflows/ci.yml` runs `npm test` + `npm run build` on every push to `main`.
 - **KV backup of contacts + QR library:** `functions/api/sync.js` + `src/sync.js`, binding `EZ_SYNC`.
   localStorage is the source of truth; newest edit wins (`ez_sync_at_<addr>`); auth = a PIN signature over a
