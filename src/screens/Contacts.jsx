@@ -167,10 +167,10 @@ export default function Contacts() {
                   <div style={{ fontSize: 'var(--fs-h2)', fontWeight: 'var(--fw-medium)' }}>{c.name}</div>
                   <button onClick={() => copyAddr(c)}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}>
-                    <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted)' }}>
+                    <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)' }}>
                       {shortenAddr(c.address)}
                     </span>
-                    <Icon name={copiedId === c.id ? 'check' : 'copy'} size="var(--is-caption)" color={copiedId === c.id ? 'var(--color-primary)' : 'var(--color-muted)'} />
+                    <Icon name={copiedId === c.id ? 'check' : 'copy'} size="var(--is-caption)" color={copiedId === c.id ? 'var(--color-primary)' : 'var(--color-muted-2)'} />
                   </button>
                 </div>
                 <button onClick={() => navigate('SendAmount', { address: c.address, name: c.name, back: 'Contacts' })}
