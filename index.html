@@ -51,7 +51,11 @@
     <link rel="apple-touch-icon" href="/icon.png?v=6" />
   </head>
   <body>
-    <div id="root"></div>
+    <!-- SPLASH, painted by the HTML itself (fix 2026-09-27): Splash.jsx was never shown in the real app -
+         only reachable via ?screen=Splash - so launch showed a blank white page while the JS loaded. This
+         markup is Splash.jsx's exact output (same .screen/.logo-lockup classes, same GRADIENT as src/brandBg.js);
+         React replaces it on first render, and App.jsx keeps showing <Splash/> until the first screen is loaded. -->
+    <div id="root"><div class="screen" style="background: linear-gradient(204.80096509205717deg, #FFFFFF 50%, #0B53BF 100%)"><img class="logo-lockup" src="/design/logo.svg" alt="ezwallet" /></div></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

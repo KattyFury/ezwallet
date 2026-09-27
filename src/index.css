@@ -21,7 +21,7 @@
      jobs - do not re-merge them without asking. */
   --color-muted:      #94A3B8;   /* general secondary text: nav-inactive labels/icons, input placeholders */
   --color-muted-2:    #667085;   /* the "Label:" PREFIX word only, inside a meta/value line (e.g. "Available:", "Fee:", "Balance:", "Rate:" - the value itself after it is --color-brand, semibold). */
-  --color-faint:      #F1F5F9;   /* hidden icons / placeholders - consolidated into the box/input grey (see --color-surface below) */
+  --color-faint:      var(--color-card);   /* was #F1F5F9 - merged into the ONE app grey (user decision 2026-09-27) */   /* hidden icons / placeholders - consolidated into the box/input grey (see --color-surface below) */
 
   /* ── FUNCTIONAL COLOURS ── */
   --color-primary:      #14AE5C; /* guideline "tích cực" - active, money RECEIVED / positive */
@@ -42,7 +42,7 @@
   --color-warning:      #E8B931; /* guideline "warning" */
   --color-warning-soft: #FBF4E0; /* pale tint of --color-warning (15% mixed into white) */
   --color-white:        #FFFFFF;
-  --color-gray:         #E3E3E3; /* borders / dividers / NavBar's flat inactive background - NOT the recessed-box colour below, kept grey on purpose */
+  --color-gray:         var(--color-card);   /* was #E3E3E3 - merged into the ONE app grey (user decision 2026-09-27) */ /* borders / dividers / NavBar's flat inactive background - NOT the recessed-box colour below, kept grey on purpose */
   /* RECESSED ("lõm xuống") BOX FILL - UPDATED 2026-09-10 to #E1E7ED, matching BRAND-GUIDELINE.md's
      "Surface / input / card" value (rewritten 2026-09-09) and confirmed pixel-for-pixel against the
      "Sign in with email" input box in the current Figma file (`GxgsMU6HAYqolckzvPWXp1`). This is the

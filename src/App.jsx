@@ -1,4 +1,4 @@
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { NavContext } from './nav'
 import { bootTarget, shouldOfferInstall } from './boot'
 import ErrorBoundary from './components/ErrorBoundary'
@@ -9,7 +9,9 @@ import ErrorBoundary from './components/ErrorBoundary'
 // The heaviest parts were what the first screen does NOT need: jsQR 130KB (scanner only), qrcode.react (QR screens only).
 // lazy() → one file per screen, downloaded only when the user actually opens it.
 const AddToHome   = lazy(() => import('./screens/AddToHome'))
-const Splash      = lazy(() => import('./screens/Splash'))
+// Splash is imported EAGERLY (not lazy): it is the Suspense fallback while the FIRST screen loads (see below),
+// so it must already be in the main bundle - a lazy fallback would itself suspend.
+import Splash from './screens/Splash'
 const Login       = lazy(() => import('./screens/Login'))
 const HomeSend    = lazy(() => import('./screens/HomeSend'))
 const HomeReceive = lazy(() => import('./screens/HomeReceive'))
@@ -67,7 +69,12 @@ export default function App() {
     return bootTarget()
   })
 
+  // true until the user's first navigation: while the app is still booting, the loading fallback is the
+  // Splash (matching the Splash index.html paints before any JS runs); afterwards it is the plain white frame.
+  const booting = useRef(true)
+
   function navigate(screen, params = {}) {
+    booting.current = false
     setNav({ screen, params })
   }
 
@@ -119,7 +126,8 @@ export default function App() {
         {/* fallback = an EMPTY WHITE SCREEN FRAME, deliberately WITHOUT a spinner or "loading" text: screens load in
             <100ms, and a spinner that blinks in and out is more annoying than nothing. Keeping the white background +
             the exact .screen frame → no layout jump when the real screen appears. */}
-        <Suspense fallback={<div className="screen" />}>
+        {/* While BOOTING the fallback is <Splash/> instead (fix 2026-09-27, see `booting`). */}
+        <Suspense fallback={booting.current ? <Splash /> : <div className="screen" />}>
           <Screen />
         </Suspense>
       </ErrorBoundary>

@@ -30,8 +30,10 @@ const ROW = { position: 'absolute', left: '9.23%', right: '9.23%', transform: 't
 // First centre 14.34dvh (121px, the middle of grid row 2), step 7.58dvh (64px). About.jsx uses the SAME
 // ROW_TOP so the two screens stay in sync - change both or neither.
 export const ROW_TOP = i => `${(14.34 + i * 7.58).toFixed(2)}dvh`
-const INFO = { fontSize: 18, color: 'var(--color-black)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', minWidth: 0 }
-const VALUE = { fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }
+// Info rows (Network/Email/Wallet address) use About.jsx's row style (user decision 2026-09-27): bold label
+// on the left, value on the right in 17px --color-muted-2 - same look as PIN/Language/Currency's labels.
+const LABEL = { fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', flexShrink: 0 }
+const VALUE = { fontSize: 17, color: 'var(--color-muted-2)', textAlign: 'right', minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
 
 function Picker({ title, options, active, onPick, onClose }) {
   return (
@@ -97,24 +99,24 @@ export default function Security() {
           currency are rows with a value chip. */}
       <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 16 }} />
 
-      <div style={{ ...ROW, top: ROW_TOP(0) }}><span style={INFO}>Network: <span style={VALUE}>Arc Testnet</span></span></div>
-      <div style={{ ...ROW, top: ROW_TOP(1) }}><span style={INFO}>Email: <span style={VALUE}>{email}</span></span></div>
-      <div style={{ ...ROW, top: ROW_TOP(2) }}><span style={INFO}>Wallet address: <span style={VALUE}>{shortAddr}</span></span></div>
+      <div style={{ ...ROW, top: ROW_TOP(0) }}><span style={LABEL}>Network</span><span style={VALUE}>Arc Testnet</span></div>
+      <div style={{ ...ROW, top: ROW_TOP(1) }}><span style={LABEL}>Email</span><span style={VALUE}>{email}</span></div>
+      <div style={{ ...ROW, top: ROW_TOP(2) }}><span style={LABEL}>Wallet address</span><span style={VALUE}>{shortAddr}</span></div>
 
       <div style={{ ...ROW, top: ROW_TOP(3) }}>
-        <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)' }}>PIN</span>
+        <span style={LABEL}>PIN</span>
         <button style={{ ...CHIP, color: pinStatus ? (pinErr ? 'var(--color-error)' : 'var(--color-primary)') : 'var(--color-black)' }} disabled={!!pinStatus} onClick={handleResetPin}>
           {pinStatus || 'Change PIN'}
         </button>
       </div>
       <div style={{ ...ROW, top: ROW_TOP(4) }}>
-        <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)' }}>Language</span>
+        <span style={LABEL}>Language</span>
         <button style={CHIP} onClick={() => setLangPicker(true)}>
           English<Icon name="down2" size={17} color="var(--color-brand)" />
         </button>
       </div>
       <div style={{ ...ROW, top: ROW_TOP(5) }}>
-        <span style={{ fontSize: 18, fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)' }}>Default currency</span>
+        <span style={LABEL}>Default currency</span>
         <button style={CHIP} onClick={() => setCurPicker(true)}>
           {CUR_SHORT[currency] || 'USD'}<Icon name="down2" size={17} color="var(--color-brand)" />
         </button>
