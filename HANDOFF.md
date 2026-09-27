@@ -113,10 +113,12 @@ See `MAINNET-AUDIT.md` (copied from the mainnet repo) for the full findings.
   The Circle SDK does not run on localhost → PIN/login/swap only testable on a deploy.
 - **Mock mode:** `npm run mock` - fake wallet/balances/history, skips Login/PIN, never reaches production.
   Playwright: `npm i --no-save playwright && npx playwright install chromium`.
-- **Pages ↔ GitHub link:** the project tracks the repo by **id `1271272056`**, not by name - after the
-  2026-09-27 rename the dashboard/API still SHOW `KattyFury/ezwallet` (a PATCH of `repo_name` is silently
-  ignored), but pushes to `ezwallet-testnet` keep deploying. Do not "fix" it by reconnecting to the name
-  `ezwallet` - that is now the MAINNET repo.
+- **Pages ↔ GitHub link - ⚠️ CORRECTED 2026-09-27:** the project is triggered by repo **id** (`1271272056` =
+  `ezwallet-testnet`) but CLONES by the stored **name** `KattyFury/ezwallet` - which became the new MAINNET repo.
+  Since then every testnet deploy fails at `clone_repo` (the commits are not in that repo); the live site kept
+  serving the last good build (`00885e8`). The earlier note "do not reconnect" was WRONG. Fix = in the Cloudflare
+  dashboard, Workers & Pages → ezwallet → Settings → Build → Git repository → reconnect to
+  `KattyFury/ezwallet-testnet` (the API ignores `repo_name` changes).
 - **CI:** `.github/workflows/ci.yml` runs `npm test` + `npm run build` on every push to `main`.
 - **KV backup of contacts + QR library:** `functions/api/sync.js` + `src/sync.js`, binding `EZ_SYNC`.
   localStorage is the source of truth; newest edit wins (`ez_sync_at_<addr>`); auth = a PIN signature over a
