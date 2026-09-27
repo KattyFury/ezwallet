@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNav } from '../nav'
 import { refreshSession, forceFreshSession, isTokenExpiredError, getSDK, executeChallenge, restorePinChallenge, circleErrorMessage } from '../circle'
 import logoLong from '../../design/logo.svg'
+import { GRADIENT } from '../brandBg'
 
 // FORGOT PIN - reached from Circle's own "Forgot PIN" button inside the PIN-entry iframe (wired in
 // PinGate.jsx via sdk.setOnForgotPin). Structured exactly like PinGate.jsx (open Circle's iframe
@@ -56,14 +57,14 @@ export default function ForgotPin() {
   // own centred, 56%-wide copy, the same drift PinGate had).
   if (busy) {
     return (
-      <div className="screen">
+      <div className="screen" style={{ background: GRADIENT }}>
         <img className="logo-lockup" src={logoLong} alt="ezwallet" />
       </div>
     )
   }
 
   return (
-    <div className="screen">
+    <div className="screen" style={{ background: GRADIENT }}>
       <img className="logo-lockup" src={logoLong} alt="ezwallet" />
       {error && (
         <div style={{ position: 'absolute', top: '34.72dvh', left: '6.41%', right: '6.41%', fontSize: 'var(--fs-content-1)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</div>

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNav } from '../nav'
 import { refreshSession, forceFreshSession, isTokenExpiredError, getSDK, executeChallenge, signMessageChallenge, circleErrorMessage } from '../circle'
 import logoLong from '../../design/logo.svg'
+import { GRADIENT } from '../brandBg'
 
 // WALLET UNLOCK using the Circle PIN itself. Entering the screen opens Circle's PIN iframe IMMEDIATELY - there is
 // NO separate project-made "Enter your PIN" screen (user decision 2026-07-15: drop the project PIN screen, tapping
@@ -81,9 +82,11 @@ export default function PinGate() {
   // ⚠️ THIS is the logo screen a returning user actually sees on every visit (ez_pin_ok lives in
   // sessionStorage, so App.jsx boots straight here, skipping Splash entirely) - it MUST use the shared
   // `.logo-lockup`, not a lockup of its own. See THE LOGO RULE in index.css.
+  // Same GRADIENT ground as Splash (fix 2026-09-27): it follows Splash directly on boot, and a white
+  // background here read as "the gradient flashes for 0.1s then goes white" (user report).
   if (busy) {
     return (
-      <div className="screen">
+      <div className="screen" style={{ background: GRADIENT }}>
         <img className="logo-lockup" src={logoLong} alt="ezwallet" />
       </div>
     )
@@ -92,7 +95,7 @@ export default function PinGate() {
   // The user cancelled / hit an error → let them retry (only now do the UI + button appear).
   // The error line sits at 34.72dvh - the same slot Login puts its slogan in, directly under the lockup.
   return (
-    <div className="screen">
+    <div className="screen" style={{ background: GRADIENT }}>
       <img className="logo-lockup" src={logoLong} alt="ezwallet" />
       {error && (
         <div style={{ position: 'absolute', top: '34.72dvh', left: '6.41%', right: '6.41%', fontSize: 'var(--fs-content-1)', color: 'var(--color-error)', textAlign: 'center' }}>{error}</div>
