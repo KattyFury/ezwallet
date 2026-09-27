@@ -9,7 +9,10 @@ import Icon from '../components/Icon'
 //
 // Geometry, straight off the node: four equal 97.5px columns, so the centres fall on 48.75 / 146.25 /
 // 243.75 / 341.25 of 390 - i.e. 12.5% / 37.5% / 62.5% / 87.5%. The 24px icon sits at y=783 and the 16px
-// semibold label at y=809. Active = black, inactive = the card grey #D2DCE6 (NOT the app's --color-muted:
+// semibold label at y=809.
+// ICON ONLY since 2026-09-27 (user decision: "ICON + TEXT thành ICON") - the label is gone from view but
+// kept as aria-label for screen readers; the icon is centred in row 10 at 30px (up from 24, filling the
+// space the label left). Active = black, inactive = the card grey #D2DCE6 (NOT the app's --color-muted:
 // on this gradient a muted slate would disappear into the blue).
 const TABS = [
   { id: 'ServiceHub',  label: 'Services', icon: 'hub',  left: '12.5%' },
@@ -38,13 +41,12 @@ export default function NavBar({ active }) {
               // row 10's centre is 809. Owning the row means the maths cannot drift again.
               position: 'absolute', left: tab.left, top: '91.71dvh', height: 70,
               transform: 'translateX(-50%)', width: '25%',
-              display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-              fontFamily: 'inherit', fontSize: 16, fontWeight: 'var(--fw-semibold)', color,
               WebkitTapHighlightColor: 'transparent',
-            }}>
-            <Icon name={tab.icon} size={24} color={color} />
-            {tab.label}
+            }}
+            aria-label={tab.label}>
+            <Icon name={tab.icon} size={30} color={color} />
           </button>
         )
       })}
