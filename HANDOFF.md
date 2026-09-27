@@ -8,10 +8,37 @@ name `ezwallet-mainnet`, and this header.
 
 > **Start of every session:** read `CLAUDE.md`, this file and **`MAINNET-SPEC.md`**, then `git pull`.
 
+## ▶▶ LATEST (2026-09-27, later session) - supersedes the section below where they disagree
+
+- **B1 RESOLVED - Circle PIN wallets work on Arc mainnet.** Circle's live supported-blockchains page now lists
+  `Arc (ARC / ARC-TESTNET)`, user-controlled EOA + SCA (the Circle docs MCP index was stale - always fetch the live
+  page). Confirmed with the owner's LIVE key: `POST /v1/w3s/user/initialize` `blockchains:["ARC"]` → 201 + challengeId
+  (control: a made-up chain → 400 code 156027). A probe user `ezwallet-probe-20260927` exists on the live account.
+- **Mainnet App ID:** `5ffb6dbb-ea01-5758-8780-2eb6b8cb2996` (testnet: `518fec6a-4680-5175-9de6-0810fb3dfd04`,
+  still hard-coded in `circle.js`, `Login.jsx`, `LoginEmailPopup.jsx` - must move into `src/network.js`).
+- **Kit key is one key for testnet AND mainnet** (developers.circle.com/w3s/keys). Still open for swap later:
+  `@circle-fin/adapter-circle-wallets@1.8.0` maps only `'ARC-TESTNET'`.
+- **Secrets now live in ONE file outside every repo:** `D:\Files\Claude\.secrets\keys.env`
+  (`CIRCLE_LIVE_API_KEY`, `CIRCLE_LIVE_APP_ID`, `CIRCLE_TEST_API_KEY`, `CIRCLE_KIT_KEY`, `CF_*`, `RESEND_API_KEY`,
+  `EZWALLET_TESTNET_AUTH_SECRET`, `EZWALLET_MAINNET_AUTH_SECRET`). The old per-repo `.env.txt` are kept as backup.
+- **Owner decisions:**
+  1. **Mainnet v1 = Send/Receive only.** Swap stays OFF on mainnet (C5/H2, paid RPC and the adapter question are
+     deferred to v1.1). "Build slowly."
+  2. **ONE repo:** this repo (`KattyFury/ezwallet`) serves both networks via `VITE_NETWORK`/`NETWORK`;
+     `KattyFury/ezwallet-testnet` will be ARCHIVED (not deleted) once testnet.ezwallet.cash deploys from here.
+- **Testnet `main` now has the email sign-in code (C1)** - merged + live 2026-09-27 (commit `f60b1b9` in the testnet
+  repo; `/api/session` without an auth token → `AUTH_REQUIRED`). Port it FROM the testnet repo `main`, not `wip/otp`.
+- **Plan, in order (ask the owner before each step):**
+  1. Bring the testnet repo's post-fork code (C1 email code) into this repo; per-network flags in `src/network.js`
+     (App ID, swap on/off, cirBTC, faucet); set mainnet `circleBlockchain: 'ARC'`.
+  2. New Pages project for TESTNET built from this repo (`NETWORK`/`VITE_NETWORK=testnet`), move
+     testnet.ezwallet.cash to it, verify testers see the same wallets; then archive the testnet repo.
+  3. Mainnet v1 work (spec on the owner's Desktop: `ezwallet-mainnet-v1-spec.md`) → Pages project for mainnet →
+     tiny-amount tests (≤ $1) → ezwallet.cash.
+
 ## ▶ WHERE WE ARE (end of session 2026-09-27) - read this first
 
-- **Mainnet is BLOCKED by Circle (MAINNET-AUDIT.md B1):** user-controlled (PIN) wallets do not list Arc mainnet;
-  owner decided: **no workaround**, wait for Circle. Development continues in `KattyFury/ezwallet-testnet`.
+- ~~**Mainnet is BLOCKED by Circle (MAINNET-AUDIT.md B1)**~~ - resolved, see LATEST above.
 - `main` here has the audit fixes C2, H1/H6, C3/C4 (the same code now runs on testnet). Branch `wip/otp` holds an
   EARLY server-only copy of the email-code work (C1); the finished, tested version lives on the testnet repo's
   `feature/otp` branch (it adds a KV-read fix, the client popup step and the pasted-code fix) - port FROM there.
