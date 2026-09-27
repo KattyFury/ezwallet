@@ -9,6 +9,44 @@
 
 ---
 
+## ▶ WHERE WE ARE (end of session 2026-09-27) - read this first
+
+**Owner decision:** keep building on TESTNET; mainnet waits for Circle (MAINNET-AUDIT.md B1).
+
+**Live now on testnet.ezwallet.cash (`main`, Pages project `ezwallet-testnet`):** the money-safety fixes C2 (network
+config + `/api/health`), H1/H6 (exact amounts, checksum addresses), C3/C4 (refId-tracked sends/swaps, no double
+send, receipts only after `COMPLETE`) - see §0b.
+
+**Waiting on the owner - branch `feature/otp` (C1, our own 6-digit email code before Circle's token), §0c on that
+branch:** preview https://feature-otp.ezwallet-testnet.pages.dev. The owner must test on a PHONE: email → code
+from `no-reply@ezwallet.cash` → Circle's PIN screen must still appear. Only then merge to `main` (every tester will
+have to sign in once more with a code). Explain the difference clearly if asked: Circle's Email-OTP mode removes
+the PIN; ours runs BEFORE Circle and keeps it (the old "PIN + OTP is impossible" answer was wrong in scope).
+
+**Next, in order (ask before each):**
+1. Merge `feature/otp` after the owner's phone test.
+2. Transaction emails (owner wants: received, sent, swap, PIN changed/restored) - postponed by the owner. Design
+   researched: Circle webhooks v2 (`transactions.inbound/outbound`, `challenges.*`), ECDSA_SHA_256 signature in
+   `X-Circle-Signature` (DER, base64) verified with the key from `/v2/notifications/publicKey/{X-Circle-Key-Id}` over
+   the RAW body; dedupe on `notificationId`; order not guaranteed. Map wallet→email and refId→details in KV at
+   send/login time; skip inbound legs whose source is the swap adapter. Webhook must be registered in the Circle
+   console by the owner.
+3. Remaining audit items: C5/H2 (swap intent validation + simulation - needs a paid RPC with eth_simulateV1;
+   quote vs executed price; 3% slippage), H3 (QR amount/token UX), H4 (label testnet shares "Arc Testnet").
+
+**Infra facts learned today:**
+- Pages project `ezwallet-testnet` (created via API) serves testnet.ezwallet.cash; the OLD project `ezwallet`
+  cannot deploy any more (clones by the name `KattyFury/ezwallet`, now the mainnet repo) - it only still holds
+  `ezwallet.cash` + `www` (frozen build that redirects to testnet).
+- Secrets on `ezwallet-testnet`: API_KEY, KIT_KEY, AUTH_SECRET, RESEND_API_KEY (+ plain NETWORK/VITE_NETWORK=testnet).
+  The local testnet `.env.txt` holds AUTH_SECRET and the shared Resend key (same Resend account as TapTip).
+- Resend: `ezwallet.cash` verified (DNS `resend._domainkey`, `send` MX+TXT, `rsend` CNAME).
+- The Cloudflare API token lacks Rules permission and cannot change a project's Git repo (API ignores it).
+  The Cloudflare Claude Code plugin (`cloudflare@cloudflare`, MCP `https://mcp.cloudflare.com/mcp`) was installed
+  2026-09-27 - its OAuth prompt appears on first use in a new session.
+
+---
+
 ## 0. What this repo is (after the 2026-09-27 fork)
 
 - **This is the Arc TESTNET build** of ezwallet - a stablecoin wallet for everyday people and older users
