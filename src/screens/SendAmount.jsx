@@ -12,6 +12,8 @@ import { amountHints, fmtAmountHint } from '../amountHint'
 import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
+import { NET } from '../clientNet'
+import { amountProblem, normalizeTyped } from '../money'
 
 // USD = the friendly label, what is sent = USDC (1:1). USDC/EURC/cirBTC send that exact token.
 // ⛔ VND TURNED OFF 2026-08-12 (user decision): the app runs English/USD while a scanned QR produced VND → 'VND' was
@@ -36,7 +38,8 @@ export default function SendAmount() {
   // NOT converted to USD). An old/unclear QR (e.g. 'VND') → default to USD.
   const qrCurrency = CURRENCIES.includes(params.currency) ? params.currency : null
   const [cur, setCur] = useState(qrCurrency || 'USD')
-  const [digits, setDigits] = useState(params.amount ? String(params.amount) : '')
+  // A prefilled amount (QR / back from Confirm) is only accepted if it is a clean decimal (qr.js already checks QRs).
+  const [digits, setDigits] = useState(params.amount && !amountProblem(String(params.amount), 8) ? String(params.amount) : '')
   // DEFAULT NOTE (user decision 07-20e): the user sets it once in the popup → every send prefills the memo with it
   // (as a real VALUE, not a faded placeholder). Tapping the field to type → the default note DISAPPEARS and typing is
   // free (noteTouched stops it being cleared again on later focus).
@@ -126,6 +129,10 @@ export default function SendAmount() {
     // VND has NO decimals - block the dot entirely ("50.5 dong" is meaningless).
     if (key === '.') { if (isVnd) return; setDigits(d => (d.includes('.') ? d : (d === '' ? '0.' : d + '.'))); return }
     if (digits.length >= 12) return
+    // No more decimal places than the token has (USDC/EURC 6, cirBTC 8) - the old keypad took any number and
+    // Confirm then sent toFixed(2) of it (MAINNET-AUDIT H1).
+    const frac = digits.split('.')[1]
+    if (frac !== undefined && frac.length >= (NET.tokens[effectiveToken(cur)]?.decimals ?? 6)) return
     if (digits === '0') { setDigits(key); return }
     setDigits(d => d + key)
   }
@@ -285,7 +292,7 @@ export default function SendAmount() {
       <div className="row10-dual">
         <button className="btn btn-secondary" onClick={() => navigate(back)}>Back</button>
         <button className="btn btn-primary" disabled={!canContinue}
-          onClick={() => navigate('SendConfirm', { address, name, amount, memo, currency: cur, tokenAmount, back })}>
+          onClick={() => navigate('SendConfirm', { address, name, amount, amountStr: normalizeTyped(digits), memo, currency: cur, tokenAmount, back })}>
           Continue
         </button>
       </div>

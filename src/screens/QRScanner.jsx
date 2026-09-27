@@ -9,6 +9,7 @@ import { parseQR } from '../qr'
 import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
+import { NET } from '../clientNet'
 
 export default function QRScanner() {
   const { navigate } = useNav()
@@ -126,7 +127,7 @@ export default function QRScanner() {
           it used to be glued to the old square. */}
       {!error && (
         <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: 'calc(49.05dvh + calc(16 * var(--u)))', fontSize: 'calc(16 * var(--u))', lineHeight: 'calc(20 * var(--u))', fontWeight: 'var(--fw-semibold)', textAlign: 'center', color: 'var(--color-error)' }}>
-          Current Available Network: Arc Testnet
+          Current Available Network: {NET.label}
         </div>
       )}
 

@@ -9,6 +9,10 @@
 // The wallet must already hold the tokenIn balance (e.g. 2 EURC) on Arc Testnet. KIT_KEY is read from .env.txt.
 import { readFileSync } from 'fs'
 import { simulateSwap } from './functions/api/_swapCore.js'
+import { getNetwork } from './src/network.js'
+
+// NETWORK=testnet|mainnet (no default). The public MAINNET RPC does not support eth_simulateV1.
+const net = getNetwork(process.env.NETWORK)
 
 const KIT_KEY = readFileSync('.env.txt', 'utf8').match(/^KIT_KEY=(.+)/m)?.[1]?.trim()
 if (!KIT_KEY) { console.error('❌ KIT_KEY not found in .env.txt'); process.exit(1) }
@@ -20,7 +24,7 @@ if (!walletAddress || !walletAddress.startsWith('0x')) {
 }
 
 console.log(`\nSimulating a swap of ${amountIn} ${tokenIn} → ${tokenOut} for wallet ${walletAddress} ...`)
-const out = await simulateSwap({ kitKey: KIT_KEY, tokenIn, tokenOut, walletAddress, amountIn })
+const out = await simulateSwap({ net, kitKey: KIT_KEY, tokenIn, tokenOut, walletAddress, amountIn })
 
 if (out.error) { console.error('\n❌ ERROR:', out.error, '\n', JSON.stringify(out.detail, null, 2)?.slice(0, 800)); process.exit(1) }
 

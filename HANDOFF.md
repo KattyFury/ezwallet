@@ -25,6 +25,20 @@ If something drifts from that, stop and ask the user.
 
 ---
 
+## 0b. Money-safety fixes ported from the mainnet repo (2026-09-27)
+
+The owner chose to keep building on TESTNET while Circle does not support Arc mainnet (MAINNET-AUDIT.md B1).
+The code fixes from `KattyFury/ezwallet` were applied here verbatim (code only, not docs):
+- **C2** `src/network.js` + `/api/health`: every address per network, fail-closed self-check. This repo runs
+  `NETWORK=testnet` - set on the Pages project (production + preview, plain text, 2026-09-27) as `NETWORK` (functions)
+  and `VITE_NETWORK` (build); `.env.production` also says testnet. **Without `NETWORK` every API returns 503.**
+- **H1/H6** `src/money.js`: amounts as exact strings (no toFixed(2)), EIP-55 address checksums.
+- **C3/C4** `src/txTracker.js`: refId-tracked sends/swaps, no double send, receipt only after `COMPLETE`.
+- Next: our own 6-digit email code before Circle's token (C1) - server side exists on the mainnet repo's
+  `wip/otp` branch. It must NOT go live here until email sending works (Resend) - otherwise nobody can log in.
+  Note: the Pages **preview** env already holds a `RESEND_API_KEY` secret (from the Privy branch era).
+See `MAINNET-AUDIT.md` (copied from the mainnet repo) for the full findings.
+
 ## 1. Open items (not built - ask before starting any of them)
 
 | Item | State |

@@ -4,9 +4,11 @@
 // Actions: estimate (a quote), simulate (verify with eth_simulateV1, no PIN and no cost),
 // execute (create a contractExecution challenge → the user signs with one PIN).
 import {
-  CIRCLE_API, TOKEN_ADDR, MULTICALL3FROM, toBase, fromBase,
+  CIRCLE_API, tokenOf, toBase, fromBase,
   fetchSwapIntent, buildSwapBatch, simulateSwap,
 } from './_swapCore.js'
+import { netFrom, netError } from './_net.js'
+import { amountProblem } from '../../src/money.js'
 
 const W3S_API = 'https://api.circle.com/v1/w3s'
 const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
@@ -14,23 +16,30 @@ const err = (msg, detail, status = 500) =>
   new Response(JSON.stringify({ error: msg, detail }), { status, headers: JSON_HEADERS })
 
 export async function onRequestPost(ctx) {
+  let net
+  try { net = netFrom(ctx) } catch (e) { return netError(e) }
   try {
     const apiKey = ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY
     const kitKey = ctx.env.KIT_KEY
     const body = await ctx.request.json()
-    const { action, userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn } = body
+    const { action, userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn, refId } = body
 
-    const fromAddr = TOKEN_ADDR[tokenIn]
-    const toAddr   = TOKEN_ADDR[tokenOut]
+    const fromAddr = tokenOf(net, tokenIn)?.address
+    const toAddr   = tokenOf(net, tokenOut)?.address
+    if (action === 'estimate' || action === 'simulate' || action === 'execute') {
+      if (!fromAddr || !toAddr) return err('unknown token', null, 400)
+      const problem = amountProblem(amountIn, net.tokens[tokenIn].decimals)
+      if (problem) return err(problem, null, 400)
+    }
 
     if (action === 'estimate') {
       if (!kitKey) return err('KIT_KEY not configured')
       if (!fromAddr || !toAddr) return err('unknown token', null, 400)
       const params = new URLSearchParams({
-        tokenInAddress: fromAddr, tokenInChain: 'Arc_Testnet',
-        tokenOutAddress: toAddr,  tokenOutChain: 'Arc_Testnet',
+        tokenInAddress: fromAddr, tokenInChain: net.kitChain,
+        tokenOutAddress: toAddr,  tokenOutChain: net.kitChain,
         fromAddress: walletAddress || '0x0000000000000000000000000000000000000001',
-        amount: toBase(amountIn, tokenIn).toString(), slippageBps: '300',
+        amount: toBase(net, amountIn, tokenIn).toString(), slippageBps: '300',
       })
       const res = await fetch(`${CIRCLE_API}/v1/stablecoinKits/quote?${params}`, {
         headers: { 'Authorization': `Bearer ${kitKey}` },
@@ -38,14 +47,14 @@ export async function onRequestPost(ctx) {
       const data = await res.json()
       if (!res.ok) return err(data?.message || `Circle API ${res.status}`, data)
       const q = data?.data?.quote || data?.quote || data?.data || data
-      const amountOut = q?.estimatedAmount ? fromBase(q.estimatedAmount, tokenOut) : null
+      const amountOut = q?.estimatedAmount ? fromBase(net, q.estimatedAmount, tokenOut) : null
       return new Response(JSON.stringify({ estimate: data?.data || data, amountOut }), { headers: JSON_HEADERS })
     }
 
     // The verify gate: only allow a swap when the wallet's tokenOut balance RISES (HANDOFF: never trust tx status=1).
     if (action === 'simulate') {
       if (!kitKey) return err('KIT_KEY not configured')
-      const out = await simulateSwap({ kitKey, tokenIn, tokenOut, walletAddress, amountIn })
+      const out = await simulateSwap({ net, kitKey, tokenIn, tokenOut, walletAddress, amountIn })
       if (out.error) return err(out.error, out.detail, 400)
       return new Response(JSON.stringify(out), { headers: JSON_HEADERS })
     }
@@ -54,10 +63,11 @@ export async function onRequestPost(ctx) {
       if (!userToken || !walletId || !walletAddress || !fromAddr || !toAddr) {
         return err('missing params', null, 400)
       }
-      const amountBase = toBase(amountIn, tokenIn)
-      const intent = await fetchSwapIntent(kitKey, fromAddr, toAddr, walletAddress, amountBase)
+      if (!refId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(refId)) return err('refId (uuid) required', null, 400)   // MAINNET-AUDIT C3
+      const amountBase = toBase(net, amountIn, tokenIn)
+      const intent = await fetchSwapIntent(net, kitKey, fromAddr, toAddr, walletAddress, amountBase)
       if (!intent.ok) return err(`Stablecoin Kit ${intent.status}: ${intent.data?.message || 'swap failed'}`, intent.data)
-      const built = buildSwapBatch(intent.data, fromAddr, amountBase)
+      const built = buildSwapBatch(net, intent.data, fromAddr, amountBase)
       if (built.error) return err(built.error, built.swapData)
 
       const txRes = await fetch(`${W3S_API}/user/transactions/contractExecution`, {
@@ -65,8 +75,8 @@ export async function onRequestPost(ctx) {
         headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'X-User-Token': userToken },
         body: JSON.stringify({
           idempotencyKey: crypto.randomUUID(),
-          walletId, contractAddress: MULTICALL3FROM, callData: built.batchData,
-          feeLevel: 'MEDIUM',
+          walletId, contractAddress: net.contracts.multicall3From, callData: built.batchData,
+          feeLevel: 'MEDIUM', refId,
         }),
       })
       const txData = await txRes.json()
@@ -76,7 +86,7 @@ export async function onRequestPost(ctx) {
         const msg = `${txData?.message || txData?.error?.message || 'no challengeId'} (HTTP ${txRes.status}${txData?.code ? `, code ${txData.code}` : ''})`
         return err(msg, txData)
       }
-      const amountOut = built.estOut ? fromBase(built.estOut, tokenOut) : null
+      const amountOut = built.estOut ? fromBase(net, built.estOut, tokenOut) : null
       return new Response(JSON.stringify({ challengeId, batched: true, amountOut }), { headers: JSON_HEADERS })
     }
 

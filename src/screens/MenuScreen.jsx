@@ -6,6 +6,7 @@ import { getTokenBalances, cachedBalances } from '../chain'
 import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
 import { GRADIENT } from '../brandBg'
+import { NET } from '../clientNet'
 
 // ⛔ 'Service Hub' NOT HERE - it is already TAB 1 of the NavBar (unchanged rule from before the redesign).
 //
@@ -93,7 +94,7 @@ export default function MenuScreen() {
       }}>
         <p style={{ margin: 0, fontSize: 'calc(18 * var(--u))', lineHeight: 'calc(32 * var(--u))', color: 'var(--color-black)' }}>
           Email: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{email}</span><br />
-          Network: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>Arc Testnet</span><br />
+          Network: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{NET.label}</span><br />
           Wallet address: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{shortAddr}</span>
           <button onClick={copyAddr} aria-label="Copy wallet address"
             style={{ display: 'inline-flex', verticalAlign: 'middle', marginLeft: 'calc(8 * var(--u))', padding: 0, border: 'none', background: 'none', cursor: 'pointer' }}>
@@ -122,10 +123,12 @@ export default function MenuScreen() {
         <Icon name="up" size="calc(27 * var(--u))" color="var(--color-black)" />
         Withdraw
       </button>
-      <button className="btn" onClick={copyAddrThenFaucet} style={{
+      {/* Deposit = the TESTNET faucet. Mainnet has no faucet and on/off-ramp is out of scope (MAINNET-SPEC), so
+          there it is disabled exactly like Withdraw until the owner decides what "Deposit" means (2026-09-27). */}
+      <button className="btn" disabled={!NET.faucet} onClick={NET.faucet ? copyAddrThenFaucet : undefined} style={{
         position: 'absolute', left: '51.03%', top: '30.57dvh', width: '42.56%', height: 'calc(70 * var(--u))',
         background: 'var(--color-brand)', border: 'none', borderRadius: 16,
-        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', cursor: 'pointer',
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', cursor: NET.faucet ? 'pointer' : 'not-allowed', opacity: NET.faucet ? 1 : 0.4,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
       }}>

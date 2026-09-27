@@ -230,12 +230,12 @@ export async function estimateSwap({ walletAddress, tokenIn, tokenOut, amountIn 
 }
 
 // The userToken is passed in from refreshSession() (do not read localStorage directly - a 60' token may be dead)
-export async function executeSwap({ userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn }) {
+export async function executeSwap({ userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn, refId }) {
   if (MOCK) return { challengeId: 'mock-challenge', amountOut: mockSwapOut(tokenIn, tokenOut, amountIn) }
   const res = await fetch('/api/swap', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'execute', userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn }),
+    body: JSON.stringify({ action: 'execute', userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn, refId }),
   })
   return res.json()
 }

@@ -6,8 +6,10 @@ import { shortenAddr } from '../data'
 import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
+import { isValidAddress } from '../money'
 
-function isValid(addr) { return /^0x[0-9a-fA-F]{40}$/.test(addr.trim()) }
+// Format + EIP-55 checksum (MAINNET-AUDIT H6) - see src/money.js.
+function isValid(addr) { return isValidAddress(addr) }
 
 const V = 220 // circular image viewport
 

@@ -9,6 +9,7 @@ import * as wallet from './functions/api/wallet.js'
 import * as send from './functions/api/send.js'
 import * as swap from './functions/api/swap.js'
 import * as sync from './functions/api/sync.js'
+import * as health from './functions/api/health.js'
 
 const PORT = 8787
 
@@ -46,6 +47,8 @@ function loadEnv() {
   return env
 }
 const env = loadEnv()
+// Local dev talks to TESTNET unless .env.txt/.dev.vars sets NETWORK. Production has no default.
+env.NETWORK = env.NETWORK || 'testnet'
 if (!env.API_KEY) console.warn('[dev-server] API_KEY missing from .env.txt - any flow needing the Circle API will fail')
 
 const ROUTES = {
@@ -54,6 +57,7 @@ const ROUTES = {
   '/api/send': send,
   '/api/swap': swap,
   '/api/sync': sync,
+  '/api/health': health,
 }
 
 const server = createServer(async (req, res) => {
@@ -75,10 +79,12 @@ const server = createServer(async (req, res) => {
     const request = new Request(`http://localhost${req.url}`, {
       method: req.method,
       headers: req.headers,
-      body: body || undefined,
+      body: req.method === 'GET' ? undefined : (body || undefined),
     })
 
-    const r = await mod.onRequestPost({ request, env: { ...env, EZ_SYNC: fakeKV } })
+    const handler = req.method === 'GET' ? mod.onRequestGet : mod.onRequestPost
+    if (!handler) { res.writeHead(405).end('method not allowed'); return }
+    const r = await handler({ request, env: { ...env, EZ_SYNC: fakeKV } })
     const text = await r.text()
     res.writeHead(r.status, Object.fromEntries(r.headers))
     res.end(text)

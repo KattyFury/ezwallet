@@ -17,10 +17,15 @@
 // plenty of wallets implement it sloppily - they read the address and IGNORE `@chainId`, sending on whatever chain is
 // open. That is more dangerous than a bare address, because we would believe it was locked when it is not. Faced with
 // an unknown scheme, other wallets have only one option: refuse.
-export const ARC_CHAIN_ID = 5042002
+import { NET } from './clientNet'
+import { isValidAddress, amountProblem } from './money'
+
+// The chain id of THIS build's network (5042002 testnet / 5042 mainnet) - src/network.js.
+export const ARC_CHAIN_ID = NET.chainId
 
 // A valid EVM address (shared by both the drawing and the reading side)
-export const isEvmAddress = a => /^0x[0-9a-fA-F]{40}$/.test(String(a || '').trim())
+// Format + EIP-55 checksum (MAINNET-AUDIT H6) - see src/money.js.
+export const isEvmAddress = a => isValidAddress(a)
 
 // ── DRAW ──────────────────────────────────────────────────────────────────────────────────────
 // buildQR(addr)                                → 'ezwallet:0x…@5042002'
@@ -54,7 +59,11 @@ export function parseQR(text) {
   if (m) {
     const chain = m[2] ? Number(m[2]) : ARC_CHAIN_ID   // an old QR carries no chain → treat it as Arc
     if (chain !== ARC_CHAIN_ID) return { wrongChain: chain }
-    return { address: m[1], amount: m[3] ? parseFloat(m[3]) : null, currency: m[4] || 'USD' }
+    if (!isValidAddress(m[1])) return null   // a mistyped/forged mixed-case address fails its checksum
+    // The QR amount stays a STRING and must be a clean decimal with ≤ 6 places (USDC/EURC) - otherwise it is
+    // dropped and the user types the amount (MAINNET-AUDIT H1: "0.004" used to be sent as 0).
+    const amount = m[3] && !amountProblem(m[3], 6) ? m[3] : null
+    return { address: m[1], amount, currency: m[4] || 'USD' }
   }
 
   if (isEvmAddress(raw)) return { address: raw.trim(), amount: null, currency: 'USD' }

@@ -1,20 +1,15 @@
+import { netFrom, netError } from './_net.js'
+import { toBaseUnits, isValidAddress } from '../../src/money.js'
+
 const CIRCLE_API = 'https://api.circle.com/v1/w3s'
 
 // ERC-20 transfer ABI function signature
 const TRANSFER_SIG = 'transfer(address,uint256)'
 
-// Arc Transaction Memos - the predeployed Memo contract (testnet, from docs.arc.io)
-// memo(address target, bytes data, bytes32 memoId, bytes memoData) → forward call qua
-// The CallFrom precompile (preserving msg.sender) + emitting a Memo event on chain.
-const MEMO_CONTRACT = '0x5294E9927c3306DcBaDb03fe70b92e01cCede505'
+// Arc Transaction Memos - the predeployed Memo contract (address per network in src/network.js)
+// memo(address target, bytes data, bytes32 memoId, bytes memoData) → forward call through
+// the CallFrom precompile (preserving msg.sender) + emitting a Memo event on chain.
 const MEMO_SIG = 'memo(address,bytes,bytes32,bytes)'
-
-// Token contract addresses on Arc Testnet
-const TOKEN_CONTRACTS = {
-  USDC:   { address: '0x3600000000000000000000000000000000000000', decimals: 6 },
-  EURC:   { address: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', decimals: 6 },
-  cirBTC: { address: '0xf0c4a4ce82a5746abaad9425360ab04fbba432bf', decimals: 8 },
-}
 
 // Encode the ERC-20 transfer(address,uint256) calldata by hand (selector + 2 32-byte words)
 function encodeTransfer(to, amountRaw) {
@@ -47,20 +42,33 @@ async function circleReq(method, path, body, apiKey, userToken) {
 const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 
 export async function onRequestPost(ctx) {
+  let net
+  try { net = netFrom(ctx) } catch (e) { return netError(e) }
   const apiKey = ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY
-  const { userToken, walletId, toAddress, token, amountDecimal, memo, idempotencyKey } = await ctx.request.json()
+  const { userToken, walletId, toAddress, token, amountDecimal, memo, idempotencyKey, refId } = await ctx.request.json()
   // A fixed idempotencyKey from the client → Circle dedupes, so a repeated call does not create 2 transactions
   const idemKey = idempotencyKey || crypto.randomUUID()
 
+  // refId = the client's confirmation id (a UUID). Circle stores it on the transaction, so after the PIN the client
+  // can find THIS transaction and learn its real state - the basis of "no double send" (MAINNET-AUDIT C3/C4).
+  if (!refId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(refId)) {
+    return new Response(JSON.stringify({ error: 'refId (uuid) required' }), { status: 400, headers: JSON_HEADERS })
+  }
   if (!userToken || !walletId || !toAddress || !token || !amountDecimal) {
     return new Response(JSON.stringify({ error: 'missing params' }), { status: 400, headers: JSON_HEADERS })
   }
 
-  const tokenInfo = TOKEN_CONTRACTS[token]
+  const tokenInfo = net.tokens[token]   // a token this network does not list → rejected below
   if (!tokenInfo) return new Response(JSON.stringify({ error: 'unknown token' }), { status: 400, headers: JSON_HEADERS })
 
-  // Convert decimal amount to smallest unit (uint256)
-  const amountRaw = BigInt(Math.round(parseFloat(amountDecimal) * Math.pow(10, tokenInfo.decimals))).toString()
+  // MAINNET-AUDIT H1/H6: validate, never round. The memo path hand-encodes calldata, so a malformed address
+  // must never reach encodeTransfer (padStart would silently turn it into a DIFFERENT address).
+  if (!isValidAddress(toAddress)) {
+    return new Response(JSON.stringify({ error: 'invalid recipient address' }), { status: 400, headers: JSON_HEADERS })
+  }
+  let amountRaw
+  try { amountRaw = toBaseUnits(amountDecimal, tokenInfo.decimals).toString() }
+  catch (e) { return new Response(JSON.stringify({ error: e.message }), { status: 400, headers: JSON_HEADERS }) }
 
   const memoText = (memo || '').trim()
   let execBody
@@ -70,10 +78,11 @@ export async function onRequestPost(ctx) {
     execBody = {
       idempotencyKey: idemKey,
       walletId,
-      contractAddress: MEMO_CONTRACT,
+      contractAddress: net.contracts.memo,
       abiFunctionSignature: MEMO_SIG,
       abiParameters: [tokenInfo.address, transferData, randomMemoId(), utf8ToHex(memoText)],
       feeLevel: 'MEDIUM',
+      refId,
     }
   } else {
     // Without a note → a direct transfer (the path already verified on chain)
@@ -84,6 +93,7 @@ export async function onRequestPost(ctx) {
       abiFunctionSignature: TRANSFER_SIG,
       abiParameters: [toAddress, amountRaw],
       feeLevel: 'MEDIUM',
+      refId,
     }
   }
 

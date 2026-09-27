@@ -5,6 +5,7 @@ import { getNotifs, dismissNotif, addNotif } from '../notif'
 import { isFaucetAddress, EXPLORER } from '../chain'
 import { findContactName, acct } from '../store'
 import { fmtTokenAmount, shortenAddr } from '../data'
+import { NET } from '../clientNet'
 
 // Detect incoming money (poll ArcScan) → create a "received" notification (shared by every screen with a NotifArea)
 // Duplicate guard: each tx hash is announced ONCE (a set of announced hashes is stored).
@@ -131,7 +132,7 @@ function HintBlock({ lines }) {
     // node 1:356/1:361. The blue border + all-blue 17px text was the older design.
     <div style={{ background: 'var(--color-white)', border: 'none', borderRadius: 16, padding: 'calc(6 * var(--u)) calc(10 * var(--u))', display: 'flex', flexDirection: 'column', gap: 'calc(2 * var(--u))', fontSize: NOTIF_FS, color: 'var(--color-content)', textAlign: 'left', flexShrink: 0 }}>
       <div style={{ minWidth: 0, lineHeight: 1.35, color: 'var(--color-error)', fontWeight: 'var(--fw-semibold)' }}>
-        Current Available Network: Arc Testnet
+        Current Available Network: {NET.label}
       </div>
       {lines.map((h, i) => (
         <div key={i} style={{ minWidth: 0, lineHeight: 1.35 }}>

@@ -12,6 +12,7 @@ const AddToHome   = lazy(() => import('./screens/AddToHome'))
 // Splash is imported EAGERLY (not lazy): it is the Suspense fallback while the FIRST screen loads (see below),
 // so it must already be in the main bundle - a lazy fallback would itself suspend.
 import Splash from './screens/Splash'
+import { netHealth } from './clientNet'
 const Login       = lazy(() => import('./screens/Login'))
 const HomeSend    = lazy(() => import('./screens/HomeSend'))
 const HomeReceive = lazy(() => import('./screens/HomeReceive'))
@@ -82,6 +83,9 @@ export default function App() {
   // "jumps up". Every input in this app is deliberately placed in the TOP HALF (above the keyboard area),
   // so we pin the page scroll at 0 → the field stays visible and the screen does not jump. (Only the PAGE
   // scroll is pinned; inner scrolling lists - overflow:auto in Contacts/History - are unaffected.)
+  // Start the network self-check at boot so it is already answered by the time anyone sends (clientNet.js).
+  useEffect(() => { netHealth() }, [])
+
   useEffect(() => {
     const lock = () => { if (window.scrollY !== 0) window.scrollTo(0, 0) }
     window.addEventListener('scroll', lock, { passive: true })

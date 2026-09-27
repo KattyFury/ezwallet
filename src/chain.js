@@ -5,6 +5,7 @@ import { MOCK, MOCK_AMOUNTS, MOCK_RATES, MOCK_CHANGE_24H } from './mock'
 // SavedQRList - can use it without pulling all of viem into their chunk. ONE source of truth: changing chains means
 // editing exactly one place over there, and this file follows.
 import { ARC_CHAIN_ID } from './qr'
+import { NET } from './clientNet'
 
 // The standard Multicall3 is already deployed on Arc Testnet (Arc docs → Network → Contract addresses:
 // "Aggregates multiple read calls into a single call for efficient data retrieval").
@@ -13,15 +14,16 @@ import { ARC_CHAIN_ID } from './qr'
 // from testnet.arcscan.app to explorer.testnet.arc.io. The old host answers 301 WITHOUT CORS headers, so
 // every browser fetch() to it failed outright ("Failed to fetch", measured from ezwallet.cash) - History
 // sat on "Loading..." forever and incoming-money notifications stopped. Call this host directly.
-export const EXPLORER = 'https://explorer.testnet.arc.io'
+export const EXPLORER = NET.explorer
 
+// Name kept (`arcTestnet`) to avoid touching every import - it is THIS build's Arc chain, testnet or mainnet.
 export const arcTestnet = defineChain({
   id: ARC_CHAIN_ID,
-  name: 'Arc Testnet',
+  name: NET.label,
   nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
-  rpcUrls: { default: { http: ['https://rpc.testnet.arc.network'] } },
-  blockExplorers: { default: { name: 'ArcScan', url: EXPLORER } },
-  contracts: { multicall3: { address: '0xcA11bde05977b3631167028862bE2a173976CA11' } },
+  rpcUrls: { default: { http: [NET.rpc] } },
+  blockExplorers: { default: { name: 'Arc Explorer', url: EXPLORER } },
+  contracts: { multicall3: { address: NET.contracts.multicall3 } },
 })
 
 export const publicClient = createPublicClient({
@@ -36,11 +38,14 @@ const ERC20_ABI = [
 // PRICES IN USD (the app's unit of account). cgId: the live USD price from CoinGecko; usdRate: the offline fallback
 // (USD per unit). USDC is ALWAYS pinned to 1 (it IS the dollar) → stablecoins show exactly 1:1, without the old
 // "$5"→"$4.99" drift (which came from routing through VND + CoinGecko noise).
-export const TOKENS = [
-  { symbol: 'USDC',   address: '0x3600000000000000000000000000000000000000', decimals: 6, color: '#2775CA', cgId: 'usd-coin',  usdRate: 1 },
-  { symbol: 'EURC',   address: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', decimals: 6, color: '#1A56DB', cgId: 'euro-coin', usdRate: 1.08 },
-  { symbol: 'cirBTC', address: '0xf0c4a4ce82a5746abaad9425360ab04fbba432bf', decimals: 8, color: '#F7931A', cgId: 'bitcoin',   usdRate: 65000 },
-]
+// Display-only metadata per symbol. Addresses/decimals come from the network config, so a token the network
+// does not list (e.g. cirBTC on mainnet v1) simply does not exist in this build.
+const TOKEN_UI = {
+  USDC:   { color: '#2775CA', cgId: 'usd-coin',  usdRate: 1 },
+  EURC:   { color: '#1A56DB', cgId: 'euro-coin', usdRate: 1.08 },
+  cirBTC: { color: '#F7931A', cgId: 'bitcoin',   usdRate: 65000 },
+}
+export const TOKENS = Object.entries(NET.tokens).map(([symbol, t]) => ({ symbol, address: t.address, decimals: t.decimals, ...TOKEN_UI[symbol] }))
 
 // ── CIRCLE FAUCET ADDRESSES on Arc Testnet ──
 // Money from the faucet must read "Faucet successful", NOT "Received … from 0xd4c0…daae" (an older person seeing an
@@ -61,6 +66,7 @@ const FAUCET_ADDRESSES = new Set([
   '0xd4c0b787aa2ff9eb751bb515c877ebbf2daddaae',   //  88 wallets
 ])
 export function isFaucetAddress(addr) {
+  if (!NET.faucet) return false   // mainnet has no faucet; these are TESTNET faucet addresses
   return !!addr && FAUCET_ADDRESSES.has(addr.toLowerCase())
 }
 
@@ -208,7 +214,7 @@ export async function getTokenInfo(addr, symbol = 'USDC') {
 }
 
 // Read the memo (Arc Transaction Memos) of one transaction from the on-chain Memo event → text
-const MEMO_CONTRACT = '0x5294E9927c3306DcBaDb03fe70b92e01cCede505'
+const MEMO_CONTRACT = NET.contracts.memo
 const memoEventAbi = parseAbiItem('event Memo(address indexed sender, address indexed target, bytes32 callDataHash, bytes32 indexed memoId, bytes memo, uint256 memoIndex)')
 // ── MEMOS: REMEMBER THEM FOREVER + QUEUE THEM, DO NOT FIRE ALL AT ONCE (user decision 07-31 "stop spamming") ──
 // Each memo is its own receipt read. The History screen used to fire 30 of them AT ONCE on every open

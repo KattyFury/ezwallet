@@ -8,6 +8,7 @@ import { loadSavedQRs, saveSavedQRs } from '../store'
 import { buildQR } from '../qr'
 import ScreenSheet from '../components/ScreenSheet'
 import { GRADIENT } from '../brandBg'
+import { NET } from '../clientNet'
 
 export default function ShowQR() {
   const { navigate, params } = useNav()
@@ -63,7 +64,7 @@ export default function ShowQR() {
           pass, ONE line only - "Have the sender scan this code" is gone, Figma draws just the network
           line): caption top-anchored 43.32dvh, amount centred 50dvh, 48px semibold brand blue. */}
       <div style={{ position: 'absolute', left: '50%', top: '43.32dvh', transform: 'translateX(-50%)', width: 'calc(340 * var(--u))', fontSize: 'calc(14 * var(--u))', fontWeight: 'var(--fw-semibold)', textAlign: 'center', color: 'var(--color-error)' }}>
-        Current Available Network: Arc Testnet
+        Current Available Network: {NET.label}
       </div>
       <span className="num" style={{ position: 'absolute', left: '50%', top: '50dvh', transform: 'translate(-50%, -50%)', fontSize: 'calc(48 * var(--u))', fontWeight: 'var(--fw-semibold)', lineHeight: 1, color: 'var(--color-brand)', whiteSpace: 'nowrap' }}>{amountText}</span>
 

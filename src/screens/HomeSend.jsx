@@ -9,6 +9,7 @@ import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates } from '
 import { ensureWalletAddress } from '../circle'
 import NotifArea, { NOTIF_FS } from '../components/NotifArea'
 import { GRADIENT } from '../brandBg'
+import { NET } from '../clientNet'
 
 // USDC (left) and $98.59 (right) must share the SAME font and the SAME colour - one shared style object
 // so they cannot drift apart (rather than two declarations where it is easy to change only one).
@@ -226,14 +227,18 @@ export default function HomeSend() {
             { label: 'Contacts', desc: 'Save people you send to often' },
           ]}
           warning={
-            !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) < 20 ? (
-              <div onClick={() => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } localStorage.setItem('ez_faucet_pending', String(Date.now())); window.open('https://faucet.circle.com/', '_blank') }}
+            // Testnet: warn under 20 USDC and link the faucet. Mainnet has no faucet and gas costs < $0.01, so
+            // warn only under the 1 USDC the app keeps back for fees - and show no link (2026-09-27).
+            !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) < (NET.faucet ? 20 : 1) ? (
+              <div onClick={NET.faucet ? () => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } localStorage.setItem('ez_faucet_pending', String(Date.now())); window.open('https://faucet.circle.com/', '_blank') } : undefined}
                 style={{ width: '100%', background: 'var(--color-white)', borderRadius: 16, padding: 'calc(6 * var(--u)) calc(10 * var(--u))', display: 'flex', flexDirection: 'column', gap: 'calc(2 * var(--u))', cursor: 'pointer', fontSize: NOTIF_FS, color: 'var(--color-warning)', fontWeight: 'var(--fw-semibold)' }}>
                 <span style={{ minWidth: 0, lineHeight: 1.35 }}>Out of USDC for transaction fees</span>
-                <span style={{ minWidth: 0, lineHeight: 1.35 }}>
-                  {'Tap to get testnet USDC from'}{' '}
-                  <span style={{ textDecoration: 'underline' }}>Faucet</span>
-                </span>
+                {NET.faucet && (
+                  <span style={{ minWidth: 0, lineHeight: 1.35 }}>
+                    {'Tap to get testnet USDC from'}{' '}
+                    <span style={{ textDecoration: 'underline' }}>Faucet</span>
+                  </span>
+                )}
               </div>
             ) : null
           }

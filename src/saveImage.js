@@ -1,4 +1,5 @@
 import logoLong from '../design/logo.svg'
+import { NET } from './clientNet'
 
 // ══ BRANDED QR IMAGE - shared by EVERY place that shares a QR (user decision 08-13) ══
 // Takes a bare QR canvas → returns a new canvas: QR + the words "Only Arc Testnet" + the ezwallet logo.
@@ -20,7 +21,7 @@ export async function brandedQrCanvas(qrCanvas) {
 
   x.textAlign = 'center'
   x.fillStyle = '#0B53BF'; x.font = '600 30px sans-serif'
-  x.fillText('Only Arc Testnet', W / 2, PAD + QR + 58)
+  x.fillText(`Only ${NET.label}`, W / 2, PAD + QR + 58)
 
   const lw = 168, lh = lw * 71 / 201   // logo.svg aspect ratio (viewBox 201×71), same as the receipt image
   const img = new Image()

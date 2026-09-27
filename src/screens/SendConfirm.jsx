@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
 import { getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency, shortenAddr } from '../data'
@@ -7,6 +7,8 @@ import { getSDK, executeChallenge, refreshSession, circleErrorMessage } from '..
 import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
+import { assertNetworkReady } from '../clientNet'
+import { newAttempt, getPending, clearPending, lookup, classify, waitFinal } from '../txTracker'
 
 // Currency symbols / token names use Barlow (--font-condensed); numbers stay Barlow via .num
 function Cur({ children }) {
@@ -16,7 +18,7 @@ function Cur({ children }) {
 export default function SendConfirm() {
   const { navigate, params } = useNav()
   // currency = 'USD' (the friendly label, USDC is sent) or a real token (USDC/EURC/cirBTC) - comes from SendAmount.
-  const { address, name, amount, memo, currency = 'USD' } = params
+  const { address, name, amount, amountStr, memo, currency = 'USD' } = params
   const [feeUsd, setFeeUsd] = useState(null)      // the real gas fee (USD, null = still calculating)
   // A separate rate for the FEE (USD per unit of the display currency - USDC:1, EURC:~1.08)
   const [feeRates, setFeeRates] = useState({ USDC: 1, EURC: 1.08, VND: 1 / 26300 })
@@ -40,10 +42,12 @@ export default function SendConfirm() {
   // time makes the number the user just saw ("≈ 19.00 USDC") differ from the one that ACTUALLY leaves the wallet.
   // People must get exactly what they confirmed.
   const sendUnits = currency === 'VND' ? (params.tokenAmount ?? 0) : amount
-  const sendAmountStr = token === 'cirBTC' ? sendUnits.toFixed(8) : sendUnits.toFixed(2)
-  const mainEl = currency === 'USD' ? <>{displaySymbol('USDC')}{amount}</>
+  // MAINNET-AUDIT H1: send EXACTLY the string the user typed/confirmed (validated again by the server) - the old
+  // toFixed(2) turned "0.004" into "0.00". VND is unreachable (see HANDOFF §4) and keeps its old conversion.
+  const sendAmountStr = currency === 'VND' ? sendUnits.toFixed(2) : (amountStr ?? String(amount))
+  const mainEl = currency === 'USD' ? <>{displaySymbol('USDC')}{sendAmountStr}</>
     : currency === 'VND' ? <>{amount.toLocaleString('vi-VN')} <Cur>₫</Cur></>
-    : <>{amount} <Cur>{currency}</Cur></>
+    : <>{sendAmountStr} <Cur>{currency}</Cur></>
 
   // Network fee in the DEFAULT CURRENCY from Settings (USDC/EURC/VND)
   const displayCur = getDisplayCurrency()
@@ -58,49 +62,109 @@ export default function SendConfirm() {
                    : fmtDisplay(feeUsd, displayCur, feeRates)
   }
 
+  // The attempt this screen created (refId + timestamps) - see src/txTracker.js.
+  const attemptRef = useRef(null)
+  const [status, setStatus] = useState('')        // the line under the card while working ("Checking…")
+
+  // A final, successful payment → lock the screen and show the receipt (only now - MAINNET-AUDIT C4).
+  function finishOk(tx) {
+    clearPending(attemptRef.current?.refId)
+    setDone(true)
+    navigate('SendReceipt', { address, name, amount, amountStr: sendAmountStr, memo, currency, tokenAmount: sendUnits, txHash: tx?.txHash || null, timestamp: Date.now() })
+  }
+  function fail(msg) {
+    setLoading(false); setStatus(''); setError(msg); addNotif(msg, 'error')
+  }
+  // The payment exists but is not final yet (or we could not ask) → NEVER offer a plain resend (MAINNET-AUDIT C3).
+  function stuck() {
+    setLoading(false); setStatus('')
+    setError('This payment is still being confirmed. Do NOT send it again - tap "Check again" in a moment, or look in Transaction history.')
+  }
+
   async function handleConfirm() {
     if (loading || done) return   // block repeat taps / duplicate sends
     setLoading(true); setError('')
-    // A NEW idempotencyKey on every tap → if the previous attempt was cancelled or failed, this one creates a CLEAN challenge.
-    // Duplicate sends are prevented by the loading flag (sending) + done (finished), NOT by a fixed idemKey.
-    const idempotencyKey = crypto.randomUUID()
     try {
+      // Refuse before any challenge exists if the server's network/contracts do not check out (MAINNET-AUDIT C2).
+      await assertNetworkReady()
+
+      // 1. Never start a payment while an earlier one's fate is unknown - this screen's retry, or one left
+      //    unresolved when the app was closed (MAINNET-AUDIT C3).
+      const prev = attemptRef.current || getPending()
+      if (prev) {
+        setStatus('Checking your previous payment…')
+        let r
+        try { r = classify(await lookup(prev)) } catch { return stuck() }
+        if (r === 'pending') {
+          const w = await waitFinal(prev, { timeoutMs: 30000 })
+          r = w.outcome === 'ok' ? 'ok' : w.outcome === 'failed' ? 'failed' : 'pending'
+          if (r === 'pending') return stuck()
+        }
+        if (r === 'ok' && prev === attemptRef.current) return finishOk(await lookup(prev).catch(() => null))
+        if (r === 'ok') {   // an EARLIER payment (another screen/session) went through - make them look first
+          clearPending(prev.refId)
+          return fail('Your previous payment went through. Check Transaction history before sending again.')
+        }
+        clearPending(prev.refId)   // 'failed' or never created → nothing left the wallet, safe to go on
+        attemptRef.current = null
+      }
+
+      // 2. A new attempt. Its refId is stored on the Circle transaction (server passes it through).
+      const attempt = newAttempt('send', { address, amount: sendAmountStr, token })
+      attemptRef.current = attempt
+      setStatus('Opening PIN confirmation…')
       // Refresh the userToken before sending - avoids "userToken had expired" when
       // the app has been open a while (Circle userTokens live ~1 hour).
       const { userToken, encryptionKey } = await refreshSession()
-      const walletId = localStorage.getItem('ez_wallet_id')
-
       const res = await fetch('/api/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          userToken, walletId,
-          toAddress: address,
-          token,
-          amountDecimal: sendAmountStr,
-          memo,
-          idempotencyKey,
+          userToken, walletId: attempt.walletId,
+          toAddress: address, token, amountDecimal: sendAmountStr, memo,
+          idempotencyKey: crypto.randomUUID(), refId: attempt.refId,
         }),
       })
       const data = await res.json()
-      if (data.error) throw new Error(data.error)
+      if (data.error) {
+        // No challenge → no transaction can exist. Safe to retry.
+        clearPending(attempt.refId); attemptRef.current = null
+        return fail(`Send failed: ${data.error}`)
+      }
 
-      // The user signs with their PIN through the W3S SDK. executeChallenge (circle.js) already handles it: a WRONG PIN
-      // → the iframe lets them retry; the RIGHT PIN → resolve → execution continues below (it does NOT throw out).
-      await executeChallenge(await getSDK(), userToken, encryptionKey, data.challengeId)
+      // 3. The PIN. A wrong PIN is retried inside Circle's iframe and never rejects (circle.js).
+      let signError = null
+      try {
+        await executeChallenge(await getSDK(), userToken, encryptionKey, data.challengeId)
+      } catch (e) {
+        if (e?.code === 155701) {   // the user closed the PIN screen → nothing was signed, back to Confirm silently
+          clearPending(attempt.refId); attemptRef.current = null
+          setLoading(false); setStatus('')
+          return
+        }
+        signError = e   // may or may not have been signed - FIND OUT below, never assume "failed"
+      }
 
-      setDone(true)   // signed successfully → lock the screen, no resending
-      navigate('SendReceipt', { address, name, amount, memo, currency, tokenAmount: sendUnits, timestamp: Date.now() })
+      // 4. The real outcome, from Circle's record of THIS transaction.
+      setStatus('Confirming on the network…')
+      const { outcome, tx } = await waitFinal(attempt, { timeoutMs: signError ? 30000 : 90000 })
+      if (outcome === 'ok') return finishOk(tx)
+      if (outcome === 'failed') {
+        clearPending(attempt.refId); attemptRef.current = null
+        return fail('The network rejected this payment - no money left your wallet. You can try again.')
+      }
+      if (outcome === 'none' && signError) {
+        // The PIN step broke before anything was signed (no transaction exists) → a genuine, retryable failure.
+        clearPending(attempt.refId); attemptRef.current = null
+        console.error('[SendConfirm] send failed:', signError)
+        return fail(`Send failed: ${circleErrorMessage(signError)}`)
+      }
+      return stuck()   // exists but not final, or Circle could not be asked - keep it blocked
     } catch (e) {
-      // From here only TERMINAL errors remain (PIN cancelled / token expired / network...) - NOT a wrong PIN
-      // (a wrong PIN is retried inside the iframe and never rejects). STAY on the confirm screen so they can tap send again.
-      setLoading(false)
-      if (e?.code === 155701) return   // the user cancelled the PIN themselves → stay silent, back to the confirm screen
       console.error('[SendConfirm] send failed:', e)
-      const reason = circleErrorMessage(e)
-      const msg = `Send failed: ${reason}`
-      setError(msg)
-      addNotif(msg, 'error')
+      // Anything unexpected while an attempt is open is treated as "unknown", not "failed".
+      if (attemptRef.current) return stuck()
+      fail(`Send failed: ${circleErrorMessage(e)}`)
     }
   }
 
@@ -167,7 +231,7 @@ export default function SendConfirm() {
           card's bottom edge (49.05dvh) now that the warning box above it is gone. */}
       {(loading || (error && !loading)) && (
         <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '52dvh' }}>
-          {loading && <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', textAlign: 'center', display: 'block' }}>Opening PIN confirmation...</span>}
+          {loading && <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', textAlign: 'center', display: 'block' }}>{status || 'Working…'}</span>}
           {error && !loading && <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-error)', textAlign: 'center', display: 'block' }}>{error}</span>}
         </div>
       )}
@@ -179,7 +243,7 @@ export default function SendConfirm() {
         <button className="btn btn-secondary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} disabled={loading || done} onClick={() => navigate('SendAmount', params)}>Back</button>
         <button className="btn btn-primary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }}
           disabled={loading || done} onClick={handleConfirm}>
-          {loading ? 'Processing...' : 'Confirm PIN'}
+          {loading ? 'Processing...' : (attemptRef.current ? 'Check again' : 'Confirm PIN')}
         </button>
       </div>
 
