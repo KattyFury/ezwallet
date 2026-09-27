@@ -8,6 +8,13 @@ name `ezwallet-mainnet`, and this header.
 
 > **Start of every session:** read `CLAUDE.md`, this file and **`MAINNET-SPEC.md`**, then `git pull`.
 
+## M0. READ `MAINNET-AUDIT.md` FIRST (2026-09-27)
+
+Money-loss audit of this code against Arc Mainnet: 5 critical items (no email verification, testnet addresses
+that silently "succeed" on mainnet, double payment after a network drop, receipts without on-chain checks, the
+swap server trusting the intent blindly) plus high/hardening items, with verified mainnet addresses and the
+proposed order of work. Nothing in it is fixed yet.
+
 ## M1. Before building anything (from MAINNET-SPEC "Việc cần xác nhận")
 
 1. Does LI.FI (under Circle's Stablecoin Kit) support Arc Mainnet yet? If not, find another swap route.
