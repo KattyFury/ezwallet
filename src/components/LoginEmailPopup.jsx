@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNav } from '../nav'
-import { createSession, createEmailToken, getSDK, initializeWallet, executeChallenge, getWalletAddress, circleErrorMessage } from '../circle'
+import { createSession, startEmailCode, verifyEmailCode, createEmailToken, getSDK, initializeWallet, executeChallenge, getWalletAddress, circleErrorMessage } from '../circle'
 
 // "LOG IN WITH EMAIL" - Figma node 1:193. A POPUP OVER THE LOGIN SCREEN, not a screen of its own; the
 // user settled this on 2026-09-23: "nó là popup hiện ra ngay màn Login, là chặn cửa ko cho người khác
@@ -53,8 +53,15 @@ export default function LoginEmailPopup({ onClose }) {
   const [email, setEmail] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  // MAINNET-AUDIT C1 (2026-09-27): after the email, OUR server emails a 6-digit code and this same popup asks for
+  // it (owner decision: reuse the email popup, no new screen). Only a correct code yields the auth token that
+  // /api/session requires. This is NOT Circle's Email-OTP mode - the Circle PIN flow below is unchanged.
+  const [step, setStep] = useState('email')       // 'email' → 'code'
+  const [code, setCode] = useState('')
+  const [notice, setNotice] = useState('')        // "Code sent" after a resend
 
-  const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+  const validEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())
+  const valid = step === 'email' ? validEmail : /^\d{6}$/.test(code)
   const showDomains = email.length > 0 && !email.includes('@')
   const history = getEmailHistory()
   const suggestions = email.length === 0
@@ -122,11 +129,26 @@ export default function LoginEmailPopup({ onClose }) {
       return
     }
 
-    // ── Old flow (flag off): direct email + PIN, NO email verification ──
+    // ── Step 1: email → our server emails a 6-digit code ──
+    if (step === 'email') {
+      try {
+        await startEmailCode(email.trim())
+        setStep('code'); setCode(''); setNotice('')
+      } catch (e) {
+        setError(e.message)
+      } finally {
+        setLoading(false)
+      }
+      return
+    }
+
+    // ── Step 2: the code → auth token → the unchanged email + PIN flow ──
     try {
+      const { authToken } = await verifyEmailCode(email.trim(), code)
+      localStorage.setItem('ez_auth_token', authToken)
       localStorage.removeItem('ez_wallet_addr')
       localStorage.removeItem('ez_wallet_id')
-      const { userToken, encryptionKey } = await createSession(email.trim())
+      const { userToken, encryptionKey } = await createSession(authToken)
       localStorage.setItem('ez_user_token', userToken)
       localStorage.setItem('ez_encryption_key', encryptionKey)
       localStorage.setItem('ez_email', email.trim())
@@ -135,7 +157,7 @@ export default function LoginEmailPopup({ onClose }) {
       const challengeId = walletData?.data?.challengeId
       if (challengeId) await executeChallenge(sdk, userToken, encryptionKey, challengeId)
 
-      const freshSession = await createSession(email.trim())
+      const freshSession = await createSession(authToken)
       const freshToken = freshSession.userToken
       localStorage.setItem('ez_user_token', freshToken)
       localStorage.setItem('ez_encryption_key', freshSession.encryptionKey)
@@ -160,9 +182,21 @@ export default function LoginEmailPopup({ onClose }) {
     }
   }
 
+  async function resend() {
+    if (loading) return
+    setLoading(true); setError(''); setNotice('')
+    try { await startEmailCode(email.trim()); setNotice('A new code is on its way') }
+    catch (e) { setError(e.message) }
+    finally { setLoading(false) }
+  }
+  function back() {
+    if (step === 'code') { setStep('email'); setCode(''); setError(''); setNotice(''); return }
+    onClose()
+  }
+
   // Which chips to show, and where. Figma draws two at y=236 and y=278 - a 42px step - so any further
   // suggestion continues the same step rather than getting its own magic number.
-  const chips = suggestions.length > 0
+  const chips = step === 'code' ? [] : suggestions.length > 0
     ? suggestions.map(s => ({ label: s, onClick: () => { setEmail(s); setError('') } }))
     : showDomains
       ? DOMAINS.map(d => ({ label: d, onClick: () => applyDomain(d) }))
@@ -185,18 +219,23 @@ export default function LoginEmailPopup({ onClose }) {
         width: '87.18%', textAlign: 'center',
         fontSize: 'calc(24 * var(--u))', fontWeight: 'var(--fw-semibold)', lineHeight: 'calc(30 * var(--u))', color: 'var(--color-black)',
       }}>
-        Log in with email
+        {step === 'email' ? 'Log in with email' : 'Enter the code'}
       </div>
 
       {/* The email field - node 1:200: 307.96x40 centred at x=195, top edge y=186, radius 8, #D2DCE6,
           with an 18px #94A3B8 placeholder (node 1:202). */}
       <input
-        type="email"
-        inputMode="email"
-        autoComplete="email"
-        placeholder="example@gmail.com"
-        value={email}
-        onChange={e => { setEmail(e.target.value); setError('') }}
+        key={step}
+        type={step === 'email' ? 'email' : 'text'}
+        inputMode={step === 'email' ? 'email' : 'numeric'}
+        autoComplete={step === 'email' ? 'email' : 'one-time-code'}
+        placeholder={step === 'email' ? 'example@gmail.com' : '6-digit code'}
+        value={step === 'email' ? email : code}
+        onChange={e => {
+          if (step === 'email') setEmail(e.target.value)
+          else setCode(e.target.value.replace(/\D/g, '').slice(0, 6))
+          setError('')
+        }}
         onKeyDown={e => e.key === 'Enter' && handleSubmit()}
         autoFocus
         style={{
@@ -208,6 +247,19 @@ export default function LoginEmailPopup({ onClose }) {
           outline: 'none',
           padding: '0 calc(12 * var(--u))', fontSize: 'calc(18 * var(--u))', color: 'var(--color-black)',
         }} />
+
+      {step === 'code' && (
+        <div style={{
+          position: 'absolute', left: '10.51%', right: '10.51%', top: `${236 / 844 * 100}dvh`,
+          fontSize: 'calc(15 * var(--u))', lineHeight: 1.4, color: 'var(--color-muted-2)',
+        }}>
+          We sent a 6-digit code to <span style={{ color: 'var(--color-black)', fontWeight: 'var(--fw-semibold)', overflowWrap: 'anywhere' }}>{email.trim()}</span>. It expires in 10 minutes.
+          <div style={{ marginTop: 'calc(8 * var(--u))' }}>
+            <span onClick={resend} style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-semibold)', cursor: loading ? 'default' : 'pointer' }}>Resend code</span>
+            {notice && <span style={{ marginLeft: 'calc(8 * var(--u))' }}>{notice}</span>}
+          </div>
+        </div>
+      )}
 
       {chips.map((c, i) => (
         <Chip key={c.label} label={c.label} onClick={c.onClick} top={`${(236 + i * 42) / 844 * 100}dvh`} />
@@ -225,7 +277,7 @@ export default function LoginEmailPopup({ onClose }) {
       {/* Back / Continue - nodes 1:197 and 1:196: both 48 tall at y=430, RADIUS 16 (not pills), glow
           0 0 8px rgba(0,0,0,.48), labels 18px semibold. Back closes the popup and returns to Login
           rather than navigating anywhere - the popup never was a screen. */}
-      <button onClick={onClose}
+      <button onClick={back}
         style={{
           position: 'absolute', left: '10.54%', top: '50.95dvh', width: '38.43%', height: 'calc(48 * var(--u))',
           background: 'var(--color-white)', color: 'var(--color-black)', border: 'none', borderRadius: 16,
