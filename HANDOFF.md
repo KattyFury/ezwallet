@@ -17,6 +17,7 @@ parent folder and are **separate, unrelated git repos** – never let one end up
 - **Full cards must be `position: absolute`** (left 6.41%, top 10.19dvh, 87.18% × 69.43dvh). A plain
   grid item (`gridRow`, `.row-2-8`) paints UNDER the absolute `ScreenSheet` and vanishes – this hid
   QR storage's grey, History's grey and the ENTIRE Contacts list until 2026-09-27.
+- **Row 10 = row 1 = 70/844.** `ScreenSheet` ends at y=774 (NOT Figma's 782.3, which left the NavBar strip 62px); the NavBar button is `8.29dvh` tall so its icon stays centred on any phone.
 - NavBar is icon-only (30px). Menu shows the address as `0xabcd...efgh` + copy button.
 - Boot is gradient all the way: `index.html` paints the Splash, `App.jsx` falls back to `<Splash/>`
   while booting, and PinGate/ForgotPin use `GRADIENT` (they were white = "gradient flashes then white").

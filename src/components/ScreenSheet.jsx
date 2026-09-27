@@ -13,8 +13,11 @@
 // shadow margin: the sheet ends at y=782.327, the tab drops to y=852.327 (past the 844 frame bottom, so
 // its square end is never seen), and the two joins are 8px fillets.
 const COL = 97.5            // the NavBar's four equal columns of 390/4
-const SHEET_BOTTOM = 782.327
-const TAB_BOTTOM = 852.327
+// ⚠️ 774, NOT Figma's 782.327 (user decision 2026-09-27): row 10 of the grid is 774-844 (70px), the SAME
+// height as row 1 (0-70). Ending the sheet at 782.3 left the NavBar/Exit strip only 61.7px tall - visibly
+// narrower than row 1 - while the NavBar icons already centre on row 10's own centre (809).
+const SHEET_BOTTOM = 774
+const TAB_BOTTOM = 844 + 16   // the tab runs past the frame bottom (its square end + shadow never seen)
 const R = 8                 // fillet radius where the sheet meets the tab
 const K = 4.418             // 0.5523 * R - the cubic-Bezier constant for a quarter circle
 

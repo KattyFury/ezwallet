@@ -39,7 +39,9 @@ export default function NavBar({ active }) {
               // User correction 2026-09-23: "dời icon và chữ xuống một tí, cho ra trung tâm hàng 10".
               // Pinning the top left the ~45px block sitting at 783-828, i.e. centred on 805.5 when
               // row 10's centre is 809. Owning the row means the maths cannot drift again.
-              position: 'absolute', left: tab.left, top: '91.71dvh', height: 70,
+              // height 8.29dvh (= 70/844), not a fixed 70px, so on any phone the icon stays centred in the
+              // strip under the sheet, which also scales with the viewport (fix 2026-09-27).
+              position: 'absolute', left: tab.left, top: '91.71dvh', height: '8.29dvh',
               transform: 'translateX(-50%)', width: '25%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               background: 'none', border: 'none', padding: 0, cursor: 'pointer',
