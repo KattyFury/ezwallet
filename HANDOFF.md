@@ -64,6 +64,21 @@ sub-apps / CCTP / Gateway in v1, 24h lock after PIN reset, gas shown in USDC bef
 
 ---
 
+## ▶ WHERE WE ARE (end of session 2026-09-27) - read this first
+
+- **Mainnet is BLOCKED by Circle (MAINNET-AUDIT.md B1):** user-controlled (PIN) wallets do not list Arc mainnet;
+  owner decided: **no workaround**, wait for Circle. Development continues in `KattyFury/ezwallet-testnet`.
+- `main` here has the audit fixes C2, H1/H6, C3/C4 (the same code now runs on testnet). Branch `wip/otp` holds an
+  EARLY server-only copy of the email-code work (C1); the finished, tested version lives on the testnet repo's
+  `feature/otp` branch (it adds a KV-read fix, the client popup step and the pasted-code fix) - port FROM there.
+- Fee wallet confirmed by the owner: `0xEb2D222d28F35fE7BeB5387f8Bc4eBF65f2652F6` (unchanged; no multisig needed -
+  ezwallet deploys no contracts and holds no customer money).
+- Owner still to do for mainnet: Circle "Upgrade to Prod" (LIVE_API_KEY + Kit key, paid plan) once B1 clears; a
+  paid RPC with eth_simulateV1 for C5.
+- No Pages project exists for this repo yet (`wrangler.toml` name `ezwallet-mainnet`).
+
+---
+
 ## Inherited from ezwallet-testnet (describes this code as it is today)
 
 
