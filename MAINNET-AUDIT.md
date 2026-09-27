@@ -28,6 +28,16 @@ Severity: 🔴 can lose customer or owner money · 🟠 can mislead people about
 
 ---
 
+## ⛔ Blocker
+
+### B1. Circle user-controlled wallets do not (yet) support Arc mainnet
+Circle's supported-blockchains page lists only `ARC-TESTNET`, and Circle's own
+`@circle-fin/adapter-circle-wallets@1.8.0` maps only `'ARC-TESTNET'` to a chain (no Arc mainnet entry). The PIN
+wallet is the core of ezwallet, so **mainnet cannot launch until Circle ships native Arc mainnet support**.
+**Owner decision 2026-09-27: no workaround** (e.g. a generic "EVM" wallet + sign-transaction + self-broadcast is
+NOT to be built). Wait for Circle; re-check their supported-blockchains page and the adapter's chain map, then
+confirm with a LIVE API key and set `circleBlockchain` in `src/network.js` (left `null` so the app fails closed).
+
 ## 🔴 Critical
 
 ### C1. Anyone can log in as anyone (no email verification)
@@ -107,9 +117,12 @@ The testnet app shares the bare address (no chain) by design. A tester who gives
 **Fix:** label the testnet app "TESTNET – not real money" on Receive/Share, append "(Arc Testnet)" to shared
 text; in mainnet docs warn never to reuse testnet addresses.
 
-### H5. The fee recipient is a plain address with unknown custody
-`FEE_RECIPIENT = 0xEb2D…52F6` has no code (an EOA). On mainnet every swap pays 0.1% there. The spec requires
-multi-sig for deployments. **Owner must confirm** they hold this key safely (or use a Safe) before launch.
+### H5. The fee recipient must be replaced
+`FEE_RECIPIENT = 0xEb2D…52F6` has no code (an EOA). On mainnet every swap pays 0.1% there - the owner's own
+revenue, not customer funds. **Owner decision 2026-09-27: switch to a different wallet** (address to be supplied).
+Multi-sig is NOT required: ezwallet deploys no contracts and never holds customer money (Circle MPC + the user's
+PIN), so the spec's "deploy with multi-sig" rule does not apply. A wallet whose key the owner controls safely
+(hardware wallet or an offline seed) is enough.
 
 ### H6. Addresses are not checksum-validated
 `/^0x[0-9a-fA-F]{40}$/` accepts a mixed-case address with a typo. **Fix:** `viem.isAddress(addr, { strict: true })`
@@ -133,8 +146,8 @@ on every entry path (Paste, QR, Contacts) and on the server.
 
 ## Proposed order of work
 
-1. Owner: Circle LIVE API key + Kit key; confirm the Arc mainnet chain code works for user-controlled wallets;
-   confirm custody of the fee wallet; pick a mail provider for C1 and a paid RPC for C5.
+1. Owner: wait for B1 (Circle Arc-mainnet support); Circle LIVE API key + Kit key; the new fee-wallet address;
+   a mail provider for C1 (6-digit email code, decided 2026-09-27); a paid RPC for C5.
 2. Code, in this order: network config + self-check (C2) → amount/address validation (H1, H6, server) →
    transaction status tracking + receipt gating + no double send (C3, C4) → email verification (C1) →
    swap intent validation + simulation + quote/slippage (C5, H2) → QR/cirBTC scope (H3) → hardening.

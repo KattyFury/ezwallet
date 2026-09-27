@@ -1,3 +1,5 @@
+import { netFrom, netError, JSON_CORS } from './_net.js';
+
 const CIRCLE_API = 'https://api.circle.com/v1/w3s';
 
 async function circleReq(method, path, body, apiKey, userToken) {
@@ -18,13 +20,20 @@ async function circleReq(method, path, body, apiKey, userToken) {
 
 const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
 
-// Get the wallet on Arc Testnet (falling back to the first wallet if none is found)
-function pickArcWallet(wallets) {
+// The wallet on THIS network's chain - and nothing else. The old `|| list[0]` fallback is gone
+// (MAINNET-AUDIT.md C2): a wallet from another chain would sign on the wrong network.
+function pickArcWallet(wallets, circleBlockchain) {
   const list = wallets?.data?.wallets || [];
-  return list.find(w => w.blockchain === 'ARC-TESTNET') || list[0] || null;
+  return list.find(w => w.blockchain === circleBlockchain) || null;
 }
 
 export async function onRequestPost(ctx) {
+  let net;
+  try { net = netFrom(ctx); } catch (e) { return netError(e); }
+  // Circle does not (yet) support this network for user-controlled wallets → refuse everything, fail closed.
+  if (!net.circleBlockchain) {
+    return new Response(JSON.stringify({ error: `Circle wallets are not available on ${net.label} yet` }), { status: 503, headers: JSON_CORS });
+  }
   const apiKey = ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY;
   const body = await ctx.request.json();
   const { action, userToken } = body;
@@ -52,7 +61,7 @@ export async function onRequestPost(ctx) {
     const { data } = await circleReq('POST', '/user/initialize', {
       idempotencyKey: crypto.randomUUID(),
       accountType: 'EOA',
-      blockchains: ['ARC-TESTNET'],
+      blockchains: [net.circleBlockchain],
     }, apiKey, userToken);
     return new Response(JSON.stringify(data), { headers: JSON_HEADERS });
   }
@@ -96,7 +105,7 @@ export async function onRequestPost(ctx) {
   if (action === 'getAddress') {
     // The correct endpoint: GET /v1/w3s/wallets (X-User-Token), NOT /user/wallets
     const { data: wallets } = await circleReq('GET', '/wallets', undefined, apiKey, userToken);
-    const wallet = pickArcWallet(wallets);
+    const wallet = pickArcWallet(wallets, net.circleBlockchain);
     return new Response(JSON.stringify({
       address: wallet?.address || null,
       walletId: wallet?.id || null,

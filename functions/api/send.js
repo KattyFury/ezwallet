@@ -1,20 +1,14 @@
+import { netFrom, netError } from './_net.js'
+
 const CIRCLE_API = 'https://api.circle.com/v1/w3s'
 
 // ERC-20 transfer ABI function signature
 const TRANSFER_SIG = 'transfer(address,uint256)'
 
-// Arc Transaction Memos - the predeployed Memo contract (testnet, from docs.arc.io)
-// memo(address target, bytes data, bytes32 memoId, bytes memoData) → forward call qua
-// The CallFrom precompile (preserving msg.sender) + emitting a Memo event on chain.
-const MEMO_CONTRACT = '0x5294E9927c3306DcBaDb03fe70b92e01cCede505'
+// Arc Transaction Memos - the predeployed Memo contract (address per network in src/network.js)
+// memo(address target, bytes data, bytes32 memoId, bytes memoData) → forward call through
+// the CallFrom precompile (preserving msg.sender) + emitting a Memo event on chain.
 const MEMO_SIG = 'memo(address,bytes,bytes32,bytes)'
-
-// Token contract addresses on Arc Testnet
-const TOKEN_CONTRACTS = {
-  USDC:   { address: '0x3600000000000000000000000000000000000000', decimals: 6 },
-  EURC:   { address: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', decimals: 6 },
-  cirBTC: { address: '0xf0c4a4ce82a5746abaad9425360ab04fbba432bf', decimals: 8 },
-}
 
 // Encode the ERC-20 transfer(address,uint256) calldata by hand (selector + 2 32-byte words)
 function encodeTransfer(to, amountRaw) {
@@ -47,6 +41,8 @@ async function circleReq(method, path, body, apiKey, userToken) {
 const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
 
 export async function onRequestPost(ctx) {
+  let net
+  try { net = netFrom(ctx) } catch (e) { return netError(e) }
   const apiKey = ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY
   const { userToken, walletId, toAddress, token, amountDecimal, memo, idempotencyKey } = await ctx.request.json()
   // A fixed idempotencyKey from the client → Circle dedupes, so a repeated call does not create 2 transactions
@@ -56,7 +52,7 @@ export async function onRequestPost(ctx) {
     return new Response(JSON.stringify({ error: 'missing params' }), { status: 400, headers: JSON_HEADERS })
   }
 
-  const tokenInfo = TOKEN_CONTRACTS[token]
+  const tokenInfo = net.tokens[token]   // a token this network does not list → rejected below
   if (!tokenInfo) return new Response(JSON.stringify({ error: 'unknown token' }), { status: 400, headers: JSON_HEADERS })
 
   // Convert decimal amount to smallest unit (uint256)
@@ -70,7 +66,7 @@ export async function onRequestPost(ctx) {
     execBody = {
       idempotencyKey: idemKey,
       walletId,
-      contractAddress: MEMO_CONTRACT,
+      contractAddress: net.contracts.memo,
       abiFunctionSignature: MEMO_SIG,
       abiParameters: [tokenInfo.address, transferData, randomMemoId(), utf8ToHex(memoText)],
       feeLevel: 'MEDIUM',

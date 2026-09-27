@@ -17,7 +17,10 @@
 // plenty of wallets implement it sloppily - they read the address and IGNORE `@chainId`, sending on whatever chain is
 // open. That is more dangerous than a bare address, because we would believe it was locked when it is not. Faced with
 // an unknown scheme, other wallets have only one option: refuse.
-export const ARC_CHAIN_ID = 5042002
+import { NET } from './clientNet'
+
+// The chain id of THIS build's network (5042002 testnet / 5042 mainnet) - src/network.js.
+export const ARC_CHAIN_ID = NET.chainId
 
 // A valid EVM address (shared by both the drawing and the reading side)
 export const isEvmAddress = a => /^0x[0-9a-fA-F]{40}$/.test(String(a || '').trim())

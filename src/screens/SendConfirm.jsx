@@ -7,6 +7,7 @@ import { getSDK, executeChallenge, refreshSession, circleErrorMessage } from '..
 import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
+import { assertNetworkReady } from '../clientNet'
 
 // Currency symbols / token names use Barlow (--font-condensed); numbers stay Barlow via .num
 function Cur({ children }) {
@@ -65,6 +66,8 @@ export default function SendConfirm() {
     // Duplicate sends are prevented by the loading flag (sending) + done (finished), NOT by a fixed idemKey.
     const idempotencyKey = crypto.randomUUID()
     try {
+      // Refuse before any challenge exists if the server's network/contracts do not check out (MAINNET-AUDIT C2).
+      await assertNetworkReady()
       // Refresh the userToken before sending - avoids "userToken had expired" when
       // the app has been open a while (Circle userTokens live ~1 hour).
       const { userToken, encryptionKey } = await refreshSession()

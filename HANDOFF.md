@@ -15,6 +15,20 @@ that silently "succeed" on mainnet, double payment after a network drop, receipt
 swap server trusting the intent blindly) plus high/hardening items, with verified mainnet addresses and the
 proposed order of work. Nothing in it is fixed yet.
 
+## M0b. Progress on the audit (2026-09-27)
+
+- ✅ **C2 done - one network config.** `src/network.js` holds every chain id/RPC/explorer/token/contract per
+  network (values verified live). Client picks it with `VITE_NETWORK` (`.env.development`/`.env.mock` = testnet,
+  `.env.production` = mainnet), functions with the runtime env `NETWORK` (no default → 503). `/api/health`
+  checks chainId + contract code at every address; `SendConfirm`/`Swap` call `assertNetworkReady()` and refuse
+  to create a challenge if it fails or the two sides disagree. Mainnet build: USDC+EURC only, label "Arc", no
+  faucet (Deposit disabled), `circleBlockchain: null` → `/api/wallet` answers 503 until B1 is resolved.
+- ⏳ Next: H1/H6 (amount + address validation), then C3/C4 (refId-tracked transaction status, no double send,
+  receipt only after `COMPLETE`). Circle API facts for C3 are verified: contractExecution accepts `refId`;
+  `GET /v1/w3s/transactions` (X-User-Token, filters walletIds/from/operation) returns refId/state/txHash.
+- "Email OTP" wording: Circle's Email-OTP **auth mode** removes the PIN (never use it). C1's fix is different -
+  OUR server emails a 6-digit code before asking Circle for a token; Circle still sees `userId=email` + PIN.
+
 ## M1. Before building anything (from MAINNET-SPEC "Việc cần xác nhận")
 
 1. Does LI.FI (under Circle's Stablecoin Kit) support Arc Mainnet yet? If not, find another swap route.

@@ -12,6 +12,7 @@ import { spendableOf, floorTo, getDisplayCurrency, displaySymbol, fmtDisplay, de
 import { useFitFontSize } from '../useFitFontSize'
 import { roundHints, fmtHint } from '../roundHint'
 import { addNotif } from '../notif'
+import { assertNetworkReady } from '../clientNet'
 
 // ✅ SWAP executes through ADAPTER.execute(a signed intent) - the correct path, and adapter settlement records
 // the USDC arriving in the wallet (see the SWAP section of HANDOFF + functions/api/_swapCore.js). VERIFIED with eth_simulateV1
@@ -230,6 +231,7 @@ export default function Swap() {
     setLoading(true); setError(''); setSuccess(false); setStatus('Preparing…')
     const beforeOut = balances[toSym] || 0   // the RECEIVING token's balance before the swap → used to confirm on-chain
     try {
+      await assertNetworkReady()   // MAINNET-AUDIT C2 - no challenge unless the network self-check passed
       // A 60' token may have expired mid-session → refresh it BEFORE creating a challenge that needs the PIN
       const { userToken, encryptionKey } = await refreshSession()
       const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: String(amountNum) })

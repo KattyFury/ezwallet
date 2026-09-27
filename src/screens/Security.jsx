@@ -6,6 +6,7 @@ import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
 import { getSDK, executeChallenge, resetPinChallenge, refreshSession, circleErrorMessage } from '../circle'
 import { getDisplayCurrency } from '../data'
+import { NET } from '../clientNet'
 
 // SECURITY - Figma node 58:332, rebuilt 2026-09-24 against the 2026-09-23 redesign's gradient+sheet
 // shell (was the pre-redesign plain-white `.screen`/`.row-10` layout). Figma now merges the old separate
@@ -99,7 +100,7 @@ export default function Security() {
           currency are rows with a value chip. */}
       <div style={{ position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '69.43dvh', background: 'var(--color-card)', borderRadius: 16 }} />
 
-      <div style={{ ...ROW, top: ROW_TOP(0) }}><span style={LABEL}>Network</span><span style={VALUE}>Arc Testnet</span></div>
+      <div style={{ ...ROW, top: ROW_TOP(0) }}><span style={LABEL}>Network</span><span style={VALUE}>{NET.label}</span></div>
       <div style={{ ...ROW, top: ROW_TOP(1) }}><span style={LABEL}>Email</span><span style={VALUE}>{email}</span></div>
       <div style={{ ...ROW, top: ROW_TOP(2) }}><span style={LABEL}>Wallet address</span><span style={VALUE}>{shortAddr}</span></div>
 

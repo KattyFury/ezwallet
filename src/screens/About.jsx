@@ -4,6 +4,7 @@ import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
 import { ROW_TOP } from './Security'
+import { NET } from '../clientNet'
 
 const VERSION = '0.1.0'
 
@@ -22,7 +23,7 @@ const VERSION = '0.1.0'
 const ITEMS = [
   { label: 'App', value: 'ezwallet' },
   { label: 'Version', value: VERSION },
-  { label: 'Network', value: 'Arc Testnet' },
+  { label: 'Network', value: NET.label },
   { label: 'Wallet', value: 'Circle Wallet' },
   { label: 'Github', link: 'https://github.com/KattyFury/ezwallet' },
   { label: 'Term of use', link: 'https://www.circle.com/en/legal/privacy-policy' },

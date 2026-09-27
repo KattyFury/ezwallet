@@ -13,3 +13,4 @@ Thumbs.db
 
 # output of tools/figma-check.mjs (regenerable) - comment on its OWN line: gitignore has no inline comments
 figma-check/
+dist-*/
