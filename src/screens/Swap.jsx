@@ -15,6 +15,7 @@ import { addNotif } from '../notif'
 import { assertNetworkReady } from '../clientNet'
 import { NET } from '../clientNet'
 import { toAmountString } from '../money'
+import { newAttempt, getPending, clearPending, lookup, classify, waitFinal } from '../txTracker'
 
 // ✅ SWAP executes through ADAPTER.execute(a signed intent) - the correct path, and adapter settlement records
 // the USDC arriving in the wallet (see the SWAP section of HANDOFF + functions/api/_swapCore.js). VERIFIED with eth_simulateV1
@@ -229,46 +230,69 @@ export default function Swap() {
     resetAmount()
   }
 
+  // MAINNET-AUDIT C3: the same refId tracking as Send (src/txTracker.js). "complete" is only announced once Circle
+  // reports the transaction COMPLETE, and an error after the PIN is treated as UNKNOWN - never as "failed" - so
+  // nobody swaps twice. Send and Swap share one pending slot: no new swap while any payment is unresolved.
   async function handleSwap() {
     setLoading(true); setError(''); setSuccess(false); setStatus('Preparing…')
-    const beforeOut = balances[toSym] || 0   // the RECEIVING token's balance before the swap → used to confirm on-chain
+    const blocked = (msg) => { setLoading(false); setStatus(''); setError(msg) }
+    const STILL = 'Your last transaction is still being confirmed. Do NOT swap again yet - check Transaction history in a moment.'
+    let attempt = null
     try {
       await assertNetworkReady()   // MAINNET-AUDIT C2 - no challenge unless the network self-check passed
+
+      const prev = getPending()
+      if (prev) {
+        setStatus('Checking your last transaction…')
+        let r
+        try { r = classify(await lookup(prev)) } catch { return blocked(STILL) }
+        if (r === 'pending') return blocked(STILL)
+        clearPending(prev.refId)   // final (ok/failed) or never created → safe to go on
+      }
+
+      attempt = newAttempt('swap', { fromSym, toSym })
       // A 60' token may have expired mid-session → refresh it BEFORE creating a challenge that needs the PIN
       const { userToken, encryptionKey } = await refreshSession()
-      const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: toAmountString(amountNum, NET.tokens[fromSym]?.decimals ?? 6) })
-      if (res.error) throw new Error(res.error)
+      const amountIn = toAmountString(amountNum, NET.tokens[fromSym]?.decimals ?? 6)
+      const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn, refId: attempt.refId })
+      if (res.error) { clearPending(attempt.refId); throw new Error(res.error) }   // no challenge → nothing can exist
+
       setStatus('Enter PIN...')
-      await executeChallenge(await getSDK(), userToken, encryptionKey, res.challengeId)
-
-      // ✅ STATE 1 - the PIN is signed and the swap has been SUBMITTED to Arc ("successfully requested")
-      // ONE SINGLE NOTIFICATION per swap (user decision 07-20: "Swapped..." + "Swap complete·received" were merged
-      // into one) → "Swapped X EURC to ~Y USDC (complete)". NotifArea no longer adds a separate received notification
-      // for the swap's incoming leg (that outHashes branch is disabled over there).
-      const outTxt = res.amountOut ? ` to ~${parseFloat(res.amountOut).toFixed(decimalsFor(toSym))} ${toSym}` : ` to ${toSym}`
-      addNotif(`Swapped ${amountNum} ${fromSym}${outTxt} (complete)`, 'sent', null, `swap-${Date.now()}`)   // NotifArea (Home)
-      resetAmount()
-      setSuccess(true); setStatus('Swap submitted')
-      setLoading(false)
-
-      // ✅ STATE 2 - ON-CHAIN confirmation (Arc finality is <1s, leaving room for RPC lag): poll until the RECEIVING
-      // token's balance rises, then switch the button to "Swap successful". If the rise is not seen in time → keep "Swap submitted".
-      let confirmed = false
-      for (let i = 0; i < 6 && !confirmed; i++) {
-        await new Promise(r => setTimeout(r, 1500))
-        try {
-          const ts = await getTokenBalances(walletAddress)
-          const map = {}; ts.forEach(tk => { map[tk.symbol] = tk.amount }); setBalances(map)
-          if ((ts.find(t => t.symbol === toSym)?.amount || 0) > beforeOut + 1e-9) confirmed = true
-        } catch {}
+      let signError = null
+      try {
+        await executeChallenge(await getSDK(), userToken, encryptionKey, res.challengeId)
+      } catch (e) {
+        if (e?.code === 155701) { clearPending(attempt.refId); setLoading(false); setStatus(''); return }   // user closed the PIN screen
+        signError = e
       }
-      setStatus(confirmed ? 'Swap successful' : 'Swap submitted')
+
+      setStatus('Confirming on the network…')
+      const { outcome } = await waitFinal(attempt, { timeoutMs: signError ? 30000 : 90000 })
+      if (outcome === 'failed' || (outcome === 'none' && signError)) {
+        clearPending(attempt.refId)
+        addNotif(`Swapped ${amountIn} ${fromSym} to ${toSym} (failed - nothing was swapped)`, 'error', null, `swap-fail-${Date.now()}`)
+        setLoading(false); setStatus('')
+        setError(signError && outcome === 'none' ? circleErrorMessage(signError) : 'The network rejected this swap - nothing left your wallet.')
+        return
+      }
+      if (outcome !== 'ok') return blocked(STILL)   // exists but not final / could not ask - keep it blocked
+
+      clearPending(attempt.refId)
+      // ONE notification per swap (user decision 07-20) - now only after Circle says COMPLETE.
+      const outTxt = res.amountOut ? ` to ~${parseFloat(res.amountOut).toFixed(decimalsFor(toSym))} ${toSym}` : ` to ${toSym}`
+      addNotif(`Swapped ${amountIn} ${fromSym}${outTxt} (complete)`, 'sent', null, `swap-${Date.now()}`)
+      resetAmount()
+      setSuccess(true); setStatus('Swap successful')
+      setLoading(false)
+      try {
+        const ts = await getTokenBalances(walletAddress)
+        const map = {}; ts.forEach(tk => { map[tk.symbol] = tk.amount }); setBalances(map)
+      } catch {}
       setTimeout(() => { setSuccess(false); setStatus('') }, 3500)   // auto-hide, back to the plain "Swap" button
     } catch (e) {
+      // Unexpected error while an attempt is open → unknown, keep it blocked; otherwise a plain failure.
+      if (attempt && getPending()?.refId === attempt.refId) return blocked(STILL)
       setLoading(false)
-      if (e?.code === 155701) { setStatus(''); return }  // the user cancelled the PIN themselves → stay silent
-      // Swap failed → the same merged notification, ending in "(failed)" (user decision 07-20)
-      addNotif(`Swapped ${amountNum} ${fromSym} to ${toSym} (failed)`, 'error', null, `swap-fail-${Date.now()}`)
       const msg = circleErrorMessage(e)
       setError(msg); setStatus('')
     }

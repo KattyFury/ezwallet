@@ -24,22 +24,26 @@ export default function SendReceipt() {
   const { navigate, params } = useNav()
   // Defaults to 'USD' (it used to be 'VND' - a leftover from when the app counted in VND). Since 08-04 VND is a REAL
   // currency, so a wrong default would render a receipt with a missing currency as Vietnamese money.
-  const { address, name, amount, memo, currency = 'USD', timestamp } = params
+  // Reached ONLY after Circle reports the transaction COMPLETE (SendConfirm + txTracker, MAINNET-AUDIT C4).
+  // amountStr = the exact string that was sent; txHash links the notification to History.
+  const { address, name, amount, amountStr, memo, currency = 'USD', timestamp, txHash } = params
+  const exact = amountStr ?? String(amount)
   const to = name || shortenAddr(address)
   // "$2" as one string in one style (NOT a bold "2" plus a regular "USD" - user decision)
-  const amountText = currency === 'VND' ? `${Number(amount).toLocaleString('vi-VN')} ₫` : fmtMoney(amount, currency)
+  const amountText = currency === 'VND' ? `${Number(amount).toLocaleString('vi-VN')} ₫` : fmtMoney(exact, currency)
   // The REAL token moved on-chain (USD = a label, USDC actually moves 1:1) - shown plainly on the receipt
   // so sender and recipient can reconcile the actual asset (nobody should read a label and assume another token).
   // ⚠️ VND is NOT a token: what actually moves is USDC, and the USDC figure ≠ the VND typed → you must use
   // params.tokenAmount (decided in SendAmount, forwarded by SendConfirm), never `amount`.
   const realToken = currency === 'USD' || currency === 'VND' ? 'USDC' : currency
   const realUnits = currency === 'VND' ? (params.tokenAmount ?? 0) : Number(amount)
-  const realAmountText = `${realToken === 'cirBTC' ? realUnits.toFixed(8) : realUnits.toFixed(2)} ${realToken}`
+  // The exact sent string (was toFixed(2): 0.004 showed as "0.00 USDC" - MAINNET-AUDIT H1). VND keeps its conversion.
+  const realAmountText = `${currency === 'VND' ? realUnits.toFixed(2) : exact} ${realToken}`
 
   // Store the "sent" notification for HomeSend to show. dedupeKey is the timestamp (unique per real send)
   // → guards against duplication from React.StrictMode running the effect twice in dev mode.
   useEffect(() => {
-    addNotif(`Sent ${amountText} to ${to}`, 'sent', null, `sent-${timestamp}`)
+    addNotif(`Sent ${amountText} to ${to}`, 'sent', txHash || null, `sent-${timestamp}`)
   }, [])
 
   // Draw the receipt onto a canvas, then save it to the photo library

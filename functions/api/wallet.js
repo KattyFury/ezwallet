@@ -102,6 +102,27 @@ export async function onRequestPost(ctx) {
     return new Response(JSON.stringify({ challengeId }), { headers: JSON_HEADERS });
   }
 
+  // Find the transaction this app created with `refId` and report its REAL state (MAINNET-AUDIT C3/C4).
+  // Circle API (verified against the API reference 2026-09-27): contractExecution accepts `refId`, and
+  // GET /v1/w3s/transactions (X-User-Token; filters walletIds/from/pageSize) returns refId/state/txHash per item.
+  // There is no refId filter, so list the wallet's recent transactions (since the attempt started) and match here.
+  if (action === 'txByRef') {
+    const { walletId, refId, since } = body;
+    if (!walletId || !refId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(refId)) {
+      return new Response(JSON.stringify({ error: 'walletId + refId required' }), { status: 400, headers: JSON_CORS });
+    }
+    const qs = new URLSearchParams({ walletIds: walletId, pageSize: '50' });
+    if (since && !Number.isNaN(Date.parse(since))) qs.set('from', new Date(since).toISOString());
+    const { status, data } = await circleReq('GET', `/transactions?${qs}`, undefined, apiKey, userToken);
+    if (status >= 400) {
+      return new Response(JSON.stringify({ error: data?.message || `Circle HTTP ${status}` }), { status: 502, headers: JSON_CORS });
+    }
+    const tx = (data?.data?.transactions || []).find(t => t.refId === refId);
+    return new Response(JSON.stringify(tx
+      ? { found: true, id: tx.id, state: tx.state, txHash: tx.txHash || null, errorReason: tx.errorReason || null }
+      : { found: false }), { headers: JSON_CORS });
+  }
+
   if (action === 'getAddress') {
     // The correct endpoint: GET /v1/w3s/wallets (X-User-Token), NOT /user/wallets
     const { data: wallets } = await circleReq('GET', '/wallets', undefined, apiKey, userToken);

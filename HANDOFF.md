@@ -26,8 +26,16 @@ proposed order of work. Nothing in it is fixed yet.
 - ✅ **H1/H6 done** - `src/money.js`: amounts are decimal strings end to end, `parseUnits` on the server, anything
   unclean is rejected (never rounded); keypad capped at token decimals; EIP-55 checksum on every address path.
   Tests: `test/money.test.mjs`.
-- ⏳ Next: C3/C4 (refId-tracked transaction status, no double send,
-  receipt only after `COMPLETE`). Circle API facts for C3 are verified: contractExecution accepts `refId`;
+- ✅ **C3/C4 done** - `src/txTracker.js`: every Send/Swap carries a `refId` (a UUID the server passes to Circle's
+  contractExecution); after the PIN - and after any doubtful error - `/api/wallet` `txByRef` lists the wallet's
+  recent transactions and the app waits for the REAL state. Receipt / "Swapped … (complete)" only on `COMPLETE`;
+  `FAILED/DENIED/CANCELLED` → "nothing left your wallet", retry allowed; not final / could not ask → blocked
+  ("Check again"), persisted per account (`ez_pending_tx_<addr>`) so no new payment starts until it resolves.
+  Mock rehearsal: `localStorage.ez_mock_tx_state = COMPLETE | FAILED | SENT`. Verified: each scenario issues exactly
+  one send. Open UI point: Swap shows its long "still being confirmed" warning inside the button (existing pattern).
+- ⏳ Next (needs owner input): C1 (6-digit email code - needs a mail provider + sender domain), C5/H2 (swap intent
+  validation + simulation via a paid RPC + quote/slippage), H3 (QR amount/token UX), H4 (testnet labelling), H5
+  (new fee wallet address). Circle API facts for C3 are verified: contractExecution accepts `refId`;
   `GET /v1/w3s/transactions` (X-User-Token, filters walletIds/from/operation) returns refId/state/txHash.
 - "Email OTP" wording: Circle's Email-OTP **auth mode** removes the PIN (never use it). C1's fix is different -
   OUR server emails a 6-digit code before asking Circle for a token; Circle still sees `userId=email` + PIN.

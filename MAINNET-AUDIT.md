@@ -67,7 +67,7 @@ Addresses are duplicated in `send.js`, `_swapCore.js`, `chain.js`, `swap.js` (ch
 self-check (`eth_getCode` must be non-empty for every contract, `eth_chainId` must equal 5042) that refuses to
 send if anything is off; remove the `list[0]` wallet fallback.
 
-### C3. Double payment after a network drop
+### C3. Double payment after a network drop — ✅ FIXED 2026-09-27 (Send + Swap, `src/txTracker.js`)
 `SendConfirm` treats `executeChallenge` resolving as "sent" and anything thrown as "failed". If the connection
 drops after the PIN is accepted, Circle may already have broadcast the transfer while the screen says
 **"Send failed"** with the button re-enabled and a **fresh idempotencyKey** → the customer pays twice.
@@ -75,7 +75,7 @@ Swap has the same shape. **Fix (spec item 6):** after the PIN, poll Circle `GET 
 wallet) until `COMPLETE`/`FAILED`; on any doubt show "Checking…" and block re-sending until the previous
 transaction's final state is known; reuse one idempotencyKey per confirmation screen.
 
-### C4. The receipt claims success without checking the chain
+### C4. The receipt claims success without checking the chain — ✅ FIXED 2026-09-27 (receipt only after `COMPLETE`)
 `SendReceipt` never reads the transaction. A signed-but-reverted/failed transfer still produces "Sent", a
 notification and a **savable receipt image** - which people will show a seller as proof of payment.
 **Fix:** only show the receipt after the on-chain status is `COMPLETE`; include the tx hash on the receipt.

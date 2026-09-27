@@ -22,7 +22,7 @@ export async function onRequestPost(ctx) {
     const apiKey = ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY
     const kitKey = ctx.env.KIT_KEY
     const body = await ctx.request.json()
-    const { action, userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn } = body
+    const { action, userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn, refId } = body
 
     const fromAddr = tokenOf(net, tokenIn)?.address
     const toAddr   = tokenOf(net, tokenOut)?.address
@@ -63,6 +63,7 @@ export async function onRequestPost(ctx) {
       if (!userToken || !walletId || !walletAddress || !fromAddr || !toAddr) {
         return err('missing params', null, 400)
       }
+      if (!refId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(refId)) return err('refId (uuid) required', null, 400)   // MAINNET-AUDIT C3
       const amountBase = toBase(net, amountIn, tokenIn)
       const intent = await fetchSwapIntent(net, kitKey, fromAddr, toAddr, walletAddress, amountBase)
       if (!intent.ok) return err(`Stablecoin Kit ${intent.status}: ${intent.data?.message || 'swap failed'}`, intent.data)
@@ -75,7 +76,7 @@ export async function onRequestPost(ctx) {
         body: JSON.stringify({
           idempotencyKey: crypto.randomUUID(),
           walletId, contractAddress: net.contracts.multicall3From, callData: built.batchData,
-          feeLevel: 'MEDIUM',
+          feeLevel: 'MEDIUM', refId,
         }),
       })
       const txData = await txRes.json()
