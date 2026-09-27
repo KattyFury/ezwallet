@@ -99,6 +99,10 @@ If something drifts from that, stop and ask the user.
   The Circle SDK does not run on localhost → PIN/login/swap only testable on a deploy.
 - **Mock mode:** `npm run mock` - fake wallet/balances/history, skips Login/PIN, never reaches production.
   Playwright: `npm i --no-save playwright && npx playwright install chromium`.
+- **Pages ↔ GitHub link:** the project tracks the repo by **id `1271272056`**, not by name - after the
+  2026-09-27 rename the dashboard/API still SHOW `KattyFury/ezwallet` (a PATCH of `repo_name` is silently
+  ignored), but pushes to `ezwallet-testnet` keep deploying. Do not "fix" it by reconnecting to the name
+  `ezwallet` - that is now the MAINNET repo.
 - **CI:** `.github/workflows/ci.yml` runs `npm test` + `npm run build` on every push to `main`.
 - **KV backup of contacts + QR library:** `functions/api/sync.js` + `src/sync.js`, binding `EZ_SYNC`.
   localStorage is the source of truth; newest edit wins (`ez_sync_at_<addr>`); auth = a PIN signature over a
