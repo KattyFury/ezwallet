@@ -45,13 +45,16 @@ export async function sendSecurityMail(env, { kind, email, netLabel }) {
 }
 
 // The account's email from Circle itself (userId = email), never from the request body.
-// GET /v1/w3s/user (X-User-Token) → data.user.id. Returns null if it does not look like an email.
+// GET /v1/w3s/user (X-User-Token). ⚠️ VERIFIED LIVE 2026-09-29: the user is at `data.id` - the API reference says
+// `data.user.id`, which does not exist (the first build read that and silently sent nothing). Both are accepted.
+// Returns null if it does not look like an email.
 export async function emailFromUserToken(apiKey, userToken) {
   const res = await fetch('https://api.circle.com/v1/w3s/user', {
     headers: { Authorization: `Bearer ${apiKey}`, 'X-User-Token': userToken, Accept: 'application/json' },
   })
   if (!res.ok) return null
-  const id = (await res.json().catch(() => ({})))?.data?.user?.id
+  const d = (await res.json().catch(() => ({})))?.data
+  const id = d?.id ?? d?.user?.id
   return typeof id === 'string' && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(id) ? id.toLowerCase() : null
 }
 

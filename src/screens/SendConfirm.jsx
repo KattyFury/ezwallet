@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
-import { getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency, shortenAddr } from '../data'
+import { getDisplayCurrency, displaySymbol, shortenAddr } from '../data'
 import { getDisplayRates, estimateSendFeeUsd } from '../chain'
 import { getSDK, executeChallenge, refreshSession, circleErrorMessage } from '../circle'
 import ScreenSheet from '../components/ScreenSheet'
@@ -64,13 +64,12 @@ export default function SendConfirm() {
   const displayCur = getDisplayCurrency()
   function feeEl() {
     if (feeUsd === null) return 'Calculating...'
+    // THE REAL FEE, AT MOST 3 DECIMALS (owner rule 2026-09-29: "0.002 thì hiển là 0.002 ... không thêm số thập phân
+    // nào nữa"). Rounded to the nearest 0.001, trailing zeros trimmed; below half of that → "< 0.001".
     const v = feeUsd / (feeRates[displayCur] || 1)
-    // The "too small to show" threshold must follow the currency's DECIMALS: $0.01 for USD, but VND has no
-    // decimals so its threshold is 1 ₫ - a shared 0.01 would render a 500 ₫ fee as "< 0.01 ₫" (meaningless).
-    const dec = decimalsOfCurrency(displayCur)
-    const min = 10 ** -dec
-    return v < min ? `< ${fmtDisplay(min * (feeRates[displayCur] || 1), displayCur, feeRates)}`
-                   : fmtDisplay(feeUsd, displayCur, feeRates)
+    const r = Math.round(v * 1000) / 1000
+    const sym = displaySymbol(displayCur)
+    return r === 0 ? `< ${sym}0.001` : `${sym}${String(r)}`
   }
 
   // The attempt this screen created (refId + timestamps) - see src/txTracker.js.
