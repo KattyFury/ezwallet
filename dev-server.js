@@ -11,6 +11,7 @@ import * as swap from './functions/api/swap.js'
 import * as sync from './functions/api/sync.js'
 import * as health from './functions/api/health.js'
 import * as auth from './functions/api/auth.js'
+import * as inbox from './functions/api/inbox.js'
 
 const PORT = 8787
 
@@ -60,6 +61,7 @@ const ROUTES = {
   '/api/sync': sync,
   '/api/health': health,
   '/api/auth': auth,
+  '/api/inbox': inbox,
 }
 
 const server = createServer(async (req, res) => {
