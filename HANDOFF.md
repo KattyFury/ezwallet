@@ -17,15 +17,19 @@ name `ezwallet-mainnet`, and this header.
   admin). Temp-mail block (#6) = a free, bundled open-source domain list. Plan item #5 was already done (`send.js`
   rejects bad/non-checksummed addresses).
 - **Admin `admin.ezwallet.cash`** - spec `admin/SPEC.md` (owner-approved v2). Code in `admin/` on branch `admin`.
-  - Pages project `ezwallet-admin`, root dir `admin`, **production branch `admin`** (switch to `main` after merge),
-    previews off. Env: CIRCLE_TEST_API_KEY, CIRCLE_LIVE_API_KEY, RESEND_API_KEY (secrets), ADMIN_EMAIL,
+  - Pages project `ezwallet-admin`, root dir `admin`, production branch `main` (merged 2026-09-29), previews off. Env: CIRCLE_TEST_API_KEY, CIRCLE_LIVE_API_KEY, RESEND_API_KEY (secrets), ADMIN_EMAIL,
     ACCESS_TEAM_DOMAIN `plain-fog-e653.cloudflareaccess.com`, ACCESS_AUD. KV `EZ_ADMIN` (audit log).
   - Cloudflare Access app `ezwallet admin` (id 5f4f6774-…), one-time PIN only, policy = kattyfury1403@gmail.com.
     Code re-verifies the Access JWT on every request (`admin/functions/_access.js`) → `*.pages.dev` answers 403.
   - Done: health, stats, lookup (read-only), email ONE user (preview + confirm, logged). Verified 2026-09-29 on the
     owner's account: Circle returns wallets/transactions/balances by userId with the API key alone; transactions
     carry no amounts (amounts come from ArcScan); address → email reverse lookup is NOT possible.
-  - Next: owner tests on a phone/PC → build step 5 (in-app inbox, touches the user app → testnet first).
+  - Tabs: Health, Stats, Users (every email, owner request), Lookup, Announce, Mail, Log.
+  - **In-app announcements DONE + owner-tested on a phone (2026-09-29), merged to `main` → live on testnet.**
+    Broadcast only, ≤ 200 chars, no links. Admin writes KV `inbox:all` in the APP's KV (admin binding
+    `EZ_SYNC_TESTNET` = testnet EZ_SYNC; `EZ_SYNC_MAINNET` to add at mainnet launch). App: `functions/api/inbox.js`
+    + `src/inbox.js` (poll on open, then ≤ 1 per 5 min; each id shown once per account). Spec admin/SPEC.md §5.5.
+  - Next: back to mainnet v1 - first "testnet = mainnet" (swap OFF + no cirBTC on testnet), then plan items.
   - Mainnet ArcScan API answers with a Cloudflare challenge page to curl - lookup on mainnet may show no transfers.
 - Cloudflare: ONE master token now (`CF_API_TOKEN` in the central secrets file, id 151b0875…) with Pages, Workers,
   KV, Access, DNS, Single Redirect. The old token (7d9d445c…) is to be deleted by the owner.
