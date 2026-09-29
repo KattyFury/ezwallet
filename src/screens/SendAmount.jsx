@@ -22,7 +22,9 @@ import { amountProblem, normalizeTyped } from '../money'
 // deleted - re-enabling only needs 'VND' back in this array + the locked flags removed in Security.jsx + data.js
 // (the language/currency picker moved there when Currency.jsx was deleted 2026-09-24).
 // The original reason (user decision 08-04): "type VND directly, let the app convert to USDC" for Vietnamese users.
-const CURRENCIES = ['USD', 'USDC', 'EURC', 'cirBTC']
+// 'USD' + exactly the tokens THIS network lists (src/network.js) - a hard-coded list offered cirBTC on mainnet,
+// where it does not exist (the server would refuse the send, but the app must not offer it at all).
+const CURRENCIES = ['USD', ...Object.keys(NET.tokens)]
 const effectiveToken = c => (c === 'USD' || c === 'VND' ? 'USDC' : c)
 // USD/VND are FIAT LABELS, not tokens - no coin logo for them (user decision 2026-09-24: "USD, EUR
 // tụi mình k dùng logo, còn token thì mới dùng" - showing USDC's logo under "USD" implied the user had
@@ -37,9 +39,17 @@ export default function SendAmount() {
   // WHAT YOU SCAN IS WHAT YOU GET: if the QR carries a valid currency → open in that currency (2 USDC shows as "2 USDC",
   // NOT converted to USD). An old/unclear QR (e.g. 'VND') → default to USD.
   const qrCurrency = CURRENCIES.includes(params.currency) ? params.currency : null
+  // QR SAFETY (MAINNET-V1-PLAN item 2): a currency this build does not have (an old 'VND' QR, a testnet 'cirBTC' QR)
+  // keeps NO amount - the number meant something else, and "500000" VND must never turn into $500,000.
+  const badCurrency = !!params.currency && !qrCurrency
   const [cur, setCur] = useState(qrCurrency || 'USD')
   // A prefilled amount (QR / back from Confirm) is only accepted if it is a clean decimal (qr.js already checks QRs).
-  const [digits, setDigits] = useState(params.amount && !amountProblem(String(params.amount), 8) ? String(params.amount) : '')
+  const [digits, setDigits] = useState(params.amount && !badCurrency && !amountProblem(String(params.amount), 8) ? String(params.amount) : '')
+  // The amount was put there by a QR and the user has not changed it (amount AND currency) → SendConfirm asks for one
+  // more "yes" above $100. Typing anything else makes it the user's own amount again. (No on-screen label: the owner
+  // removed "Amount requested by this QR code" on 2026-09-29 as clutter - the >$100 popup stays.)
+  const qrAmountStr = params.qrAmount && !badCurrency && params.amount ? String(params.amount) : null
+  const qrActive = !!qrAmountStr && digits === qrAmountStr && cur === (qrCurrency || 'USD')
   // DEFAULT NOTE (user decision 07-20e): the user sets it once in the popup → every send prefills the memo with it
   // (as a real VALUE, not a faded placeholder). Tapping the field to type → the default note DISAPPEARS and typing is
   // free (noteTouched stops it being cleared again on later focus).
@@ -292,7 +302,7 @@ export default function SendAmount() {
       <div className="row10-dual">
         <button className="btn btn-secondary" onClick={() => navigate(back)}>Back</button>
         <button className="btn btn-primary" disabled={!canContinue}
-          onClick={() => navigate('SendConfirm', { address, name, amount, amountStr: normalizeTyped(digits), memo, currency: cur, tokenAmount, back })}>
+          onClick={() => navigate('SendConfirm', { address, name, amount, amountStr: normalizeTyped(digits), memo, currency: cur, tokenAmount, qrAmount: qrActive, back })}>
           Continue
         </button>
       </div>

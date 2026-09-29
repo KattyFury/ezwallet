@@ -3,6 +3,7 @@ import ScreenSheet from '../components/ScreenSheet'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
 import { GRADIENT } from '../brandBg'
+import { NET } from '../clientNet'
 
 // SERVICE HUB - Figma node 58:119 ("Service"), rebuilt 2026-09-23. Same gradient/sheet/barless-NavBar
 // frame as Send/Receive; this screen shows a TITLE instead of the balance (no BalanceHeader here -
@@ -11,8 +12,13 @@ import { GRADIENT } from '../brandBg'
 // ⚠️ ONE CARD ONLY. LuckyPot was removed 2026-09-23 - see the note this file already carried, still
 // true: the user settled it directly, twice ("Exchange giờ sẽ là app duy nhất..." then "Figma là nguồn
 // sự thật, Figma k có luckypot").
+// Swap OFF on this network (mainnet v1 = send/receive only; testnet mirrors it) → the card KEEPS ITS PLACE, dimmed,
+// "Coming soon", not tappable (MAINNET-V1-PLAN item 1 - the button layout the owner approved stays as it is).
+// `screen: null` is what the existing `soon` state below keys on. v1.1 only has to flip NET.swap.
 const SERVICES = [
-  { id: 'swap', icon: 'exchange', label: 'Exchange', desc: 'Swap between USDC, EURC & cirBTC', screen: 'Swap' },
+  NET.swap
+    ? { id: 'swap', icon: 'exchange', label: 'Exchange', desc: `Swap between ${Object.keys(NET.tokens).join(' & ')}`, screen: 'Swap' }
+    : { id: 'swap', icon: 'exchange', label: 'Exchange', desc: 'Coming soon', screen: null },
 ]
 
 export default function ServiceHub() {

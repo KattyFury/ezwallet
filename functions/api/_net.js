@@ -6,7 +6,7 @@ export function netFrom(ctx) {
   return getNetwork(ctx.env.NETWORK)
 }
 
-export const JSON_CORS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+export const JSON_HEADERS_BASE = { 'Content-Type': 'application/json' }
 
 export const netError = (e) =>
-  new Response(JSON.stringify({ error: `Network misconfigured: ${e.message}` }), { status: 503, headers: JSON_CORS })
+  new Response(JSON.stringify({ error: `Network misconfigured: ${e.message}` }), { status: 503, headers: JSON_HEADERS_BASE })

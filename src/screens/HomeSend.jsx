@@ -124,6 +124,9 @@ export default function HomeSend() {
   }, [])
 
   const totalUsd = tokens.reduce((s, t) => s + t.usd, 0)
+  // Only tokens the user actually HOLDS are listed (owner 2026-09-29: an EURC row at 0 when you have no EURC
+  // "looks odd"). Display only - totals, the low-USDC warning and other screens still use the full `tokens`.
+  const heldTokens = tokens.filter(t => t.amount > 0)
 
   // SEND - Figma node 1:328, rebuilt 2026-09-23. Every coordinate is that node's own number in the
   // app's convention (x = px/390 as %, y = px/844 as dvh).
@@ -157,7 +160,7 @@ export default function HomeSend() {
         }}>
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted-2)', fontSize: 'calc(18 * var(--u))', padding: '0 calc(2 * var(--u))' }}>Loading...</div>
-        ) : tokens.length === 0 ? (
+        ) : heldTokens.length === 0 ? (
           <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted-2)', fontSize: 'calc(18 * var(--u))', padding: '0 calc(2 * var(--u))' }}>
             No tokens yet
           </div>
@@ -165,7 +168,7 @@ export default function HomeSend() {
           <>
             {/* One row per token - nodes 1:357 / 56:17: 308x40, radius 8, white. Figma stacks two of them
                 at y=101.9 and y=149.9, a 48px step = 40 tall plus the 8px gap declared above. */}
-            {tokens.map(tk => (
+            {heldTokens.map(tk => (
               <div key={tk.symbol} style={{
                 display: 'flex', alignItems: 'center', gap: 'calc(8 * var(--u))', flexShrink: 0,
                 height: 'calc(40 * var(--u))', borderRadius: 16, background: 'var(--color-white)', padding: '0 calc(16 * var(--u))',
@@ -206,7 +209,7 @@ export default function HomeSend() {
         )}
         </div>
 
-        {tokens.length > 0 && (
+        {heldTokens.length > 0 && (
           <ShowTokensButton onHoldStart={() => setShowToken(true)} onHoldEnd={() => setShowToken(false)} />
         )}
       </div>

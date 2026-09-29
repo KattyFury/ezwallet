@@ -39,7 +39,7 @@ async function circleReq(method, path, body, apiKey, userToken) {
   return res.json()
 }
 
-const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
+const JSON_HEADERS = { 'Content-Type': 'application/json' }
 
 export async function onRequestPost(ctx) {
   let net
@@ -105,18 +105,9 @@ export async function onRequestPost(ctx) {
     // Log the full response for investigation, and return Circle's real message instead of a vague "no challengeId".
     console.error('[send] contractExecution returned no challengeId:', JSON.stringify(txResp))
     const msg = txResp?.message || txResp?.error?.message || (txResp?.code ? `Circle error ${txResp.code}` : 'no challengeId')
-    return new Response(JSON.stringify({ error: msg, detail: txResp }), { status: 500, headers: JSON_HEADERS })
+    return new Response(JSON.stringify({ error: msg }), { status: 500, headers: JSON_HEADERS })
   }
 
   return new Response(JSON.stringify({ challengeId }), { headers: JSON_HEADERS })
 }
 
-export async function onRequestOptions() {
-  return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  })
-}

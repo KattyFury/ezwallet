@@ -1,4 +1,4 @@
-import { createPublicClient, http, decodeEventLog, parseAbiItem } from 'viem'
+import { createPublicClient, http, decodeEventLog, parseAbiItem, parseAbi, encodeFunctionData, parseUnits, stringToHex } from 'viem'
 import { defineChain } from 'viem'
 import { MOCK, MOCK_AMOUNTS, MOCK_RATES, MOCK_CHANGE_24H } from './mock'
 // The chain id is declared in qr.js (a module that does NOT depend on viem) so screens that only draw/read QRs - ShowQR,
@@ -282,6 +282,27 @@ async function readMemoOnChain(hash) {
 
 // The real gas fee: Arc prices gas in USDC (18 decimals internally). USDC = $1 → the USD fee IS feeUsdc.
 // gasUnits: ~65k for a plain transfer, ~110k for a transfer with a memo. NOT rounded (the fee is tiny, cents matter).
+// THE FEE OF THIS EXACT SEND (MAINNET-V1-PLAN item 4): ask the chain how much gas the very call /api/send will make
+// (a plain transfer, or the Memo contract when there is a note - same encoding as functions/api/send.js) instead of a
+// fixed 65k/110k guess. If the chain cannot estimate it (e.g. the amount is above the balance) fall back to the guess.
+const ERC20_TRANSFER = parseAbi(['function transfer(address to, uint256 amount)'])
+const MEMO_ABI = parseAbi(['function memo(address target, bytes data, bytes32 memoId, bytes memoData)'])
+export async function estimateSendFeeUsd({ from, token, to, amountStr, memo }) {
+  const note = (memo || '').trim()
+  const guess = note ? 110000 : 65000
+  const t = NET.tokens[token]
+  if (MOCK || !from || !t) return estimateFeeUsd(guess)
+  let gas = BigInt(guess)
+  try {
+    const transfer = encodeFunctionData({ abi: ERC20_TRANSFER, functionName: 'transfer', args: [to, parseUnits(String(amountStr), t.decimals)] })
+    const call = note
+      ? { to: NET.contracts.memo, data: encodeFunctionData({ abi: MEMO_ABI, functionName: 'memo', args: [t.address, transfer, `0x${'11'.repeat(32)}`, stringToHex(note)] }) }
+      : { to: t.address, data: transfer }
+    gas = await publicClient.estimateGas({ account: from, ...call })
+  } catch { /* keep the guess */ }
+  return estimateFeeUsd(gas)
+}
+
 export async function estimateFeeUsd(gasUnits = 65000) {
   if (MOCK) return 0.002   // a small fake fee
   try {

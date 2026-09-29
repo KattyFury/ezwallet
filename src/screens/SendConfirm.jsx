@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
-import { getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency, shortenAddr } from '../data'
-import { getDisplayRates, estimateFeeUsd } from '../chain'
+import { getDisplayCurrency, displaySymbol, shortenAddr } from '../data'
+import { getDisplayRates, estimateSendFeeUsd } from '../chain'
 import { getSDK, executeChallenge, refreshSession, circleErrorMessage } from '../circle'
 import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
@@ -25,14 +25,8 @@ export default function SendConfirm() {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)         // sent successfully → locked, no resending
   const [error, setError] = useState('')          // a terminal error (cancel/network...) shown in place
-
-  useEffect(() => {
-    // getDisplayRates (not the per-token getUsdRate) - it includes VND, and VND is not a token
-    // so getUsdRate looking through TOKENS would not find it.
-    getDisplayRates().then(setFeeRates).catch(() => {})
-    // A memo goes through the Memo contract → more gas (~110k) than a plain transfer (~65k)
-    estimateFeeUsd(memo && memo.trim() ? 110000 : 65000).then(setFeeUsd).catch(() => setFeeUsd(0))
-  }, [memo])
+  const [qrCheck, setQrCheck] = useState(false)    // the extra "is this right?" popup for a big QR amount is open
+  const [qrChecked, setQrChecked] = useState(false) // ...and the user said yes (asked once per payment)
 
   // USD = USDC (1:1, only the label differs); USDC/EURC/cirBTC send exactly the amount entered, with NO conversion.
   // VND = fiat, which does NOT exist on-chain → USDC is sent.
@@ -45,21 +39,37 @@ export default function SendConfirm() {
   // MAINNET-AUDIT H1: send EXACTLY the string the user typed/confirmed (validated again by the server) - the old
   // toFixed(2) turned "0.004" into "0.00". VND is unreachable (see HANDOFF §4) and keeps its old conversion.
   const sendAmountStr = currency === 'VND' ? sendUnits.toFixed(2) : (amountStr ?? String(amount))
+
+  useEffect(() => {
+    // getDisplayRates (not the per-token getUsdRate) - it includes VND, and VND is not a token
+    // so getUsdRate looking through TOKENS would not find it.
+    getDisplayRates().then(setFeeRates).catch(() => {})
+    // The fee of THIS send, estimated on chain (MAINNET-V1-PLAN item 4) - see estimateSendFeeUsd.
+    estimateSendFeeUsd({ from: localStorage.getItem('ez_wallet_addr'), token, to: address, amountStr: sendAmountStr, memo })
+      .then(setFeeUsd).catch(() => setFeeUsd(0))
+  }, [memo, token, address, sendAmountStr])
+
   const mainEl = currency === 'USD' ? <>{displaySymbol('USDC')}{sendAmountStr}</>
     : currency === 'VND' ? <>{amount.toLocaleString('vi-VN')} <Cur>₫</Cur></>
     : <>{sendAmountStr} <Cur>{currency}</Cur></>
+
+  // QR SAFETY (MAINNET-V1-PLAN item 2): an amount a QR put there (untouched - SendAmount's qrActive) worth more than
+  // $100 needs one more explicit "yes" before the PIN. A forged or swapped QR is the easiest way to trick someone
+  // into a big payment.
+  const QR_CHECK_OVER_USD = 100
+  const usdValue = Number(sendAmountStr) * (token === 'USDC' ? 1 : (feeRates[token] || 1))
+  const needsQrCheck = !!params.qrAmount && usdValue > QR_CHECK_OVER_USD && !qrChecked
 
   // Network fee in the DEFAULT CURRENCY from Settings (USDC/EURC/VND)
   const displayCur = getDisplayCurrency()
   function feeEl() {
     if (feeUsd === null) return 'Calculating...'
+    // THE REAL FEE, AT MOST 3 DECIMALS (owner rule 2026-09-29: "0.002 thì hiển là 0.002 ... không thêm số thập phân
+    // nào nữa"). Rounded to the nearest 0.001, trailing zeros trimmed; below half of that → "< 0.001".
     const v = feeUsd / (feeRates[displayCur] || 1)
-    // The "too small to show" threshold must follow the currency's DECIMALS: $0.01 for USD, but VND has no
-    // decimals so its threshold is 1 ₫ - a shared 0.01 would render a 500 ₫ fee as "< 0.01 ₫" (meaningless).
-    const dec = decimalsOfCurrency(displayCur)
-    const min = 10 ** -dec
-    return v < min ? `< ${fmtDisplay(min * (feeRates[displayCur] || 1), displayCur, feeRates)}`
-                   : fmtDisplay(feeUsd, displayCur, feeRates)
+    const r = Math.round(v * 1000) / 1000
+    const sym = displaySymbol(displayCur)
+    return r === 0 ? `< ${sym}0.001` : `${sym}${String(r)}`
   }
 
   // The attempt this screen created (refId + timestamps) - see src/txTracker.js.
@@ -242,10 +252,26 @@ export default function SendConfirm() {
       <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.66dvh', transform: 'translateY(-50%)', display: 'flex', gap: 'calc(8 * var(--u))' }}>
         <button className="btn btn-secondary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} disabled={loading || done} onClick={() => navigate('SendAmount', params)}>Back</button>
         <button className="btn btn-primary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }}
-          disabled={loading || done} onClick={handleConfirm}>
+          disabled={loading || done} onClick={() => (needsQrCheck && !attemptRef.current ? setQrCheck(true) : handleConfirm())}>
           {loading ? 'Processing...' : (attemptRef.current ? 'Check again' : 'Confirm PIN')}
         </button>
       </div>
+
+      {qrCheck && (
+        <div className="popup-overlay" onClick={() => setQrCheck(false)}>
+          <div className="popup-card" onClick={e => e.stopPropagation()}>
+            <div className="popup-title">Check this amount</div>
+            <p style={{ margin: 0, fontSize: 'var(--fs-content-2)', lineHeight: 1.4 }}>
+              This QR code asks you to send <b className="num">{mainEl}</b> to <b>{name || shortenAddr(address)}</b>.
+              Only continue if you know who this is and you expected to pay this amount.
+            </p>
+            <div className="popup-actions">
+              <button className="btn btn-secondary" onClick={() => setQrCheck(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={() => { setQrCheck(false); setQrChecked(true); handleConfirm() }}>Yes, continue</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ExitBar onClick={() => navigate('HomeSend')} />
     </div>

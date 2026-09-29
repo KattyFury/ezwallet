@@ -34,7 +34,7 @@
 // ══════════════════════════════════════════════════════════════════════════════
 import { recoverMessageAddress } from 'viem';
 
-const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
+const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
 // 128KB is the LAST-RESORT CAP, not a number anyone normally approaches: 500 contacts + 200 "clean" QRs is only ~95KB.
 // It exists because `id` is kept exactly as the client sent it (no type constraint) - stuffing a long string into
@@ -139,12 +139,3 @@ export async function onRequestPost(ctx) {
   return json({ error: 'unknown action' }, 400);
 }
 
-export async function onRequestOptions() {
-  return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
-}
