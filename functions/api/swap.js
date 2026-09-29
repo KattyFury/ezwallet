@@ -11,9 +11,12 @@ import { netFrom, netError } from './_net.js'
 import { amountProblem } from '../../src/money.js'
 
 const W3S_API = 'https://api.circle.com/v1/w3s'
-const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' }
-const err = (msg, detail, status = 500) =>
-  new Response(JSON.stringify({ error: msg, detail }), { status, headers: JSON_HEADERS })
+const JSON_HEADERS = { 'Content-Type': 'application/json' }
+// The raw upstream payload (`detail`) goes to the server log only - never back to the browser (MAINNET-V1-PLAN item 7).
+const err = (msg, detail, status = 500) => {
+  if (detail) console.error('[swap]', msg, JSON.stringify(detail))
+  return new Response(JSON.stringify({ error: msg }), { status, headers: JSON_HEADERS })
+}
 
 export async function onRequestPost(ctx) {
   let net
@@ -97,6 +100,3 @@ export async function onRequestPost(ctx) {
   }
 }
 
-export async function onRequestOptions() {
-  return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type' } })
-}

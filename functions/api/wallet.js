@@ -1,4 +1,4 @@
-import { netFrom, netError, JSON_CORS } from './_net.js';
+import { netFrom, netError, JSON_HEADERS_BASE } from './_net.js';
 
 const CIRCLE_API = 'https://api.circle.com/v1/w3s';
 
@@ -18,7 +18,7 @@ async function circleReq(method, path, body, apiKey, userToken) {
   return { status: res.status, data };
 }
 
-const JSON_HEADERS = { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' };
+const JSON_HEADERS = { 'Content-Type': 'application/json' };
 
 // The wallet on THIS network's chain - and nothing else. The old `|| list[0]` fallback is gone
 // (MAINNET-AUDIT.md C2): a wallet from another chain would sign on the wrong network.
@@ -32,7 +32,7 @@ export async function onRequestPost(ctx) {
   try { net = netFrom(ctx); } catch (e) { return netError(e); }
   // Circle does not (yet) support this network for user-controlled wallets → refuse everything, fail closed.
   if (!net.circleBlockchain) {
-    return new Response(JSON.stringify({ error: `Circle wallets are not available on ${net.label} yet` }), { status: 503, headers: JSON_CORS });
+    return new Response(JSON.stringify({ error: `Circle wallets are not available on ${net.label} yet` }), { status: 503, headers: JSON_HEADERS_BASE });
   }
   const apiKey = ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY;
   const body = await ctx.request.json();
@@ -52,7 +52,7 @@ export async function onRequestPost(ctx) {
     if (!challengeId) {
       console.error('[signMessage] no challengeId:', status, JSON.stringify(data));
       const msg = `${data?.message || data?.error?.message || 'no challengeId'} (HTTP ${status}${data?.code ? `, code ${data.code}` : ''})`;
-      return new Response(JSON.stringify({ error: msg, detail: data }), { status: 500, headers: JSON_HEADERS });
+      return new Response(JSON.stringify({ error: msg }), { status: 500, headers: JSON_HEADERS });
     }
     return new Response(JSON.stringify({ challengeId }), { headers: JSON_HEADERS });
   }
@@ -82,7 +82,7 @@ export async function onRequestPost(ctx) {
       // 3 debugging sessions. A screenshot of an error now has to explain itself.
       console.error('[resetPin] no challengeId returned:', status, JSON.stringify(data));
       const msg = `${data?.message || data?.error?.message || 'no challengeId'} (HTTP ${status}${data?.code ? `, code ${data.code}` : ''})`;
-      return new Response(JSON.stringify({ error: msg, detail: data }), { status: 500, headers: JSON_HEADERS });
+      return new Response(JSON.stringify({ error: msg }), { status: 500, headers: JSON_HEADERS });
     }
     return new Response(JSON.stringify({ challengeId }), { headers: JSON_HEADERS });
   }
@@ -97,7 +97,7 @@ export async function onRequestPost(ctx) {
     if (!challengeId) {
       console.error('[restorePin] no challengeId returned:', status, JSON.stringify(data));
       const msg = `${data?.message || data?.error?.message || 'no challengeId'} (HTTP ${status}${data?.code ? `, code ${data.code}` : ''})`;
-      return new Response(JSON.stringify({ error: msg, detail: data }), { status: 500, headers: JSON_HEADERS });
+      return new Response(JSON.stringify({ error: msg }), { status: 500, headers: JSON_HEADERS });
     }
     return new Response(JSON.stringify({ challengeId }), { headers: JSON_HEADERS });
   }
@@ -109,18 +109,18 @@ export async function onRequestPost(ctx) {
   if (action === 'txByRef') {
     const { walletId, refId, since } = body;
     if (!walletId || !refId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(refId)) {
-      return new Response(JSON.stringify({ error: 'walletId + refId required' }), { status: 400, headers: JSON_CORS });
+      return new Response(JSON.stringify({ error: 'walletId + refId required' }), { status: 400, headers: JSON_HEADERS_BASE });
     }
     const qs = new URLSearchParams({ walletIds: walletId, pageSize: '50' });
     if (since && !Number.isNaN(Date.parse(since))) qs.set('from', new Date(since).toISOString());
     const { status, data } = await circleReq('GET', `/transactions?${qs}`, undefined, apiKey, userToken);
     if (status >= 400) {
-      return new Response(JSON.stringify({ error: data?.message || `Circle HTTP ${status}` }), { status: 502, headers: JSON_CORS });
+      return new Response(JSON.stringify({ error: data?.message || `Circle HTTP ${status}` }), { status: 502, headers: JSON_HEADERS_BASE });
     }
     const tx = (data?.data?.transactions || []).find(t => t.refId === refId);
     return new Response(JSON.stringify(tx
       ? { found: true, id: tx.id, state: tx.state, txHash: tx.txHash || null, errorReason: tx.errorReason || null }
-      : { found: false }), { headers: JSON_CORS });
+      : { found: false }), { headers: JSON_HEADERS_BASE });
   }
 
   if (action === 'getAddress') {
@@ -137,12 +137,3 @@ export async function onRequestPost(ctx) {
   return new Response(JSON.stringify({ error: 'unknown action' }), { status: 400, headers: JSON_HEADERS });
 }
 
-export async function onRequestOptions() {
-  return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
-}

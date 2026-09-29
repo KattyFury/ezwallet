@@ -4,9 +4,9 @@
 // The authToken is what /api/session now requires (MAINNET-AUDIT.md C1). Logic + limits live in _auth.js.
 import { normEmail, isEmail, startChallenge, verifyChallenge, requireSecret } from './_auth.js'
 import { sendMail, codeEmail } from './_mail.js'
-import { JSON_CORS } from './_net.js'
+import { JSON_HEADERS_BASE } from './_net.js'
 
-const reply = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: JSON_CORS })
+const reply = (obj, status = 200) => new Response(JSON.stringify(obj), { status, headers: JSON_HEADERS_BASE })
 
 export async function onRequestPost(ctx) {
   let secret
@@ -41,6 +41,3 @@ export async function onRequestPost(ctx) {
   return reply({ error: 'unknown action' }, 400)
 }
 
-export async function onRequestOptions() {
-  return new Response(null, { headers: { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': 'POST', 'Access-Control-Allow-Headers': 'Content-Type' } })
-}

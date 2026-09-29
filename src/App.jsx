@@ -12,7 +12,7 @@ const AddToHome   = lazy(() => import('./screens/AddToHome'))
 // Splash is imported EAGERLY (not lazy): it is the Suspense fallback while the FIRST screen loads (see below),
 // so it must already be in the main bundle - a lazy fallback would itself suspend.
 import Splash from './screens/Splash'
-import { netHealth } from './clientNet'
+import { netHealth, NET } from './clientNet'
 const Login       = lazy(() => import('./screens/Login'))
 const HomeSend    = lazy(() => import('./screens/HomeSend'))
 const HomeReceive = lazy(() => import('./screens/HomeReceive'))
@@ -115,14 +115,16 @@ export default function App() {
     const cancel = window.cancelIdleCallback ? window.cancelIdleCallback.bind(window) : clearTimeout
     const id = idle(() => {
       import('./screens/HomeSend'); import('./screens/HomeReceive')
-      import('./screens/ServiceHub'); import('./screens/Swap'); import('./screens/MenuScreen')
+      import('./screens/ServiceHub'); if (NET.swap) import('./screens/Swap'); import('./screens/MenuScreen')
       import('./screens/SendAmount'); import('./screens/Contacts'); import('./screens/TxHistory')
       if (import.meta.env.VITE_MOCK !== '1') import('@circle-fin/w3s-pw-web-sdk').catch(() => {})
     })
     return () => cancel(id)
   }, [])
 
-  const Screen = SCREENS[nav.screen] || SCREENS['Login']
+  // Swap is off on this network → no way into the screen at all (not even the ?screen= QA override); /api/swap
+  // refuses too (503). See ServiceHub's "Coming soon" card.
+  const Screen = nav.screen === 'Swap' && !NET.swap ? SCREENS.ServiceHub : (SCREENS[nav.screen] || SCREENS['Login'])
 
   return (
     <NavContext.Provider value={{ navigate, params: nav.params }}>

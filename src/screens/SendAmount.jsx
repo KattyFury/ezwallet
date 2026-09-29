@@ -22,7 +22,9 @@ import { amountProblem, normalizeTyped } from '../money'
 // deleted - re-enabling only needs 'VND' back in this array + the locked flags removed in Security.jsx + data.js
 // (the language/currency picker moved there when Currency.jsx was deleted 2026-09-24).
 // The original reason (user decision 08-04): "type VND directly, let the app convert to USDC" for Vietnamese users.
-const CURRENCIES = ['USD', 'USDC', 'EURC', 'cirBTC']
+// 'USD' + exactly the tokens THIS network lists (src/network.js) - a hard-coded list offered cirBTC on mainnet,
+// where it does not exist (the server would refuse the send, but the app must not offer it at all).
+const CURRENCIES = ['USD', ...Object.keys(NET.tokens)]
 const effectiveToken = c => (c === 'USD' || c === 'VND' ? 'USDC' : c)
 // USD/VND are FIAT LABELS, not tokens - no coin logo for them (user decision 2026-09-24: "USD, EUR
 // tụi mình k dùng logo, còn token thì mới dùng" - showing USDC's logo under "USD" implied the user had

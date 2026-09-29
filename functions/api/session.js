@@ -1,5 +1,5 @@
 import { readToken, requireSecret } from './_auth.js';
-import { JSON_CORS } from './_net.js';
+import { JSON_HEADERS_BASE } from './_net.js';
 
 const CIRCLE_API = 'https://api.circle.com/v1/w3s';
 
@@ -31,13 +31,14 @@ export async function onRequestPost(ctx) {
     });
     const data = await res.json();
     if (data.code || !data.data?.userToken) {
-      return new Response(JSON.stringify({ error: data.message || 'refresh failed', detail: data }), { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+      console.error('[session] token refresh failed:', JSON.stringify(data));
+      return new Response(JSON.stringify({ error: data.message || 'refresh failed' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
     return new Response(JSON.stringify({
       userToken: data.data.userToken,
       encryptionKey: data.data.encryptionKey,
       refreshToken: data.data.refreshToken,
-    }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    }), { headers: { 'Content-Type': 'application/json' } });
   }
 
   // Social login: create a device token
@@ -53,7 +54,7 @@ export async function onRequestPost(ctx) {
     return new Response(JSON.stringify({
       deviceToken: data.data.deviceToken,
       deviceEncryptionKey: data.data.deviceEncryptionKey,
-    }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    }), { headers: { 'Content-Type': 'application/json' } });
   }
 
   // Email OTP: mail the code + return otpToken/deviceToken/deviceEncryptionKey for the SDK's verifyOtp.
@@ -68,13 +69,14 @@ export async function onRequestPost(ctx) {
     });
     const data = await res.json();
     if (data.code || !data.data?.otpToken) {
-      return new Response(JSON.stringify({ error: data.message || 'email token failed', detail: data }), { status: 400, headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+      console.error('[session] email token failed:', JSON.stringify(data));
+      return new Response(JSON.stringify({ error: data.message || 'email token failed' }), { status: 400, headers: { 'Content-Type': 'application/json' } });
     }
     return new Response(JSON.stringify({
       otpToken: data.data.otpToken,
       deviceToken: data.data.deviceToken,
       deviceEncryptionKey: data.data.deviceEncryptionKey,
-    }), { headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' } });
+    }), { headers: { 'Content-Type': 'application/json' } });
   }
 
   // MAINNET-AUDIT C1: a Circle token is minted ONLY for the email inside a valid auth token (the user proved
@@ -82,11 +84,11 @@ export async function onRequestPost(ctx) {
   // for ANY email. The email in the body, if any, is ignored.
   let secret;
   try { secret = requireSecret(ctx.env); } catch (e) {
-    return new Response(JSON.stringify({ error: `Sign-in is not configured: ${e.message}` }), { status: 503, headers: JSON_CORS });
+    return new Response(JSON.stringify({ error: `Sign-in is not configured: ${e.message}` }), { status: 503, headers: JSON_HEADERS_BASE });
   }
   const email = await readToken(secret, body.authToken);
   if (!email) {
-    return new Response(JSON.stringify({ error: 'Please sign in again', code: 'AUTH_REQUIRED' }), { status: 401, headers: JSON_CORS });
+    return new Response(JSON.stringify({ error: 'Please sign in again', code: 'AUTH_REQUIRED' }), { status: 401, headers: JSON_HEADERS_BASE });
   }
 
   const userId = email;
@@ -103,16 +105,7 @@ export async function onRequestPost(ctx) {
     userToken: tokenData.data.userToken,
     encryptionKey: tokenData.data.encryptionKey,
   }), {
-    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+    headers: { 'Content-Type': 'application/json' },
   });
 }
 
-export async function onRequestOptions() {
-  return new Response(null, {
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
-}

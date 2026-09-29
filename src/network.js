@@ -21,11 +21,13 @@ export const NETWORKS = {
     circleAppId: '518fec6a-4680-5175-9de6-0810fb3dfd04',   // Circle Console (Testnet) → User Controlled → App ID
     kitChain: 'Arc_Testnet',           // Circle Stablecoin/App Kit identifier
     faucet: true,
-    swap: true,
+    // TESTNET = MAINNET (owner rule 2026-09-29): testnet exists to rehearse what mainnet ships, so it runs the same
+    // feature set - swap OFF and no cirBTC, exactly like mainnet v1. Only chain/App ID/addresses/faucet may differ.
+    // (cirBTC on testnet was 0xf0c4a4ce82a5746abaad9425360ab04fbba432bf, 8 decimals - for when a token is added back.)
+    swap: false,
     tokens: {
       USDC:   { address: '0x3600000000000000000000000000000000000000', decimals: 6 },
       EURC:   { address: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', decimals: 6 },
-      cirBTC: { address: '0xf0c4a4ce82a5746abaad9425360ab04fbba432bf', decimals: 8 },
     },
     contracts: {
       memo:           '0x5294E9927c3306DcBaDb03fe70b92e01cCede505',

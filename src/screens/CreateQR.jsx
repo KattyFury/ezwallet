@@ -7,9 +7,11 @@ import { useFitFontSize } from '../useFitFontSize'
 import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
+import { NET } from '../clientNet'
 
-// Consistent with the Send screen: USD (friendly label, backed by USDC) by default + USDC/EURC/cirBTC.
-const CURRENCIES = ['USD', 'USDC', 'EURC', 'cirBTC']
+// Consistent with the Send screen: USD (friendly label, backed by USDC) by default + this network's tokens.
+// 'USD' + exactly the tokens this network lists (src/network.js) - never a hard-coded token list.
+const CURRENCIES = ['USD', ...Object.keys(NET.tokens)]
 // USD is a FIAT LABEL, not a token - no coin logo for it (same rule as SendAmount.jsx).
 const isFiatLabel = c => c === 'USD'
 const tokenIconFor = c => (c === 'USD' ? 'usdc' : c.toLowerCase())

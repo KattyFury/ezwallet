@@ -72,23 +72,22 @@ ezwallet removes the crypto vocabulary from the surface:
 | 🔑 **Email + PIN login** | No seed phrase to write down or lose. Keys are held in Circle's MPC infrastructure; the PIN authorises every signature. |
 | 💸 **Send with a note** | Attach a short message to a transfer, so the receiver knows what the money is for. |
 | 📷 **Receive by QR** | Show a QR to get paid. Optionally set an exact amount, name it, and keep it in a QR library for reuse. |
-| 🔄 **Swap with a % slider** | Choose how much of your balance to convert by dragging a slider instead of typing decimals. Round-number shortcuts are offered as chips. |
 | 👥 **Contacts** | Save addresses under a name (with an avatar) so you never paste a raw `0x…` twice. |
 | 🧾 **History + receipts** | Full transaction history with per-transaction detail and a saveable receipt image. |
-| 🌐 **Multi-currency display** | Show balances in USDC, EURC or Vietnamese dong; with VND you can also type the amount you want to send and the app converts it to USDC. The underlying token is always labelled honestly. |
+| 🌐 **USD or EUR display** | Show balances in US dollars or euros. The underlying token (USDC or EURC) is always labelled honestly. |
+| 📣 **Notices from the team** | Short announcements (never with a link) appear in the app's notification area. |
 
 ## Tech stack
 
 | Layer | What it uses |
 |---|---|
 | **Wallet** | [Circle User-Controlled Wallets](https://developers.circle.com/w3s/programmable-wallets) – MPC key management, PIN-based signing (`@circle-fin/w3s-pw-web-sdk`) |
-| **Chain** | [Arc](https://docs.arc.io) L1 testnet (`chainId 5042002`) – **USDC is the native gas token** |
-| **Swap** | Circle Stablecoin Kit, routed through LiFi |
+| **Chain** | [Arc](https://docs.arc.io) L1 – mainnet (`chainId 5042`) and testnet (`chainId 5042002`) from one codebase; **USDC is the native gas token** |
 | **Frontend** | React 18 + Vite 5, `viem` for on-chain reads, `qrcode.react` / `jsqr` for QR |
 | **Backend** | Cloudflare Pages + Pages Functions (`functions/api/*`) – keeps the Circle API key server-side |
 
-Tokens on Arc Testnet: **USDC**, **EURC**, **cirBTC**. Transfer notes are written
-on-chain through Arc's Memo precompile.
+Tokens: **USDC** and **EURC**. Transfer notes are written on-chain through Arc's
+Memo precompile.
 
 ## Try it
 
@@ -153,20 +152,19 @@ npm test        # unit tests (node:test)
 
 ## Current limitations
 
-Being upfront about what this is not, yet:
+Being upfront about what this is not:
 
-- **Testnet only.** Runs on Arc Testnet; balances have no real-world value.
-- **No mainnet deployment.**
-- **English by default.** Vietnamese is fully translated – including Circle's PIN
-  and security-question screens – and selectable under Language & Currency, but the
-  app does not auto-switch on it. A few strings inside Circle's iframe stay English
-  regardless: runtime error messages have no localization field in the SDK, and
-  `common.showPin` is currently ignored (reported to Circle).
-- **Google sign-in is not supported.** Email + PIN only.
-- **QR scanning is limited to crypto wallet QR codes.** Real-world QR codes
-  (product barcodes, bank QRs, etc.) are not handled.
-- **Not audited.** See [SECURITY.md](./SECURITY.md) for the custody model, the known
-  limitations, and how to report a vulnerability privately.
+- **Not a bank.** ezwallet is a free, non-profit wallet app. Money is held in your own
+  on-chain wallet; nobody insures it and nobody can reverse a transfer.
+- **Not independently audited.** See [SECURITY.md](./SECURITY.md) for the custody model,
+  the known limitations, and how to report a vulnerability privately.
+- **You cannot export your private key yet.** The wallet is a Circle user-controlled
+  (MPC) wallet opened with your email + PIN; there is no seed phrase or key export.
+- **Arc only.** Send and receive USDC/EURC on the Arc network. Money someone sends to
+  your address on another chain does not arrive in ezwallet.
+- **No swap for now.** Swapping is switched off while it gets a proper safety review.
+- **English only**, email + PIN sign-in only (no Google sign-in).
+- **QR scanning is limited to wallet QR codes** (not bank QRs or product barcodes).
 
 ## How this was built
 
