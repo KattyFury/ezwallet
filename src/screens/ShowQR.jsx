@@ -7,6 +7,7 @@ import { saveImageToPhotos, brandedQrCanvas } from '../saveImage'
 import { loadSavedQRs, saveSavedQRs } from '../store'
 import { buildQR } from '../qr'
 import ScreenSheet from '../components/ScreenSheet'
+import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
 import { NET } from '../clientNet'
 
@@ -81,6 +82,11 @@ export default function ShowQR() {
             where I came from", library vs Receive alike). */}
         <button className="btn btn-primary" onClick={() => navigate(back)}>Done</button>
       </div>
+
+      {/* Row 10 is the gradient strip → it carries Exit, like every other sheet screen (owner rule 2026-09-29:
+          "hàng 10 màu xanh gradient nghĩa là nó phải có nút Exit"; the 09-24 "Done is enough" call left the
+          strip empty). Exit and Done go to the same place. */}
+      <ExitBar onClick={() => navigate(back)} />
     </div>
   )
 }
