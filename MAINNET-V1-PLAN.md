@@ -38,13 +38,13 @@
 | # | Việc | Vì sao |
 |---|---|---|
 | 1 | Swap tắt trên mainnet: ô "Exchange" trong Service Hub **giữ nguyên vị trí**, làm mờ, ghi "Coming soon" (không ghi ngày), không bấm được. Server `/api/swap` trả lỗi nếu bị gọi | Tránh rủi ro mất tiền khi swap (C5/H2); giữ bố cục nút đã ưng, v1.1 chỉ cần bật lại |
-| 2 | **QR an toàn (H3):** QR điền sẵn số tiền phải hiện rõ "Số tiền do mã QR này yêu cầu". QR đòi **trên $100** phải xác nhận thêm một bước | QR độc có thể lừa gửi số lớn |
+| 2 | **QR an toàn (H3):** ~~QR điền sẵn số tiền phải hiện rõ "Số tiền do mã QR này yêu cầu"~~ (chủ dự án bỏ 2026-09-29: thừa). QR đòi **trên $100** phải xác nhận thêm một bước (popup "Check this amount") | QR độc có thể lừa gửi số lớn |
 | 3 | **Mail thông báo bảo mật (3 loại):** tạo tài khoản thành công; đổi PIN; đặt lại PIN khi quên (bằng câu hỏi bảo mật của Circle). Server biết thời điểm đặt lại PIN vì yêu cầu đi qua server ezwallet trước khi mở iframe Circle | Chủ ví biết ngay khi có ai động vào tài khoản. **Không khoá giao dịch** sau khi đặt lại PIN |
 | 4 | **Hiện phí gas bằng USDC trước khi xác nhận** (thay vì con số ước đoán cố định) | Spec đã chốt; người dùng biết chính xác sẽ tốn bao nhiêu |
 | 5 | Server kiểm tra địa chỉ nhận trong `send.js` | Chặn địa chỉ sai bị biến thành địa chỉ khác |
 | 6 | **Chặn email dùng-một-lần (temp-mail)** trên mainnet | Ví gắn với email; email chết thì người dùng không lấy lại được ví |
 | 7 | Siết bảo mật web: CORS chỉ cho tên miền của app; không trả nguyên văn lỗi Circle; CSP chặt; bỏ script đếm lượt truy cập của Cloudflare | Khuyến nghị "hardening" trong audit |
-| 8 | Ghi nhãn "TESTNET – không phải tiền thật" rõ ràng trên màn Nhận/Chia sẻ của bản testnet (H4) | Tránh người thử đem địa chỉ testnet đi nhận tiền thật |
+| ~~8~~ | ~~(BỎ 2026-09-29: testnet phải y chang mainnet)~~ Ghi nhãn "TESTNET – không phải tiền thật" rõ ràng trên màn Nhận/Chia sẻ của bản testnet (H4) | Tránh người thử đem địa chỉ testnet đi nhận tiền thật |
 | 9 | README "Hạn chế" (ngắn gọn): chưa xuất được private key; chưa có audit độc lập; không phải ngân hàng; chỉ gửi/nhận trong mạng Arc | Spec yêu cầu nói thẳng |
 
 ### Giai đoạn 3 — Ra mắt

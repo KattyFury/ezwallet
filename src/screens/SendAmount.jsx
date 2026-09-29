@@ -45,8 +45,9 @@ export default function SendAmount() {
   const [cur, setCur] = useState(qrCurrency || 'USD')
   // A prefilled amount (QR / back from Confirm) is only accepted if it is a clean decimal (qr.js already checks QRs).
   const [digits, setDigits] = useState(params.amount && !badCurrency && !amountProblem(String(params.amount), 8) ? String(params.amount) : '')
-  // The amount was put there by a QR and the user has not changed it (amount AND currency) → say so on screen, and
-  // SendConfirm asks for one more "yes" above $100. Typing anything else makes it the user's own amount again.
+  // The amount was put there by a QR and the user has not changed it (amount AND currency) → SendConfirm asks for one
+  // more "yes" above $100. Typing anything else makes it the user's own amount again. (No on-screen label: the owner
+  // removed "Amount requested by this QR code" on 2026-09-29 as clutter - the >$100 popup stays.)
   const qrAmountStr = params.qrAmount && !badCurrency && params.amount ? String(params.amount) : null
   const qrActive = !!qrAmountStr && digits === qrAmountStr && cur === (qrCurrency || 'USD')
   // DEFAULT NOTE (user decision 07-20e): the user sets it once in the popup → every send prefills the memo with it
@@ -231,13 +232,9 @@ export default function SendAmount() {
         <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '39.5dvh', fontSize: 'var(--fs-caption)', color: 'var(--color-error)', textAlign: 'center' }}>
           That's your own wallet – you can't send to yourself
         </span>
-      ) : overBalance ? (
+      ) : overBalance && (
         <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '39.5dvh', fontSize: 'var(--fs-caption)', color: 'var(--color-error)', textAlign: 'center' }}>
           {'Insufficient balance (available:'} {availableStr})
-        </span>
-      ) : qrActive && (
-        <span style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '39.5dvh', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)', textAlign: 'center' }}>
-          Amount requested by this QR code
         </span>
       )}
 
