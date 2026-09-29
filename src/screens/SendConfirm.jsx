@@ -25,6 +25,8 @@ export default function SendConfirm() {
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)         // sent successfully → locked, no resending
   const [error, setError] = useState('')          // a terminal error (cancel/network...) shown in place
+  const [qrCheck, setQrCheck] = useState(false)    // the extra "is this right?" popup for a big QR amount is open
+  const [qrChecked, setQrChecked] = useState(false) // ...and the user said yes (asked once per payment)
 
   useEffect(() => {
     // getDisplayRates (not the per-token getUsdRate) - it includes VND, and VND is not a token
@@ -48,6 +50,13 @@ export default function SendConfirm() {
   const mainEl = currency === 'USD' ? <>{displaySymbol('USDC')}{sendAmountStr}</>
     : currency === 'VND' ? <>{amount.toLocaleString('vi-VN')} <Cur>₫</Cur></>
     : <>{sendAmountStr} <Cur>{currency}</Cur></>
+
+  // QR SAFETY (MAINNET-V1-PLAN item 2): an amount a QR put there (untouched - SendAmount's qrActive) worth more than
+  // $100 needs one more explicit "yes" before the PIN. A forged or swapped QR is the easiest way to trick someone
+  // into a big payment; below $100 the amount line on SendAmount is the warning.
+  const QR_CHECK_OVER_USD = 100
+  const usdValue = Number(sendAmountStr) * (token === 'USDC' ? 1 : (feeRates[token] || 1))
+  const needsQrCheck = !!params.qrAmount && usdValue > QR_CHECK_OVER_USD && !qrChecked
 
   // Network fee in the DEFAULT CURRENCY from Settings (USDC/EURC/VND)
   const displayCur = getDisplayCurrency()
@@ -242,10 +251,26 @@ export default function SendConfirm() {
       <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '85.66dvh', transform: 'translateY(-50%)', display: 'flex', gap: 'calc(8 * var(--u))' }}>
         <button className="btn btn-secondary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }} disabled={loading || done} onClick={() => navigate('SendAmount', params)}>Back</button>
         <button className="btn btn-primary" style={{ flex: 1, boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)' }}
-          disabled={loading || done} onClick={handleConfirm}>
+          disabled={loading || done} onClick={() => (needsQrCheck && !attemptRef.current ? setQrCheck(true) : handleConfirm())}>
           {loading ? 'Processing...' : (attemptRef.current ? 'Check again' : 'Confirm PIN')}
         </button>
       </div>
+
+      {qrCheck && (
+        <div className="popup-overlay" onClick={() => setQrCheck(false)}>
+          <div className="popup-card" onClick={e => e.stopPropagation()}>
+            <div className="popup-title">Check this amount</div>
+            <p style={{ margin: 0, fontSize: 'var(--fs-content-2)', lineHeight: 1.4 }}>
+              This QR code asks you to send <b className="num">{mainEl}</b> to <b>{name || shortenAddr(address)}</b>.
+              Only continue if you know who this is and you expected to pay this amount.
+            </p>
+            <div className="popup-actions">
+              <button className="btn btn-secondary" onClick={() => setQrCheck(false)}>Cancel</button>
+              <button className="btn btn-primary" onClick={() => { setQrCheck(false); setQrChecked(true); handleConfirm() }}>Yes, continue</button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <ExitBar onClick={() => navigate('HomeSend')} />
     </div>
