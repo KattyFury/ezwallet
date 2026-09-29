@@ -35,6 +35,24 @@ export async function circleGet(env, net, path) {
   return { status: res.status, body }
 }
 
+// Every user of a network, Circle's page order. A Pages Function may make ~50 outbound requests per call (Workers
+// free plan) → at most 45 pages of 50 users; past that `truncated` is set instead of returning a silently short list.
+const PAGE_SIZE = 50, MAX_PAGES = 45
+export async function listUsers(env, net) {
+  const users = []
+  let after = null
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const qs = `pageSize=${PAGE_SIZE}` + (after ? `&pageAfter=${encodeURIComponent(after)}` : '')
+    const { status, body } = await circleGet(env, net, `/users?${qs}`)
+    if (status !== 200) throw new Error(`Circle HTTP ${status}`)
+    const list = body?.data?.users || []
+    users.push(...list)
+    if (list.length < PAGE_SIZE) return { users, truncated: false }
+    after = list[list.length - 1].id
+  }
+  return { users, truncated: true }
+}
+
 // ── Chain ──
 export async function rpc(net, method, params = []) {
   const res = await fetch(net.rpc, {

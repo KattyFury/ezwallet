@@ -4,7 +4,7 @@ import { NETWORKS } from '../../src/network.js'
 // ezwallet admin (admin/SPEC.md). Read-only views + email to one user. Every /api call is behind Cloudflare Access
 // AND the server's own ticket check (functions/_middleware.js) - this page holds no secrets.
 
-const TABS = ['Health', 'Stats', 'Lookup', 'Mail', 'Log']
+const TABS = ['Health', 'Stats', 'Users', 'Lookup', 'Mail', 'Log']
 
 async function api(path, opts) {
   const res = await fetch(path, opts)
@@ -31,6 +31,8 @@ const short = a => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '')
 export default function App() {
   const [net, setNet] = useState('testnet')
   const [tab, setTab] = useState('Health')
+  const [lookupQ, setLookupQ] = useState('')   // set by clicking an email in Users
+  const openLookup = q => { setLookupQ(q); setTab('Lookup') }
 
   function pickNet(n) {
     if (n === net) return
@@ -50,7 +52,8 @@ export default function App() {
       <main>
         {tab === 'Health' && <Health net={net} />}
         {tab === 'Stats' && <Stats net={net} />}
-        {tab === 'Lookup' && <Lookup net={net} key={net} />}
+        {tab === 'Users' && <Users net={net} onOpen={openLookup} />}
+        {tab === 'Lookup' && <Lookup net={net} key={net + lookupQ} initial={lookupQ} />}
         {tab === 'Mail' && <Mail net={net} key={net} />}
         {tab === 'Log' && <Log />}
       </main>
@@ -118,17 +121,18 @@ function Stats({ net }) {
   )
 }
 
-function Lookup({ net }) {
-  const [q, setQ] = useState('')
+function Lookup({ net, initial }) {
+  const [q, setQ] = useState(initial || '')
   const [s, set] = useState({})
   const explorer = NETWORKS[net].explorer
 
-  function run(e) {
-    e.preventDefault()
-    if (!q.trim()) return
+  function lookup(query) {
+    if (!query.trim()) return
     set({ loading: true })
-    api(`/api/lookup?net=${net}&q=${encodeURIComponent(q.trim())}`).then(data => set({ data }), err => set({ error: err.message }))
+    api(`/api/lookup?net=${net}&q=${encodeURIComponent(query.trim())}`).then(data => set({ data }), err => set({ error: err.message }))
   }
+  function run(e) { e.preventDefault(); lookup(q) }
+  useEffect(() => { if (initial) lookup(initial) }, [])
 
   const d = s.data
   return (
@@ -188,6 +192,36 @@ function Lookup({ net }) {
         </div>
       )}
     </>
+  )
+}
+
+function Users({ net, onOpen }) {
+  const [s, reload] = useApi(`/api/users?net=${net}`, [net])
+  const [filter, setFilter] = useState('')
+  if (s.loading) return <p className="muted">Loading users…</p>
+  if (s.error) return <p className="err">{s.error}</p>
+  const f = filter.trim().toLowerCase()
+  const list = s.data.users.filter(u => !f || u.email.toLowerCase().includes(f))
+  return (
+    <div className="card">
+      <h2>{s.data.users.length} {net} users (newest first) <button className="btn ghost" onClick={reload}>Refresh</button></h2>
+      {s.data.truncated && <p className="err">Only the first {s.data.users.length} users could be loaded (request limit).</p>}
+      <div className="row"><input placeholder="Filter by email" value={filter} onChange={e => setFilter(e.target.value)} /></div>
+      <table>
+        <thead><tr><th>Email</th><th>Signed up</th><th>PIN</th><th>Wrong PIN</th><th>Security questions</th><th>Status</th></tr></thead>
+        <tbody>{list.map(u => (
+          <tr key={u.email}>
+            <td><a href="#" onClick={e => { e.preventDefault(); onOpen(u.email) }}>{u.email}</a></td>
+            <td>{fmtTime(u.created)}</td>
+            <td className={u.pin === 'ENABLED' ? 'ok' : 'warn'}>{u.pin === 'ENABLED' ? 'set' : 'not set'}</td>
+            <td className={u.pinFails ? 'bad' : ''}>{u.pinFails}</td>
+            <td>{u.securityQuestions === 'ENABLED' ? 'set' : 'not set'}</td>
+            <td>{u.status}</td>
+          </tr>
+        ))}</tbody>
+      </table>
+      {list.length === 0 && <p className="muted">No match.</p>}
+    </div>
   )
 }
 

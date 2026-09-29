@@ -107,3 +107,6 @@ Ghi chú Q4: thông báo đẩy vào app vẫn cho gửi "tất cả", vì chỉ
 4. Gửi mail cho 1 người, có xác nhận lần 2.
 5. Hộp thư thông báo trong app, lên testnet, chủ dự án thử trên điện thoại.
 6. Bật cho mainnet khi mainnet ra mắt.
+
+### 5.6 Danh sách người dùng (bổ sung 2026-09-29, chủ dự án yêu cầu)
+- Tab Users: mọi email của mạng đang chọn, mới nhất trước: ngày tạo, PIN đã đặt chưa, số lần sai PIN, câu hỏi bảo mật, trạng thái. Có ô lọc theo email; bấm email → mở Tra cứu người đó. Chỉ xem.
