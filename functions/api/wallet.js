@@ -117,7 +117,19 @@ export async function onRequestPost(ctx) {
     if (status >= 400) {
       return new Response(JSON.stringify({ error: data?.message || `Circle HTTP ${status}` }), { status: 502, headers: JSON_HEADERS_BASE });
     }
-    const tx = (data?.data?.transactions || []).find(t => t.refId === refId);
+    // ⚠️ VERIFIED LIVE 2026-09-29: the LIST response does NOT carry `refId` (the API reference says it does) - only
+    // GET /transactions/{id} does. Matching on the list alone never found anything, so every send sat on
+    // "Confirming…" for 90s and ended "still being confirmed" - or, after a PIN-step error, "Send failed" for a
+    // payment that HAD gone through (→ a double send on retry). So: use refId from the list when present, otherwise
+    // read the recent candidates one by one (newest first, at most 10 - the list is already limited to `since`).
+    const list = data?.data?.transactions || [];
+    let tx = list.find(t => t.refId === refId);
+    for (const t of list.filter(t => !t.refId).slice(0, 10)) {
+      if (tx) break;
+      const one = await circleReq('GET', `/transactions/${encodeURIComponent(t.id)}`, undefined, apiKey, userToken);
+      const full = one.data?.data?.transaction;
+      if (full?.refId === refId) tx = full;
+    }
     return new Response(JSON.stringify(tx
       ? { found: true, id: tx.id, state: tx.state, txHash: tx.txHash || null, errorReason: tx.errorReason || null }
       : { found: false }), { headers: JSON_HEADERS_BASE });
