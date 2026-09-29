@@ -8,6 +8,28 @@ name `ezwallet-mainnet`, and this header.
 
 > **Start of every session:** read `CLAUDE.md`, this file and **`MAINNET-SPEC.md`**, then `git pull`.
 
+## ▶▶▶ 2026-09-29 - ADMIN FIRST, then mainnet v1
+
+- **Owner decisions:** plan A (finish ALL of phase 2 before ezwallet.cash moves; it still serves the old testnet build
+  from Pages project `ezwallet` + a redirect script to testnet). **Testnet must be IDENTICAL to mainnet** - never add
+  testnet-only features/labels; differences live only in `src/network.js` (chain, App ID, addresses, faucet). So:
+  plan item #8 (TESTNET label) is DROPPED; testnet gets swap OFF and no cirBTC like mainnet (not done yet - after
+  admin). Temp-mail block (#6) = a free, bundled open-source domain list. Plan item #5 was already done (`send.js`
+  rejects bad/non-checksummed addresses).
+- **Admin `admin.ezwallet.cash`** - spec `admin/SPEC.md` (owner-approved v2). Code in `admin/` on branch `admin`.
+  - Pages project `ezwallet-admin`, root dir `admin`, **production branch `admin`** (switch to `main` after merge),
+    previews off. Env: CIRCLE_TEST_API_KEY, CIRCLE_LIVE_API_KEY, RESEND_API_KEY (secrets), ADMIN_EMAIL,
+    ACCESS_TEAM_DOMAIN `plain-fog-e653.cloudflareaccess.com`, ACCESS_AUD. KV `EZ_ADMIN` (audit log).
+  - Cloudflare Access app `ezwallet admin` (id 5f4f6774-…), one-time PIN only, policy = kattyfury1403@gmail.com.
+    Code re-verifies the Access JWT on every request (`admin/functions/_access.js`) → `*.pages.dev` answers 403.
+  - Done: health, stats, lookup (read-only), email ONE user (preview + confirm, logged). Verified 2026-09-29 on the
+    owner's account: Circle returns wallets/transactions/balances by userId with the API key alone; transactions
+    carry no amounts (amounts come from ArcScan); address → email reverse lookup is NOT possible.
+  - Next: owner tests on a phone/PC → build step 5 (in-app inbox, touches the user app → testnet first).
+  - Mainnet ArcScan API answers with a Cloudflare challenge page to curl - lookup on mainnet may show no transfers.
+- Cloudflare: ONE master token now (`CF_API_TOKEN` in the central secrets file, id 151b0875…) with Pages, Workers,
+  KV, Access, DNS, Single Redirect. The old token (7d9d445c…) is to be deleted by the owner.
+
 ## ▶▶ LATEST (2026-09-27, later session) - supersedes the section below where they disagree
 
 - **B1 RESOLVED - Circle PIN wallets work on Arc mainnet.** Circle's live supported-blockchains page now lists
@@ -60,8 +82,10 @@ name `ezwallet-mainnet`, and this header.
   `feature/otp` branch (it adds a KV-read fix, the client popup step and the pasted-code fix) - port FROM there.
 - Fee wallet confirmed by the owner: `0xEb2D222d28F35fE7BeB5387f8Bc4eBF65f2652F6` (unchanged; no multisig needed -
   ezwallet deploys no contracts and holds no customer money).
-- Owner still to do for mainnet: Circle "Upgrade to Prod" (LIVE_API_KEY + Kit key, paid plan) once B1 clears; a
-  paid RPC with eth_simulateV1 for C5.
+- ~~Owner still to do for mainnet: Circle "Upgrade to Prod" (paid plan)~~ - WRONG (checked 2026-09-29): Circle
+  Wallets is pay-as-you-go per Monthly Active Wallet, the first 1,000 MAW/month are free, billed in arrears - nothing
+  to prepay. Gas is not billed by Circle either (EOA wallets, users pay their own gas; only Gas Station is invoiced).
+  The LIVE key already works. Still open for swap (v1.1): a paid RPC with eth_simulateV1 for C5.
 - No Pages project exists for this repo yet (`wrangler.toml` name `ezwallet-mainnet`).
 
 ## M0. READ `MAINNET-AUDIT.md` FIRST (2026-09-27)
