@@ -110,3 +110,8 @@ Ghi chú Q4: thông báo đẩy vào app vẫn cho gửi "tất cả", vì chỉ
 
 ### 5.6 Danh sách người dùng (bổ sung 2026-09-29, chủ dự án yêu cầu)
 - Tab Users: mọi email của mạng đang chọn, mới nhất trước: ngày tạo, PIN đã đặt chưa, số lần sai PIN, câu hỏi bảo mật, trạng thái. Có ô lọc theo email; bấm email → mở Tra cứu người đó. Chỉ xem.
+
+### 5.5 (chốt 2026-09-29) Thông báo trong app – v1
+- CHỈ gửi tất cả (không gửi riêng 1 người). ≤ 200 ký tự, KHÔNG link/địa chỉ web (server chặn). Thẻ trong app: icon `info`, màu brand #0B53BF.
+- Admin: tab Announce (xem trước → xác nhận → đăng; danh sách đang hiện + nút gỡ). Lưu ở KV của chính app (`inbox:all`, 7 ngày, tối đa 20 cái).
+- App: `/api/inbox` (công khai, chỉ đọc) + `src/inbox.js` hỏi lúc mở app rồi tối đa 5 phút/lần; mỗi thông báo chỉ hiện 1 lần/tài khoản (đã tắt thì không hiện lại).

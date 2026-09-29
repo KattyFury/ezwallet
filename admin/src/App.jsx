@@ -4,7 +4,7 @@ import { NETWORKS } from '../../src/network.js'
 // ezwallet admin (admin/SPEC.md). Read-only views + email to one user. Every /api call is behind Cloudflare Access
 // AND the server's own ticket check (functions/_middleware.js) - this page holds no secrets.
 
-const TABS = ['Health', 'Stats', 'Users', 'Lookup', 'Mail', 'Log']
+const TABS = ['Health', 'Stats', 'Users', 'Lookup', 'Announce', 'Mail', 'Log']
 
 async function api(path, opts) {
   const res = await fetch(path, opts)
@@ -54,6 +54,7 @@ export default function App() {
         {tab === 'Stats' && <Stats net={net} />}
         {tab === 'Users' && <Users net={net} onOpen={openLookup} />}
         {tab === 'Lookup' && <Lookup net={net} key={net + lookupQ} initial={lookupQ} />}
+        {tab === 'Announce' && <Announce net={net} key={net} />}
         {tab === 'Mail' && <Mail net={net} key={net} />}
         {tab === 'Log' && <Log />}
       </main>
@@ -222,6 +223,65 @@ function Users({ net, onOpen }) {
       </table>
       {list.length === 0 && <p className="muted">No match.</p>}
     </div>
+  )
+}
+
+// Broadcast to every user's in-app notification area. ≤ 200 characters, no links (the server enforces both).
+function Announce({ net }) {
+  const [list, reload] = useApi(`/api/announce?net=${net}`, [net])
+  const [text, setText] = useState('')
+  const [s, set] = useState({})
+  const post = body => api('/api/announce', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ net, ...body }) })
+
+  function submit(confirmed) {
+    set({ ...s, busy: true, error: null })
+    post({ action: 'add', text, confirm: confirmed }).then(
+      r => { if (confirmed) { set({ sent: true }); setText(''); reload() } else set({ preview: r.preview }) },
+      e => set({ ...s, busy: false, error: e.message }))
+  }
+  function remove(m) {
+    if (!confirm(`Take down this announcement?
+
+"${m.text}"
+
+Phones that already received it keep it until it expires (24h) or the user closes it.`)) return
+    post({ action: 'remove', id: m.id }).then(reload, e => alert(e.message))
+  }
+
+  return (
+    <>
+      <div className="card">
+        <h2>Announce to every {net} user</h2>
+        <div className="row"><textarea style={{ minHeight: 90 }} placeholder="Short plain text, no links (e.g. Sending is paused for 10 minutes tonight for maintenance.)" value={text}
+          onChange={e => { setText(e.target.value); set({}) }} /></div>
+        <p className={text.length > 200 ? 'err' : 'muted'}>{text.length}/200</p>
+        {s.error && <p className="err">{s.error}</p>}
+        {s.sent && <p className="ok">Published. Open apps pick it up within 5 minutes.</p>}
+        {!s.preview && <button className="btn" disabled={s.busy || !text.trim()} onClick={() => submit(false)}>Preview</button>}
+        {s.preview && (
+          <>
+            <p className="muted">How it looks in the app, for <b>{s.preview.to}</b>:</p>
+            <div className="preview" style={{ display: 'flex', gap: 8, alignItems: 'center', color: 'var(--brand)', background: '#fff', borderStyle: 'solid', borderRadius: 16 }}>
+              <span style={{ fontWeight: 700 }}>ⓘ</span><span>{s.preview.text}</span>
+            </div>
+            <div className="row" style={{ marginTop: 12 }}>
+              <button className={`btn ${net === 'mainnet' ? 'danger' : ''}`} disabled={s.busy} onClick={() => submit(true)}>Publish to every {net} user</button>
+              <button className="btn ghost" disabled={s.busy} onClick={() => set({})}>Edit</button>
+            </div>
+          </>
+        )}
+      </div>
+      <div className="card">
+        <h2>Active announcements (kept 7 days) <button className="btn ghost" onClick={reload}>Refresh</button></h2>
+        {list.loading ? <p className="muted">Loading…</p> : list.error ? <p className="err">{list.error}</p> :
+          list.data.messages.length === 0 ? <p className="muted">None.</p> : (
+            <table><tbody>{list.data.messages.map(m => (
+              <tr key={m.id}><td>{fmtTime(m.ts)}</td><td style={{ whiteSpace: 'normal' }}>{m.text}</td><td className="muted">until {fmtTime(m.exp)}</td>
+                <td><button className="btn ghost" onClick={() => remove(m)}>Take down</button></td></tr>
+            ))}</tbody></table>
+          )}
+      </div>
+    </>
   )
 }
 

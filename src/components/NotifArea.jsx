@@ -6,6 +6,7 @@ import { isFaucetAddress, EXPLORER } from '../chain'
 import { findContactName, acct } from '../store'
 import { fmtTokenAmount, shortenAddr } from '../data'
 import { NET } from '../clientNet'
+import { pollInbox } from '../inbox'
 
 // Detect incoming money (poll ArcScan) → create a "received" notification (shared by every screen with a NotifArea)
 // Duplicate guard: each tx hash is announced ONCE (a set of announced hashes is stored).
@@ -85,6 +86,7 @@ const STYLE = {
   received: { color: 'var(--color-primary)', icon: 'down' },    // received = green
   sent:     { color: 'var(--color-info)',    icon: 'up' },      // sent = blue
   error:    { color: 'var(--color-error)',   icon: 'warning' }, // error = red
+  announce: { color: 'var(--color-brand)',   icon: 'info' },    // from the ezwallet team (src/inbox.js) - owner decision 2026-09-29
 }
 
 // ⚠️ CHANGED 2026-08-25 (user bug report): rows used to be forced onto ONE LINE + "…" for compactness, but the swap
@@ -171,7 +173,11 @@ export default function NotifArea({ hints = [], warning = null, pollMs = 15000 }
   // ⚠️ Do NOT drop the default to a few seconds for EVERY screen: each tick is a request, multiplied by every device
   // with the app open. If one screen needs to be faster, pass pollMs to THAT screen only.
   useEffect(() => {
-    const tick = () => { if (document.visibilityState === 'visible') pollIncoming(() => setNotifs(getNotifs())) }
+    const tick = () => {
+      if (document.visibilityState !== 'visible') return
+      pollIncoming(() => setNotifs(getNotifs()))
+      pollInbox(() => setNotifs(getNotifs()))   // announcements - throttled to 5 minutes inside
+    }
     tick()                                   // ask immediately on mount (keeps the old behaviour)
     const id = setInterval(tick, pollMs)
     // Returning to the app asks IMMEDIATELY instead of waiting out the interval: the most common scenario is "I was told
