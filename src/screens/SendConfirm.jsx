@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
 import { getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency, shortenAddr } from '../data'
-import { getDisplayRates, estimateFeeUsd } from '../chain'
+import { getDisplayRates, estimateSendFeeUsd } from '../chain'
 import { getSDK, executeChallenge, refreshSession, circleErrorMessage } from '../circle'
 import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
@@ -28,14 +28,6 @@ export default function SendConfirm() {
   const [qrCheck, setQrCheck] = useState(false)    // the extra "is this right?" popup for a big QR amount is open
   const [qrChecked, setQrChecked] = useState(false) // ...and the user said yes (asked once per payment)
 
-  useEffect(() => {
-    // getDisplayRates (not the per-token getUsdRate) - it includes VND, and VND is not a token
-    // so getUsdRate looking through TOKENS would not find it.
-    getDisplayRates().then(setFeeRates).catch(() => {})
-    // A memo goes through the Memo contract → more gas (~110k) than a plain transfer (~65k)
-    estimateFeeUsd(memo && memo.trim() ? 110000 : 65000).then(setFeeUsd).catch(() => setFeeUsd(0))
-  }, [memo])
-
   // USD = USDC (1:1, only the label differs); USDC/EURC/cirBTC send exactly the amount entered, with NO conversion.
   // VND = fiat, which does NOT exist on-chain → USDC is sent.
   const token = currency === 'USD' || currency === 'VND' ? 'USDC' : currency
@@ -47,13 +39,23 @@ export default function SendConfirm() {
   // MAINNET-AUDIT H1: send EXACTLY the string the user typed/confirmed (validated again by the server) - the old
   // toFixed(2) turned "0.004" into "0.00". VND is unreachable (see HANDOFF §4) and keeps its old conversion.
   const sendAmountStr = currency === 'VND' ? sendUnits.toFixed(2) : (amountStr ?? String(amount))
+
+  useEffect(() => {
+    // getDisplayRates (not the per-token getUsdRate) - it includes VND, and VND is not a token
+    // so getUsdRate looking through TOKENS would not find it.
+    getDisplayRates().then(setFeeRates).catch(() => {})
+    // The fee of THIS send, estimated on chain (MAINNET-V1-PLAN item 4) - see estimateSendFeeUsd.
+    estimateSendFeeUsd({ from: localStorage.getItem('ez_wallet_addr'), token, to: address, amountStr: sendAmountStr, memo })
+      .then(setFeeUsd).catch(() => setFeeUsd(0))
+  }, [memo, token, address, sendAmountStr])
+
   const mainEl = currency === 'USD' ? <>{displaySymbol('USDC')}{sendAmountStr}</>
     : currency === 'VND' ? <>{amount.toLocaleString('vi-VN')} <Cur>₫</Cur></>
     : <>{sendAmountStr} <Cur>{currency}</Cur></>
 
   // QR SAFETY (MAINNET-V1-PLAN item 2): an amount a QR put there (untouched - SendAmount's qrActive) worth more than
   // $100 needs one more explicit "yes" before the PIN. A forged or swapped QR is the easiest way to trick someone
-  // into a big payment; below $100 the amount line on SendAmount is the warning.
+  // into a big payment.
   const QR_CHECK_OVER_USD = 100
   const usdValue = Number(sendAmountStr) * (token === 'USDC' ? 1 : (feeRates[token] || 1))
   const needsQrCheck = !!params.qrAmount && usdValue > QR_CHECK_OVER_USD && !qrChecked

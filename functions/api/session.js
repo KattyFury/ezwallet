@@ -1,5 +1,6 @@
 import { readToken, requireSecret } from './_auth.js';
-import { JSON_HEADERS_BASE } from './_net.js';
+import { JSON_HEADERS_BASE, netFrom } from './_net.js';
+import { sendSecurityMail, inBackground } from './_securityMail.js';
 
 const CIRCLE_API = 'https://api.circle.com/v1/w3s';
 
@@ -93,7 +94,13 @@ export async function onRequestPost(ctx) {
 
   const userId = email;
 
-  await circlePost('/users', { userId }, apiKey);
+  // 201 = created just now (409 / code 155101 = already existed - verified live 2026-09-29) → security mail #1.
+  const created = await circlePost('/users', { userId }, apiKey);
+  if (!created?.code && created?.data) {
+    let label = 'Arc';
+    try { label = netFrom(ctx).label; } catch {}
+    inBackground(ctx, sendSecurityMail(ctx.env, { kind: 'created', email, netLabel: label }));
+  }
 
   const tokenData = await circlePost('/users/token', { userId }, apiKey);
 

@@ -1,4 +1,5 @@
 import { netFrom, netError, JSON_HEADERS_BASE } from './_net.js';
+import { sendSecurityMail, emailFromUserToken, inBackground } from './_securityMail.js';
 
 const CIRCLE_API = 'https://api.circle.com/v1/w3s';
 
@@ -25,6 +26,13 @@ const JSON_HEADERS = { 'Content-Type': 'application/json' };
 function pickArcWallet(wallets, circleBlockchain) {
   const list = wallets?.data?.wallets || [];
   return list.find(w => w.blockchain === circleBlockchain) || null;
+}
+
+// Security mail for a PIN change/reset request, in the background. The address comes from Circle (the token's user),
+// never from the request body - see _securityMail.js.
+function notifyPin(ctx, kind, apiKey, userToken, net) {
+  inBackground(ctx, emailFromUserToken(apiKey, userToken).then(email =>
+    email ? sendSecurityMail(ctx.env, { kind, email, netLabel: net.label }) : console.error(`[${kind}] no email for this token - mail skipped`)));
 }
 
 export async function onRequestPost(ctx) {
@@ -77,6 +85,7 @@ export async function onRequestPost(ctx) {
     //   which is reasonable security: bypassing the PIN demands more trust than a 60' token. Do NOT use it for Change PIN.
     const { status, data } = await circleReq('PUT', '/user/pin', { idempotencyKey: crypto.randomUUID() }, apiKey, userToken);
     const challengeId = data?.data?.challengeId;
+    if (challengeId) notifyPin(ctx, 'pinChange', apiKey, userToken, net);   // security mail #2 (MAINNET-V1-PLAN item 3)
     if (!challengeId) {
       // Surface Circle's error VERBATIM (HTTP status + code + message) - a bare "Forbidden" already cost
       // 3 debugging sessions. A screenshot of an error now has to explain itself.
@@ -94,6 +103,7 @@ export async function onRequestPost(ctx) {
     // Same 403-for-Google-users caveat as resetPin - guarded client-side in ForgotPin.jsx before this is ever called.
     const { status, data } = await circleReq('POST', '/user/pin/restore', { idempotencyKey: crypto.randomUUID() }, apiKey, userToken);
     const challengeId = data?.data?.challengeId;
+    if (challengeId) notifyPin(ctx, 'pinReset', apiKey, userToken, net);    // security mail #3
     if (!challengeId) {
       console.error('[restorePin] no challengeId returned:', status, JSON.stringify(data));
       const msg = `${data?.message || data?.error?.message || 'no challengeId'} (HTTP ${status}${data?.code ? `, code ${data.code}` : ''})`;
