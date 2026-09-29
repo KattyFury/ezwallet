@@ -8,6 +8,26 @@ name `ezwallet-mainnet`, and this header.
 
 > **Start of every session:** read `CLAUDE.md`, this file and **`MAINNET-SPEC.md`**, then `git pull`.
 
+## ▶▶▶▶ 2026-09-29 (end) - MAINNET V1 BUILT, deployed on ezwallet-mainnet.pages.dev, awaiting the owner's real-money test
+
+- Branch `mainnet-v1` merged into `main` (owner-tested on the preview): testnet = mainnet (swap off, no cirBTC,
+  Exchange "Coming soon"), CSP + no CORS + no raw Circle payloads, README limits, QR >$100 extra confirm (the
+  on-screen "requested by this QR" label was REMOVED by the owner), unknown QR currency drops the amount, temp-mail
+  block for NEW accounts (CC0 list, `tools/update-disposable-domains.mjs`), security mails (created / PIN change
+  requested / PIN reset started), fee = eth_estimateGas of the exact call shown to 3 decimals ($0.002), home lists
+  only held tokens, Exit on ShowQR, in-app announcements.
+- **Two Circle doc lies found live (both fixed):** the transactions LIST omits `refId` (only GET /transactions/{id}
+  has it) - the send tracker never confirmed anything since 09-27 (hotfixed to testnet same day); GET /v1/w3s/user
+  returns the user at `data.id`, not `data.user.id`.
+- **Pages `ezwallet-mainnet`** (repo main, previews off): NETWORK/VITE_NETWORK=mainnet, API_KEY=LIVE key,
+  AUTH_SECRET=EZWALLET_MAINNET_AUTH_SECRET, KIT_KEY live, RESEND. KV `EZ_SYNC_MAINNET` (d591e211…) bound as EZ_SYNC;
+  also bound to the admin as EZ_SYNC_MAINNET. /api/health mainnet OK.
+- ⚠️ The public mainnet RPC rate-limits: the first /api/health failed ("rate limit exceeded", then 3/3 OK). Health
+  fails closed → a user may see "Sending is paused" and succeed on retry. Watch it; a paid RPC may be needed.
+- Next: owner tests with ≤ $1 on ezwallet-mainnet.pages.dev (create wallet + mail, receive, send, PIN change + mail,
+  forgot PIN + mail) → only then, with the owner's explicit OK, move ezwallet.cash + www from the old Pages project
+  `ezwallet` (old testnet build + redirect script) to `ezwallet-mainnet`.
+
 ## ▶▶▶ 2026-09-29 - ADMIN FIRST, then mainnet v1
 
 - **Owner decisions:** plan A (finish ALL of phase 2 before ezwallet.cash moves; it still serves the old testnet build
