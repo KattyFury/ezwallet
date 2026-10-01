@@ -17,6 +17,12 @@ real-money test (≤ $1). ezwallet.cash is NOT switched yet.**
   POST /users/token). Live `GET /v1/w3s/users` lists only `ezwallet-probe-20260927` - the owner's user was never
   created. `ca38595` makes session.js return POST /users' own error instead of continuing; the owner reported the
   SAME message afterwards - root cause still unknown.
+- **Bug 1 ROOT CAUSE (owner-confirmed 2026-10-01, NOT in Circle docs):** on one Circle account, POST /users
+  checks userId uniqueness across testnet AND mainnet, while GET /users/{id} and POST /users/token only look in
+  the key's own network. Any email that already has a testnet user gets 155101 "already exists" on mainnet, then
+  155102 on the token → stuck. An email never used on testnet signs in to mainnet fine (owner tested). The
+  API_KEY on Pages was re-written with the console key `LIVE_API_KEY:18394…` (same as keys.env) - not the cause.
+  Fix not chosen yet (options: Circle support / mainnet userId prefix / separate Circle account for testnet).
 - **Bug 2 - RPC:** `rpc.mainnet.arc.io` answers "rate limit exceeded" to Cloudflare Functions every time (fine from
   a home PC) → /api/health fails → sending paused. docs.arc.io lists Blockdaemon / dRPC / QuickNode / Alchemy.
 - **Bug 3 (likely):** `explorer.arc.io/api` returns a Cloudflare challenge page instead of JSON → history and
