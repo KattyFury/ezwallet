@@ -13,7 +13,8 @@ async function circlePost(path, body, apiKey) {
     },
     body: JSON.stringify(body),
   });
-  return res.json();
+  // _status/_requestId ride along for the support log below (Circle's own fields never start with "_").
+  return { ...(await res.json()), _status: res.status, _requestId: res.headers.get('x-request-id') };
 }
 
 export async function onRequestPost(ctx) {
@@ -110,6 +111,14 @@ export async function onRequestPost(ctx) {
   const tokenData = await circlePost('/users/token', { userId }, apiKey);
 
   if (tokenData.code) {
+    // Evidence for Circle support (2026-10-01 case: a userId that exists on testnet is neither created nor found on
+    // mainnet). X-Request-Id is what Circle support traces a call by (OpenAPI: "helpful for identifying a request when
+    // communicating with Circle support"). Logged only on this failure, so normal sign-ins log nothing.
+    console.error('[session] token failed', JSON.stringify({
+      network: (() => { try { return netFrom(ctx).key; } catch { return '?'; } })(),
+      createUser: { status: created._status, requestId: created._requestId, code: created.code ?? null, message: created.message ?? null },
+      userToken: { status: tokenData._status, requestId: tokenData._requestId, code: tokenData.code, message: tokenData.message },
+    }));
     return new Response(JSON.stringify({ error: tokenData.message }), { status: 400 });
   }
 
