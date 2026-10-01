@@ -19,8 +19,9 @@ TARGET: public mainnet launch within October 2026.**
 | # | Bug | State |
 |---|---|---|
 | 1 | Emails already used on testnet cannot sign in on mainnet (Circle userId shared across TEST/LIVE) | Circle-side; owner reports to Circle; workaround = new email |
-| 2 | `rpc.mainnet.arc.io` rate-limits Cloudflare → /api/health fails → **sending paused** | Open - options not yet presented (docs list Blockdaemon / dRPC / QuickNode / Alchemy) |
-| 3 | `explorer.arc.io/api` answers a Cloudflare challenge → history / "money received" likely broken | Open - Arc docs say use `eth_getLogs` on the system emitter `0xffff…fffe` instead |
+| 2 | The public Arc RPC (itself behind Cloudflare) rate-limits **Cloudflare Functions** (eth_chainId passes, the next call fails; a PC passes 30/30) → /api/health failed → sending paused | FIXED `7e5fdb4` - the chain self-check runs in the browser; /api/health only reports the network. Waiting for the owner's phone test |
+| 3 | `explorer.arc.io/api` answers a Cloudflare bot challenge → history / "money received" broken | FIXED `7e5fdb4` - Circle's tx list (`/api/wallet` 'history') + each receipt read in the browser (USDC from system emitter `0xffff…fffe`). Verified on the owner's testnet wallet = same rows as the explorer. Waiting for the owner's phone test. eth_getLogs was rejected: 10k blocks per call → ~1,700 calls for a June wallet |
+| 3b | Admin Lookup "Transfers" + balances still use the explorer / RPC FROM CLOUDFLARE → fail on mainnet | Open, owner-only tool - Circle tx states still show |
 | 4 | Testnet RPC `rpc.testnet.arc.network` differs from the docs' `rpc.testnet.arc.io` | Open, low |
 | 5 | CSP blocks Cloudflare's injected `static.cloudflareinsights.com` beacon (console noise, harmless) | Open, low - turn Web Analytics off or allow it |
 | 6 | Circle PIN window on ezwallet.cash - is the domain needed in the Circle Console? | Unchecked |
