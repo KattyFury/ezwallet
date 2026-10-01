@@ -8,6 +8,23 @@ real-money test (≤ $1). ezwallet.cash is NOT switched yet.**
 > Specs: `MAINNET-V1-PLAN.md` (mainnet v1, owner-approved), `admin/SPEC.md` (admin). Older: `MAINNET-SPEC.md`,
 > `MAINNET-AUDIT.md`. Secrets: `D:\Files\Claude\.secrets\keys.env` (never in the repo).
 
+## ▶▶▶▶▶ 2026-10-01 - ezwallet.cash MOVED to mainnet; mainnet is BROKEN - no blind fixes
+
+- Local folder is now `D:\Files\Claude\Big projects\ezwallet`.
+- Owner ordered it: ezwallet.cash + www now serve Pages `ezwallet-mainnet` (removed from the old `ezwallet`
+  project, CNAMEs → `ezwallet-mainnet.pages.dev`). The rows of the map below are out of date on that point.
+- **Bug 1 - login:** after the email code, "Cannot find the userId in the system" (Circle 155102 from
+  POST /users/token). Live `GET /v1/w3s/users` lists only `ezwallet-probe-20260927` - the owner's user was never
+  created. `ca38595` makes session.js return POST /users' own error instead of continuing; the owner reported the
+  SAME message afterwards - root cause still unknown.
+- **Bug 2 - RPC:** `rpc.mainnet.arc.io` answers "rate limit exceeded" to Cloudflare Functions every time (fine from
+  a home PC) → /api/health fails → sending paused. docs.arc.io lists Blockdaemon / dRPC / QuickNode / Alchemy.
+- **Bug 3 (likely):** `explorer.arc.io/api` returns a Cloudflare challenge page instead of JSON → history and
+  "money received" may not work on mainnet. Not covered by any Arc doc.
+- **Owner rule: no blind building.** Read the official sources first (Circle OpenAPI
+  `developers.circle.com/openapi/user-controlled-wallets.yaml`, `.md` pages via `/llms.txt`, Arc docs MCP) and cite
+  them for every change.
+
 ## Map (one repo, three Cloudflare Pages projects, all build from `main`)
 
 | Site | Pages project | Network / notes |
