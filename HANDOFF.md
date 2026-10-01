@@ -1,10 +1,29 @@
 # HANDOFF – ezwallet
 
-**Updated:** 2026-09-29 · **Repo:** `KattyFury/ezwallet` (the ONLY ezwallet repo) · **Local:** `D:\Files\Claude\Build on Arc\ezwallet`
-**Status: MAINNET V1 BUILT AND DEPLOYED on https://ezwallet-mainnet.pages.dev - waiting for the owner's
-real-money test (≤ $1). ezwallet.cash is NOT switched yet.**
+**Updated:** 2026-10-01 · **Repo:** `KattyFury/ezwallet` (the ONLY ezwallet repo) · **Local:** `D:\Files\Claude\Big projects\ezwallet`
+**Status: ezwallet.cash SERVES MAINNET (since 2026-10-01). Owner is testing mainnet and reporting bugs one by one.
+TARGET: public mainnet launch within October 2026.**
 
-> **Start of every session:** read `CLAUDE.md`, this file (the ▶▶▶▶ section first), then `git pull`.
+> **Start of every session:** read `CLAUDE.md`, this file (the ▶▶▶▶▶ section first), then `git pull`.
+> **Before any fix:** official docs first, no blind building - the verified sources are listed in the Claude
+> memory file `arc-circle-mainnet-official-docs.md` (Circle OpenAPI + `.md` pages via `developers.circle.com/llms.txt`,
+> Arc docs via `docs.arc.io/llms.txt` / the arc-docs MCP). Cite the doc line or a live measurement for every change.
+
+### Workflow until launch
+1. The owner tests on https://ezwallet.cash with an email NEVER used on testnet (see Bug 1) and reports bugs.
+2. For each bug: reproduce/measure (read-only first), find the rule in the official docs, then offer options -
+   the owner picks before any code. Fix on `main` directly (owner: no extra branch domains), push, verify the deploy.
+3. Keep testnet = mainnet (differences only in `src/network.js`).
+
+### Known open mainnet bugs (2026-10-01)
+| # | Bug | State |
+|---|---|---|
+| 1 | Emails already used on testnet cannot sign in on mainnet (Circle userId shared across TEST/LIVE) | Circle-side; owner reports to Circle; workaround = new email |
+| 2 | `rpc.mainnet.arc.io` rate-limits Cloudflare → /api/health fails → **sending paused** | Open - options not yet presented (docs list Blockdaemon / dRPC / QuickNode / Alchemy) |
+| 3 | `explorer.arc.io/api` answers a Cloudflare challenge → history / "money received" likely broken | Open - Arc docs say use `eth_getLogs` on the system emitter `0xffff…fffe` instead |
+| 4 | Testnet RPC `rpc.testnet.arc.network` differs from the docs' `rpc.testnet.arc.io` | Open, low |
+| 5 | CSP blocks Cloudflare's injected `static.cloudflareinsights.com` beacon (console noise, harmless) | Open, low - turn Web Analytics off or allow it |
+| 6 | Circle PIN window on ezwallet.cash - is the domain needed in the Circle Console? | Unchecked |
 > Specs: `MAINNET-V1-PLAN.md` (mainnet v1, owner-approved), `admin/SPEC.md` (admin). Older: `MAINNET-SPEC.md`,
 > `MAINNET-AUDIT.md`. Secrets: `D:\Files\Claude\.secrets\keys.env` (never in the repo).
 
@@ -37,15 +56,15 @@ real-money test (≤ $1). ezwallet.cash is NOT switched yet.**
 | Site | Pages project | Network / notes |
 |---|---|---|
 | testnet.ezwallet.cash | `ezwallet-test` | testnet - rehearses EXACTLY what mainnet ships (owner rule: testnet = mainnet); branch previews on `<branch>.ezwallet-test.pages.dev` |
-| ezwallet-mainnet.pages.dev (→ ezwallet.cash after the owner's OK) | `ezwallet-mainnet` | mainnet, LIVE Circle key, KV `EZ_SYNC_MAINNET`, previews off |
+| ezwallet.cash + www + ezwallet-mainnet.pages.dev | `ezwallet-mainnet` | mainnet, LIVE Circle key (`LIVE_API_KEY:18394…`), KV `EZ_SYNC_MAINNET`, previews off |
 | admin.ezwallet.cash | `ezwallet-admin` (root dir `admin/`) | behind Cloudflare Access (owner email only) + own JWT check |
-| ezwallet.cash + www (today) | `ezwallet` (OLD) | old testnet build + a script redirecting to testnet - to be detached when mainnet takes the apex |
+| (no domain any more) | `ezwallet` (OLD) | old testnet build - domains removed 2026-10-01, project can be deleted by the owner |
 
 ## Open items (owner)
 
-1. Real-money test on ezwallet-mainnet.pages.dev (steps in ▶▶▶▶ below). If Circle's PIN window does not open there,
-   the mainnet Circle app may need the domain allow-listed in the Circle Console - not checked yet.
-2. Then an explicit OK to move ezwallet.cash + www to `ezwallet-mainnet` (and delete the redirect/old project).
+1. Test mainnet on ezwallet.cash with a new email and report bugs (target: launch within October 2026).
+2. ~~Move ezwallet.cash + www to `ezwallet-mainnet`~~ DONE 2026-10-01. Old Pages project `ezwallet` can be deleted.
+2b. Send `CIRCLE-SUPPORT-REPORT.md` (Desktop) to Circle support (Bug 1).
 3. Delete the old Cloudflare token (id 7d9d445c…) - the master token (151b0875…) replaces it.
 4. Delete the old Pages project `ezwallet-testnet` (no domains) in the dashboard.
 5. Branches `admin`, `mainnet-v1`, `merge-testnet` are fully merged into `main` - safe to delete when the owner agrees.
