@@ -18,7 +18,7 @@ TARGET: public mainnet launch within October 2026.**
 ### Known open mainnet bugs (2026-10-01)
 | # | Bug | State |
 |---|---|---|
-| 1 | Emails already used on testnet cannot sign in on mainnet (Circle userId shared across TEST/LIVE) | Circle-side; owner reports to Circle; workaround = new email |
+| 1 | Emails already used on testnet cannot sign in on mainnet: LIVE POST /users → 409/155101, then /users/token → 404/155102 (captured 2026-10-01 07:29 UTC, request IDs b3507b6e… / 2ef9cf2b…; `2a8fe7b` logs them on every such failure) | Circle-side; support's 1st answer was generic ("envs are separate") → follow-up with the request IDs sent; workaround = new email |
 | 2 | The public Arc RPC (itself behind Cloudflare) rate-limits **Cloudflare Functions** (eth_chainId passes, the next call fails; a PC passes 30/30) → /api/health failed → sending paused | FIXED `7e5fdb4` - the chain self-check runs in the browser; /api/health only reports the network. Waiting for the owner's phone test |
 | 3 | `explorer.arc.io/api` answers a Cloudflare bot challenge → history / "money received" broken | FIXED `7e5fdb4` - Circle's tx list (`/api/wallet` 'history') + each receipt read in the browser (USDC from system emitter `0xffff…fffe`). Verified on the owner's testnet wallet = same rows as the explorer. Waiting for the owner's phone test. eth_getLogs was rejected: 10k blocks per call → ~1,700 calls for a June wallet |
 | 3b | Admin Lookup "Transfers" + balances still use the explorer / RPC FROM CLOUDFLARE → fail on mainnet | Open, owner-only tool - Circle tx states still show |
