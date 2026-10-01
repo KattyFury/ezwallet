@@ -150,6 +150,20 @@ export async function getWalletAddress(userToken) {
   }
 }
 
+// This wallet's transactions from Circle → [{ hash, type, state, date }], newest first (functions/api/wallet.js
+// 'history'). The userToken lives 60' and History can be opened hours after sign-in → on an expired token, mint a
+// fresh one once and retry.
+export async function fetchHistory(walletId, limit) {
+  const ask = userToken => fetch('/api/wallet', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'history', userToken, walletId, limit }),
+  }).then(r => r.json())
+  let data = await ask(localStorage.getItem('ez_user_token'))
+  if (data.error && isTokenExpiredError({ code: data.code, message: data.error })) data = await ask((await forceFreshSession()).userToken)
+  if (data.error) throw new Error(data.error)
+  return data.txs
+}
+
 // A Circle userToken only lives ~1 hour - far shorter than a real usage session for an
 // older user (open the app, go do something else, come back and send money). An expired token
 // makes the W3S SDK refuse RIGHT BEFORE showing the PIN screen → "userToken had expired",

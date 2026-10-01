@@ -2,13 +2,13 @@ import { useState, useEffect, useRef } from 'react'
 import Icon from './Icon'
 import { useNav } from '../nav'
 import { getNotifs, dismissNotif, addNotif } from '../notif'
-import { isFaucetAddress, EXPLORER } from '../chain'
+import { isFaucetAddress, loadHistoryRows } from '../chain'
 import { findContactName, acct } from '../store'
 import { fmtTokenAmount, shortenAddr } from '../data'
 import { NET } from '../clientNet'
 import { pollInbox } from '../inbox'
 
-// Detect incoming money (poll ArcScan) → create a "received" notification (shared by every screen with a NotifArea)
+// Detect incoming money (poll Circle's list + on-chain receipts) → create a "received" notification (shared by every screen with a NotifArea)
 // Duplicate guard: each tx hash is announced ONCE (a set of announced hashes is stored).
 // SPLIT PER WALLET (bug fix 2026-09-11, same fix as notif.js's own notification list, right above) -
 // these were global keys too, so a hash "already announced" on one account silently suppressed the
@@ -29,12 +29,11 @@ function pollIncoming(after) {
   const addr = localStorage.getItem('ez_wallet_addr')
   if (!addr || polling) return
   polling = true
-  // page=1&offset=20, NOT limit=20 (fix 2026-09-27): the Etherscan-style API has no `limit` param, it was
-  // silently ignored and EVERY poll downloaded the wallet's ENTIRE token history (8.3MB / 11s measured on
-  // a busy address), every 5-15s. offset=20 → the newest 20 only (16KB / ~1s on the same address).
-  fetch(`${EXPLORER}/api?module=account&action=tokentx&address=${addr}&sort=desc&page=1&offset=20`)
-    .then(r => r.json()).then(d => {
-      const all = d?.result || []
+  // The newest 20 of Circle's list + their on-chain receipts (src/chain.js loadHistoryRows) - NOT the explorer API,
+  // which answers a Cloudflare bot challenge on mainnet (2026-10-01). Receipts are remembered, so a poll only reads
+  // the chain for a transaction it has not seen before.
+  loadHistoryRows({ limit: 20 })
+    .then(all => {
       const lower = addr.toLowerCase()
       // A hash the wallet just SENT (from = wallet) AND also received = a SWAP (token exchange, one single tx).
       // → the incoming notification for a swap must say "swap complete", NOT "received from a stranger"

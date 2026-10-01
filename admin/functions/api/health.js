@@ -11,13 +11,14 @@ export async function onRequestGet(ctx) {
   const env = ctx.env
 
   const [site, circle, chain, mail] = await Promise.all([
-    // The app's own self-check: right chain + real contract code at every configured address.
+    // The app answers and runs the expected network. (Its chain/contract self-check now runs in the user's
+    // browser - the public RPC rate-limits Cloudflare Functions, see functions/api/health.js of the app.)
     check(async () => {
       const res = await fetch(`${SITE[net.key]}/api/health`, { headers: { Accept: 'application/json' } })
       let h
       try { h = JSON.parse(await res.text()) } catch { return { ok: false, error: `${SITE[net.key]} does not run a build with /api/health (HTTP ${res.status})` } }
       if (h.network !== net.key) return { ok: false, error: `${SITE[net.key]} runs "${h.network}", expected "${net.key}"`, detail: h }
-      return { ok: !!h.ok, detail: h }
+      return { ok: true, detail: h }
     }),
     check(async () => {
       const { status } = await circleGet(env, net, '/config/entity')

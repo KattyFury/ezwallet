@@ -145,6 +145,36 @@ export async function onRequestPost(ctx) {
       : { found: false }), { headers: JSON_HEADERS_BASE });
   }
 
+  // TRANSACTION HISTORY = Circle's own list of this wallet's transactions (replaces the block-explorer API, which on
+  // mainnet answers a Cloudflare bot challenge instead of JSON - measured 2026-10-01). Measured on the owner's testnet
+  // wallet: all 49 transfers the explorer listed were in Circle's list. Circle gives the hash + date; the amounts are
+  // read from the on-chain receipt in the browser (src/chain.js) because Circle's OUTBOUND CONTRACT_EXECUTION rows (our
+  // sends go through the Memo contract) carry no amounts and no recipient.
+  // API: GET /v1/w3s/transactions (X-User-Token), pageSize max 50, next page from the `Link: <…>; rel="next"` header
+  // (the OpenAPI spec says to follow it, not to build the URL). includeAll=true = also non-monitored tokens.
+  if (action === 'history') {
+    const { walletId } = body;
+    if (!walletId) return new Response(JSON.stringify({ error: 'walletId required' }), { status: 400, headers: JSON_HEADERS_BASE });
+    // ≤ 1000 transactions, like the explorer-based list it replaces; the notification poll asks for only a few.
+    const max = Math.min(Math.max(parseInt(body.limit, 10) || 1000, 1), 1000);
+    const out = [];
+    let path = `/transactions?${new URLSearchParams({ walletIds: walletId, pageSize: String(Math.min(max, 50)), includeAll: 'true' })}`;
+    while (path && out.length < max) {
+      const res = await fetch(`${CIRCLE_API}${path}`, { headers: { Authorization: `Bearer ${apiKey}`, 'X-User-Token': userToken } });
+      let data; try { data = await res.json(); } catch { data = {}; }
+      if (res.status >= 400) {
+        console.error('[history]', res.status, JSON.stringify(data));
+        return new Response(JSON.stringify({ error: data?.message || `Circle HTTP ${res.status}`, code: data?.code }), { status: 502, headers: JSON_HEADERS_BASE });
+      }
+      for (const t of data?.data?.transactions || []) {
+        if (t.txHash) out.push({ hash: t.txHash, type: t.transactionType, state: t.state, date: t.firstConfirmDate || t.createDate });
+      }
+      const next = /<([^>]+)>;\s*rel="next"/.exec(res.headers.get('link') || '');
+      path = next ? next[1].replace(CIRCLE_API, '') : null;
+    }
+    return new Response(JSON.stringify({ txs: out.slice(0, max) }), { headers: JSON_HEADERS_BASE });
+  }
+
   if (action === 'getAddress') {
     // The correct endpoint: GET /v1/w3s/wallets (X-User-Token), NOT /user/wallets
     const { data: wallets } = await circleReq('GET', '/wallets', undefined, apiKey, userToken);

@@ -1,6 +1,7 @@
 import { createPublicClient, http, decodeEventLog, parseAbiItem, parseAbi, encodeFunctionData, parseUnits, stringToHex } from 'viem'
 import { defineChain } from 'viem'
-import { MOCK, MOCK_AMOUNTS, MOCK_RATES, MOCK_CHANGE_24H } from './mock'
+import { MOCK, MOCK_AMOUNTS, MOCK_RATES, MOCK_CHANGE_24H, MOCK_TX } from './mock'
+import { fetchHistory } from './circle'
 // The chain id is declared in qr.js (a module that does NOT depend on viem) so screens that only draw/read QRs - ShowQR,
 // SavedQRList - can use it without pulling all of viem into their chunk. ONE source of truth: changing chains means
 // editing exactly one place over there, and this file follows.
@@ -278,6 +279,116 @@ async function readMemoOnChain(hash) {
     }
   } catch {}
   return null
+}
+
+// ── TRANSFERS OF ONE TRANSACTION, from its on-chain receipt (the History screen + incoming-money notifications) ──
+// Replaces the block-explorer `tokentx` API (mainnet answers it with a Cloudflare bot challenge - measured 2026-10-01).
+// Rows keep the explorer's shape { hash, from, to, value, contractAddress, tokenSymbol, tokenDecimal, timeStamp } so the
+// screens did not change.
+// USDC: read from Arc's native USDC system emitter 0xffff…fffe, NOT the ERC-20 contract 0x3600… - docs.arc.io
+// (/integrate/exchanges/deposits, /integrate/wallets/add-arc-to-a-wallet): every USDC movement emits a Transfer there
+// (18 decimals), while a plain native send emits nothing on 0x3600… and would be missed. Measured on real receipts: an
+// ERC-20 USDC transfer emits BOTH logs (same from/to, 1e18 vs 1e6) → the 0x3600… log is skipped to avoid a double row.
+// Other tokens (EURC): their own contract's Transfer log. Gas has no event (docs) → never a row.
+// Same guards as the memos above: remembered forever (a final Arc tx never changes - docs: no reorgs) and read through
+// the same 3-at-a-time queue (firing many receipt reads at once gets "rate limit exceeded" from the public RPC -
+// measured again 2026-10-01 with a 20-call batch). The memo of the same receipt is stored too → no second read.
+const SYSTEM_EMITTER = '0xfffffffffffffffffffffffffffffffffffffffe'
+const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+const TRANSFERS_KEY = 'ez_tx_transfers'
+const TRANSFERS_MAX = 1500
+let _transfers = null
+function transferStore() {
+  if (!_transfers) { try { _transfers = JSON.parse(localStorage.getItem(TRANSFERS_KEY) || '{}') } catch { _transfers = {} } }
+  return _transfers
+}
+function rememberTransfers(hash, rows) {
+  if (Object.keys(transferStore()).length >= TRANSFERS_MAX) _transfers = {}
+  _transfers[hash] = rows
+  try { localStorage.setItem(TRANSFERS_KEY, JSON.stringify(_transfers)) } catch {}
+}
+const topicAddr = t => '0x' + t.slice(26)
+
+// → [{ from, to, value, contractAddress, tokenSymbol, tokenDecimal }] (every token transfer in the tx), or null when the
+// receipt could not be read (NOT remembered → asked again next time).
+async function readTransfersOnChain(hash) {
+  // Retry with a growing pause: a rate-limited read is NOT "no transfers" (measured 2026-10-01: 3 of 50 receipts
+  // failed in one go and their rows silently vanished from History).
+  let r
+  for (let i = 0; i < 3 && !r; i++) {
+    try { r = await publicClient.getTransactionReceipt({ hash }) } catch { await new Promise(ok => setTimeout(ok, 700 * (i + 1))) }
+  }
+  if (!r) return null
+  const usdc = NET.tokens.USDC.address.toLowerCase()
+  const bySym = Object.entries(NET.tokens).map(([sym, t]) => ({ sym, ...t, address: t.address.toLowerCase() }))
+  const rows = []
+  if (r.status === 'success') {
+    for (const log of r.logs) {
+      if (log.topics[0] !== TRANSFER_TOPIC || log.topics.length !== 3) continue
+      const a = log.address.toLowerCase()
+      const value = BigInt(log.data)
+      if (a === SYSTEM_EMITTER) {
+        rows.push({ from: topicAddr(log.topics[1]), to: topicAddr(log.topics[2]), value: (value / 10n ** 12n).toString(), contractAddress: usdc, tokenSymbol: 'USDC', tokenDecimal: '6' })
+      } else if (a !== usdc) {
+        const t = bySym.find(x => x.address === a)
+        if (t) rows.push({ from: topicAddr(log.topics[1]), to: topicAddr(log.topics[2]), value: value.toString(), contractAddress: a, tokenSymbol: t.sym, tokenDecimal: String(t.decimals) })
+      }
+    }
+  }
+  if (!(hash in memoStore())) {
+    let memo = null
+    for (const log of r.logs) {
+      if (log.address.toLowerCase() !== MEMO_CONTRACT.toLowerCase()) continue
+      try {
+        const d = decodeEventLog({ abi: [memoEventAbi], data: log.data, topics: log.topics })
+        if (d.eventName === 'Memo' && d.args.memo && d.args.memo.length > 2) {
+          memo = new TextDecoder().decode(Uint8Array.from(d.args.memo.slice(2).match(/.{1,2}/g).map(b => parseInt(b, 16))))
+          break
+        }
+      } catch {}
+    }
+    rememberMemo(hash, memo)
+  }
+  return rows
+}
+
+export async function getTxTransfers(hash) {
+  const s = transferStore()
+  if (hash in s) return s[hash]
+  const rows = await queued(() => readTransfersOnChain(hash))
+  if (rows) rememberTransfers(hash, rows)
+  return rows
+}
+
+// The explorer-shaped rows of a list of { hash, date } (Circle's history, see functions/api/wallet.js 'history'),
+// only the transfers that touch `walletAddr`, newest first. onProgress(rowsSoFar) lets the screen draw while the
+// receipts are still arriving. Throws when ANY receipt could not be read - an incomplete ledger must not pass for a
+// complete one; the rows read so far were already handed to onProgress and are remembered, so the caller's retry is cheap.
+export async function historyRows(txs, walletAddr, onProgress) {
+  const me = walletAddr.toLowerCase()
+  const seen = new Set(), list = []
+  for (const t of txs) if (!seen.has(t.hash)) { seen.add(t.hash); list.push(t) }
+  const out = []
+  let failed = 0
+  await Promise.all(list.map(t => getTxTransfers(t.hash).then(rows => {
+    if (!rows) { failed++; return }
+    const ts = String(Math.floor(Date.parse(t.date) / 1000))
+    for (const x of rows) if (x.from === me || x.to === me) out.push({ ...x, hash: t.hash, timeStamp: ts })
+    onProgress?.(out.slice().sort((a, b) => Number(b.timeStamp) - Number(a.timeStamp)))
+  })))
+  if (failed) throw new Error(`could not read ${failed} of ${list.length} transactions from the chain`)
+  return out.sort((a, b) => Number(b.timeStamp) - Number(a.timeStamp))
+}
+
+// The wallet's history in explorer-shaped rows - the one entry point for TxHistory and NotifArea. `limit` caps how many
+// of Circle's newest transactions are read from the chain (the notification poll only needs the latest few).
+export async function loadHistoryRows({ limit, onProgress } = {}) {
+  if (MOCK) return MOCK_TX.slice().sort((a, b) => Number(b.timeStamp) - Number(a.timeStamp))
+  const walletAddr = localStorage.getItem('ez_wallet_addr')
+  const walletId = localStorage.getItem('ez_wallet_id')
+  if (!walletAddr || !walletId) return []
+  const txs = await fetchHistory(walletId, limit)
+  return historyRows(txs, walletAddr, onProgress)
 }
 
 // The real gas fee: Arc prices gas in USDC (18 decimals internally). USDC = $1 → the USD fee IS feeUsdc.

@@ -1,27 +1,29 @@
 // The network this BUILD targets (VITE_NETWORK in .env.development / .env.mock / .env.production, or the Pages
 // build environment). getNetwork throws on an unset/unknown name - a misbuilt app fails closed instead of
 // quietly talking to the wrong chain. See src/network.js.
-import { getNetwork } from './network'
+import { getNetwork, checkNetwork } from './network'
 import { MOCK } from './mock'
 
 export const NET = getNetwork(import.meta.env.VITE_NETWORK)
 
 // ── The send/swap guard (MAINNET-AUDIT.md C2) ──
-// Asks the server once which network it runs and whether every configured contract really exists on that chain.
-// Money is only allowed to move when BOTH sides agree and the check passed. Cached for the session; a failed
-// fetch is not cached, so the next attempt asks again.
+// Asks the server once which network it runs, then checks the chain FROM THE BROWSER (right chainId + contract code
+// at every configured address). Not on the server: the public Arc RPC rate-limits Cloudflare Functions - see
+// functions/api/health.js. Money is only allowed to move when BOTH sides agree and the check passed. Only a passed
+// check is cached for the session; any failure is retried on the next attempt.
 let _health = null
 export function netHealth() {
   if (MOCK) return Promise.resolve({ ok: true, problems: [] })
   if (!_health) {
     _health = fetch('/api/health')
       .then(r => r.json())
-      .then(h => {
+      .then(async h => {
         if (h.error) return { ok: false, problems: [h.error] }
         if (h.network !== NET.key) return { ok: false, problems: [`server runs ${h.network}, this app was built for ${NET.key}`] }
-        return h
+        return checkNetwork(NET)
       })
-      .catch(e => { _health = null; return { ok: false, problems: [`cannot verify the network (${e.message})`] } })
+      .catch(e => ({ ok: false, problems: [`cannot verify the network (${e.message})`] }))
+      .then(r => { if (!r.ok) _health = null; return r })
   }
   return _health
 }

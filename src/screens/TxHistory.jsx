@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
 import { getDisplayCurrency, displayNum, displaySymbol, shortenAddr } from '../data'
-import { TOKENS, getTxMemo, getDisplayRates, isFaucetAddress, EXPLORER } from '../chain'
+import { TOKENS, getTxMemo, getDisplayRates, isFaucetAddress, EXPLORER, loadHistoryRows } from '../chain'
 import Icon from '../components/Icon'
 import { loadContacts } from '../store'
 import ScreenSheet from '../components/ScreenSheet'
@@ -211,12 +211,8 @@ export default function TxHistory() {
 
   useEffect(() => {
     if (!walletAddr) { setLoading(false); return }
-    // ⚠️ PAGINATION: ArcScan (Blockscout) **IGNORES `limit`** - only `page` + `offset` work.
-    // Measured for real 07-31 on a busy wallet: `limit=50` → returned **10,000 rows / 11.7s** (i.e. it downloads the
-    // wallet's ENTIRE history before drawing anything); `page=1&offset=1000` → 1,000 rows / 1.7s.
-    // 1000 was chosen (not 50) to KEEP the rule "history is the ledger, never truncated" (HANDOFF section 6):
-    // a real user's wallet has nowhere near 1000 transactions, so they still see everything, without dragging down 10k rows.
-    // ArcScan DOES honour `sort=desc` (measured) - the list renders straight in API order, without re-sorting.
+    // Up to 1000 transactions (functions/api/wallet.js 'history') - the rule "history is the ledger, never truncated"
+    // (HANDOFF section 6): a real user's wallet has nowhere near 1000 transactions.
     //
     // RETRY, NEVER FALL BACK TO "empty" (bug fix 2026-09-11, same lesson HomeSend's balance fetch already
     // learned): a failed/errored request used to be swallowed by `.catch(() => {})` + `setLoading(false)`,
@@ -224,15 +220,13 @@ export default function TxHistory() {
     // history reading empty with no way to tell if that was real or a silently-failed fetch. On failure,
     // keep the loading state and retry every 3s until a REAL answer (success OR a genuinely empty result[])
     // arrives.
+    // ⚠️ SOURCE CHANGED 2026-10-01: Circle's transaction list + each tx's on-chain receipt (src/chain.js
+    // loadHistoryRows), NOT the explorer API - on mainnet that answers a Cloudflare bot challenge. Rows keep the
+    // explorer's shape and arrive progressively (receipts are read 3 at a time, and remembered forever).
+    // The rows come back sorted newest first (07-31 rule: never trust an API order - duplicate DateHeaders drop rows).
     let cancelled = false
     let timer = null
-    const load = () => fetch(`${ARCSCAN}/api?module=account&action=tokentx&address=${walletAddr}&sort=desc&page=1&offset=1000`)
-      .then(r => r.json())
-      // SORT IT OURSELVES, DO NOT TRUST THE API ORDER (07-31). ArcScan currently honours `sort=desc` (measured), but the
-      // list renders STRAIGHT from the array order: if the API ever changes behaviour or returns something skewed, (a) new
-      // transactions land in the middle, (b) DATE labels repeat → two DateHeaders with the same key → React warns about
-      // "duplicated and/or omitted" and may DROP rows. Sorting on the client is the cheapest possible guard.
-      .then(d => (d?.result || []).slice().sort((a, b) => Number(b.timeStamp) - Number(a.timeStamp)))
+    const load = () => loadHistoryRows({ onProgress: rows => { if (!cancelled && rows.length) { setTxs(rows); setLoading(false) } } })
       .then(list => { if (!cancelled) { setTxs(list); setLoading(false) } })
       .catch(() => { if (!cancelled) timer = setTimeout(load, 3000) })
     load()

@@ -50,13 +50,12 @@ function jsonRes(obj) {
   return new Response(JSON.stringify(obj), { status: 200, headers: { 'Content-Type': 'application/json' } })
 }
 
-// Block the network: /api/* (the Circle proxy) + ArcScan tokentx → fake data. Every other URL (viem RPC…) goes
-// through the real fetch and fails gracefully (getTxMemo/gasPrice both have try/catch → no harm).
+// Block the network: /api/* (the Circle proxy) → fake data (history: chain.js loadHistoryRows returns MOCK_TX itself).
+// Every other URL (viem RPC…) goes through the real fetch and fails gracefully (getTxMemo/gasPrice both have try/catch → no harm).
 export function installMockFetch() {
   const orig = window.fetch.bind(window)
   window.fetch = async (input, init) => {
     const url = typeof input === 'string' ? input : (input?.url || '')
-    if ((url.includes('arcscan.app') || url.includes('explorer.testnet.arc.io')) && url.includes('tokentx')) return jsonRes({ result: MOCK_TX })
     if (url.includes('/api/send'))    return jsonRes({ challengeId: 'mock-challenge' })
     if (url.includes('/api/session')) return jsonRes({ userToken: 'mock-token', encryptionKey: 'mock-key' })
     if (url.includes('/api/wallet'))  return jsonRes({ address: MOCK_ADDR, walletId: 'mock-wallet' })
