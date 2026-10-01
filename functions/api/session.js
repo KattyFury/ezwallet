@@ -100,6 +100,11 @@ export async function onRequestPost(ctx) {
     let label = 'Arc';
     try { label = netFrom(ctx).label; } catch {}
     inBackground(ctx, sendSecurityMail(ctx.env, { kind: 'created', email, netLabel: label }));
+  } else if (created?.code !== 155101) {
+    // Creating the user failed for a reason other than "already exists" - stop here with Circle's own message
+    // instead of going on to /users/token, which would only report "Cannot find the userId".
+    console.error('[session] create user failed:', JSON.stringify(created));
+    return new Response(JSON.stringify({ error: `Could not create the account: ${created?.message || 'unknown error'} (code ${created?.code ?? '?'})` }), { status: 400, headers: JSON_HEADERS_BASE });
   }
 
   const tokenData = await circlePost('/users/token', { userId }, apiKey);
