@@ -22,7 +22,8 @@ real-money test (≤ $1). ezwallet.cash is NOT switched yet.**
   the key's own network. Any email that already has a testnet user gets 155101 "already exists" on mainnet, then
   155102 on the token → stuck. An email never used on testnet signs in to mainnet fine (owner tested). The
   API_KEY on Pages was re-written with the console key `LIVE_API_KEY:18394…` (same as keys.env) - not the cause.
-  Fix not chosen yet (options: Circle support / mainnet userId prefix / separate Circle account for testnet).
+  Owner decision 2026-10-01: use a NEW email (never used on testnet) on mainnet for now and report to Circle
+  (draft at the owner's Desktop `CIRCLE-SUPPORT-REPORT.md`). No code change for this bug until Circle answers.
 - **Bug 2 - RPC:** `rpc.mainnet.arc.io` answers "rate limit exceeded" to Cloudflare Functions every time (fine from
   a home PC) → /api/health fails → sending paused. docs.arc.io lists Blockdaemon / dRPC / QuickNode / Alchemy.
 - **Bug 3 (likely):** `explorer.arc.io/api` returns a Cloudflare challenge page instead of JSON → history and
