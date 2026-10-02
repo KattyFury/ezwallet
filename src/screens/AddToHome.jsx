@@ -56,7 +56,7 @@ export default function AddToHome() {
         style={{
           position: 'absolute', left: '83.49%', top: '4.15dvh', transform: 'translate(-50%, -50%)',
           background: 'none', border: 'none', padding: 'calc(8 * var(--u))', cursor: 'pointer',
-          fontSize: 'calc(18 * var(--u))', lineHeight: 'calc(22 * var(--u))', fontWeight: 'var(--fw-semibold)', letterSpacing: '-0.64px', color: 'var(--color-muted-2)',
+          fontSize: 'calc(18 * var(--u))', lineHeight: 'calc(22 * var(--u))', fontWeight: 'var(--fw-semibold)', letterSpacing: '-0.64px', color: 'var(--color-muted-2)', whiteSpace: 'nowrap',
           WebkitTapHighlightColor: 'transparent',
         }}>
         Skip →
