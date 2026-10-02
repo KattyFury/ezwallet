@@ -1,6 +1,6 @@
 # HANDOFF – ezwallet
 
-**Updated:** 2026-10-01 · **Repo:** `KattyFury/ezwallet` (the ONLY ezwallet repo) · **Local:** `D:\Files\Claude\Big projects\ezwallet`
+**Updated:** 2026-10-02 · **Repo:** `KattyFury/ezwallet` (the ONLY ezwallet repo) · **Local:** `D:\Files\Claude\Big projects\ezwallet`
 **Status: ezwallet.cash SERVES MAINNET (since 2026-10-01). Owner is testing mainnet and reporting bugs one by one.
 TARGET: public mainnet launch within October 2026.**
 
@@ -27,6 +27,24 @@ TARGET: public mainnet launch within October 2026.**
 | 6 | Circle PIN window on ezwallet.cash - is the domain needed in the Circle Console? | Unchecked |
 > Specs: `MAINNET-V1-PLAN.md` (mainnet v1, owner-approved), `admin/SPEC.md` (admin). Older: `MAINNET-SPEC.md`,
 > `MAINNET-AUDIT.md`. Secrets: `D:\Files\Claude\.secrets\keys.env` (never in the repo).
+
+## ▶▶▶▶▶▶ 2026-10-02 - small owner requests (both live on ezwallet.cash + testnet)
+
+- **Add to Home Screen: Skip now snoozes for 2 days** (owner: "ấn skip chỉ ẩn 2 ngày thôi"; was permanent).
+  `ez_a2hs_done` now stores the Skip time (ms); `A2HS_SNOOZE_MS` in `src/boot.js`. Old value `'1'` counts as
+  expired, so everyone who skipped before sees the screen once more. Commit `14df158`.
+- **Link preview (X/Telegram) refreshed for mainnet v1** - commits `7b3e169`, `55ecfc7`:
+  - `public/og.png` rebuilt: same template as 2026-09-11 (solid `#0B53BF`, white `design/logo.svg`, slogan),
+    pills "Live on Arc Mainnet" + "Open source · MIT", phone = a fresh HomeSend screenshot from
+    `VITE_NETWORK=mainnet npm run mock` at 390x844 @3x (USDC + EURC only).
+  - ⚠️ The phone frame MUST have the screenshot's exact ratio (270 x 584.3 for 390x844) and NO border - the
+    first rebuild had a 6px white border + wrong ratio and the owner saw white bands top/bottom.
+  - `og:description` / `twitter:description` / `description` / manifest: Send/Receive USDC + EURC, email +
+    6-digit PIN, fees in USDC, Arc Mainnet. NO swap, NO testnet, NO cirBTC in the copy until they ship.
+  - `og:image` is now `og.png?v=5` - bump it on the next image change (X/Telegram cache by URL).
+    Telegram refresh: send the link to @WebpageBot. X: no manual refresh tool; post `?v=N` on the page URL.
+- **Still stale (owner not asked yet):** `README.md` says "Mainnet port – not started yet" and links the
+  deleted `ezwallet-testnet` repo + testnet badges; its screenshots (`docs/app-*.png`) show the old swap/cirBTC.
 
 ## ▶▶▶▶▶ 2026-10-01 - ezwallet.cash MOVED to mainnet; mainnet is BROKEN - no blind fixes
 
