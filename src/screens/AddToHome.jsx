@@ -49,14 +49,14 @@ export default function AddToHome() {
   return (
     <div className="screen" style={{ background: GRADIENT }}>
 
-      {/* Skip - node 48:376: centre (325.6, 35) of 390x844, 16px, tracking -0.64. A real button, not a
+      {/* Skip - node 48:376: centre (325.6, 35) of 390x844, tracking -0.64; owner 2026-10-03: one step up 16→18px + bold. A real button, not a
           text span: it is the only control on the screen and has to be reachable by keyboard. */}
       <button
         onClick={skip}
         style={{
           position: 'absolute', left: '83.49%', top: '4.15dvh', transform: 'translate(-50%, -50%)',
           background: 'none', border: 'none', padding: 'calc(8 * var(--u))', cursor: 'pointer',
-          fontSize: 'calc(16 * var(--u))', lineHeight: 'calc(20 * var(--u))', letterSpacing: '-0.64px', color: 'var(--color-muted-2)',
+          fontSize: 'calc(18 * var(--u))', lineHeight: 'calc(22 * var(--u))', fontWeight: 'var(--fw-semibold)', letterSpacing: '-0.64px', color: 'var(--color-muted-2)',
           WebkitTapHighlightColor: 'transparent',
         }}>
         Skip →
