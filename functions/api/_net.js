@@ -1,4 +1,4 @@
-// The network for this request: env.NETWORK ("testnet" | "mainnet"), resolved through src/network.js.
+// The network for this request: env.NETWORK ("mainnet" - the only one since 2026-10-02), resolved through src/network.js.
 // No default - an unset/unknown value throws, and every endpoint turns that into a 503 (fail closed).
 import { getNetwork } from '../../src/network.js'
 

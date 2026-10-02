@@ -9,33 +9,13 @@
 //
 // Selecting the network: client = import.meta.env.VITE_NETWORK (build time), functions = env.NETWORK
 // (runtime). There is NO default - an unset or unknown name throws, so a misconfigured deploy fails closed.
+//
+// MAINNET ONLY (owner decision 2026-10-02): the testnet build and testnet.ezwallet.cash are gone. Features are
+// tried first on test.ezwallet.cash = the SAME mainnet config built from the `test` branch (Pages ezwallet-test,
+// behind Cloudflare Access). The old testnet block (chain 5042002, App ID 518fec6a…, testnet EURC/swap adapter)
+// is in git history before this commit - never paste its values back next to mainnet's.
 
 export const NETWORKS = {
-  testnet: {
-    key: 'testnet',
-    label: 'Arc Testnet',
-    chainId: 5042002,
-    rpc: 'https://rpc.testnet.arc.network',
-    explorer: 'https://explorer.testnet.arc.io',
-    circleBlockchain: 'ARC-TESTNET',   // Circle W3S wallet identifier
-    circleAppId: '518fec6a-4680-5175-9de6-0810fb3dfd04',   // Circle Console (Testnet) → User Controlled → App ID
-    kitChain: 'Arc_Testnet',           // Circle Stablecoin/App Kit identifier
-    faucet: true,
-    // TESTNET = MAINNET (owner rule 2026-09-29): testnet exists to rehearse what mainnet ships, so it runs the same
-    // feature set - swap OFF and no cirBTC, exactly like mainnet v1. Only chain/App ID/addresses/faucet may differ.
-    // (cirBTC on testnet was 0xf0c4a4ce82a5746abaad9425360ab04fbba432bf, 8 decimals - for when a token is added back.)
-    swap: false,
-    tokens: {
-      USDC:   { address: '0x3600000000000000000000000000000000000000', decimals: 6 },
-      EURC:   { address: '0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a', decimals: 6 },
-    },
-    contracts: {
-      memo:           '0x5294E9927c3306DcBaDb03fe70b92e01cCede505',
-      multicall3From: '0x522fAf9A91c41c443c66765030741e4AaCe147D0',
-      multicall3:     '0xcA11bde05977b3631167028862bE2a173976CA11',
-      swapAdapter:    '0xBBD70b01a1CAbc96d5b7b129Ae1AAabdf50dd40b',   // @circle-fin/adapter-viem-v2 ADAPTER_CONTRACT_EVM_TESTNET
-    },
-  },
   mainnet: {
     key: 'mainnet',
     label: 'Arc',
@@ -46,7 +26,6 @@ export const NETWORKS = {
     circleBlockchain: 'ARC',
     circleAppId: '5ffb6dbb-ea01-5758-8780-2eb6b8cb2996',   // Circle Console (Mainnet) → User Controlled → App ID
     kitChain: 'Arc',                   // @circle-fin/adapter-viem-v2: SwapChain["Arc"]
-    faucet: false,
     // v1 scope (owner, 2026-09-27): send/receive only. Swap waits for C5/H2 and for
     // @circle-fin/adapter-circle-wallets to map 'ARC' (1.8.0 maps only 'ARC-TESTNET').
     swap: false,
@@ -66,7 +45,7 @@ export const NETWORKS = {
 
 export function getNetwork(name) {
   const net = NETWORKS[name]
-  if (!net) throw new Error(`Unknown or unset network "${name}" - set VITE_NETWORK (client) / NETWORK (functions) to testnet or mainnet`)
+  if (!net) throw new Error(`Unknown or unset network "${name}" - set VITE_NETWORK (client) / NETWORK (functions) to mainnet`)
   return net
 }
 

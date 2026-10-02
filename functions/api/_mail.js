@@ -1,12 +1,12 @@
 // Outgoing email. Provider: Resend (https://resend.com), from no-reply@ezwallet.cash (owner decision 2026-09-27).
 // Needs env.RESEND_API_KEY (+ the ezwallet.cash domain verified in Resend).
-// Without a key: on TESTNET with env.DEV_LOG_OTP = '1' the message is printed to the server log instead (local
-// development only); anywhere else sending fails loudly - a login code must never be silently dropped.
+// Without a key: with env.DEV_LOG_OTP = '1' (set only by local dev, never on a Pages project) the message is printed
+// to the server log instead; anywhere else sending fails loudly - a login code must never be silently dropped.
 const FROM = 'ezwallet <no-reply@ezwallet.cash>'
 
 export async function sendMail(env, { to, subject, text, html }) {
   if (!env.RESEND_API_KEY) {
-    if (env.NETWORK === 'testnet' && env.DEV_LOG_OTP === '1') {
+    if (env.DEV_LOG_OTP === '1') {
       console.log(`[mail:DEV] to=${to} subject=${JSON.stringify(subject)}\n${text}`)
       return { ok: true, dev: true }
     }

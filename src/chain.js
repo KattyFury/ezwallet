@@ -17,7 +17,7 @@ import { NET } from './clientNet'
 // sat on "Loading..." forever and incoming-money notifications stopped. Call this host directly.
 export const EXPLORER = NET.explorer
 
-// Name kept (`arcTestnet`) to avoid touching every import - it is THIS build's Arc chain, testnet or mainnet.
+// Name kept (`arcTestnet`) to avoid touching every import - it is Arc MAINNET (the only network since 2026-10-02).
 export const arcTestnet = defineChain({
   id: ARC_CHAIN_ID,
   name: NET.label,
@@ -47,29 +47,6 @@ const TOKEN_UI = {
   cirBTC: { color: '#F7931A', cgId: 'bitcoin',   usdRate: 65000 },
 }
 export const TOKENS = Object.entries(NET.tokens).map(([symbol, t]) => ({ symbol, address: t.address, decimals: t.decimals, ...TOKEN_UI[symbol] }))
-
-// ── CIRCLE FAUCET ADDRESSES on Arc Testnet ──
-// Money from the faucet must read "Faucet successful", NOT "Received … from 0xd4c0…daae" (an older person seeing an
-// unknown address assumes a stranger sent them money).
-// FOUND FROM REAL DATA (ArcScan, 2026-07-17), not guessed: scanned the ~1000 most recent txs of all 3
-// tokens and filtered by FAUCET BEHAVIOUR = sends to MANY different wallets + has NEVER received anything.
-// All 5 addresses below pay out the exact same fixed bundle, USDC 20.00 + EURC 20.00 + cirBTC 0.00, to
-// 88-101 different wallets, with 0 incoming → they cannot be confused with a user's wallet.
-// (0xc3de926d… and 0xfa61e1de… were excluded: they have also never received anything, but their amounts are all over
-//  the place - 0.09/0.50/1.00… - so they are ordinary users, not faucets.)
-// A new faucet created later that is not listed here → still caught by the ez_faucet_pending flag
-// (the user pressed the Faucet button in the app) - see NotifArea.pollIncoming.
-const FAUCET_ADDRESSES = new Set([
-  '0x70e3fb28e1794bb91d5bceb7d66b731d0c61af8e',   // 101 wallets · USDC+EURC+cirBTC
-  '0x319dd63e0ac72e7ac74443029d074032c043460f',   //  96 wallets
-  '0x3c3380cdfb94dfeeaa41cad9f58254ae380d752d',   //  90 wallets
-  '0xd844ba11f64d23a7481e24474d2f184e350b9b3d',   //  89 wallets
-  '0xd4c0b787aa2ff9eb751bb515c877ebbf2daddaae',   //  88 wallets
-])
-export function isFaucetAddress(addr) {
-  if (!NET.faucet) return false   // mainnet has no faucet; these are TESTNET faucet addresses
-  return !!addr && FAUCET_ADDRESSES.has(addr.toLowerCase())
-}
 
 let priceCache = {}
 let priceCache24h = {}   // symbol -> % change in the last 24h (CoinGecko usd_24h_change), for the token-list arrow

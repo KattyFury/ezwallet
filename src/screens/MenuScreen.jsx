@@ -46,13 +46,6 @@ function RowIcon({ name, color }) {
   return <Icon name={name} size="calc(18 * var(--u))" color={color} />
 }
 
-// Top up: copy the wallet address to the clipboard then open the Faucet → the user only has to paste it there.
-function copyAddrThenFaucet() {
-  const addr = localStorage.getItem('ez_wallet_addr')
-  if (addr) { try { navigator.clipboard.writeText(addr) } catch {} }
-  window.open('https://faucet.circle.com/', '_blank')
-}
-
 export default function MenuScreen() {
   const { navigate } = useNav()
   const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? c.reduce((s, t) => s + t.usd, 0) : null })
@@ -123,12 +116,12 @@ export default function MenuScreen() {
         <Icon name="up" size="calc(27 * var(--u))" color="var(--color-black)" />
         Withdraw
       </button>
-      {/* Deposit = the TESTNET faucet. Mainnet has no faucet and on/off-ramp is out of scope (MAINNET-SPEC), so
-          there it is disabled exactly like Withdraw until the owner decides what "Deposit" means (2026-09-27). */}
-      <button className="btn" disabled={!NET.faucet} onClick={NET.faucet ? copyAddrThenFaucet : undefined} style={{
+      {/* Deposit: on/off-ramp is out of scope for mainnet v1 (MAINNET-SPEC), so it is disabled exactly like Withdraw
+          until the owner decides what "Deposit" means (2026-09-27). It used to open the testnet faucet. */}
+      <button className="btn" disabled style={{
         position: 'absolute', left: '51.03%', top: '30.57dvh', width: '42.56%', height: 'calc(70 * var(--u))',
         background: 'var(--color-brand)', border: 'none', borderRadius: 16,
-        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', cursor: NET.faucet ? 'pointer' : 'not-allowed', opacity: NET.faucet ? 1 : 0.4,
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', cursor: 'not-allowed', opacity: 0.4,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
       }}>

@@ -31,13 +31,13 @@ export async function onRequestPost(ctx) {
   if (!text || text.length > MAX_TEXT) return json({ error: `Message: 1-${MAX_TEXT} characters` }, 400)
 
   const user = await circleGet(ctx.env, net, `/users/${encodeURIComponent(to)}`)
-  if (user.status !== 200) return json({ error: `${to} is not an ezwallet user on ${net.key}` }, 400)
+  if (user.status !== 200) return json({ error: `${to} is not an ezwallet user` }, 400)
 
   const mail = renderMail(subject, text)
   if (body.confirm !== true) return json({ preview: { from: 'ezwallet <no-reply@ezwallet.cash>', to, ...mail } })
 
   if (!ctx.env.EZ_ADMIN) return json({ error: 'KV binding EZ_ADMIN missing - nothing is sent without an audit log' }, 503)
-  const entry = { action: 'mail', by: ctx.data.adminEmail, net: net.key, to, subject, text }
+  const entry = { action: 'mail', by: ctx.data.adminEmail, net: net.target, to, subject, text }
   try {
     await sendMail({ ...ctx.env, NETWORK: net.key }, { to, ...mail })
   } catch (e) {

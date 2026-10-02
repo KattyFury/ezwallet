@@ -1,5 +1,6 @@
-# Pages project for MAINNET - deliberately NOT "ezwallet" (that project serves the testnet build on
-# testnet.ezwallet.cash). Created when mainnet is first deployed.
+# Pages project for ezwallet.cash (branch main). test.ezwallet.cash is the separate Pages project
+# "ezwallet-test" (branch test, same mainnet config, own KV, behind Cloudflare Access). Config lives in the
+# dashboard/API, not here.
 name = "ezwallet-mainnet"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]

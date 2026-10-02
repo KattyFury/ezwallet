@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import Icon from './Icon'
 import { useNav } from '../nav'
 import { getNotifs, dismissNotif, addNotif } from '../notif'
-import { isFaucetAddress, loadHistoryRows } from '../chain'
+import { loadHistoryRows } from '../chain'
 import { findContactName, acct } from '../store'
 import { fmtTokenAmount, shortenAddr } from '../data'
 import { NET } from '../clientNet'
@@ -47,24 +47,9 @@ function pollIncoming(after) {
         recv.filter(tx => parseInt(tx.timeStamp) > lastSeen && !seen.has(tx.hash)).reverse().forEach(tx => {
           const symbol = tx.tokenSymbol || 'USDC'
           const amt = fmtTokenAmount(parseFloat(tx.value) / Math.pow(10, parseInt(tx.tokenDecimal || 6)), symbol)
-          // FAUCET - 2 ways to recognise it, the reliable one first:
-          // 1) The sender address IS IN the faucet list looked up from ArcScan (chain.js) - certain, independent of
-          //    whether the user pressed the Faucet button in the app, and it never expires.
-          // 2) The ez_faucet_pending flag (the user just pressed Faucet on HomeSend, within 1h) - a safety net for a
-          //    NEW faucet that is not in the list yet.
-          // ⚠️ 2 OLD BUGS, both fixed (user report 07-17: "Received 20.00 EURC from 0xd4c0…daae" instead of
-          //    "Faucet successful"):
-          //    - The old code gated on `symbol === 'USDC'` → the Circle faucet pays ALL THREE tokens in ONE round (USDC 20 +
-          //      EURC 20 + cirBTC dust), so EURC/cirBTC fell into the "received from unknown 0x…" branch.
-          //    - The old code called `removeItem('ez_faucet_pending')` right after the FIRST token → the other 2 tokens of
-          //      the same faucet round lost the flag. It is now NOT removed inside the loop (the flag expires by itself after 1h).
-          const faucetPending = parseInt(localStorage.getItem('ez_faucet_pending') || '0')
-          const isFaucet = isFaucetAddress(tx.from) || (faucetPending && Date.now() - faucetPending < 3600000)
           if (outHashes.has(tx.hash)) {
             // The INCOMING leg of a swap: do NOT add a separate received notification (user decision 07-20, the two swap
             // notifications were merged) - the Swap screen already fired "Swapped X to ~Y (complete)". Still markNotified so it does not repeat.
-          } else if (isFaucet) {
-            addNotif(`Faucet successful · received ${amt} ${symbol}`, 'received', tx.hash, `recv-${tx.hash}`)
           } else {
             // Show the CONTACT NAME if the sender's address is saved (matching the "Sent to <name>" notification)
             const fromName = findContactName(tx.from) || shortenAddr(tx.from)

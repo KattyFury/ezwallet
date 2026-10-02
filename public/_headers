@@ -1,8 +1,8 @@
 # Security headers for the app (MAINNET-V1-PLAN item 7). Every external host below is one the app or the Circle SDK
-# really uses (checked 2026-09-29): Arc RPC + ArcScan of both networks, CoinGecko rates, Circle's PIN iframe.
+# really uses (checked 2026-09-29): Arc RPC + explorer (mainnet only since 2026-10-02), CoinGecko rates, Circle's PIN iframe.
 # Adding a new external call? Add its host here or the browser will block it.
 /*
-  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob: mediastream:; connect-src 'self' https://rpc.testnet.arc.network https://rpc.mainnet.arc.io https://explorer.testnet.arc.io https://explorer.arc.io https://api.coingecko.com https://pw-auth.circle.com; frame-src https://pw-auth.circle.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self'; media-src 'self' blob: mediastream:; connect-src 'self' https://rpc.mainnet.arc.io https://explorer.arc.io https://api.coingecko.com https://pw-auth.circle.com; frame-src https://pw-auth.circle.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
   X-Content-Type-Options: nosniff
   X-Frame-Options: DENY
   Referrer-Policy: strict-origin-when-cross-origin

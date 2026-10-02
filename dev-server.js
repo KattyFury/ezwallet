@@ -49,8 +49,8 @@ function loadEnv() {
   return env
 }
 const env = loadEnv()
-// Local dev talks to TESTNET unless .env.txt/.dev.vars sets NETWORK. Production has no default.
-env.NETWORK = env.NETWORK || 'testnet'
+// Mainnet is the only network (2026-10-02). Production has no default; local dev gets it here.
+env.NETWORK = env.NETWORK || 'mainnet'
 if (!env.API_KEY) console.warn('[dev-server] API_KEY missing from .env.txt - any flow needing the Circle API will fail')
 
 const ROUTES = {

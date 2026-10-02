@@ -18,12 +18,12 @@ export async function onRequestGet(ctx) {
   try { net = netParam(params.get('net')) } catch (e) { return json({ error: e.message }, 400) }
   const q = (params.get('q') || '').trim()
 
-  if (isAddress(q)) return json({ network: net.key, kind: 'address', email: null, wallets: [await chainView(net, q)] })
+  if (isAddress(q)) return json({ network: net.target, kind: 'address', email: null, wallets: [await chainView(net, q)] })
   if (!isEmail(q)) return json({ error: 'Enter an email or a 0x wallet address' }, 400)
 
   const email = q.toLowerCase()
   const user = await circleGet(ctx.env, net, `/users/${encodeURIComponent(email)}`)
-  if (user.status === 404 || user.status === 400) return json({ network: net.key, kind: 'email', notFound: true, email })
+  if (user.status === 404 || user.status === 400) return json({ network: net.target, kind: 'email', notFound: true, email })
   if (user.status !== 200) return json({ error: `Circle HTTP ${user.status}` }, 502)
 
   const [w, t] = await Promise.all([
@@ -36,7 +36,7 @@ export async function onRequestGet(ctx) {
   }))
 
   return json({
-    network: net.key, kind: 'email', email,
+    network: net.target, kind: 'email', email,
     user: user.body.data.user,
     wallets: await Promise.all(wallets.map(x => chainView(net, x.address).then(v => ({ ...v, walletId: x.id, state: x.state, created: x.createDate })))),
     circleTx,

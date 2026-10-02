@@ -7,7 +7,7 @@ export async function onRequestGet(ctx) {
   let users, truncated
   try { ({ users, truncated } = await listUsers(ctx.env, net)) } catch (e) { return json({ error: e.message }, 502) }
   return json({
-    network: net.key, truncated,
+    network: net.target, truncated,
     users: users
       .map(u => ({
         email: u.id, created: u.createDate, status: u.status, pin: u.pinStatus,

@@ -9,7 +9,6 @@ import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates } from '
 import { ensureWalletAddress } from '../circle'
 import NotifArea, { NOTIF_FS } from '../components/NotifArea'
 import { GRADIENT } from '../brandBg'
-import { NET } from '../clientNet'
 
 // USDC (left) and $98.59 (right) must share the SAME font and the SAME colour - one shared style object
 // so they cannot drift apart (rather than two declarations where it is easy to change only one).
@@ -216,7 +215,7 @@ export default function HomeSend() {
 
       {/* NOTIFICATION CARD - node 1:335: 340x242 at (25,430), rows 6-8 of the grid.
           ⚠️ Figma draws ONE fixed hint box and ONE example notification inside it. The real screen has
-          0..N live notifications plus the faucet warning, so the CONTAINER is matched exactly and its
+          0..N live notifications plus the low-USDC warning, so the CONTAINER is matched exactly and its
           contents stay NotifArea, which is what actually knows about them. */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '50.95dvh', width: '87.18%', height: '28.67dvh',
@@ -230,18 +229,11 @@ export default function HomeSend() {
             { label: 'Contacts', desc: 'Save people you send to often' },
           ]}
           warning={
-            // Testnet: warn under 20 USDC and link the faucet. Mainnet has no faucet and gas costs < $0.01, so
-            // warn only under the 1 USDC the app keeps back for fees - and show no link (2026-09-27).
-            !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) < (NET.faucet ? 20 : 1) ? (
-              <div onClick={NET.faucet ? () => { const a = localStorage.getItem('ez_wallet_addr'); if (a) { try { navigator.clipboard.writeText(a) } catch {} } localStorage.setItem('ez_faucet_pending', String(Date.now())); window.open('https://faucet.circle.com/', '_blank') } : undefined}
-                style={{ width: '100%', background: 'var(--color-white)', borderRadius: 16, padding: 'calc(6 * var(--u)) calc(10 * var(--u))', display: 'flex', flexDirection: 'column', gap: 'calc(2 * var(--u))', cursor: 'pointer', fontSize: NOTIF_FS, color: 'var(--color-warning)', fontWeight: 'var(--fw-semibold)' }}>
+            // Gas costs < $0.01 on Arc, so warn only under the 1 USDC the app keeps back for fees (2026-09-27).
+            !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) < 1 ? (
+              <div
+                style={{ width: '100%', background: 'var(--color-white)', borderRadius: 16, padding: 'calc(6 * var(--u)) calc(10 * var(--u))', display: 'flex', flexDirection: 'column', gap: 'calc(2 * var(--u))', fontSize: NOTIF_FS, color: 'var(--color-warning)', fontWeight: 'var(--fw-semibold)' }}>
                 <span style={{ minWidth: 0, lineHeight: 1.35 }}>Out of USDC for transaction fees</span>
-                {NET.faucet && (
-                  <span style={{ minWidth: 0, lineHeight: 1.35 }}>
-                    {'Tap to get testnet USDC from'}{' '}
-                    <span style={{ textDecoration: 'underline' }}>Faucet</span>
-                  </span>
-                )}
               </div>
             ) : null
           }

@@ -14,10 +14,10 @@ export async function onRequestGet(ctx) {
     // The app answers and runs the expected network. (Its chain/contract self-check now runs in the user's
     // browser - the public RPC rate-limits Cloudflare Functions, see functions/api/health.js of the app.)
     check(async () => {
-      const res = await fetch(`${SITE[net.key]}/api/health`, { headers: { Accept: 'application/json' } })
+      const res = await fetch(`${SITE[net.target]}/api/health`, { headers: { Accept: 'application/json' } })
       let h
-      try { h = JSON.parse(await res.text()) } catch { return { ok: false, error: `${SITE[net.key]} does not run a build with /api/health (HTTP ${res.status})` } }
-      if (h.network !== net.key) return { ok: false, error: `${SITE[net.key]} runs "${h.network}", expected "${net.key}"`, detail: h }
+      try { h = JSON.parse(await res.text()) } catch { return { ok: false, error: `${SITE[net.target]} does not run a build with /api/health (HTTP ${res.status})` } }
+      if (h.network !== net.key) return { ok: false, error: `${SITE[net.target]} runs "${h.network}", expected "${net.key}"`, detail: h }
       return { ok: true, detail: h }
     }),
     check(async () => {
@@ -44,5 +44,5 @@ export async function onRequestGet(ctx) {
     }),
   ])
 
-  return json({ network: net.key, checkedAt: new Date().toISOString(), site, circle, chain, mail })
+  return json({ network: net.target, checkedAt: new Date().toISOString(), site, circle, chain, mail })
 }

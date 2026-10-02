@@ -20,9 +20,9 @@ test('renderMail escapes input', () => {
 })
 
 test('circleGet refuses anything outside the read list', async () => {
-  const net = { key: 'testnet' }
+  const net = { key: 'mainnet', target: 'test' }
   for (const p of ['/user/initialize', '/users/a/b', '/wallets/1/balances', '/transactions/transfer']) {
-    await assert.rejects(circleGet({ CIRCLE_TEST_API_KEY: 'x' }, net, p), /not allowed/, p)
+    await assert.rejects(circleGet({ CIRCLE_LIVE_API_KEY: 'x' }, net, p), /not allowed/, p)
   }
 })
 

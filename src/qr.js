@@ -20,7 +20,7 @@
 import { NET } from './clientNet'
 import { isValidAddress, amountProblem } from './money'
 
-// The chain id of THIS build's network (5042002 testnet / 5042 mainnet) - src/network.js.
+// The chain id of THIS build's network (5042, Arc mainnet) - src/network.js.
 export const ARC_CHAIN_ID = NET.chainId
 
 // A valid EVM address (shared by both the drawing and the reading side)

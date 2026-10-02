@@ -32,7 +32,7 @@ export async function onRequestGet(ctx) {
   }
 
   return json({
-    network: net.key, total: users.length, truncated,
+    network: net.target, total: users.length, truncated,
     pinSet, pinNotSet: users.length - pinSet, securityQuestionSet,
     byDay, byWeek,
   })

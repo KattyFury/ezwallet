@@ -764,7 +764,7 @@ body {
   /* Following the app's existing rule: notifications = a PALE COLOURED FILL WITH NO BORDER, and text inside a coloured box = BLACK.
      2026-09-10: node 15:229 (SendConfirm) draws this as its OWN literal rgba(232,185,49,.25) - NOT
      --color-warning-soft (#FBF4E0, visibly paler) - and radius 16 (was 10). Using the literal value here
-     rather than changing the shared token, which HomeSend's faucet warning also uses and was not
+     rather than changing the shared token, which HomeSend's low-USDC warning also uses and was not
      re-verified today. */
   background: rgba(232, 185, 49, 0.25);
   border: none;

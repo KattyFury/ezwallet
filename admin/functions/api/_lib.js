@@ -2,17 +2,19 @@
 // so the admin can never disagree with the app about a network.
 import { getNetwork } from '../../../src/network.js'
 
-// The public app of each network - its /api/health is part of the health page.
-export const SITE = { testnet: 'https://testnet.ezwallet.cash', mainnet: 'https://ezwallet.cash' }
+// The two deployments of the app (owner decision 2026-10-02 - testnet is gone): BOTH run mainnet, same Circle
+// users. `test` = test.ezwallet.cash (branch `test`, behind Cloudflare Access, its own KV) where features are tried
+// before `mainnet` = ezwallet.cash. A target only changes the site checked and the KV announcements go to.
+export const SITE = { test: 'https://test.ezwallet.cash', mainnet: 'https://ezwallet.cash' }
 
 export function json(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
 }
 
-// ?net=testnet|mainnet - anything else is refused (never a default).
+// ?net=test|mainnet - anything else is refused (never a default). Returns the mainnet config + `target`.
 export function netParam(value) {
-  if (value !== 'testnet' && value !== 'mainnet') throw new Error('net must be testnet or mainnet')
-  return getNetwork(value)
+  if (value !== 'test' && value !== 'mainnet') throw new Error('net must be test or mainnet')
+  return { ...getNetwork('mainnet'), target: value }
 }
 
 // ── Circle: READ ONLY (admin/SPEC.md §6.3) ──
@@ -28,8 +30,8 @@ const CIRCLE_READ_PATHS = [
 ]
 export async function circleGet(env, net, path) {
   if (!CIRCLE_READ_PATHS.some(re => re.test(path))) throw new Error(`Circle path not allowed: ${path}`)
-  const key = net.key === 'testnet' ? env.CIRCLE_TEST_API_KEY : env.CIRCLE_LIVE_API_KEY
-  if (!key) throw new Error(`Circle API key for ${net.key} is not set`)
+  const key = env.CIRCLE_LIVE_API_KEY
+  if (!key) throw new Error('CIRCLE_LIVE_API_KEY is not set')
   const res = await fetch(`${CIRCLE_API}${path}`, { method: 'GET', headers: { Authorization: `Bearer ${key}`, Accept: 'application/json' } })
   const body = await res.json().catch(() => ({}))
   return { status: res.status, body }

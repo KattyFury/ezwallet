@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { NETWORKS } from '../../src/network.js'
+import { getNetwork } from '../../src/network.js'
 
 // ezwallet admin (admin/SPEC.md). Read-only views + email to one user. Every /api call is behind Cloudflare Access
 // AND the server's own ticket check (functions/_middleware.js) - this page holds no secrets.
@@ -29,7 +29,7 @@ const fmtTime = t => (t ? new Date(t).toLocaleString() : '')
 const short = a => (a ? `${a.slice(0, 6)}…${a.slice(-4)}` : '')
 
 export default function App() {
-  const [net, setNet] = useState('testnet')
+  const [net, setNet] = useState('test')
   const [tab, setTab] = useState('Health')
   const [lookupQ, setLookupQ] = useState('')   // set by clicking an email in Users
   const openLookup = q => { setLookupQ(q); setTab('Lookup') }
@@ -46,7 +46,7 @@ export default function App() {
         <h1>ezwallet admin</h1>
         <nav>{TABS.map(t => <button key={t} className={t === tab ? 'on' : ''} onClick={() => setTab(t)}>{t}</button>)}</nav>
         <div className="seg">
-          {['testnet', 'mainnet'].map(n => <button key={n} className={`${n} ${n === net ? 'on' : ''}`} onClick={() => pickNet(n)}>{n}</button>)}
+          {['test', 'mainnet'].map(n => <button key={n} className={`${n} ${n === net ? 'on' : ''}`} onClick={() => pickNet(n)}>{n}</button>)}
         </div>
       </header>
       <main>
@@ -125,7 +125,7 @@ function Stats({ net }) {
 function Lookup({ net, initial }) {
   const [q, setQ] = useState(initial || '')
   const [s, set] = useState({})
-  const explorer = NETWORKS[net].explorer
+  const explorer = getNetwork('mainnet').explorer   // both targets run mainnet
 
   function lookup(query) {
     if (!query.trim()) return

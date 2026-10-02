@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
 import { getDisplayCurrency, displayNum, displaySymbol, shortenAddr } from '../data'
-import { TOKENS, getTxMemo, getDisplayRates, isFaucetAddress, EXPLORER, loadHistoryRows } from '../chain'
+import { TOKENS, getTxMemo, getDisplayRates, EXPLORER, loadHistoryRows } from '../chain'
 import Icon from '../components/Icon'
 import { loadContacts } from '../store'
 import ScreenSheet from '../components/ScreenSheet'
@@ -61,13 +61,10 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, sw
   // Swap: the title states the DIRECTION explicitly, "Swapped <amount> <token out> to <token in>" (user decision 07-20d - it
   // used to say just "Swapped", which told you nothing). It needs swapInfo (both legs) from TxHistory; without it, fall back to "Swapped".
   const swapTitle = swapInfo ? `Swapped ${swapInfo.outAmt.toFixed(swapInfo.outAmt < 0.01 ? 6 : 2)} ${swapInfo.outSym} to ${swapInfo.inSym}` : 'Swapped'
-  // Money from the faucet → show "Faucet" instead of an unfamiliar 0x address (user decision 07-17). A contact name wins
-  // if the user saved one. The faucet list is looked up from ArcScan - see chain.js.
-  const isFaucet = !isSend && isFaucetAddress(counter)
   // Sending to yourself → say "yourself" plainly, do not make an older person compare 0x1234…5678 against
   // their own wallet address (07-31, the same bug as swapHashes above).
   const isSelf = counter && walletAddr && counter.toLowerCase() === walletAddr.toLowerCase()
-  const who = isSelf ? 'yourself' : name || (isFaucet ? 'Faucet' : shortenAddr(counter))
+  const who = isSelf ? 'yourself' : name || shortenAddr(counter)
   // Font sizes REDUCED so the full information fits a phone screen (user decision 07-20): icon 40→34, the money on the right
   // fs-num 24→fs-md-lg 21, the secondary token fs-label→fs-tiny, vertical padding 14→11, gap 12→10.
   return (
@@ -95,7 +92,7 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, sw
           <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)' }}>
             {isSwap ? 'Swap completed · ' : ''}At <span className="num">{timeLabel(tx.timeStamp)}</span>
           </span>
-          {!isSwap && !name && !isFaucet && counter && (   /* the faucet is a test-money machine, saving it as a contact is pointless */
+          {!isSwap && !name && counter && (
             <span onClick={e => { e.stopPropagation(); onAdd(counter) }}
               style={{ flexShrink: 0, fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-medium)', color: 'var(--color-brand)', border: '1px solid var(--color-brand)', borderRadius: 16, padding: 'calc(1 * var(--u)) calc(8 * var(--u))', whiteSpace: 'nowrap', background: 'var(--color-white)' }}>
               Add to Contacts

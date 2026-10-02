@@ -12,7 +12,7 @@ nav button.on { background: var(--brand); color: #fff; border-color: var(--brand
 .seg button { border-radius: 0; }
 .seg button:first-child { border-radius: 8px 0 0 8px; }
 .seg button:last-child { border-radius: 0 8px 8px 0; }
-.seg button.on.testnet { background: var(--brand); color: #fff; }
+.seg button.on.test { background: var(--brand); color: #fff; }
 .seg button.on.mainnet { background: var(--bad); color: #fff; }
 main { padding: 20px; max-width: 1100px; margin: 0 auto; }
 .card { background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 16px; margin-bottom: 16px; overflow-x: auto; }
