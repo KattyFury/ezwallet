@@ -32,7 +32,7 @@ TARGET: public mainnet launch within October 2026.**
 > Specs: `MAINNET-V1-PLAN.md` (mainnet v1, owner-approved), `admin/SPEC.md` (admin). Older: `MAINNET-SPEC.md`,
 > `MAINNET-AUDIT.md`. Secrets: `D:\Files\Claude\.secrets\keys.env` (never in the repo).
 
-## ▶▶▶▶▶▶▶▶ 2026-10-03 - Deposit / Withdraw, link preview, audit + docs (branch `test`, NOT on main yet)
+## ▶▶▶▶▶▶▶▶ 2026-10-03 - Deposit / Withdraw, link preview, audit + docs (LIVE on main + test since 2026-10-03)
 
 - **Fiat on/off-ramp DROPPED (owner 2026-10-03):** Arc's Onramp Kit (`@circle-fin/onramp-kit`, Transak behind it)
   only enables card / Apple Pay / Google Pay after a business KYB in Circle Console - the owner has no company.
@@ -53,7 +53,7 @@ TARGET: public mainnet launch within October 2026.**
 - **Docs refreshed:** README (mainnet badges, Deposit/Withdraw, env table, new `docs/app-*.png`, `app-swap.png`
   deleted), SECURITY.md (mainnet, email-code sign-in), `.env.example` (AUTH_SECRET, RESEND_API_KEY, EZ_SYNC).
   Old dated sections of this file (09-27 → 09-29) moved to `HANDOFF-LOG.md`.
-- Next: owner tries it on test.ezwallet.cash → merge `test` into `main`.
+- Merged `test` → `main` 2026-10-03 (owner: "merge"), og.png?v=6 verified live on ezwallet.cash.
 
 ## ▶▶▶▶▶▶▶ 2026-10-02 - TESTNET REMOVED; test.ezwallet.cash = mainnet staging (owner decision)
 
