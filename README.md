@@ -4,17 +4,14 @@
 
 **A crypto wallet simple enough for my mom to use.**
 
-[![Live demo](https://img.shields.io/badge/live%20demo-testnet.ezwallet.cash-0B53BF?style=flat-square)](https://testnet.ezwallet.cash)
-[![Network](https://img.shields.io/badge/network-Arc%20Testnet-16A34A?style=flat-square)](https://explorer.testnet.arc.io)
+[![Live](https://img.shields.io/badge/live-ezwallet.cash-0B53BF?style=flat-square)](https://ezwallet.cash)
+[![Network](https://img.shields.io/badge/network-Arc%20Mainnet-16A34A?style=flat-square)](https://explorer.arc.io)
 [![Pitch deck](https://img.shields.io/badge/pitch%20deck-slides-F59E0B?style=flat-square)](https://docs.google.com/presentation/d/1-MuqJeSV1Riwg3Bx6IXZSuNumqbtM83dmzG48-vIRDQ/edit?usp=sharing)
 [![License](https://img.shields.io/badge/license-MIT-black?style=flat-square)](./LICENSE)
 
 </div>
 
-> 🚧 **Mainnet port – not started yet.** This repo is where ezwallet moves to **Arc Mainnet** (spec:
-> [`MAINNET-SPEC.md`](./MAINNET-SPEC.md)). Until then its code is an exact copy of the testnet build.
-> The working app today is **[testnet.ezwallet.cash](https://testnet.ezwallet.cash)**, source
-> **[KattyFury/ezwallet-testnet](https://github.com/KattyFury/ezwallet-testnet)**.
+> **Live on Arc Mainnet** at **[ezwallet.cash](https://ezwallet.cash)** – real USDC and EURC.
 
 ---
 
@@ -25,7 +22,7 @@
 <tr>
 <td align="center" width="33%"><img src="docs/app-send.png" width="180" alt="Send"><br><sub>Balance & send</sub></td>
 <td align="center" width="33%"><img src="docs/app-receive.png" width="180" alt="Receive"><br><sub>Receive by QR</sub></td>
-<td align="center" width="33%"><img src="docs/app-swap.png" width="180" alt="Exchange"><br><sub>Swap by slider</sub></td>
+<td align="center" width="33%"><img src="docs/app-withdraw.png" width="180" alt="Withdraw"><br><sub>Deposit & withdraw</sub></td>
 </tr>
 </table>
 </div>
@@ -71,6 +68,7 @@ ezwallet removes the crypto vocabulary from the surface:
 |---|---|
 | 🔑 **Email + PIN login** | No seed phrase to write down or lose. Keys are held in Circle's MPC infrastructure; the PIN authorises every signature. |
 | 💸 **Send with a note** | Attach a short message to a transfer, so the receiver knows what the money is for. |
+| ⇅ **Deposit & withdraw** | Menu → Deposit shows your Arc address to top up from an exchange or another wallet; Withdraw sends to any Arc address. |
 | 📷 **Receive by QR** | Show a QR to get paid. Optionally set an exact amount, name it, and keep it in a QR library for reuse. |
 | 👥 **Contacts** | Save addresses under a name (with an avatar) so you never paste a raw `0x…` twice. |
 | 🧾 **History + receipts** | Full transaction history with per-transaction detail and a saveable receipt image. |
@@ -82,7 +80,7 @@ ezwallet removes the crypto vocabulary from the surface:
 | Layer | What it uses |
 |---|---|
 | **Wallet** | [Circle User-Controlled Wallets](https://developers.circle.com/w3s/programmable-wallets) – MPC key management, PIN-based signing (`@circle-fin/w3s-pw-web-sdk`) |
-| **Chain** | [Arc](https://docs.arc.io) L1 – mainnet (`chainId 5042`) and testnet (`chainId 5042002`) from one codebase; **USDC is the native gas token** |
+| **Chain** | [Arc](https://docs.arc.io) L1 mainnet (`chainId 5042`); **USDC is the native gas token** |
 | **Frontend** | React 18 + Vite 5, `viem` for on-chain reads, `qrcode.react` / `jsqr` for QR |
 | **Backend** | Cloudflare Pages + Pages Functions (`functions/api/*`) – keeps the Circle API key server-side |
 
@@ -91,14 +89,14 @@ Memo precompile.
 
 ## Try it
 
-1. Open **[testnet.ezwallet.cash](https://testnet.ezwallet.cash)**.
+1. Open **[ezwallet.cash](https://ezwallet.cash)**.
 2. Create a wallet with your **email** – you'll receive a one-time code, then set
    a 6-digit PIN.
-3. Get test money: **Menu → Deposit**. This copies your wallet address and opens
-   the [Circle faucet](https://faucet.circle.com/) – paste the address there.
+3. Add money: **Menu → Deposit** shows your wallet address. Send USDC (or EURC) to it
+   **on the Arc network** from an exchange or another wallet.
 4. Send some to a friend, or have them show you their QR.
 
-> Everything runs on **Arc Testnet**. The money is test money and is worth nothing.
+> ⚠️ This is **Arc Mainnet** – real money. Start with a small amount.
 
 ## Local setup
 
@@ -119,8 +117,12 @@ cp .env.example .env.txt      # .env.txt is gitignored
 
 | Variable | Needed for |
 |---|---|
-| `API_KEY` | Circle Programmable Wallets (login, PIN, send). `CIRCLE_API_KEY` also accepted. |
-| `KIT_KEY` | Circle Stablecoin Kit – only needed for Swap. |
+| `API_KEY` | Circle User-Controlled Wallets (login, PIN, send). `CIRCLE_API_KEY` also accepted. |
+| `AUTH_SECRET` | Signs the email-code sign-in tokens (any long random string). |
+| `RESEND_API_KEY` | Sends the 6-digit sign-in code and security emails ([Resend](https://resend.com)). |
+| `KIT_KEY` | Circle Stablecoin Kit – only for Swap, which is switched off. |
+
+Sign-in codes and the contact backup also need a Cloudflare KV namespace bound as `EZ_SYNC`.
 
 Then run the two processes in **separate terminals**:
 
@@ -132,8 +134,8 @@ npm run dev     # Vite dev server on http://localhost:5173
 Vite proxies `/api/*` to the local proxy, which mirrors what Cloudflare Pages
 Functions do in production.
 
-> ⚠️ **The Circle Web SDK does not run on `localhost`.** Login, PIN entry and
-> swap can only be exercised on a deployed build. For local UI work use mock
+> ⚠️ **The Circle Web SDK does not run on `localhost`.** Login and PIN entry
+> can only be exercised on a deployed build. For local UI work use mock
 > mode instead.
 
 **Mock mode** – full UI with a fake wallet and fake balances, no Circle account
@@ -162,6 +164,8 @@ Being upfront about what this is not:
   (MPC) wallet opened with your email + PIN; there is no seed phrase or key export.
 - **Arc only.** Send and receive USDC/EURC on the Arc network. Money someone sends to
   your address on another chain does not arrive in ezwallet.
+- **No card or bank purchases.** There is no fiat on/off-ramp: money comes in from an
+  exchange or another wallet on Arc, and goes out the same way.
 - **No swap for now.** Swapping is switched off while it gets a proper safety review.
 - **English only**, email + PIN sign-in only (no Google sign-in).
 - **QR scanning is limited to wallet QR codes** (not bank QRs or product barcodes).

@@ -83,8 +83,7 @@ export default function MenuScreen() {
           redesign is 16; this one is genuinely 8 in the node, kept as measured). Figma's example text
           ("kattyfury1403@gmail.com" / "Arc" / "0xabcd...efgh") is placeholder DATA, same as Send's
           "$10,000.00" - replaced with the real values, sourced exactly like Security.jsx already does.
-          "Arc Testnet" (not the placeholder's bare "Arc") matches the label used everywhere else in the
-          app - About.jsx's Network row, NotifArea's network line. */}
+          The network is NET.label ("Arc"), the label used everywhere else in the app. */}
       <div style={{
         position: 'absolute', left: '6.41%', top: '10.19dvh', width: '87.18%', height: '18.48dvh',
         background: 'var(--color-card)', borderRadius: 16,

@@ -44,7 +44,7 @@ export default function HomeReceive() {
     getTokenBalances(walletAddr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0))).catch(() => {})
   }, [walletAddr])
 
-  // Share = the QR IMAGE (with logo + the "Only Arc Testnet" label) **PLUS the WALLET ADDRESS AS TEXT** - user decision
+  // Share = the QR IMAGE (with logo + the "Only Arc" label) **PLUS the WALLET ADDRESS AS TEXT** - user decision
   // 08-13: "as long as it shares 2 things, not 1".
   //
   // ⚠️ A KNOWN, ACCEPTED TRADE-OFF: including `text` makes iOS FILTER the apps offered in the share sheet

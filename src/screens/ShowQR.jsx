@@ -35,7 +35,7 @@ export default function ShowQR() {
   // "Share": Web Share API → iOS/Android "Save image to Photos" + sending through social apps.
   // IMAGE ONLY, no address text attached (user decision 08-13) - unlike the Receive screen. Here what matters is the
   // AMOUNT in the QR, and scanning it yields the address anyway; attaching the address is both redundant and makes iOS
-  // filter the share targets. The image still goes through brandedQrCanvas for the logo + the "Only Arc Testnet" label, like Receive.
+  // filter the share targets. The image still goes through brandedQrCanvas for the logo + the "Only Arc" label, like Receive.
   async function shareQR() {
     const canvas = wrapRef.current?.querySelector('canvas')
     if (!canvas) return

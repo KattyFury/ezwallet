@@ -2,7 +2,7 @@ import logoLong from '../design/logo.svg'
 import { NET } from './clientNet'
 
 // ══ BRANDED QR IMAGE - shared by EVERY place that shares a QR (user decision 08-13) ══
-// Takes a bare QR canvas → returns a new canvas: QR + the words "Only Arc Testnet" + the ezwallet logo.
+// Takes a bare QR canvas → returns a new canvas: QR + the words "Only <network>" (NET.label) + the ezwallet logo.
 // Used by: the Receive screen (Share) and the ShowQR screen (a created QR / a QR from the library).
 //
 // ⚠️ DELIBERATELY does not draw the wallet address onto the image (user decision 08-13: "putting the address on the QR looks awful").

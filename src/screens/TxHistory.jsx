@@ -156,7 +156,7 @@ export default function TxHistory() {
   }, [selected])
 
   // The message for EACH ROW of the list (user request: show the memo right under the title for reconciliation).
-  // Fetches the first 30 txs in the background, one RPC read of the Memo event each - light on testnet, and errors are ignored silently.
+  // Fetches the first 30 txs in the background, one RPC read of the Memo event each; errors are ignored silently.
   useEffect(() => {
     txs.slice(0, 30).forEach(tx => {
       if (memos[tx.hash] !== undefined) return

@@ -8,17 +8,14 @@ import { fetchHistory } from './circle'
 import { ARC_CHAIN_ID } from './qr'
 import { NET } from './clientNet'
 
-// The standard Multicall3 is already deployed on Arc Testnet (Arc docs → Network → Contract addresses:
+// The standard Multicall3 is deployed on Arc (Arc docs → Network → Contract addresses:
 // "Aggregates multiple read calls into a single call for efficient data retrieval").
 // Declared on the chain so publicClient.multicall() can fold N reads into 1 request - see getTokenBalances.
-// THE BLOCK EXPLORER - one constant for every API call and tx link. ⚠️ Changed 2026-09-27: ArcScan moved
-// from testnet.arcscan.app to explorer.testnet.arc.io. The old host answers 301 WITHOUT CORS headers, so
-// every browser fetch() to it failed outright ("Failed to fetch", measured from ezwallet.cash) - History
-// sat on "Loading..." forever and incoming-money notifications stopped. Call this host directly.
+// THE BLOCK EXPLORER - one constant for every tx link (explorer.arc.io, from src/network.js).
 export const EXPLORER = NET.explorer
 
-// Name kept (`arcTestnet`) to avoid touching every import - it is Arc MAINNET (the only network since 2026-10-02).
-export const arcTestnet = defineChain({
+// Arc mainnet - the only network since 2026-10-02.
+const arc = defineChain({
   id: ARC_CHAIN_ID,
   name: NET.label,
   nativeCurrency: { name: 'USDC', symbol: 'USDC', decimals: 18 },
@@ -28,7 +25,7 @@ export const arcTestnet = defineChain({
 })
 
 export const publicClient = createPublicClient({
-  chain: arcTestnet,
+  chain: arc,
   transport: http(),
 })
 
