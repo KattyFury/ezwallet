@@ -8,7 +8,7 @@ import { NET } from '../clientNet'
 
 // DEPOSIT / WITHDRAW popups over the Menu (owner spec 2026-10-03). Same pattern as LoginEmailPopup: a white
 // card, glow shadow, NO dark scrim - MenuScreen blurs itself behind it. Smaller than the login card (owner:
-// "ko cần quá to"), so it sizes to its content instead of using fixed Figma coordinates.
+// "ko cần quá to"): same top edge as the login card, height sized to its content.
 // Closes on the X (top-right) or a tap anywhere outside the card.
 // No fiat on/off-ramp (owner decision 2026-10-03: no KYB → Onramp Kit dropped). Deposit = this wallet's own
 // address; Withdraw = an ordinary send to another Arc address, handed to the existing SendConfirm (fee, PIN,
@@ -148,8 +148,9 @@ export default function FundsPopup({ mode, onClose }) {
     // Full-screen catcher: a tap outside the card closes the popup.
     <div onClick={onClose} style={{ position: 'absolute', inset: 0, zIndex: 100 }}>
       <div onClick={e => e.stopPropagation()} style={{
-        position: 'absolute', left: '6.41%', width: '87.18%', top: '50%', transform: 'translateY(-50%)',
-        maxHeight: '90dvh', overflowY: 'auto', boxSizing: 'border-box',
+        // Same top edge / left / width as LoginEmailPopup's card (node 51:5: (25,86), 340 wide); the height follows the content.
+        position: 'absolute', left: '6.41%', width: '87.18%', top: '10.19dvh',
+        maxHeight: '85dvh', overflowY: 'auto', boxSizing: 'border-box',
         background: 'var(--color-white)', borderRadius: 16, boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)',
         padding: 'calc(20 * var(--u)) calc(16 * var(--u))',
         display: 'flex', flexDirection: 'column', gap: 'max(8px, calc(12 * var(--u)))',
