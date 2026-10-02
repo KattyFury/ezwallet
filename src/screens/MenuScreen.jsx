@@ -2,6 +2,7 @@ import NavBar from '../components/NavBar'
 import ScreenSheet from '../components/ScreenSheet'
 import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
+import FundsPopup from '../components/FundsPopup'
 import { getTokenBalances, cachedBalances } from '../chain'
 import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
@@ -67,9 +68,13 @@ export default function MenuScreen() {
     navigator.clipboard?.writeText(walletAddr).catch(() => {})
     setCopied(true); setTimeout(() => setCopied(false), 1200)   // same check-mark feedback as Contacts
   }
+  const [popup, setPopup] = useState(null)   // 'deposit' | 'withdraw' | null - see FundsPopup
 
   return (
     <div className="screen" style={{ background: GRADIENT }}>
+      {/* Everything lives in this layer so the Deposit/Withdraw popup can blur it - same as Login + its email popup.
+          inset:0 keeps every absolute coordinate below unchanged; taps are cut while a popup is open. */}
+      <div style={{ position: 'absolute', inset: 0, filter: popup ? 'blur(6px)' : 'none', pointerEvents: popup ? 'none' : 'auto' }}>
       <ScreenSheet active="MenuScreen" />
 
       <BalanceHeader totalUsd={totalUsd} loading={totalUsd === null} />
@@ -101,27 +106,27 @@ export default function MenuScreen() {
           ⚠️ FIGMA LABELS BOTH BUTTONS "Deposit" - almost certainly a copy-paste slip in the file (the
           left one is white/inactive, the right one is blue/active, exactly the existing Withdraw/Deposit
           pair's visual states). Kept as "Withdraw" here, matching its own established, still-accurate
-          behaviour (disabled - no fiat off-ramp exists) rather than shipping two buttons that say the
+          behaviour rather than shipping two buttons that say the
           same word. Flagged to the user; revert to Figma's literal text if that duplication turns out to
           be intentional. Icons are a flat 27px square in Figma on both; given no real destination icon is
           established for either action, `up`/`down` are used - the same in/out arrow language the
           NavBar and the token trend arrows already use elsewhere in this app (Send=up, Receive=down). */}
-      <button className="btn" disabled style={{
+      <button className="btn" onClick={() => setPopup('withdraw')} style={{
         position: 'absolute', left: '6.41%', top: '30.57dvh', width: '42.56%', height: 'calc(70 * var(--u))',
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
-        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', opacity: 0.4, cursor: 'not-allowed',
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', cursor: 'pointer',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
       }}>
         <Icon name="up" size="calc(27 * var(--u))" color="var(--color-black)" />
         Withdraw
       </button>
-      {/* Deposit: on/off-ramp is out of scope for mainnet v1 (MAINNET-SPEC), so it is disabled exactly like Withdraw
-          until the owner decides what "Deposit" means (2026-09-27). It used to open the testnet faucet. */}
-      <button className="btn" disabled style={{
+      {/* Deposit / Withdraw open FundsPopup (owner spec 2026-10-03): Deposit = this wallet's Arc address, Withdraw =
+          a send to another Arc address. No fiat on/off-ramp (Onramp Kit needs a KYB the owner does not have). */}
+      <button className="btn" onClick={() => setPopup('deposit')} style={{
         position: 'absolute', left: '51.03%', top: '30.57dvh', width: '42.56%', height: 'calc(70 * var(--u))',
         background: 'var(--color-brand)', border: 'none', borderRadius: 16,
-        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', cursor: 'not-allowed', opacity: 0.4,
+        boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', cursor: 'pointer',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
       }}>
@@ -160,6 +165,9 @@ export default function MenuScreen() {
       </button>
 
       <NavBar active="MenuScreen" />
+      </div>
+
+      {popup && <FundsPopup mode={popup} onClose={() => setPopup(null)} />}
     </div>
   )
 }

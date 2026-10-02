@@ -32,6 +32,20 @@ TARGET: public mainnet launch within October 2026.**
 > Specs: `MAINNET-V1-PLAN.md` (mainnet v1, owner-approved), `admin/SPEC.md` (admin). Older: `MAINNET-SPEC.md`,
 > `MAINNET-AUDIT.md`. Secrets: `D:\Files\Claude\.secrets\keys.env` (never in the repo).
 
+## ▶▶▶▶▶▶▶▶ 2026-10-03 - Deposit / Withdraw popups (branch `test`, NOT on main yet)
+
+- **Fiat on/off-ramp DROPPED (owner 2026-10-03):** Arc's Onramp Kit (`@circle-fin/onramp-kit`, Transak behind it)
+  only enables card / Apple Pay / Google Pay after a business KYB in Circle Console - the owner has no company.
+  Circle has no consumer off-ramp at all (Mint / CPN / DAA are B2B). `MAINNET-SPEC.md` "on/off-ramp out of scope" stands.
+- **Menu → Withdraw / Deposit are enabled** and open `src/components/FundsPopup.jsx` over the Menu (Menu blurs, like
+  Login + LoginEmailPopup). X top-right or a tap outside closes it.
+  - Deposit: the full wallet address + copy, note "Send USDC on the Arc network… another network will not arrive".
+  - Withdraw: address + Paste, amount (left half) + token button (right half, tap = next held token), "Current
+    balance", validation (EIP-55 address, not own wallet, decimals, ≤ balance), Continue → the existing
+    `SendConfirm` (fee, PIN, tracker, receipt) with `memo: ''`. SendConfirm's Back goes to SendAmount (its usual target).
+- Screenshots (mock, 390x844 + 360x780) were sent to the owner's Desktop `ezwallet-funds-popup/`.
+- Next: owner tries it on test.ezwallet.cash → merge `test` into `main`.
+
 ## ▶▶▶▶▶▶▶ 2026-10-02 - TESTNET REMOVED; test.ezwallet.cash = mainnet staging (owner decision)
 
 Owner: "ezwallet.cash là mainnet, test.ezwallet.cash là mainnet nhưng dùng để test tính năng trước khi public,
