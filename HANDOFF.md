@@ -1,6 +1,6 @@
 # HANDOFF – ezwallet
 
-**Updated:** 2026-10-02 · **Repo:** `KattyFury/ezwallet` (the ONLY ezwallet repo) · **Local:** `D:\Files\Claude\Big projects\ezwallet`
+**Updated:** 2026-10-02 (testnet removed) · **Repo:** `KattyFury/ezwallet` (the ONLY ezwallet repo) · **Local:** `D:\Files\Claude\Big projects\ezwallet`
 **Status: ezwallet.cash SERVES MAINNET (since 2026-10-01). Owner is testing mainnet and reporting bugs one by one.
 TARGET: public mainnet launch within October 2026.**
 
@@ -12,8 +12,12 @@ TARGET: public mainnet launch within October 2026.**
 ### Workflow until launch
 1. The owner tests on https://ezwallet.cash with an email NEVER used on testnet (see Bug 1) and reports bugs.
 2. For each bug: reproduce/measure (read-only first), find the rule in the official docs, then offer options -
-   the owner picks before any code. Fix on `main` directly (owner: no extra branch domains), push, verify the deploy.
-3. Keep testnet = mainnet (differences only in `src/network.js`).
+   the owner picks before any code.
+3. **Where code goes (since 2026-10-02):** new features → branch `test` → owner tries them on
+   **test.ezwallet.cash** → merge `test` into `main` → ezwallet.cash. Small bug fixes the owner asks for directly
+   may still go straight to `main` (then fast-forward `test`: `git merge --ff-only main`). Keep `test` = `main` +
+   whatever is being tried; never let it drift for long.
+4. There is NO testnet any more (see the 2026-10-02 section below).
 
 ### Known open mainnet bugs (2026-10-01)
 | # | Bug | State |
@@ -27,6 +31,32 @@ TARGET: public mainnet launch within October 2026.**
 | 6 | Circle PIN window on ezwallet.cash - is the domain needed in the Circle Console? | Unchecked |
 > Specs: `MAINNET-V1-PLAN.md` (mainnet v1, owner-approved), `admin/SPEC.md` (admin). Older: `MAINNET-SPEC.md`,
 > `MAINNET-AUDIT.md`. Secrets: `D:\Files\Claude\.secrets\keys.env` (never in the repo).
+
+## ▶▶▶▶▶▶▶ 2026-10-02 - TESTNET REMOVED; test.ezwallet.cash = mainnet staging (owner decision)
+
+Owner: "ezwallet.cash là mainnet, test.ezwallet.cash là mainnet nhưng dùng để test tính năng trước khi public,
+không muốn repo riêng hay testnet riêng nữa". Picked: separate data, invite-only, testnet domain OFF, testnet code deleted.
+
+| | ezwallet.cash | test.ezwallet.cash |
+|---|---|---|
+| Pages project | `ezwallet-mainnet` (branch `main`) | `ezwallet-test` (production branch **`test`**, previews off) |
+| Network / Circle | mainnet, LIVE key | mainnet, LIVE key - **same Circle users, same wallets, REAL money** |
+| KV `EZ_SYNC` | `EZ_SYNC_MAINNET` d591e211… | **`EZ_SYNC_STAGING` ca7c7eb8…** (contacts/QR start empty) |
+| AUTH_SECRET | its own | its own (`EZWALLET_STAGING_AUTH_SECRET` in keys.env) - sessions do not cross |
+| Access | public | Cloudflare Access app `ezwallet test (mainnet staging)` e2094640… - policy "invited testers" = owner email only; covers test.ezwallet.cash + ezwallet-test.pages.dev + *.ezwallet-test.pages.dev. Add testers = add emails to that policy. `/api/health` has a Bypass app so the admin Health page can read it |
+
+- **testnet.ezwallet.cash is GONE** (DNS + Pages domain removed). Old testnet KV `EZ_SYNC` 5aec627d… was kept, unbound.
+  Old Pages projects `ezwallet` / `ezwallet-testnet` (if still there) are unused.
+- **Code `10062ce`:** testnet block out of `src/network.js` (values recoverable from git history), faucet list /
+  "Faucet successful" / faucet link removed, Deposit stays in place disabled, CSP mainnet-only, local dev + mock =
+  mainnet. **Admin:** the switch is now `test | mainnet` (both mainnet + LIVE key; `test` only changes the health
+  site and the announcement KV `EZ_SYNC_TEST`). Admin env: `CIRCLE_TEST_API_KEY` + `EZ_SYNC_TESTNET` removed.
+- Cloudflare still creates a queued "preview" on `ezwallet-mainnet`/`ezwallet-admin` for every push to `test` (and on
+  `ezwallet-test` for pushes to `main`) even with previews off - they never build; cancel them if they bother you.
+  Watch PRODUCTION deployments only (`per_page=1` can show one of these instead).
+- **Not checked yet:** Circle PIN window on test.ezwallet.cash (open bug 6 - allowed domains in Circle Console?),
+  and the PWA install on test (the manifest request goes through Access).
+- `MAINNET-V1-PLAN.md`, `README.md`, older sections below still talk about testnet - historical.
 
 ## ▶▶▶▶▶▶ 2026-10-02 - small owner requests (both live on ezwallet.cash + testnet)
 
