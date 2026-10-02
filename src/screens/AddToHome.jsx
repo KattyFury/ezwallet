@@ -38,10 +38,10 @@ function Ez() {
 export default function AddToHome() {
   const { navigate } = useNav()
 
-  // Skip is permanent (node 48:376). Writing the flag BEFORE navigating means a crash on the next
-  // screen still cannot resurrect this one.
+  // Skip snoozes the offer for 2 days (A2HS_SNOOZE_MS in boot.js; node 48:376). Writing the timestamp
+  // BEFORE navigating means a crash on the next screen still cannot resurrect this one early.
   function skip() {
-    try { localStorage.setItem(A2HS_KEY, '1') } catch {}
+    try { localStorage.setItem(A2HS_KEY, String(Date.now())) } catch {}
     const t = bootTarget()
     navigate(t.screen, t.params)
   }

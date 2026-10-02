@@ -14,8 +14,13 @@ export function bootTarget() {
 
 export const A2HS_KEY = 'ez_a2hs_done'
 
+// How long one Skip hides the offer. The key stores the Skip time (ms since epoch); once this much time
+// has passed the screen comes back. User decision 2026-10-02: "ấn skip chỉ ẩn 2 ngày thôi" (it used to be
+// permanent). A legacy value of '1' from the permanent era parses as 1 ms → already expired → shows again.
+export const A2HS_SNOOZE_MS = 2 * 24 * 60 * 60 * 1000
+
 // SHOULD THE "ADD TO HOME SCREEN" OFFER RUN? Two gates, both of which must pass:
-//   1. not dismissed before - one Skip and it never comes back,
+//   1. not skipped in the last 2 days (A2HS_SNOOZE_MS) - a Skip only snoozes it,
 //   2. NOT already installed - `display-mode: standalone` (Android/Chrome + the manifest) or
 //      `navigator.standalone` (iOS Safari's own, non-standard flag). Offering to install an app that IS
 //      installed is the most annoying version of this screen.
@@ -32,7 +37,8 @@ export const A2HS_KEY = 'ez_a2hs_done'
 // in old WebViews - in either case the offer is simply skipped rather than blocking the whole boot.
 export function shouldOfferInstall() {
   try {
-    if (localStorage.getItem(A2HS_KEY)) return false
+    const skippedAt = Number(localStorage.getItem(A2HS_KEY))
+    if (skippedAt && Date.now() - skippedAt < A2HS_SNOOZE_MS) return false
     if (window.matchMedia?.('(display-mode: standalone)')?.matches) return false
     if (window.navigator.standalone === true) return false
     return true
