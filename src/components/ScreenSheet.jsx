@@ -25,8 +25,9 @@ const K = 4.418             // 0.5523 * R - the cubic-Bezier constant for a quar
 const ORDER = ['ServiceHub', 'HomeSend', 'HomeReceive', 'MenuScreen']
 
 function sheetPath(i) {
-  // No tab (a screen with no NavBar item selected): a plain sheet.
-  if (i < 0) return `M0 ${SHEET_BOTTOM} H390 V0 H0 Z`
+  // No tab = the Exit screens (no NavBar): the sheet covers the WHOLE screen, row 10 included (owner 2026-10-03:
+  // "hàng 10 màu xanh mình không thích nữa ... full màn trắng"). The red Exit sits on white in row 10 (ExitBar).
+  if (i < 0) return `M0 ${TAB_BOTTOM} H390 V0 H0 Z`
 
   const L = i * COL
   const Rt = L + COL
