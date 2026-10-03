@@ -34,7 +34,6 @@ console.log(`  ${out.tokenOut} before:     ${out.before}`)
 console.log(`  ${out.tokenOut} sau:        ${out.after}`)
 console.log(`  Delta (received): ${out.delta}   (Kit estimate: ${out.expected ?? 'n/a'})`)
 console.log(`  Gas used:         ${out.gasUsed ? BigInt(out.gasUsed).toString() : 'n/a'}`)
-console.log(`  App fee → ${out.feeRecipient?.slice(0, 8)}…: +${out.feeDeltaIn} ${tokenIn} / +${out.feeDeltaOut} ${tokenOut}`)
 console.log('─────────────────────────────────────────')
 
 if (out.ok) {

@@ -294,7 +294,7 @@ function mockSwapOut(tokenIn, tokenOut, amountIn) {
 }
 
 export async function estimateSwap({ walletAddress, tokenIn, tokenOut, amountIn }) {
-  if (MOCK) return { amountOut: mockSwapOut(tokenIn, tokenOut, amountIn) }
+  if (MOCK) { const amountOut = mockSwapOut(tokenIn, tokenOut, amountIn); return { amountOut, minOut: amountOut } }
   const res = await fetch('/api/swap', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -304,12 +304,13 @@ export async function estimateSwap({ walletAddress, tokenIn, tokenOut, amountIn 
 }
 
 // The userToken is passed in from refreshSession() (do not read localStorage directly - a 60' token may be dead)
-export async function executeSwap({ userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn, refId }) {
+// minOut = the 'estimate' minimum the screen showed → the server makes it the swap's stopLimit (MAINNET-AUDIT H2).
+export async function executeSwap({ userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn, minOut, refId }) {
   if (MOCK) return { challengeId: 'mock-challenge', amountOut: mockSwapOut(tokenIn, tokenOut, amountIn) }
   const res = await fetch('/api/swap', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'execute', userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn, refId }),
+    body: JSON.stringify({ action: 'execute', userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn, minOut, refId }),
   })
   return res.json()
 }

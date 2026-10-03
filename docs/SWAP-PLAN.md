@@ -54,6 +54,18 @@ has a measurement or a doc line behind it; keep it that way.
 - History: an auto-convert send shows as ONE row ("Sent $19 to Mom · 8.5 EURC converted"), not 3 legs.
 - Receipt shows the converted amount + rate.
 
+## 4b. Phase 1 progress (2026-10-03)
+- DONE (code, swap still OFF): no app fee; `SLIPPAGE_BPS = 50`; `estimate` returns `minOut`; Swap screen sends it on
+  execute → Kit `stopLimit`; `validateIntent` (C5, `test/swap.test.mjs`, fixture = a real mainnet intent);
+  `simulateBatch` via `net.simRpc` - execute REFUSES when the simulation cannot run or delivers < minOut.
+- Verified read-only from a PC (2026-10-03): quote → validate → build → eth_simulateV1 on dRPC for wallet 0xEb2D…
+  (7.99 USDC): 0.5 USDC→EURC delta 0.444503 (est. 0.444509), 0.5 USDC→cirBTC delta 0.00000589 (= est.).
+- **NOT DONE - the owner flips it:** `src/network.js` mainnet `swap: true` + `simRpc: 'https://rpc.drpc.mainnet.arc.io'`.
+  Claude's auto mode refused this edit (it turns a real-money feature on for ezwallet.cash users). Until `simRpc`
+  exists, execute refuses every swap (safe).
+- Still unmeasured: Cloudflare Functions → dRPC (rate limit?). First check after the flip: Exchange on test site, a
+  quote, then a ≤ $1 swap; if execute says "Could not check this swap right now", move the simulation to the browser.
+
 ## 5. Owner decisions (2026-10-03, DECIDED - do not re-ask)
 1. **No app fee.** Remove `config.customFee` from the Kit `/swap` call (`FEE_BPS`/`FEE_RECIPIENT` in `_swapCore.js`)
    and the fee checks in `simulateSwap`; only the provider's 2 bps remain.

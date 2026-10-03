@@ -4,8 +4,8 @@
 // Actions: estimate (a quote), simulate (verify with eth_simulateV1, no PIN and no cost),
 // execute (create a contractExecution challenge → the user signs with one PIN).
 import {
-  CIRCLE_API, tokenOf, toBase, fromBase,
-  fetchSwapIntent, buildSwapBatch, simulateSwap,
+  CIRCLE_API, tokenOf, toBase, fromBase, SLIPPAGE_BPS,
+  fetchSwapIntent, validateIntent, buildSwapBatch, simulateBatch, simulateSwap,
 } from './_swapCore.js'
 import { netFrom, netError } from './_net.js'
 import { amountProblem } from '../../src/money.js'
@@ -43,7 +43,7 @@ export async function onRequestPost(ctx) {
         tokenInAddress: fromAddr, tokenInChain: net.kitChain,
         tokenOutAddress: toAddr,  tokenOutChain: net.kitChain,
         fromAddress: walletAddress || '0x0000000000000000000000000000000000000001',
-        amount: toBase(net, amountIn, tokenIn).toString(), slippageBps: '300',
+        amount: toBase(net, amountIn, tokenIn).toString(), slippageBps: String(SLIPPAGE_BPS),
       })
       const res = await fetch(`${CIRCLE_API}/v1/stablecoinKits/quote?${params}`, {
         headers: { 'Authorization': `Bearer ${kitKey}` },
@@ -52,7 +52,9 @@ export async function onRequestPost(ctx) {
       if (!res.ok) return err(data?.message || `Circle API ${res.status}`, data)
       const q = data?.data?.quote || data?.quote || data?.data || data
       const amountOut = q?.estimatedAmount ? fromBase(net, q.estimatedAmount, tokenOut) : null
-      return new Response(JSON.stringify({ estimate: data?.data || data, amountOut }), { headers: JSON_HEADERS })
+      // minOut = the least the user can receive at SLIPPAGE_BPS; the screen sends it back on execute → stopLimit (H2).
+      const minOut = q?.minAmount ? fromBase(net, q.minAmount, tokenOut) : null
+      return new Response(JSON.stringify({ estimate: data?.data || data, amountOut, minOut }), { headers: JSON_HEADERS })
     }
 
     // The verify gate: only allow a swap when the wallet's tokenOut balance RISES (HANDOFF: never trust tx status=1).
@@ -68,11 +70,28 @@ export async function onRequestPost(ctx) {
         return err('missing params', null, 400)
       }
       if (!refId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(refId)) return err('refId (uuid) required', null, 400)   // MAINNET-AUDIT C3
+      // H2: the minimum the screen showed (from 'estimate') becomes the intent's stopLimit - never less than displayed.
+      const { minOut } = body
+      if (!minOut || amountProblem(String(minOut), net.tokens[tokenOut].decimals)) return err('minOut required', null, 400)
       const amountBase = toBase(net, amountIn, tokenIn)
-      const intent = await fetchSwapIntent(net, kitKey, fromAddr, toAddr, walletAddress, amountBase)
-      if (!intent.ok) return err(`Stablecoin Kit ${intent.status}: ${intent.data?.message || 'swap failed'}`, intent.data)
+      const minOutBase = toBase(net, String(minOut), tokenOut)
+      const intent = await fetchSwapIntent(net, kitKey, fromAddr, toAddr, walletAddress, amountBase, minOutBase)
+      if (!intent.ok) {
+        if (/stop limit/i.test(intent.data?.message || '')) return err('The price moved. Check the new amount and try again.', intent.data, 409)
+        return err(`Stablecoin Kit ${intent.status}: ${intent.data?.message || 'swap failed'}`, intent.data)
+      }
+      // C5: the intent must be exactly what the user asked for…
+      const bad = validateIntent(net, intent.data, { fromAddr, toAddr, walletAddress, amountBase, minOutBase })
+      if (bad) return err('This swap could not be verified - nothing was sent.', { bad, intent: intent.data }, 502)
       const built = buildSwapBatch(net, intent.data, fromAddr, amountBase)
       if (built.error) return err(built.error, built.swapData)
+      // …and must deliver at least minOut when run against the chain (eth_simulateV1 via dRPC). If the simulation cannot
+      // run, REFUSE - a swap is never signed unchecked.
+      const sim = await simulateBatch(net, walletAddress, toAddr, built.batchData)
+      if (sim.error) return err('Could not check this swap right now - nothing was sent. Please try again in a moment.', sim, 503)
+      if (!sim.ok || sim.delta < minOutBase) {
+        return err('This swap would not deliver the amount shown - nothing was sent.', { ...sim, delta: String(sim.delta), before: String(sim.before), after: String(sim.after) }, 502)
+      }
 
       const txRes = await fetch(`${W3S_API}/user/transactions/contractExecution`, {
         method: 'POST',

@@ -19,12 +19,13 @@ export const CIRCLE_API = 'https://api.circle.com'
 // from the `net` object of src/network.js, passed in by the caller - nothing is hard-coded here any more
 // (MAINNET-AUDIT.md C2: the testnet adapter address has NO code on mainnet, and a call to it "succeeds").
 
-// The app's swap fee (user decision 07-23): 0.1% of each swap to the owner's wallet. This is the Stablecoin Kit's
-// OFFICIAL customFee (body `config.customFee`, dissected from the source of @circle-fin/provider-stablecoin-service-swap
-// - the createSwapParamsSchema accepts percentageBps 1..10000 + recipientAddress). Circle keeps 10%
-// of that fee, 90% goes to the recipient. The receiving address is PUBLIC (not a secret) → hardcoded like ADAPTER.
-export const FEE_RECIPIENT = '0xEb2D222d28F35fE7BeB5387f8Bc4eBF65f2652F6'
-export const FEE_BPS       = 10   // 10 bps = 0.1%
+// NO APP FEE (owner 2026-10-03; the 0.1% customFee of 07-23 is gone). Only the swap provider's 2 bps remain
+// (docs.arc.io /app-kit/concepts/swap-fees).
+// Slippage 50 bps (MAINNET-AUDIT H2 - was the Kit default 300). On execute the server ALSO passes the exact minimum the
+// screen showed as `stopLimit`: measured 2026-10-03, the REST /swap honours it (instruction minTokenOut >= stopLimit) and
+// an unreachable one answers "No route found that satisfies the requested stop limit" - so the user never gets less
+// than what was on screen; if the price moved, nothing is signed.
+export const SLIPPAGE_BPS = 50
 
 // ⚠️ The Kit expects amount = an INTEGER IN BASE UNITS (a decimal → 400; a small number → "No route"). The client sends
 // decimals, the server converts to base units before calling the Kit, and converts estimatedAmount back on the way out.
@@ -65,7 +66,8 @@ const BALANCE_OF_ABI = [{ type: 'function', name: 'balanceOf', stateMutability: 
   inputs: [{ name: 'a', type: 'address' }], outputs: [{ name: '', type: 'uint256' }] }]
 
 // Call the Stablecoin Kit /swap → { ok, status, data }. data.transaction holds executionParams + signature.
-export async function fetchSwapIntent(net, kitKey, fromAddr, toAddr, walletAddress, amountBase) {
+// minOutBase (optional, base units of tokenOut) → `stopLimit`.
+export async function fetchSwapIntent(net, kitKey, fromAddr, toAddr, walletAddress, amountBase, minOutBase = null) {
   const res = await fetch(`${CIRCLE_API}/v1/stablecoinKits/swap`, {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${kitKey}`, 'Content-Type': 'application/json' },
@@ -73,12 +75,43 @@ export async function fetchSwapIntent(net, kitKey, fromAddr, toAddr, walletAddre
       tokenInAddress: fromAddr, tokenInChain: net.kitChain,
       tokenOutAddress: toAddr,  tokenOutChain: net.kitChain,
       fromAddress: walletAddress, toAddress: walletAddress,
-      amount: amountBase.toString(), slippageBps: 300,
-      config: { customFee: { percentageBps: FEE_BPS, recipientAddress: FEE_RECIPIENT } },
+      amount: amountBase.toString(), slippageBps: SLIPPAGE_BPS,
+      ...(minOutBase ? { stopLimit: minOutBase.toString() } : {}),
     }),
   })
   const data = await res.json()
   return { ok: res.ok, status: res.status, data }
+}
+
+// MAINNET-AUDIT C5: never sign Circle's intent blindly. Checks it against what the USER asked for → null when fine, else
+// the reason. Field names from a real mainnet /swap response (2026-10-03): top-level tokenIn/OutAddress, -Chain, amount,
+// from/toAddress; transaction.executionParams { tokens[{token, beneficiary}], instructions[{tokenIn, amountToApprove,
+// tokenOut, minTokenOut, value}], deadline (unix s) }. The adapter address is NOT taken from the intent (buildSwapBatch
+// uses net.contracts.swapAdapter).
+export function validateIntent(net, data, { fromAddr, toAddr, walletAddress, amountBase, minOutBase = 0n, now = Date.now() }) {
+  const eq = (a, b) => String(a || '').toLowerCase() === String(b || '').toLowerCase()
+  const tx = data?.transaction
+  const ep = tx?.executionParams
+  if (!ep || !tx?.signature) return 'no executionParams/signature'
+  if (!eq(data.tokenInAddress, fromAddr) || !eq(data.tokenOutAddress, toAddr)) return 'tokens differ from the request'
+  if (data.tokenInChain !== net.kitChain || data.tokenOutChain !== net.kitChain) return 'another chain'
+  if (String(data.amount) !== amountBase.toString()) return 'amount differs from the request'
+  if (!eq(data.fromAddress, walletAddress) || !eq(data.toAddress, walletAddress)) return 'from/to is not this wallet'
+  if (!ep.tokens?.length || ep.tokens.some(t => !eq(t.beneficiary, walletAddress))) return 'pays someone other than this wallet'
+  if (!(Number(ep.deadline) * 1000 > now + 30000)) return 'expired'
+  const ins = ep.instructions || []
+  if (!ins.length) return 'no instructions'
+  let approved = 0n
+  for (const i of ins) {
+    if (!eq(i.tokenIn, fromAddr)) return 'spends another token'
+    if (BigInt(i.value || 0) !== 0n) return 'sends native value'
+    approved += BigInt(i.amountToApprove || 0)
+  }
+  if (approved > amountBase) return 'spends more than the request'
+  const outMin = ins.filter(i => eq(i.tokenOut, toAddr)).reduce((a, i) => a + BigInt(i.minTokenOut || 0), 0n)
+  if (outMin <= 0n) return 'no minimum output'
+  if (outMin < minOutBase) return 'minimum output below the amount shown'
+  return null
 }
 
 // Build the callData for Multicall3From.aggregate3([approve(tokenIn→ADAPTER, amount), ADAPTER.execute(...)]).
@@ -113,8 +146,39 @@ export function buildSwapBatch(net, swapData, fromAddr, amountBase) {
   return { batchData, totalValue, estOut }
 }
 
-// An eth_simulateV1 bundle [balanceOf(tokenOut) before, the batch, balanceOf(tokenOut) after] → a verdict.
-// Costs nothing, needs no PIN. ok = the swap does not revert AND the wallet's tokenOut balance RISES.
+// Run the batch in eth_simulateV1 (no PIN, no cost) and measure the wallet's tokenOut balance before/after.
+// The public Arc RPC does NOT support eth_simulateV1 (measured 2026-10-03; QuickNode no, Blockdaemon filtered) → dRPC
+// (`net.simRpc`). Returns { ok, delta (bigint), before, after, swapStatus, swapError, gasUsed } or { error } when the
+// simulation itself could not run - the caller must then REFUSE, never sign unchecked.
+export async function simulateBatch(net, walletAddress, toAddr, batchData) {
+  if (!net.simRpc) return { error: 'no simulation RPC configured' }
+  const balOf = (addr) => encodeFunctionData({ abi: BALANCE_OF_ABI, functionName: 'balanceOf', args: [addr] })
+  const simBody = {
+    jsonrpc: '2.0', id: 1, method: 'eth_simulateV1',
+    params: [{
+      blockStateCalls: [{ calls: [
+        { to: toAddr, data: balOf(walletAddress) },                                                // [0] before
+        { from: walletAddress, to: net.contracts.multicall3From, data: batchData, value: '0x0' },   // [1] the batch
+        { to: toAddr, data: balOf(walletAddress) },                                                // [2] after
+      ] }],
+      validation: false, traceTransfers: true, returnFullTransactions: false,
+    }, 'latest'],
+  }
+  let sim
+  try {
+    const r = await fetch(net.simRpc, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(simBody) })
+    sim = await r.json()
+  } catch (e) { return { error: `simulation RPC unreachable: ${e.message}` } }
+  if (sim.error) return { error: `eth_simulateV1 error: ${sim.error?.message}`, detail: sim.error }
+  const calls = sim?.result?.[0]?.calls
+  if (!calls || calls.length < 3) return { error: 'sim: missing call results', detail: sim }
+  const hexToBig = (r) => (r && r !== '0x') ? BigInt(r) : 0n   // returnData is empty when a call reverts
+  const before = hexToBig(calls[0].returnData), after = hexToBig(calls[2].returnData)
+  return { ok: calls[1].status === '0x1' && after > before, delta: after - before, before, after,
+    swapStatus: calls[1].status, swapError: calls[1].error || null, gasUsed: calls[1].gasUsed || null }
+}
+
+// Quote → validate → build → simulate, without signing (the 'simulate' action and verify-swap.mjs).
 export async function simulateSwap({ net, kitKey, tokenIn, tokenOut, walletAddress, amountIn }) {
   const fromAddr = tokenOf(net, tokenIn)?.address
   const toAddr   = tokenOf(net, tokenOut)?.address
@@ -122,59 +186,16 @@ export async function simulateSwap({ net, kitKey, tokenIn, tokenOut, walletAddre
   const amountBase = toBase(net, amountIn, tokenIn)
   const intent = await fetchSwapIntent(net, kitKey, fromAddr, toAddr, walletAddress, amountBase)
   if (!intent.ok) return { error: `Stablecoin Kit ${intent.status}: ${intent.data?.message || 'swap failed'}`, detail: intent.data }
+  const bad = validateIntent(net, intent.data, { fromAddr, toAddr, walletAddress, amountBase })
+  if (bad) return { error: `intent rejected: ${bad}` }
   const built = buildSwapBatch(net, intent.data, fromAddr, amountBase)
   if (built.error) return { error: built.error, detail: built.swapData }
-
-  const balOf = (addr) => encodeFunctionData({ abi: BALANCE_OF_ABI, functionName: 'balanceOf', args: [addr] })
-  // The FEE wallet is watched too (07-23): measure FEE_RECIPIENT's tokenIn + tokenOut before/after
-  // to prove the 0.1% fee ACTUALLY arrives - never trust "it is configured, so it must work".
-  const simBody = {
-    jsonrpc: '2.0', id: 1, method: 'eth_simulateV1',
-    params: [{
-      blockStateCalls: [{ calls: [
-        { to: toAddr,   data: balOf(walletAddress) },   // [0] user's tokenOut before
-        { to: fromAddr, data: balOf(FEE_RECIPIENT) },   // [1] fee wallet's tokenIn before
-        { to: toAddr,   data: balOf(FEE_RECIPIENT) },   // [2] fee wallet's tokenOut before
-        { from: walletAddress, to: net.contracts.multicall3From, data: built.batchData, value: '0x0' },  // [3] swap
-        { to: toAddr,   data: balOf(walletAddress) },   // [4] user's tokenOut after
-        { to: fromAddr, data: balOf(FEE_RECIPIENT) },   // [5] fee wallet's tokenIn after
-        { to: toAddr,   data: balOf(FEE_RECIPIENT) },   // [6] fee wallet's tokenOut after
-      ] }],
-      validation: false, traceTransfers: true, returnFullTransactions: false,
-    }, 'latest'],
-  }
-  const simRes = await fetch(net.rpc, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(simBody),
-  })
-  const sim = await simRes.json()
-  if (sim.error) return { error: `eth_simulateV1 error: ${sim.error?.message}`, detail: sim.error }
-  const calls = sim?.result?.[0]?.calls
-  if (!calls || calls.length < 7) return { error: 'sim: missing call results', detail: sim }
-  const hexToBig = (r) => (r && r !== '0x') ? BigInt(r) : 0n // returnData is empty when a call reverts
-  const before = hexToBig(calls[0].returnData)
-  const feeInBefore  = hexToBig(calls[1].returnData)
-  const feeOutBefore = hexToBig(calls[2].returnData)
-  const swapCall = calls[3]
-  const after = hexToBig(calls[4].returnData)
-  const feeInAfter  = hexToBig(calls[5].returnData)
-  const feeOutAfter = hexToBig(calls[6].returnData)
-  const delta = after - before
-  const feeInDelta  = feeInAfter - feeInBefore
-  const feeOutDelta = feeOutAfter - feeOutBefore
-  const expected = built.estOut ? BigInt(built.estOut) : null
+  const sim = await simulateBatch(net, walletAddress, toAddr, built.batchData)
+  if (sim.error) return sim
   return {
-    ok: swapCall.status === '0x1' && delta > 0n,
-    swapStatus: swapCall.status,
-    swapError: swapCall.error || null,
-    tokenOut,
-    before:   fromBase(net, before.toString(), tokenOut),
-    after:    fromBase(net, after.toString(), tokenOut),
-    delta:    fromBase(net, delta.toString(), tokenOut),
-    expected: expected ? fromBase(net, expected.toString(), tokenOut) : null,
-    gasUsed:  swapCall.gasUsed || null,
-    // The app fee arriving at FEE_RECIPIENT (in tokenIn or tokenOut depending on where the route deducts it - measure both)
-    feeRecipient: FEE_RECIPIENT,
-    feeDeltaIn:  fromBase(net, feeInDelta.toString(),  tokenIn),
-    feeDeltaOut: fromBase(net, feeOutDelta.toString(), tokenOut),
+    ok: sim.ok, swapStatus: sim.swapStatus, swapError: sim.swapError, tokenOut, gasUsed: sim.gasUsed,
+    before: fromBase(net, sim.before.toString(), tokenOut), after: fromBase(net, sim.after.toString(), tokenOut),
+    delta: fromBase(net, sim.delta.toString(), tokenOut),
+    expected: built.estOut ? fromBase(net, built.estOut, tokenOut) : null,
   }
 }

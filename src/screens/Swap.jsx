@@ -76,6 +76,7 @@ export default function Swap() {
   const [pct, setPct] = useState(0)              // the selected % OF BALANCE (0-100) - the single source of truth for the amount
   const [snapAmt, setSnapAmt] = useState(null)   // the ROUND amount the user tapped in row 7 (token units) - overrides pct
   const [estAmt, setEstAmt] = useState(null)
+  const [minOut, setMinOut] = useState(null)   // the estimate's minimum (50 bps) - sent on execute as the stopLimit (H2)
   // SEEDED FROM CACHE (07-31 - the user reported "swap loads slowly"): measured for real, a COLD Arc RPC call takes ~3.3s
   // (subsequent ones 130-360ms). The Swap screen used to start from {}, so "Available: …" sat frozen for
   // seconds on every open, even though the Send screen had just read the very same balances. It now reuses the module-level
@@ -160,15 +161,15 @@ export default function Swap() {
       try {
         const res = await estimateSwap({ walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: toAmountString(amountNum, NET.tokens[fromSym]?.decimals ?? 6) })
         // amountOut = the real token decimal (the server already converted from base units - the raw estimatedAmount is base units, do NOT show it directly)
-        if (res?.amountOut) { setEstAmt(res.amountOut); setError('') }
-        else if (res?.error) { setEstAmt(null); setError(res.error) }
-        else setEstAmt(null)
-      } catch (e) { setEstAmt(null); setError(e.message) }
+        if (res?.amountOut) { setEstAmt(res.amountOut); setMinOut(res.minOut || null); setError('') }
+        else if (res?.error) { setEstAmt(null); setMinOut(null); setError(res.error) }
+        else { setEstAmt(null); setMinOut(null) }
+      } catch (e) { setEstAmt(null); setMinOut(null); setError(e.message) }
     }, 600)
     return () => clearTimeout(debounceRef.current)
   }, [amountNum, fromSym, toSym])
 
-  function resetAmount() { setPct(0); setSnapAmt(null); setEstAmt(null); setError(''); setTyped('') }
+  function resetAmount() { setPct(0); setSnapAmt(null); setEstAmt(null); setMinOut(null); setError(''); setTyped('') }
 
   // ── NUMPAD bottom sheet: tap the You pay amount → open it; whatever is typed applies immediately (snapAmt + the slider follows) ──
   function openPad() {
@@ -254,7 +255,9 @@ export default function Swap() {
       // A 60' token may have expired mid-session → refresh it BEFORE creating a challenge that needs the PIN
       const { userToken, encryptionKey } = await refreshSession()
       const amountIn = toAmountString(amountNum, NET.tokens[fromSym]?.decimals ?? 6)
-      const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn, refId: attempt.refId })
+      // minOut from the SAME estimate whose amount is on screen - the swap can never deliver less (H2).
+      if (!minOut) { clearPending(attempt.refId); throw new Error('Getting the price… try again in a second.') }
+      const res = await executeSwap({ userToken, walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn, minOut, refId: attempt.refId })
       if (res.error) { clearPending(attempt.refId); throw new Error(res.error) }   // no challenge → nothing can exist
 
       setStatus('Enter PIN...')
