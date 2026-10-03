@@ -12,6 +12,7 @@ import * as sync from './functions/api/sync.js'
 import * as health from './functions/api/health.js'
 import * as auth from './functions/api/auth.js'
 import * as inbox from './functions/api/inbox.js'
+import * as prices from './functions/api/prices.js'
 
 const PORT = 8787
 
@@ -62,6 +63,7 @@ const ROUTES = {
   '/api/health': health,
   '/api/auth': auth,
   '/api/inbox': inbox,
+  '/api/prices': prices,
 }
 
 const server = createServer(async (req, res) => {

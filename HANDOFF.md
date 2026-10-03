@@ -32,6 +32,19 @@ TARGET: public mainnet launch within October 2026.**
 > Specs: `MAINNET-V1-PLAN.md` (mainnet v1, owner-approved), `admin/SPEC.md` (admin). Older: `MAINNET-SPEC.md`,
 > `MAINNET-AUDIT.md`. Secrets: `D:\Files\Claude\.secrets\keys.env` (never in the repo).
 
+## 2026-10-03 - Prices via /api/prices (option C) + test.ezwallet.cash opened to the public (on `test`)
+- **Owner decision: option C** - CoinGecko primary (Demo key, env `COINGECKO_API`), Binance backup + cross-check.
+  `functions/api/prices.js`: both fetched server-side, merged by `mergePrices` (agree within 2% → CoinGecko; only one
+  answers → that one; >2% apart → last stored price held; none → stale stored price), cached 5 min in KV EZ_SYNC
+  `prices:v1` for everyone. Binance = `data-api.binance.vision` (USDT pairs ÷ USDCUSDT). cirBTC = BTC price. ETH is
+  returned too (price only, no ETH token in the wallet). The browser no longer calls CoinGecko (removed from CSP).
+  Response field `up` shows which source answered; `src` per symbol shows which one was used. Tests: `test/prices.test.mjs`.
+- **TODO (owner):** add `COINGECKO_API` (secret) to Pages `ezwallet-test` and, before merging to main, `ezwallet-mainnet`
+  - Claude's auto mode refused to write secrets to Cloudflare. Without it CoinGecko is called keyless (shared IP limit).
+- **test.ezwallet.cash is PUBLIC since 2026-10-03** (owner: "ai truy cập cũng được"): the Access policy "invited
+  testers" on app e2094640… was changed to Bypass / Everyone (not deleted - change it back to Allow + email to re-lock).
+  It is still MAINNET with real money.
+
 ## 2026-10-03 - test.ezwallet.cash has its own apple-touch-icon (owner request)
 - Builds with `CF_PAGES_BRANCH=test` (Pages `ezwallet-test`) swap the apple-touch-icon to `public/icon-test.png`
   (blue tile, white mark; source `design/logo-pfp-test.svg` = `logo-pfp.svg` with colours inverted). Done in a small
@@ -72,7 +85,7 @@ không muốn repo riêng hay testnet riêng nữa". Picked: separate data, invi
 | Network / Circle | mainnet, LIVE key | mainnet, LIVE key - **same Circle users, same wallets, REAL money** |
 | KV `EZ_SYNC` | `EZ_SYNC_MAINNET` d591e211… | **`EZ_SYNC_STAGING` ca7c7eb8…** (contacts/QR start empty) |
 | AUTH_SECRET | its own | its own (`EZWALLET_STAGING_AUTH_SECRET` in keys.env) - sessions do not cross |
-| Access | public | Cloudflare Access app `ezwallet test (mainnet staging)` e2094640… - policy "invited testers" = owner email only; covers test.ezwallet.cash + ezwallet-test.pages.dev + *.ezwallet-test.pages.dev. Add testers = add emails to that policy. `/api/health` has a Bypass app so the admin Health page can read it |
+| Access | public | PUBLIC since 2026-10-03 (policy switched to Bypass/Everyone). Was: Cloudflare Access app `ezwallet test (mainnet staging)` e2094640… - policy "invited testers" = owner email only; covers test.ezwallet.cash + ezwallet-test.pages.dev + *.ezwallet-test.pages.dev. Add testers = add emails to that policy. `/api/health` has a Bypass app so the admin Health page can read it |
 
 - **testnet.ezwallet.cash is GONE** (DNS + Pages domain removed). Old testnet KV `EZ_SYNC` 5aec627d… was kept, unbound.
   Old Pages projects `ezwallet` / `ezwallet-testnet` (if still there) are unused.

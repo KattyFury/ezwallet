@@ -33,20 +33,20 @@ const ERC20_ABI = [
   { name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'account', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ]
 
-// PRICES IN USD (the app's unit of account). cgId: the live USD price from CoinGecko; usdRate: the offline fallback
+// PRICES IN USD (the app's unit of account), live from /api/prices (fetchPrices below); usdRate: the offline fallback
 // (USD per unit). USDC is ALWAYS pinned to 1 (it IS the dollar) → stablecoins show exactly 1:1, without the old
 // "$5"→"$4.99" drift (which came from routing through VND + CoinGecko noise).
 // Display-only metadata per symbol. Addresses/decimals come from the network config, so a token the network
 // does not list (e.g. cirBTC on mainnet v1) simply does not exist in this build.
 const TOKEN_UI = {
-  USDC:   { color: '#2775CA', cgId: 'usd-coin',  usdRate: 1 },
-  EURC:   { color: '#1A56DB', cgId: 'euro-coin', usdRate: 1.08 },
-  cirBTC: { color: '#F7931A', cgId: 'bitcoin',   usdRate: 65000 },
+  USDC:   { color: '#2775CA', usdRate: 1 },
+  EURC:   { color: '#1A56DB', usdRate: 1.08 },
+  cirBTC: { color: '#F7931A', usdRate: 65000 },
 }
 export const TOKENS = Object.entries(NET.tokens).map(([symbol, t]) => ({ symbol, address: t.address, decimals: t.decimals, ...TOKEN_UI[symbol] }))
 
 let priceCache = {}
-let priceCache24h = {}   // symbol -> % change in the last 24h (CoinGecko usd_24h_change), for the token-list arrow
+let priceCache24h = {}   // symbol -> % change in the last 24h (from /api/prices), for the token-list arrow
 let lastFetch = 0
 
 // ── Module-level cache: switching screens (Send↔Receive↔Menu) shows the number IMMEDIATELY, with no "..." flash.
@@ -74,23 +74,20 @@ const VND_PER_USD_FALLBACK = 26300
 async function fetchPrices() {
   if (Date.now() - lastFetch < 60000) return priceCache
   try {
-    const ids = TOKENS.filter(t => t.cgId).map(t => t.cgId).join(',')
-    // +vnd: ask for the VND price IN THE SAME request (do not add a second one - CoinGecko's
-    // free tier is strictly rate limited, and the app already calls this every 60s).
-    // include_24hr_change: the 24h % move, for the up/down indicator on the token list (user request 08-25) -
-    // same request, no extra call.
-    const res = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd,vnd&include_24hr_change=true`)
+    // Our own /api/prices (functions/api/prices.js): CoinGecko with the Demo key, cross-checked against Binance,
+    // cached 5 min server-side for everyone (owner decision 2026-10-03). The browser no longer calls CoinGecko.
+    const res = await fetch('/api/prices')
     const data = await res.json()
     TOKENS.forEach(t => {
-      if (t.cgId && data[t.cgId]?.usd != null) priceCache[t.symbol] = data[t.cgId].usd
-      if (t.cgId && data[t.cgId]?.usd_24h_change != null) priceCache24h[t.symbol] = data[t.cgId].usd_24h_change
+      if (data.prices?.[t.symbol] > 0) priceCache[t.symbol] = data.prices[t.symbol]
+      if (data.change24h?.[t.symbol] != null) priceCache24h[t.symbol] = data.change24h[t.symbol]
     })
+    if (data.prices?.ETH > 0) priceCache['ETH'] = data.prices.ETH   // not a token in the wallet yet - price only
     priceCache['USDC'] = 1  // pinned: USDC = exactly $1 (do not let CoinGecko's ~0.9998 skew it)
     // VND is stored as "USD per 1 VND" to MATCH every other rate (rates[cur] = USD per unit),
     // which is what lets displayNum(usd, cur, rates) = usd / rates[cur] be shared with no special case.
-    // usd-coin.vnd = the number of VND per USDC (~26,300) → inverted, ~0.000038.
-    const vndPerUsd = data['usd-coin']?.vnd
-    priceCache['VND'] = 1 / (vndPerUsd > 0 ? vndPerUsd : VND_PER_USD_FALLBACK)
+    // vndPerUsd = the number of VND per USDC (~26,300) → inverted, ~0.000038.
+    priceCache['VND'] = 1 / (data.vndPerUsd > 0 ? data.vndPerUsd : VND_PER_USD_FALLBACK)
     lastFetch = Date.now()
   } catch {}
   return priceCache
