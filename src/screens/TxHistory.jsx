@@ -83,9 +83,11 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, sw
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        {/* row 1: who - item size, bold */}
-        <div style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-          {isSwap ? swapTitle : `${isSend ? 'Sent to' : 'Received from'} ${who}`}
+        {/* row 1: who - item size, bold. WRAPS like a notification (owner 2026-10-03: it was cut with "…" and lost
+            words); break-word keeps a short address whole on the next line, only breaking one that cannot fit. */}
+        <div style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', lineHeight: 1.3, overflowWrap: 'break-word' }}>
+          {/* A shortened address stays in ONE piece (browsers may break right after its "…"); a contact name wraps freely. */}
+          {isSwap ? swapTitle : <>{isSend ? 'Sent to' : 'Received from'} <span style={!name && !isSelf ? { whiteSpace: 'nowrap' } : undefined}>{who}</span></>}
         </div>
         {/* row 2: status/time + the [Add contacts] button. Swap → "Swap completed · <time>" (user decision 07-20d;
             "At" dropped 2026-10-03 - with the bigger type it wrapped the time onto 2 lines) */}
