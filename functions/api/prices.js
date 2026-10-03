@@ -19,7 +19,7 @@ const BN_PAIRS = { EURC: 'EURUSDT', cirBTC: 'BTCUSDT', ETH: 'ETHUSDT' }
 
 async function getJson(url, headers) {
   const res = await fetch(url, { headers, signal: AbortSignal.timeout(4000) })
-  if (!res.ok) throw new Error(`HTTP ${res.status}`)
+  if (!res.ok) throw new Error(`HTTP ${res.status} ${(await res.text()).slice(0, 160)}`)
   return res.json()
 }
 
@@ -84,7 +84,8 @@ export async function onRequestGet(ctx) {
   const merged = mergePrices(cg.value, bn.value, prev)
   const held = Object.entries(merged.src).filter(([, s]) => s !== 'coingecko').map(([k, s]) => `${k}=${s}`)
   if (held.length) console.warn('[prices]', held.join(' '), JSON.stringify({ cg: cg.value?.prices, bn: bn.value?.prices }))
-  if (cg.status === 'rejected' && bn.status === 'rejected') return reply(prev || { ts: 0, prices: {}, change24h: {}, src: {} })
+  const errors = { coingecko: cg.reason?.message, binance: bn.reason?.message }   // undefined = no error (dropped by JSON)
+  if (cg.status === 'rejected' && bn.status === 'rejected') return reply({ ...(prev || { ts: 0, prices: {}, change24h: {}, src: {} }), errors })
   const result = { ts: Date.now(), ...merged }
   if (kv) { try { await kv.put(KV_KEY, JSON.stringify(result)) } catch {} }
   return reply(result)
