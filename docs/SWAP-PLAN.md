@@ -59,7 +59,9 @@ has a measurement or a doc line behind it; keep it that way.
    and the fee checks in `simulateSwap`; only the provider's 2 bps remain.
 2. **Roll-out: both branches at once** (test + main), per the pre-launch rule. → Phase 1 must be fully validated +
    simulated before `NET.swap = true` is pushed, since ezwallet.cash users see it immediately.
-3. **Auto-convert source order: EURC first, then cirBTC.** Send "available" = USDC + EURC + cirBTC in USD.
-   A shortfall larger than the EURC balance converts all needed EURC, then cirBTC for the rest (two swaps in the same
-   batch, still one PIN).
+3. **Auto-convert source order (owner, refined same day): other STABLECOINS first (EURC today), then cirBTC, then
+   ETH "if there is one".** ETH is not a verified token on Arc today (no ETH token in `NET.tokens`) - the order is a
+   priority list in code (stablecoins → cirBTC → ETH), so an ETH token added later slots in last. Send "available" =
+   every verified token in USD. A shortfall larger than one source's balance takes that source fully and moves to the
+   next (several swaps in the same batch, still one PIN).
 4. **Exchange pairs: every direction between USDC / EURC / cirBTC** (6).
