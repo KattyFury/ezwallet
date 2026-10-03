@@ -75,6 +75,13 @@ Pre-launch rule in force: every change → commit on `test`, `git checkout main 
   holds no ETH there - Gas Station / SCA / CCTP Forwarding Service?) (3) Bridge Kit's `adapter-circle-wallets`
   chain support (it lagged on Arc mainnet before) (4) LI.FI fees + whether it reaches Arc mainnet at all.
 
+- **Create QR "Balance:"** was a hard-coded `20.00` from Figma → now real: **USD = the wallet's TOTAL in dollars**
+  (USDC + EURC at today's rate, same sum as Home's header), USDC/EURC = that token's balance ("$16.23", "5.00 USDC").
+- **💡 PLANNED, not built (owner 2026-10-03): spend the TOTAL in USD.** With 10 USDC + 10 EURC (≈$11) the user may
+  send e.g. $19 - the app converts the missing part EURC → USDC (swap) first, then sends USDC. Open points before
+  building: swap is a separate tx (2 PIN prompts or one batched challenge?), rate moves between quote and send
+  (slippage / keep a buffer), Circle swap availability + fees on Arc mainnet, what SendAmount's "available" shows.
+
 **Owner answers (2026-10-03, do NOT offer these again):**
 - Contact photo sync to other devices: **NO** - photos stay per-device.
 - Wrapping button labels in a <span> for cap-height trim: **NO**.

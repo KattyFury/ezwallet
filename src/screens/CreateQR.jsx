@@ -8,7 +8,7 @@ import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
 import { NET } from '../clientNet'
-import { getTokenInfo } from '../chain'
+import { getTokenInfo, getTokenBalances } from '../chain'
 import { ensureWalletAddress } from '../circle'
 
 // Consistent with the Send screen: USD (friendly label, backed by USDC) by default + this network's tokens.
@@ -29,22 +29,25 @@ export default function CreateQR() {
   // From the QR library → creating also SAVES it to the library (with a NAME); from Receive → only shown to share, NOT saved.
   const fromLibrary = params?.from === 'SavedQRList'
 
-  // Real balance of the selected token (USD → USDC) - was a hard-coded "20.00" copied from Figma. Same read as
-  // SendAmount, but the FULL balance (this screen receives, nothing is held back for fees). A failed read keeps
-  // null ("…") and retries after 3s - never a fake 0 (bug 07-17).
+  // Real balance - was a hard-coded "20.00" copied from Figma. USD = the wallet's TOTAL value in dollars (USDC + EURC
+  // at today's rate, the same sum as Home's balance header - owner 2026-10-03); a token = that token's full balance
+  // (this screen receives, nothing is held back for fees). A failed read keeps null ("…") and retries after 3s -
+  // never a fake 0 (bug 07-17).
   const [balance, setBalance] = useState(null)
   useEffect(() => {
-    const tok = cur === 'USD' ? 'USDC' : cur
     setBalance(null)
     let alive = true, retry
+    const read = a => (cur === 'USD'
+      ? getTokenBalances(a).then(ts => ts.reduce((s, t) => s + t.usd, 0))
+      : getTokenInfo(a, cur).then(i => i.balance))
     const load = () => ensureWalletAddress()
-      .then(a => (a ? getTokenInfo(a, tok) : Promise.reject(new Error('no wallet address'))))
-      .then(i => { if (alive) setBalance(i.balance) })
+      .then(a => (a ? read(a) : Promise.reject(new Error('no wallet address'))))
+      .then(b => { if (alive) setBalance(b) })
       .catch(() => { if (alive) retry = setTimeout(load, 3000) })
     load()
     return () => { alive = false; clearTimeout(retry) }
   }, [cur])
-  // Written in the unit picked above (owner 2026-10-03): USD → "$5.00", USDC → "5.00 USDC", EURC → "5.00 EURC".
+  // Written in the unit picked above (owner 2026-10-03): USD → "$16.23" (total), USDC → "5.00 USDC", EURC → "10.00 EURC".
   const balNum = balance !== null ? Number(balance).toFixed(cur === 'cirBTC' ? 8 : 2) : '…'
   const balanceStr = cur === 'USD' ? displaySymbol('USDC') + balNum : `${balNum} ${cur}`
 
