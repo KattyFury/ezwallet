@@ -52,7 +52,9 @@ TARGET: public mainnet launch within October 2026.**
 - **Icon inside a button next to its label = 1.2 × the label size** (owner, "thử xem sao"): tokens `--ib-content-1/
   -content-2/-caption` in :root. Applied: Home tiles (Paste/Contacts/QR storage/Share 19.7→19.2, Scan QR/Create QR
   27→24), Menu Withdraw/Deposit 27→24, Menu row icons 18→24 (incl. Sign out), ShowQR Share, Swap success check.
-  NOT applied to chevrons/carets (Menu ›, About ›, Security ⌄) - direction marks, not pictures. All of today's `test` work (prices,
+  NOT applied to chevrons/carets (Menu ›, About ›, Security ⌄) - direction marks, not pictures.
+- Menu Withdraw/Deposit icons: plain ↑/↓ (same as NavBar Send/Receive → confusing) → Lucide ArrowUpFromLine /
+  ArrowDownToLine (`withdraw`/`deposit` in Icon.jsx) - owner picked option B of 5 shown. All of today's `test` work (prices,
   test-only apple icon) merged to `main` - `COINGECKO_API` secret was added by the owner to BOTH Pages projects.
 
 ## 2026-10-03 - Prices via /api/prices (option C) + test.ezwallet.cash opened to the public (on `test`)

@@ -107,9 +107,9 @@ export default function MenuScreen() {
           pair's visual states). Kept as "Withdraw" here, matching its own established, still-accurate
           behaviour rather than shipping two buttons that say the
           same word. Flagged to the user; revert to Figma's literal text if that duplication turns out to
-          be intentional. Icons are a flat 27px square in Figma on both; given no real destination icon is
-          established for either action, `up`/`down` are used - the same in/out arrow language the
-          NavBar and the token trend arrows already use elsewhere in this app (Send=up, Receive=down). */}
+          be intentional. Icons: `withdraw`/`deposit` (arrow leaving / landing on a line) - owner picked
+          option B 2026-10-03 because the plain `up`/`down` used before were the SAME glyphs as the NavBar's
+          Send/Receive, so Withdraw read as Send and Deposit as Receive. Size = 1.2x the label (--ib-content-1). */}
       <button className="btn" onClick={() => setPopup('withdraw')} style={{
         position: 'absolute', left: '6.41%', top: '30.57dvh', width: '42.56%', height: 'calc(70 * var(--u))',
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
@@ -117,7 +117,7 @@ export default function MenuScreen() {
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
       }}>
-        <Icon name="up" size="var(--ib-content-1)" color="var(--color-black)" />
+        <Icon name="withdraw" size="var(--ib-content-1)" color="var(--color-black)" />
         Withdraw
       </button>
       {/* Deposit / Withdraw open FundsPopup (owner spec 2026-10-03): Deposit = this wallet's Arc address, Withdraw =
@@ -129,7 +129,7 @@ export default function MenuScreen() {
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
       }}>
-        <Icon name="down" size="var(--ib-content-1)" color="var(--color-white)" />
+        <Icon name="deposit" size="var(--ib-content-1)" color="var(--color-white)" />
         Deposit
       </button>
 
