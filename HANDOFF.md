@@ -55,6 +55,10 @@ Pre-launch rule in force: every change → commit on `test`, `git checkout main 
 - **Decided / not built:** seed / private-key import SHELVED (Circle has no import). Contact photos stay per-device
   by design (owner asked why; offered thumbnail sync + toggle, NOT decided).
 
+- **Received-money notifications show the sender's memo in BOLD, full length** ("Received 5.00 USDC from Mom · **note**"):
+  `addNotif(..., memo)` (src/notif.js) + NotifArea reads it with `getTxMemo` (already cached by loadHistoryRows' receipt
+  read - no extra RPC). Owner: no length cap, rows wrap - the notification design already allows multi-line.
+
 **Next session - open, ask the owner before starting:**
 1. Contact photo sync (thumbnail ~100px + on/off switch) - owner has not decided.
 2. Button label visual trim: only possible by wrapping each label in a `<span>` (CSS text-box) - offered, not chosen.

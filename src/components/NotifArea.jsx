@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import Icon from './Icon'
 import { useNav } from '../nav'
 import { getNotifs, dismissNotif, addNotif } from '../notif'
-import { loadHistoryRows } from '../chain'
+import { loadHistoryRows, getTxMemo } from '../chain'
 import { findContactName, acct } from '../store'
 import { fmtTokenAmount, shortenAddr } from '../data'
 import { NET } from '../clientNet'
@@ -33,7 +33,7 @@ function pollIncoming(after) {
   // which answers a Cloudflare bot challenge on mainnet (2026-10-01). Receipts are remembered, so a poll only reads
   // the chain for a transaction it has not seen before.
   loadHistoryRows({ limit: 20 })
-    .then(all => {
+    .then(async all => {
       const lower = addr.toLowerCase()
       // A hash the wallet just SENT (from = wallet) AND also received = a SWAP (token exchange, one single tx).
       // → the incoming notification for a swap must say "swap complete", NOT "received from a stranger"
@@ -44,7 +44,7 @@ function pollIncoming(after) {
       if (recv[0]) localStorage.setItem(`ez_last_recv_ts_${acct()}`, recv[0].timeStamp)
       if (lastSeen) {
         const seen = notifiedHashes()
-        recv.filter(tx => parseInt(tx.timeStamp) > lastSeen && !seen.has(tx.hash)).reverse().forEach(tx => {
+        for (const tx of recv.filter(tx => parseInt(tx.timeStamp) > lastSeen && !seen.has(tx.hash)).reverse()) {
           const symbol = tx.tokenSymbol || 'USDC'
           const amt = fmtTokenAmount(parseFloat(tx.value) / Math.pow(10, parseInt(tx.tokenDecimal || 6)), symbol)
           if (outHashes.has(tx.hash)) {
@@ -53,10 +53,13 @@ function pollIncoming(after) {
           } else {
             // Show the CONTACT NAME if the sender's address is saved (matching the "Sent to <name>" notification)
             const fromName = findContactName(tx.from) || shortenAddr(tx.from)
-            addNotif(`Received ${amt} ${symbol} from ${fromName}`, 'received', tx.hash, `recv-${tx.hash}`)
+            // The sender's NOTE goes into the notification, bold, full length (owner 2026-10-03). Free: the receipt was
+            // already read for this row by loadHistoryRows and its memo cached, so getTxMemo does not hit the chain again.
+            const memo = await getTxMemo(tx.hash).catch(() => null)
+            addNotif(`Received ${amt} ${symbol} from ${fromName}`, 'received', tx.hash, `recv-${tx.hash}`, memo)
           }
           markNotified(tx.hash)
-        })
+        }
         after()
       }
     }).catch(() => {}).finally(() => { polling = false })
@@ -228,7 +231,10 @@ export default function NotifArea({ hints = [], warning = null, pollMs = 15000 }
             <div key={n.id} onClick={() => open(n)} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'calc(10 * var(--u))', background: 'var(--color-white)', borderRadius: 16, minHeight: 'calc(40 * var(--u))', padding: 'calc(3 * var(--u)) calc(10 * var(--u))', flexShrink: 0, cursor: clickable ? 'pointer' : 'default' }}>
               <span style={{ display: 'flex', alignItems: 'center', gap: 'calc(8 * var(--u))', fontSize: NOTIF_FS, color: s.color, ...ROW_TEXT }}>
                 <Icon name={s.icon} size="calc(19.5 * var(--u))" color={s.color} style={{ flexShrink: 0 }} />
-                <span style={ROW_TEXT}>{n.text}</span>
+                <span style={ROW_TEXT}>
+                  {n.text}
+                  {n.memo ? <> · <b style={{ fontWeight: 'var(--fw-bold)' }}>{n.memo}</b></> : null}
+                </span>
               </span>
               <button onClick={e => clear(n.id, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexShrink: 0, padding: 'calc(2 * var(--u))' }}><Icon name="x" size="calc(19.5 * var(--u))" color={s.color} /></button>
             </div>

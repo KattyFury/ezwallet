@@ -21,10 +21,11 @@ export function getNotifs() {
 // dedupeKey: guards against DUPLICATED notifications - mainly React.StrictMode (dev) running useEffect
 // twice (mount→fake unmount→mount again), so addNotif() fires twice for ONE real event. If a dedupeKey
 // matches an existing notification → skip, do not add it again.
-export function addNotif(text, type = 'info', hash = null, dedupeKey = null) {
+// memo: the sender's note on a RECEIVED transfer - rendered after the text in BOLD (owner 2026-10-03), any length.
+export function addNotif(text, type = 'info', hash = null, dedupeKey = null, memo = null) {
   const list = getNotifs()
   if (dedupeKey && list.some(n => n.dedupeKey === dedupeKey)) return
-  list.unshift({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, text, type, hash, dedupeKey, ts: Date.now() })
+  list.unshift({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, text, type, hash, dedupeKey, ts: Date.now(), ...(memo ? { memo } : {}) })
   localStorage.setItem(key(), JSON.stringify(list.slice(0, 10)))
 }
 
