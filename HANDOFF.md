@@ -13,7 +13,9 @@ TARGET: public mainnet launch within October 2026.**
 1. The owner tests on https://ezwallet.cash with an email NEVER used on testnet (see Bug 1) and reports bugs.
 2. For each bug: reproduce/measure (read-only first), find the rule in the official docs, then offer options -
    the owner picks before any code.
-3. **Where code goes (since 2026-10-02):** new features → branch `test` → owner tries them on
+3. **⚠️ UNTIL PUBLIC LAUNCH (owner, 2026-10-03): every change goes to BOTH `test` and `main`** - commit on `test`,
+   then `git checkout main && git merge --ff-only test`, push both. The flow below applies again after launch.
+   **Where code goes (since 2026-10-02):** new features → branch `test` → owner tries them on
    **test.ezwallet.cash** → merge `test` into `main` → ezwallet.cash. Small bug fixes the owner asks for directly
    may still go straight to `main` (then fast-forward `test`: `git merge --ff-only main`). Keep `test` = `main` +
    whatever is being tried; never let it drift for long.
@@ -31,6 +33,10 @@ TARGET: public mainnet launch within October 2026.**
 | 6 | Circle PIN window on ezwallet.cash - is the domain needed in the Circle Console? | Unchecked |
 > Specs: `MAINNET-V1-PLAN.md` (mainnet v1, owner-approved), `admin/SPEC.md` (admin). Older: `MAINNET-SPEC.md`,
 > `MAINNET-AUDIT.md`. Secrets: `D:\Files\Claude\.secrets\keys.env` (never in the repo).
+
+## 2026-10-03 - Contacts: name one size smaller; prices + test icon now on main too
+- Contacts list name `--fs-h2` (22) → `--fs-content-1` (19) (owner request). All of today's `test` work (prices,
+  test-only apple icon) merged to `main` - `COINGECKO_API` secret was added by the owner to BOTH Pages projects.
 
 ## 2026-10-03 - Prices via /api/prices (option C) + test.ezwallet.cash opened to the public (on `test`)
 - **Owner decision: option C** - CoinGecko primary (Demo key, env `COINGECKO_API`), Binance backup + cross-check.

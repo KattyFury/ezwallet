@@ -166,7 +166,7 @@ export default function Contacts() {
                   </button>
                 )}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 'var(--fs-h2)', fontWeight: 'var(--fw-medium)' }}>{c.name}</div>
+                  <div style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-medium)' }}>{c.name}</div>
                   <button onClick={() => copyAddr(c)}
                     style={{ display: 'inline-flex', alignItems: 'center', gap: 'calc(6 * var(--u))', background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit' }}>
                     <span style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)' }}>
