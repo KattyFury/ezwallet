@@ -1,7 +1,7 @@
 import { createPublicClient, http, decodeEventLog, parseAbiItem, parseAbi, encodeFunctionData, parseUnits, stringToHex } from 'viem'
 import { defineChain } from 'viem'
 import { MOCK, MOCK_AMOUNTS, MOCK_RATES, MOCK_CHANGE_24H, MOCK_TX, MOCK_UNVERIFIED } from './mock'
-import { fetchHistory, fetchAllBalances } from './circle'
+import { fetchHistory, fetchHistoryPage, fetchAllBalances } from './circle'
 // The chain id is declared in qr.js (a module that does NOT depend on viem) so screens that only draw/read QRs - ShowQR,
 // SavedQRList - can use it without pulling all of viem into their chunk. ONE source of truth: changing chains means
 // editing exactly one place over there, and this file follows.
@@ -412,8 +412,26 @@ export async function loadHistoryRows({ limit, onProgress } = {}) {
   const walletAddr = localStorage.getItem('ez_wallet_addr')
   const walletId = localStorage.getItem('ez_wallet_id')
   if (!walletAddr || !walletId) return []
-  const txs = await fetchHistory(walletId, limit)
-  return historyRows(txs, walletAddr, onProgress)
+  // No onProgress (the notification poll): one call for the newest `limit` transactions, as before.
+  if (!onProgress) return historyRows(await fetchHistory(walletId, limit), walletAddr)
+  // History screen: PAGE BY PAGE (owner 2026-10-03) - the newest 50 are drawn as soon as their receipts arrive, older
+  // pages follow behind (it used to fetch EVERY page from Circle before drawing a single row). A page with an unreadable
+  // receipt does not stop the next pages; the error is thrown at the end so the screen retries (receipts are cached).
+  const max = limit || 1000
+  const byTime = rows => rows.sort((a, b) => Number(b.timeStamp) - Number(a.timeStamp))
+  let all = [], failed = null, cursor = null, count = 0
+  do {
+    const page = await fetchHistoryPage(walletId, cursor)
+    count += page.txs.length
+    let pageRows = []
+    try { pageRows = await historyRows(page.txs, walletAddr, rows => { pageRows = rows; onProgress(byTime([...all, ...rows])) }) }
+    catch (e) { failed = e }
+    all = byTime([...all, ...pageRows])
+    onProgress(all)
+    cursor = page.next
+  } while (cursor && count < max)
+  if (failed) throw failed
+  return all
 }
 
 // The real gas fee: Arc prices gas in USDC (18 decimals internally). USDC = $1 → the USD fee IS feeUsdc.

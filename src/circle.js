@@ -164,6 +164,19 @@ export async function fetchHistory(walletId, limit) {
   return data.txs
 }
 
+// ONE page (≤50, newest first) of the same list → { txs, next } (functions/api/wallet.js 'historyPage'); pass `next`
+// back as `cursor` for the following page, null = no more pages. Same expired-token retry as fetchHistory.
+export async function fetchHistoryPage(walletId, cursor = null) {
+  const ask = userToken => fetch('/api/wallet', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'historyPage', userToken, walletId, cursor }),
+  }).then(r => r.json())
+  let data = await ask(localStorage.getItem('ez_user_token'))
+  if (data.error && isTokenExpiredError({ code: data.code, message: data.error })) data = await ask((await forceFreshSession()).userToken)
+  if (data.error) throw new Error(data.error)
+  return { txs: data.txs, next: data.next }
+}
+
 // Every token balance Circle sees for this wallet, listed or not (functions/api/wallet.js 'balances') →
 // [{ address, symbol, name, decimals, isNative, amount }]. Same expired-token retry as fetchHistory.
 export async function fetchAllBalances(walletId) {

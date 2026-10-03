@@ -193,6 +193,26 @@ export async function onRequestPost(ctx) {
     return new Response(JSON.stringify({ tokens }), { headers: JSON_HEADERS_BASE });
   }
 
+  // ONE page of the same list (owner 2026-10-03: History should draw the newest page at once instead of waiting for
+  // every page). `cursor` = the `next` this action returned last time (Circle's own rel="next" link, minus the host);
+  // only a /transactions path is accepted, so the cursor cannot be pointed at another Circle endpoint.
+  if (action === 'historyPage') {
+    const { walletId, cursor } = body;
+    if (!walletId) return new Response(JSON.stringify({ error: 'walletId required' }), { status: 400, headers: JSON_HEADERS_BASE });
+    if (cursor && !/^\/transactions\?/.test(cursor)) return new Response(JSON.stringify({ error: 'bad cursor' }), { status: 400, headers: JSON_HEADERS_BASE });
+    const path = cursor || `/transactions?${new URLSearchParams({ walletIds: walletId, pageSize: '50', includeAll: 'true' })}`;
+    const res = await fetch(`${CIRCLE_API}${path}`, { headers: { Authorization: `Bearer ${apiKey}`, 'X-User-Token': userToken } });
+    let data; try { data = await res.json(); } catch { data = {}; }
+    if (res.status >= 400) {
+      console.error('[historyPage]', res.status, JSON.stringify(data));
+      return new Response(JSON.stringify({ error: data?.message || `Circle HTTP ${res.status}`, code: data?.code }), { status: 502, headers: JSON_HEADERS_BASE });
+    }
+    const txs = (data?.data?.transactions || []).filter(t => t.txHash)
+      .map(t => ({ hash: t.txHash, type: t.transactionType, state: t.state, date: t.firstConfirmDate || t.createDate }));
+    const next = /<([^>]+)>;\s*rel="next"/.exec(res.headers.get('link') || '');
+    return new Response(JSON.stringify({ txs, next: next ? next[1].replace(CIRCLE_API, '') : null }), { headers: JSON_HEADERS_BASE });
+  }
+
   if (action === 'getAddress') {
     // The correct endpoint: GET /v1/w3s/wallets (X-User-Token), NOT /user/wallets
     const { data: wallets } = await circleReq('GET', '/wallets', undefined, apiKey, userToken);

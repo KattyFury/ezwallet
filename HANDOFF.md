@@ -97,6 +97,12 @@ Pre-launch rule in force: every change → commit on `test`, `git checkout main 
   → confirm), 0.5% buffer, Send's "available" = the TOTAL, converting verified tokens to USDC when short. Order: AFTER
   the unverified-tokens work; needs swap re-enabled on mainnet first = fix audit C5 + H2 → write the spec, owner approves.
 
+- **Speed (owner: "app hơi chậm" → waiting for balance / history).** Measured: server/API/RPC 0.3-0.45s each, entry JS
+  50 KB gz. Owner picked ONE fix: **History draws page by page** (`/api/wallet` action `historyPage` + `fetchHistoryPage`,
+  `loadHistoryRows` with onProgress) - it used to fetch EVERY Circle page before drawing a row. NOT yet verified on a
+  real wallet (mock skips it). Offered and NOT picked (do not redo without asking): persist balances / history rows in
+  localStorage for an instant first paint; long cache headers for /assets/*.
+
 **Owner answers (2026-10-03, do NOT offer these again):**
 - Contact photo sync to other devices: **NO** - photos stay per-device.
 - Wrapping button labels in a <span> for cap-height trim: **NO**.
