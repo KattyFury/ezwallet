@@ -104,7 +104,7 @@ Memo precompile.
 [Circle console](https://console.circle.com) account for API keys.
 
 ```bash
-git clone https://github.com/KattyFury/ezwallet.git
+git clone https://github.com/KattyFury/project_arc_ezwallet.git
 cd ezwallet
 npm install
 ```

@@ -1,6 +1,6 @@
 # HANDOFF – ezwallet
 
-**Updated:** 2026-10-03 evening (UI polish day: type scale, buttons/inputs 5/6, receipt, Exit screens, prices) · **Repo:** `KattyFury/ezwallet` (the ONLY ezwallet repo) · **Local:** `D:\Files\Claude\Big projects\ezwallet`
+**Updated:** 2026-10-03 evening (UI polish day: type scale, buttons/inputs 5/6, receipt, Exit screens, prices) · **Repo:** `KattyFury/project_arc_ezwallet` (the ONLY ezwallet repo; renamed from `KattyFury/ezwallet` on 2026-10-03 - GitHub redirects the old URL; the Pages projects track it by repo id) · **Local:** `D:\Files\Claude\Big projects\project_arc_ezwallet`
 **Status: ezwallet.cash SERVES MAINNET (since 2026-10-01). Owner is testing mainnet and reporting bugs one by one.
 TARGET: public mainnet launch within October 2026.**
 

@@ -21,7 +21,7 @@ environment variables and are used exclusively from server-side Pages Functions
 Please **do not open a public issue** for security problems.
 
 - Preferred: GitHub → **Security → Report a vulnerability** (private advisory) on
-  [this repository](https://github.com/KattyFury/ezwallet/security/advisories/new).
+  [this repository](https://github.com/KattyFury/project_arc_ezwallet/security/advisories/new).
 - Alternative: DM [@0xhieuxyz](https://x.com/0xhieuxyz) on X.
 
 Please include what you did, what happened, and what you expected. Since this is a

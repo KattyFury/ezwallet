@@ -17,10 +17,10 @@
   "homepage": "https://ezwallet.cash",
   "repository": {
     "type": "git",
-    "url": "https://github.com/KattyFury/ezwallet.git"
+    "url": "https://github.com/KattyFury/project_arc_ezwallet.git"
   },
   "bugs": {
-    "url": "https://github.com/KattyFury/ezwallet/issues"
+    "url": "https://github.com/KattyFury/project_arc_ezwallet/issues"
   },
   "author": "Hieu Nguyen (0xhieu) <https://0xhieu.xyz>",
   "license": "MIT",

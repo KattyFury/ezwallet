@@ -25,7 +25,7 @@ const ITEMS = [
   { label: 'Version', value: VERSION },
   { label: 'Network', value: NET.label },
   { label: 'Wallet', value: 'Circle Wallet' },
-  { label: 'Github', link: 'https://github.com/KattyFury/ezwallet' },
+  { label: 'Github', link: 'https://github.com/KattyFury/project_arc_ezwallet' },
   { label: 'Term of use', link: 'https://www.circle.com/en/legal/privacy-policy' },
   { label: 'Privacy policy', link: 'https://www.circle.com/en/legal/privacy-policy' },
 ].map((it, i) => ({ ...it, top: ROW_TOP(i) }))
