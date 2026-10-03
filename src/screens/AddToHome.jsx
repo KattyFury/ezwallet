@@ -56,7 +56,7 @@ export default function AddToHome() {
         style={{
           position: 'absolute', left: '83.49%', top: '4.15dvh', transform: 'translate(-50%, -50%)',
           background: 'none', border: 'none', padding: 'calc(8 * var(--u))', cursor: 'pointer',
-          fontSize: 'calc(18 * var(--u))', lineHeight: 'calc(22 * var(--u))', fontWeight: 'var(--fw-semibold)', letterSpacing: '-0.64px', color: 'var(--color-muted-2)', whiteSpace: 'nowrap',
+          fontSize: 'var(--fs-content-1)', lineHeight: 'calc(22 * var(--u))', fontWeight: 'var(--fw-semibold)', letterSpacing: '-0.64px', color: 'var(--color-muted-2)', whiteSpace: 'nowrap',
           WebkitTapHighlightColor: 'transparent',
         }}>
         Skip →
@@ -75,7 +75,7 @@ export default function AddToHome() {
       <div style={{
         position: 'absolute', left: '50%', top: '32.64dvh', transform: 'translate(-50%, -50%)',
         width: '87.18%', textAlign: 'center',
-        fontSize: 'calc(20 * var(--u))', fontWeight: 'var(--fw-semibold)', lineHeight: 'calc(30 * var(--u))', color: 'var(--color-black)',
+        fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', lineHeight: 'calc(30 * var(--u))', color: 'var(--color-black)',
       }}>
         <Ez />wallet works best as an app
       </div>
@@ -84,7 +84,7 @@ export default function AddToHome() {
       <div style={{
         position: 'absolute', left: '50%', top: '36.79dvh', transform: 'translate(-50%, -50%)',
         width: '87.18%', textAlign: 'center',
-        fontSize: 'calc(16 * var(--u))', fontWeight: 'var(--fw-normal)', lineHeight: 'calc(24 * var(--u))', color: 'var(--color-black)',
+        fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-normal)', lineHeight: 'calc(24 * var(--u))', color: 'var(--color-black)',
       }}>
         Add <Ez />wallet to your home screen:
       </div>
@@ -98,7 +98,7 @@ export default function AddToHome() {
         background: '#D2DCE6', borderRadius: 16,
         display: 'flex', flexDirection: 'column', justifyContent: 'center',
         listStyle: 'decimal', listStylePosition: 'inside',
-        fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', lineHeight: 'calc(32 * var(--u))',
+        fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', lineHeight: 'calc(32 * var(--u))',
         color: 'var(--color-black)', textAlign: 'center',
       }}>
         <li>Tap Options, then tap Share</li>
@@ -140,7 +140,7 @@ export default function AddToHome() {
                   icon, tìm cái tương tự rồi add vào" - so each one carries the icon iOS actually draws
                   on that row, matched against the user's screenshot of the real share sheet. */}
               <Icon name={row.icon} size="calc(20 * var(--u))" color="var(--color-brand)" />
-              <span style={{ fontSize: 'calc(14 * var(--u))', color: 'var(--color-brand)', whiteSpace: 'nowrap' }}>{row.label}</span>
+              <span style={{ fontSize: 'var(--fs-small)', color: 'var(--color-brand)', whiteSpace: 'nowrap' }}>{row.label}</span>
             </div>
           </div>
         ))}

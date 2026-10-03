@@ -103,7 +103,7 @@ export default function SendReceipt() {
 
       {/* Amount - node 1:237: top-anchored, 48px semibold (was --fs-amount 52) - its box ends exactly
           where the card below begins (344px = card top). */}
-      <span className="num" style={{ position: 'absolute', left: '50%', top: '33.29dvh', transform: 'translateX(-50%)', fontSize: 'calc(48 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
+      <span className="num" style={{ position: 'absolute', left: '50%', top: '33.29dvh', transform: 'translateX(-50%)', fontSize: 'var(--fs-amount-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
         {amountText}
       </span>
 

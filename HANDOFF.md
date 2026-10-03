@@ -40,7 +40,12 @@ TARGET: public mainnet launch within October 2026.**
 - **Standard button height 48 (≈ 2/3 of the 70px row) → `--btn-h` = 70 × 5/6 = 58.33px** (owner). One variable in
   `:root`; `.btn` + every inline 48px button (Home Paste/Contacts/Copy/Share, About/Security Done, Login email popup
   Back/Continue, Deposit/Withdraw, Swap) use it. Buttons centred on row 9 stay centred (top = 85.665dvh − btn-h/2).
-  The 48px address FIELD in FundsPopup is an input, not a button - unchanged. All of today's `test` work (prices,
+  The 48px address FIELD in FundsPopup is an input, not a button - unchanged.
+- **TYPE SCALE (owner-approved 2026-10-03), smallest allowed = 14px.** All 58 literal font sizes now use `--fs-*`
+  tokens in `src/index.css` :root (52/48/40/28/26/24 title/24 num/22/19/17/15/14). Folded: 18+20→19, 16→17,
+  13 (notification area)+11 (token-icon fallback)→14, the 2 popup titles 24→22 (Deposit/Withdraw, email login).
+  Screen titles (.sheet-title) stay 24 (`--fs-title`). Auto-fit amounts keep their own range (44→18, balance 40→24).
+  **`test/fontScale.test.mjs` fails on any literal font size or a token under 14** - add a token, never a number. All of today's `test` work (prices,
   test-only apple icon) merged to `main` - `COINGECKO_API` secret was added by the owner to BOTH Pages projects.
 
 ## 2026-10-03 - Prices via /api/prices (option C) + test.ezwallet.cash opened to the public (on `test`)

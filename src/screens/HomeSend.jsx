@@ -14,7 +14,7 @@ import { GRADIENT } from '../brandBg'
 // so they cannot drift apart (rather than two declarations where it is easy to change only one).
 // Weight = Semibold, 18px (2026-09-10, up from Regular/24px 09-08) - the current Figma file draws each
 // token as its OWN white card (not a shared divided list), name + amount both Semibold 18.
-const TOKEN_TEXT_STYLE = { fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
+const TOKEN_TEXT_STYLE = { fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }
 
 // Small solid triangle (▲/▼) signalling the token's 24h price move (user request 08-25) - a plain CSS/SVG
 // shape rather than a shared Icon.jsx entry since it is only ever used here, right next to the amount.
@@ -75,7 +75,7 @@ export const HALF_OVAL_STYLE = {
   borderRadius: '38px 38px 0 0', border: 'none', background: 'var(--color-white)',
   boxShadow: '0 0 10px rgba(0, 0, 0, 0.4)',
   padding: '0 calc(18 * var(--u))', overflow: 'hidden', textOverflow: 'ellipsis',
-  color: 'var(--color-content)', fontFamily: 'var(--font-condensed)', fontSize: 'calc(16 * var(--u))',
+  color: 'var(--color-content)', fontFamily: 'var(--font-condensed)', fontSize: 'var(--fs-content-2)',
   fontWeight: 'var(--fw-semibold)', cursor: 'pointer', whiteSpace: 'nowrap',
   WebkitTouchCallout: 'none', WebkitUserSelect: 'none', userSelect: 'none',
 }
@@ -158,9 +158,9 @@ export default function HomeSend() {
           maskImage: 'linear-gradient(to top, transparent 0, black calc(100dvh / 30))',
         }}>
         {loading ? (
-          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted-2)', fontSize: 'calc(18 * var(--u))', padding: '0 calc(2 * var(--u))' }}>Loading...</div>
+          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted-2)', fontSize: 'var(--fs-content-1)', padding: '0 calc(2 * var(--u))' }}>Loading...</div>
         ) : heldTokens.length === 0 ? (
-          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted-2)', fontSize: 'calc(18 * var(--u))', padding: '0 calc(2 * var(--u))' }}>
+          <div style={{ display: 'flex', alignItems: 'center', color: 'var(--color-muted-2)', fontSize: 'var(--fs-content-1)', padding: '0 calc(2 * var(--u))' }}>
             No tokens yet
           </div>
         ) : (
@@ -248,7 +248,7 @@ export default function HomeSend() {
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
-        fontFamily: 'inherit', fontSize: 'calc(14 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        fontFamily: 'inherit', fontSize: 'var(--fs-small)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
         <Icon name="copy" size="calc(19.709 * var(--u))" />
@@ -260,7 +260,7 @@ export default function HomeSend() {
         background: 'var(--color-brand)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
-        fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
+        fontFamily: 'inherit', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
         <Icon name="scan" size="calc(27 * var(--u))" color="var(--color-white)" />
@@ -272,7 +272,7 @@ export default function HomeSend() {
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
-        fontFamily: 'inherit', fontSize: 'calc(14 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        fontFamily: 'inherit', fontSize: 'var(--fs-small)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
         <Icon name="human" size="calc(19.709 * var(--u))" />
@@ -290,13 +290,13 @@ export default function HomeSend() {
               <Icon name="x" size="calc(17 * var(--u))" color="var(--color-muted)" />
             </button>
             <div className="popup-title">{pctPopup.symbol}</div>
-            <div style={{ fontSize: 'calc(18 * var(--u))', color: 'var(--color-content)' }}>
+            <div style={{ fontSize: 'var(--fs-content-1)', color: 'var(--color-content)' }}>
               {'24h price change: '}
               <span style={{ fontWeight: 'var(--fw-medium)', color: pctPopup.change24h > 0 ? 'var(--color-primary)' : 'var(--color-error)' }}>
                 {pctStr(pctPopup.change24h)}
               </span>
             </div>
-            <div style={{ fontSize: 'calc(18 * var(--u))', color: 'var(--color-content)' }}>
+            <div style={{ fontSize: 'var(--fs-content-1)', color: 'var(--color-content)' }}>
               {`Value changed from ${fmtDisplay(pctPopup.usd / (1 + pctPopup.change24h / 100), cur, rates)} to ${fmtDisplay(pctPopup.usd, cur, rates)}`}
             </div>
           </div>

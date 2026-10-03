@@ -89,7 +89,8 @@ const ROW_TEXT = { minWidth: 0, lineHeight: 1.3, overflowWrap: 'anywhere' }
 // Icons in this area use the matching --is-item.
 // ⚠️ 13px since 2026-09-10 (was --fs-item 17): the current Figma file sets every line in this area to
 // 13px, and at 17 the hint block's 4 lines wrap and overflow the card the design gives them.
-export const NOTIF_FS = 'calc(13 * var(--u))'   // 13 design px (scales, see --u)
+// 14px since 2026-10-03: the owner's type scale makes 14 the smallest allowed size (--fs-small).
+export const NOTIF_FS = 'var(--fs-small)'
 
 // The hint = ONE multi-line notification (not several separate ones), the LOWEST priority, with NO X button and
 // not tappable - always present, pushed up by real notifications and fading out (as one block) when it runs out

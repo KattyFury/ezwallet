@@ -109,7 +109,7 @@ export default function HomeReceive() {
         }}>
           {walletAddr
             ? <QRCodeSVG value={buildQR(walletAddr)} size={256} level="M" style={{ width: '94%', height: '94%' }} />
-            : <span style={{ fontSize: 'calc(14 * var(--u))', color: 'var(--color-muted-2)' }}>Loading...</span>}
+            : <span style={{ fontSize: 'var(--fs-small)', color: 'var(--color-muted-2)' }}>Loading...</span>}
         </div>
 
         {/* "Tap to copy your address" - nodes 56:74 / 56:75. IDENTICAL IN SHAPE to Send's "Hold to
@@ -145,7 +145,7 @@ export default function HomeReceive() {
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
-        fontFamily: 'inherit', fontSize: 'calc(14 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        fontFamily: 'inherit', fontSize: 'var(--fs-small)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
         <Icon name="download" size="calc(19.709 * var(--u))" />
@@ -157,7 +157,7 @@ export default function HomeReceive() {
         background: 'var(--color-brand)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
-        fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
+        fontFamily: 'inherit', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
         <Icon name="qr" size="calc(27 * var(--u))" color="var(--color-white)" />
@@ -169,7 +169,7 @@ export default function HomeReceive() {
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
-        fontFamily: 'inherit', fontSize: 'calc(14 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        fontFamily: 'inherit', fontSize: 'var(--fs-small)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
         <Icon name="share" size="calc(19.709 * var(--u))" />

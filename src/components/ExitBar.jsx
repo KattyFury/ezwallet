@@ -7,7 +7,7 @@ export default function ExitBar({ onClick }) {
     <button onClick={onClick} style={{
       position: 'absolute', left: 0, right: 0, top: '95.9dvh', transform: 'translateY(-50%)',
       border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'inherit',
-      fontSize: 'calc(22 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
+      fontSize: 'var(--fs-h2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
     }}>
       Exit
     </button>

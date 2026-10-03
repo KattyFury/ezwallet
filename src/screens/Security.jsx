@@ -24,7 +24,7 @@ const CUR_SHORT = { USDC: 'USD', EURC: 'EUR' }
 const LANGUAGE_OPTIONS = [{ code: 'en', label: 'English', locked: true }]
 
 // Value chip - node 58:362/58:364/58:366: white pill, glow shadow, no border, 42px tall.
-const CHIP = { border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', borderRadius: 999, height: 'calc(42 * var(--u))', padding: '0 calc(14 * var(--u))', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 'calc(6 * var(--u))', fontFamily: 'inherit' }
+const CHIP = { border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', borderRadius: 999, height: 'calc(42 * var(--u))', padding: '0 calc(14 * var(--u))', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', cursor: 'pointer', flexShrink: 0, display: 'inline-flex', alignItems: 'center', gap: 'calc(6 * var(--u))', fontFamily: 'inherit' }
 const ROW = { position: 'absolute', left: '9.23%', right: '9.23%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'calc(12 * var(--u))' }
 // Row centres - user decision 2026-09-27: EVERY item (Network, Email, Wallet address, PIN, Language,
 // Default currency) is its own line on ONE even step, so Network→Email is the same gap as Wallet→PIN.
@@ -33,8 +33,8 @@ const ROW = { position: 'absolute', left: '9.23%', right: '9.23%', transform: 't
 export const ROW_TOP = i => `${(14.34 + i * 7.58).toFixed(2)}dvh`
 // Info rows (Network/Email/Wallet address) use About.jsx's row style (user decision 2026-09-27): bold label
 // on the left, value on the right in 17px --color-muted-2 - same look as PIN/Language/Currency's labels.
-const LABEL = { fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', flexShrink: 0 }
-const VALUE = { fontSize: 'calc(17 * var(--u))', color: 'var(--color-muted-2)', textAlign: 'right', minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
+const LABEL = { fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', flexShrink: 0 }
+const VALUE = { fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)', textAlign: 'right', minWidth: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }
 
 function Picker({ title, options, active, onPick, onClose }) {
   return (

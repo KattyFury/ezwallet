@@ -86,13 +86,22 @@
      This scale covers TEXT roles only (titles, labels, buttons, captions) - it does NOT apply to hero
      number displays (the balance, amount-entry, receipt amount), which keep their own Figma-measured
      per-screen size + --fw-light, a separate system below. */
-  --fs-amount:    calc(52 * var(--u));   /* hero money amounts (Home/Menu balance) - separate system, unchanged */
-  --fs-h1:        calc(28 * var(--u));   /* Header 1 - screen titles */
-  --fs-num:       calc(24 * var(--u));   /* numbers in lists (token amounts) - separate system, unchanged */
-  --fs-h2:        calc(22 * var(--u));   /* Header 2 - inline emphasis (a name, an amount inside a row) */
-  --fs-content-1: calc(19 * var(--u));   /* Nội dung 1 - the workhorse size: card labels, buttons, chips */
-  --fs-content-2: calc(17 * var(--u));   /* Nội dung 2 - meta values ("Label:" lines), secondary captions */
-  --fs-caption:   calc(15 * var(--u));   /* Chú thích - the smallest tier; also absorbs the old --fs-tiny (13) badges/notes */
+  /* THE TYPE SCALE (owner-approved 2026-10-03) - supersedes the notes above. EVERY font size in the app is one
+     of these; no literal sizes anywhere else (test/fontScale.test.mjs fails on one). Smallest allowed = 14.
+     px = on a 390x844 iPhone, where 1u = 1px. Only auto-fitting amounts (useFitFontSize) compute their own
+     size: typed amount 44→18, balance header 40→24. */
+  --fs-amount:    calc(52 * var(--u));   /* big money amount */
+  --fs-amount-2:  calc(48 * var(--u));   /* medium money amount - SendReceipt, ShowQR */
+  --fs-hero:      calc(40 * var(--u));   /* the Login headline */
+  --fs-h1:        calc(28 * var(--u));   /* Header 1 - Adjust photo, error screen */
+  --fs-numpad:    calc(26 * var(--u));   /* numpad keys */
+  --fs-title:     calc(24 * var(--u));   /* screen titles (.sheet-title) + the big Login button */
+  --fs-num:       calc(24 * var(--u));   /* numbers in lists (token amounts) */
+  --fs-h2:        calc(22 * var(--u));   /* Header 2 - popup titles, emphasis inside a row, the Exit bar */
+  --fs-content-1: calc(19 * var(--u));   /* Nội dung 1 - default text, buttons, labels, menu rows (old 18/20 folded in) */
+  --fs-content-2: calc(17 * var(--u));   /* Nội dung 2 - nav bar, "Label: value" lines (old 16 folded in) */
+  --fs-caption:   calc(15 * var(--u));   /* Chú thích - notes, toasts, address/memo inputs */
+  --fs-small:     calc(14 * var(--u));   /* SMALLEST ALLOWED - Home action tiles, notification area (old 13/11 raised) */
 
   /* ── ICON SIZES - ALWAYS TIED TO THE TEXT BESIDE THEM ──
      User decision 2026-07-16: "icons must match the text, big text with a small icon is wrong".
@@ -305,7 +314,7 @@ body {
 .sheet-title {
   position: absolute; left: 0; right: 0; top: 0; height: calc(70 * var(--u));
   display: flex; align-items: flex-end; justify-content: center;
-  font-family: var(--font-display); color: var(--color-black); font-size: calc(24 * var(--u)); font-weight: var(--fw-semibold);
+  font-family: var(--font-display); color: var(--color-black); font-size: var(--fs-title); font-weight: var(--fw-semibold);
 }
 
 /* THE LOGO RULE (user, 2026-09-11, applies to EVERY logo-only screen app-wide): the wordmark sits at
@@ -352,7 +361,7 @@ body {
      Menu Deposit/Withdraw, Exchange's CTA) was actually 18px, not 19 - but the user's new 5-tier scale
      (15-17-19-22-28) deliberately rounds button text to the same "Nội dung 1" tier as card labels, a
      one-pixel consolidation choice made on purpose, not a fresh measurement. */
-  font-size: calc(19 * var(--u));   /* = --fs-content-1 (19) in design px */
+  font-size: var(--fs-content-1);
   font-weight: var(--fw-semibold);
   line-height: 1;   /* 2026-09-10: without this, the browser's "normal" line-height adds asymmetric leading
                         above/below the glyphs - invisible on the standard 48px button (enough headroom to
@@ -496,7 +505,7 @@ body {
   align-items: center;
   justify-content: center;
   font-family: var(--font-condensed);
-  font-size: calc(26 * var(--u));
+  font-size: var(--fs-numpad);
   font-weight: var(--fw-medium);
   color: var(--color-black);
   background: none;
@@ -631,7 +640,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: calc(11 * var(--u));
+  font-size: var(--fs-small);   /* was 11 - 14 is the smallest allowed size (2026-10-03) */
   font-weight: var(--fw-bold);
   color: var(--color-white);
   flex-shrink: 0;

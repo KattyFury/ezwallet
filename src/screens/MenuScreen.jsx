@@ -89,7 +89,7 @@ export default function MenuScreen() {
         background: 'var(--color-card)', borderRadius: 16,
         display: 'flex', alignItems: 'center', padding: '0 calc(16 * var(--u))',
       }}>
-        <p style={{ margin: 0, fontSize: 'calc(18 * var(--u))', lineHeight: 'calc(32 * var(--u))', color: 'var(--color-black)' }}>
+        <p style={{ margin: 0, fontSize: 'var(--fs-content-1)', lineHeight: 'calc(32 * var(--u))', color: 'var(--color-black)' }}>
           Email: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{email}</span><br />
           Network: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{NET.label}</span><br />
           Wallet address: <span style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{shortAddr}</span>
@@ -115,7 +115,7 @@ export default function MenuScreen() {
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', cursor: 'pointer',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
-        fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        fontFamily: 'inherit', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
       }}>
         <Icon name="up" size="calc(27 * var(--u))" color="var(--color-black)" />
         Withdraw
@@ -127,7 +127,7 @@ export default function MenuScreen() {
         background: 'var(--color-brand)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)', cursor: 'pointer',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
-        fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
+        fontFamily: 'inherit', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
       }}>
         <Icon name="down" size="calc(27 * var(--u))" color="var(--color-white)" />
         Deposit
@@ -138,7 +138,7 @@ export default function MenuScreen() {
           <button style={{ ...ROW_STYLE, top, opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer', border: 'none', background: 'none' }}
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
             <RowIcon name={icon} color="var(--color-black)" />
-            <span style={{ flex: 1, fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', textAlign: 'left' }}>{label}</span>
+            <span style={{ flex: 1, fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', textAlign: 'left' }}>{label}</span>
             <RowIcon name="right2" color="var(--color-black)" />
           </button>
           {/* 0.5px, #94A3B8 - the SAME hairline spec as AddToHome's share-sheet dividers (Figma bakes
@@ -159,7 +159,7 @@ export default function MenuScreen() {
         window.location.reload()
       }}>
         <RowIcon name="out" color="var(--color-error)" />
-        <span style={{ flex: 1, fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-error)', textAlign: 'left' }}>Sign out</span>
+        <span style={{ flex: 1, fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-error)', textAlign: 'left' }}>Sign out</span>
         <RowIcon name="right2" color="var(--color-error)" />
       </button>
 

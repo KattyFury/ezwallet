@@ -50,8 +50,8 @@ export default function ServiceHub() {
             }}>
             <Icon name={icon} size="min(19.46vw, calc(var(--screen-max) * 0.1946))" color="var(--color-brand)" style={{ flexShrink: 0 }} />
             <span className="col" style={{ minWidth: 0, gap: 'calc(2 * var(--u))' }}>
-              <span style={{ fontSize: 'calc(20 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', lineHeight: 1.2 }}>{label}:</span>
-              <span style={{ fontSize: 'calc(16 * var(--u))', fontWeight: 'var(--fw-normal)', color: 'var(--color-black)', lineHeight: 1.3 }}>{desc}</span>
+              <span style={{ fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', lineHeight: 1.2 }}>{label}:</span>
+              <span style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-normal)', color: 'var(--color-black)', lineHeight: 1.3 }}>{desc}</span>
             </span>
           </button>
         )

@@ -21,9 +21,9 @@ const field = {
 }
 const input = {
   flex: 1, minWidth: 0, height: '100%', border: 'none', outline: 'none', background: 'none', padding: 0,
-  fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', color: 'var(--color-black)',
+  fontFamily: 'inherit', fontSize: 'var(--fs-content-1)', color: 'var(--color-black)',
 }
-const note = { margin: 0, fontSize: 'calc(15 * var(--u))', lineHeight: 1.4, color: 'var(--color-muted-2)' }
+const note = { margin: 0, fontSize: 'var(--fs-caption)', lineHeight: 1.4, color: 'var(--color-muted-2)' }
 const iconBtn = { display: 'inline-flex', flexShrink: 0, padding: 0, border: 'none', background: 'none', cursor: 'pointer' }
 
 function Deposit() {
@@ -38,7 +38,7 @@ function Deposit() {
     <>
       {/* The FULL address (wrapped), never shortened: people copy it by eye too. */}
       <div style={{ ...field, height: 'auto', padding: 'calc(12 * var(--u))' }}>
-        <span style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere', fontSize: 'calc(16 * var(--u))', lineHeight: 1.4, fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
+        <span style={{ flex: 1, minWidth: 0, overflowWrap: 'anywhere', fontSize: 'var(--fs-content-2)', lineHeight: 1.4, fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
           {addr || '…'}
         </span>
         <button onClick={copy} aria-label="Copy wallet address" style={iconBtn}>
@@ -90,7 +90,7 @@ function Withdraw() {
       <div style={field}>
         <input value={address} onChange={e => setAddress(e.target.value)} placeholder="Wallet address (0x…)"
           autoComplete="off" autoCapitalize="off" spellCheck={false} style={input} />
-        <button onClick={paste} aria-label="Paste wallet address" style={{ ...iconBtn, fontFamily: 'inherit', fontSize: 'calc(16 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
+        <button onClick={paste} aria-label="Paste wallet address" style={{ ...iconBtn, fontFamily: 'inherit', fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
           Paste
         </button>
       </div>
@@ -107,7 +107,7 @@ function Withdraw() {
           style={{
             ...field, flex: 1, minWidth: 0, justifyContent: 'center', border: 'none',
             cursor: choices.length < 2 ? 'default' : 'pointer',
-            fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+            fontFamily: 'inherit', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
           }}>
           <img src={`/tokens/${cur.symbol.toLowerCase()}.png`} alt="" style={{ width: 'calc(24 * var(--u))', height: 'calc(24 * var(--u))', borderRadius: '50%' }} />
           {cur.symbol}
@@ -134,7 +134,7 @@ function Withdraw() {
         style={{
           height: 'var(--btn-h)', border: 'none', borderRadius: 16,
           background: 'var(--color-brand)', color: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
-          fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)',
+          fontFamily: 'inherit', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)',
           opacity: ok ? 1 : 0.5, cursor: ok ? 'pointer' : 'not-allowed',
         }}>
         Continue
@@ -158,7 +158,7 @@ export default function FundsPopup({ mode, onClose }) {
         <button onClick={onClose} aria-label="Close" style={{ ...iconBtn, position: 'absolute', top: 'calc(14 * var(--u))', right: 'calc(14 * var(--u))' }}>
           <Icon name="x" size="calc(24 * var(--u))" color="var(--color-black)" />
         </button>
-        <div style={{ textAlign: 'center', fontSize: 'calc(24 * var(--u))', fontWeight: 'var(--fw-semibold)', lineHeight: 'calc(30 * var(--u))', color: 'var(--color-black)' }}>
+        <div style={{ textAlign: 'center', fontSize: 'var(--fs-h2)', fontWeight: 'var(--fw-semibold)', lineHeight: 'calc(30 * var(--u))', color: 'var(--color-black)' }}>
           {mode === 'deposit' ? 'Deposit' : 'Withdraw'}
         </div>
         {mode === 'deposit' ? <Deposit /> : <Withdraw />}

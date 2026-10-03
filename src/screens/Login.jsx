@@ -191,7 +191,7 @@ export default function Login() {
       <h1 style={{
         position: 'absolute', left: '6.41%', top: '19.43dvh', transform: 'translateY(-50%)',
         width: '87.18%', margin: 0,
-        fontSize: 'calc(40 * var(--u))', fontWeight: 700,
+        fontSize: 'var(--fs-hero)', fontWeight: 700,
         lineHeight: 'calc(44 * var(--u))', letterSpacing: '-1.6px',
         color: 'var(--color-black)',
       }}>
@@ -221,7 +221,7 @@ export default function Login() {
       <p style={{
         position: 'absolute', left: '6.41%', top: '43.19dvh',
         width: '87.18%', margin: 0,
-        fontSize: 'calc(20 * var(--u))', lineHeight: 'calc(30 * var(--u))', color: 'var(--color-black)',
+        fontSize: 'var(--fs-content-1)', lineHeight: 'calc(30 * var(--u))', color: 'var(--color-black)',
         fontWeight: 'var(--fw-normal)',
       }}>
         <span style={{ fontWeight: 'var(--fw-semibold)' }}>Send and receive digital dollars </span>
@@ -253,7 +253,7 @@ export default function Login() {
           width: '70.26%', height: '8.29dvh',
           background: 'var(--color-white)', border: 'none', borderRadius: 16,
           boxShadow: '0 0 10px rgba(0, 0, 0, 0.5)',
-          fontSize: 'calc(24 * var(--u))', fontWeight: 'var(--fw-semibold)', lineHeight: 'calc(30 * var(--u))',
+          fontSize: 'var(--fs-title)', fontWeight: 'var(--fw-semibold)', lineHeight: 'calc(30 * var(--u))',
           color: 'var(--color-black)', cursor: 'pointer',
           WebkitTapHighlightColor: 'transparent',
         }}>
