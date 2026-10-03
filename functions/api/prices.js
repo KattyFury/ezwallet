@@ -1,4 +1,4 @@
-// GET /api/prices → { ts, prices: { EURC, cirBTC, ETH }, change24h: {…}, vndPerUsd, src: {…} }   (USD per unit)
+// GET /api/prices → { ts, prices: { EURC, cirBTC, ETH }, change24h: {…}, vndPerUsd, src: {…}, up: {…}, errors: {…} }   (USD per unit)
 // Owner decision 2026-10-03 (option C): CoinGecko is the PRIMARY source, Binance the BACKUP + CROSS-CHECK.
 // - Server-side, so the CoinGecko Demo key (env COINGECKO_API, header x-cg-demo-api-key) never reaches the browser and
 //   users no longer share CoinGecko's keyless per-IP limit (the old browser call failed on shared Wi-Fi / mobile IPs).
@@ -97,7 +97,8 @@ export async function onRequestGet(ctx) {
   if (held.length) console.warn('[prices]', held.join(' '), JSON.stringify({ cg: cg.value?.prices, bn: bn.value?.prices }))
   const errors = { coingecko: cg.reason?.message, binance: bn.reason?.message }   // undefined = no error (dropped by JSON)
   if (cg.status === 'rejected' && bn.status === 'rejected') return reply({ ...(prev || { ts: 0, prices: {}, change24h: {}, src: {} }), errors })
-  const result = { ts: Date.now(), ...merged }
+  // up / errors = which source answered this round and why not - checkable from outside (Binance blocks some Cloudflare egress).
+  const result = { ts: Date.now(), ...merged, up: { coingecko: cg.status === 'fulfilled', binance: bn.status === 'fulfilled' }, errors }
   if (kv) { try { await kv.put(KV_KEY, JSON.stringify(result)) } catch {} }
   return reply(result)
 }
