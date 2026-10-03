@@ -4,7 +4,7 @@ import ScreenSheet from '../components/ScreenSheet'
 import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
-import { getDisplayCurrency, fmtDisplay } from '../data'
+import { getDisplayCurrency, fmtDisplay, GAS_RESERVE_USDC } from '../data'
 import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import NotifArea, { NOTIF_FS } from '../components/NotifArea'
@@ -229,8 +229,9 @@ export default function HomeSend() {
             { label: 'Contacts', desc: 'Save people you send to often' },
           ]}
           warning={
-            // Gas costs < $0.01 on Arc, so warn only under the 1 USDC the app keeps back for fees (2026-09-27).
-            !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) < 1 ? (
+            // Warn only when USDC is under the fee reserve itself (GAS_RESERVE_USDC, 0.01 since 2026-10-03) - above it
+            // the wallet CAN still pay a fee (~0.002 measured), so "out of USDC for fees" would be false.
+            !loading && (tokens.find(tk => tk.symbol === 'USDC')?.amount ?? 0) < GAS_RESERVE_USDC ? (
               <div
                 style={{ width: '100%', background: 'var(--color-white)', borderRadius: 16, padding: 'calc(6 * var(--u)) calc(10 * var(--u))', display: 'flex', flexDirection: 'column', gap: 'calc(2 * var(--u))', fontSize: NOTIF_FS, color: 'var(--color-warning)', fontWeight: 'var(--fw-semibold)' }}>
                 <span style={{ minWidth: 0, lineHeight: 1.35 }}>Out of USDC for transaction fees</span>

@@ -106,7 +106,7 @@ export default function Swap() {
   useEffect(() => { if (!walletAddress) ensureWalletAddress().then(a => a && setWalletAddress(a)).catch(() => {}) }, [])
   const walletId = localStorage.getItem('ez_wallet_id')
 
-  // Available: USDC holds 1 back for network fees (Arc gas = USDC) - you cannot swap every last cent
+  // Available: USDC holds GAS_RESERVE_USDC back for network fees (Arc gas = USDC) - you cannot swap every last cent
   const hasBal = balances[fromSym] !== undefined
   const available = spendableOf(fromSym, balances[fromSym])
 

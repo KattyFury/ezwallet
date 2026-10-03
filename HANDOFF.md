@@ -54,7 +54,10 @@ TARGET: public mainnet launch within October 2026.**
   27→24), Menu Withdraw/Deposit 27→24, Menu row icons 18→24 (incl. Sign out), ShowQR Share, Swap success check.
   NOT applied to chevrons/carets (Menu ›, About ›, Security ⌄) - direction marks, not pictures.
 - Menu Withdraw/Deposit icons: plain ↑/↓ (same as NavBar Send/Receive → confusing) → Lucide ArrowUpFromLine /
-  ArrowDownToLine (`withdraw`/`deposit` in Icon.jsx) - owner picked option B of 5 shown. All of today's `test` work (prices,
+  ArrowDownToLine (`withdraw`/`deposit` in Icon.jsx) - owner picked option B of 5 shown.
+- **USDC fee reserve 0.1 → 0.01** (`GAS_RESERVE_USDC`, src/data.js; owner). Measured on mainnet 2026-10-03: base fee
+  20 Gwei (floor), send ~65k gas / memo ~110k → fee ~0.0013-0.0022, max-fee cover ~0.0026-0.0044 → 2x headroom.
+  The Home "Out of USDC for transaction fees" warning now fires under GAS_RESERVE_USDC (was a hardcoded < 1). All of today's `test` work (prices,
   test-only apple icon) merged to `main` - `COINGECKO_API` secret was added by the owner to BOTH Pages projects.
 
 ## 2026-10-03 - Prices via /api/prices (option C) + test.ezwallet.cash opened to the public (on `test`)

@@ -6,7 +6,10 @@ export function fmtVND(n) {
 // otherwise a customer taps "send everything"/"swap everything" and is left with no fee money, wallet stuck (user decision 2026-07-03).
 // Applies to USDC only (the gas token); EURC/cirBTC can be spent to zero. Used EVERYWHERE "available" is computed.
 // Lowered 1 → 0.1 (user decision 08-25): 1 USDC was far more than any real gas cost, holding back too much of a small balance.
-export const GAS_RESERVE_USDC = 0.1
+// Lowered 0.1 → 0.01 (owner 2026-10-03). Measured on mainnet the same day: base fee = the 20 Gwei floor, a send is
+// ~65k gas (memo ~110k) → real fee ~0.0013-0.0022 USDC, and even the max a MEDIUM-fee tx must be able to cover
+// (gas × ~2x base) is ~0.0026-0.0044 → 0.01 still leaves ~2x headroom. Revisit if Arc's base fee rises a lot.
+export const GAS_RESERVE_USDC = 0.01
 
 // Is this address the user's own wallet? (user decision 07-31: "you must not let me send money to my own wallet").
 // Sending to yourself only burns the network fee, leaves the balance unchanged, and clutters
