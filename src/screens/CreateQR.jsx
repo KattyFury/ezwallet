@@ -44,6 +44,9 @@ export default function CreateQR() {
     load()
     return () => { alive = false; clearTimeout(retry) }
   }, [cur])
+  // Written in the unit picked above (owner 2026-10-03): USD → "$5.00", USDC → "5.00 USDC", EURC → "5.00 EURC".
+  const balNum = balance !== null ? Number(balance).toFixed(cur === 'cirBTC' ? 8 : 2) : '…'
+  const balanceStr = cur === 'USD' ? displaySymbol('USDC') + balNum : `${balNum} ${cur}`
 
   const amount = parseFloat(digits || '0')
   const amountStr = (cur === 'USD' ? displaySymbol('USDC') : '') + digits
@@ -82,7 +85,7 @@ export default function CreateQR() {
       {/* node 18:87: "Balance:" (not "Available:" - Receive's own wording, verbatim from Figma). */}
       <span style={{ position: 'absolute', left: '8.46%', top: '35.47dvh', transform: 'translateY(-50%)', fontSize: 'var(--fs-content-2)', whiteSpace: 'nowrap' }}>
         <span style={{ color: 'var(--color-muted-2)' }}>Balance: </span>
-        <span className="num" style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{balance !== null ? Number(balance).toFixed(cur === 'cirBTC' ? 8 : 2) : '…'} {cur === 'USD' ? 'USDC' : cur}</span>
+        <span className="num" style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{balanceStr}</span>
       </span>
 
       {/* Amount - node 18:93: top-anchored at 26.92dvh, right-aligned to the same 8.46% inset, 44px Light
