@@ -175,6 +175,24 @@ export async function onRequestPost(ctx) {
     return new Response(JSON.stringify({ txs: out.slice(0, max) }), { headers: JSON_HEADERS_BASE });
   }
 
+  // EVERY token the wallet holds, including ones this app does not list (owner 2026-10-03: show meme / unknown
+  // tokens as "unverified", view only). API: GET /v1/w3s/wallets/{id}/balances (X-User-Token);
+  // includeAll=true = "monitored and non-monitored tokens" (user-controlled-wallets OpenAPI, IncludeAll).
+  if (action === 'balances') {
+    const { walletId } = body;
+    if (!walletId) return new Response(JSON.stringify({ error: 'walletId required' }), { status: 400, headers: JSON_HEADERS_BASE });
+    const { status, data } = await circleReq('GET', `/wallets/${encodeURIComponent(walletId)}/balances?includeAll=true&pageSize=50`, undefined, apiKey, userToken);
+    if (status >= 400) {
+      console.error('[balances]', status, JSON.stringify(data));
+      return new Response(JSON.stringify({ error: data?.message || `Circle HTTP ${status}`, code: data?.code }), { status: 502, headers: JSON_HEADERS_BASE });
+    }
+    const tokens = (data?.data?.tokenBalances || []).map(b => ({
+      address: b.token?.tokenAddress || null, symbol: b.token?.symbol || '', name: b.token?.name || '',
+      decimals: b.token?.decimals ?? null, isNative: !!b.token?.isNative, amount: b.amount,
+    }));
+    return new Response(JSON.stringify({ tokens }), { headers: JSON_HEADERS_BASE });
+  }
+
   if (action === 'getAddress') {
     // The correct endpoint: GET /v1/w3s/wallets (X-User-Token), NOT /user/wallets
     const { data: wallets } = await circleReq('GET', '/wallets', undefined, apiKey, userToken);

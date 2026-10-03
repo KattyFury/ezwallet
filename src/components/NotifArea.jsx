@@ -50,6 +50,9 @@ function pollIncoming(after) {
           if (outHashes.has(tx.hash)) {
             // The INCOMING leg of a swap: do NOT add a separate received notification (user decision 07-20, the two swap
             // notifications were merged) - the Swap screen already fired "Swapped X to ~Y (complete)". Still markNotified so it does not repeat.
+          } else if (tx.unverified) {
+            // An UNVERIFIED token (meme / airdrop / spam) - YELLOW, says so in words, not tappable (it is not in History).
+            addNotif(`Received ${amt} ${symbol} (unverified token) from ${findContactName(tx.from) || shortenAddr(tx.from)}`, 'unverified', tx.hash, `recv-${tx.hash}-${tx.contractAddress}`)
           } else {
             // Show the CONTACT NAME if the sender's address is saved (matching the "Sent to <name>" notification)
             const fromName = findContactName(tx.from) || shortenAddr(tx.from)
@@ -74,6 +77,7 @@ const STYLE = {
   sent:     { color: 'var(--color-info)',    icon: 'up' },      // sent = blue
   error:    { color: 'var(--color-error)',   icon: 'warning' }, // error = red
   announce: { color: 'var(--color-brand)',   icon: 'info' },    // from the ezwallet team (src/inbox.js) - owner decision 2026-09-29
+  unverified: { color: 'var(--color-warning)', icon: 'down' },  // an UNVERIFIED token arrived = yellow (owner 2026-10-03)
 }
 
 // ⚠️ CHANGED 2026-08-25 (user bug report): rows used to be forced onto ONE LINE + "…" for compactness, but the swap

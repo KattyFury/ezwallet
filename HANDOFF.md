@@ -82,6 +82,21 @@ Pre-launch rule in force: every change → commit on `test`, `git checkout main 
   building: swap is a separate tx (2 PIN prompts or one batched challenge?), rate moves between quote and send
   (slippage / keep a buffer), Circle swap availability + fees on Arc mainnet, what SendAmount's "available" shows.
 
+- **cirBTC is a VERIFIED mainnet token again** (owner 2026-10-03; `src/network.js`, checked on chain: Circle Wrapped
+  Bitcoin, 8 dec). It now shows on Home, in Send/Create QR pickers and can be sent. Marketing copy still says no cirBTC.
+- **Unverified tokens (owner 2026-10-03, option C, VIEW ONLY):** any token the wallet holds that `NET.tokens` does not
+  list. Source = Circle `GET /wallets/{id}/balances?includeAll=true` (`/api/wallet` action `balances`) - NOT yet measured
+  whether Circle indexes arbitrary Arc tokens (ARCADE `0xcb92…50e3` is the owner's test token: if the row does not
+  appear on the owner's phone, Circle does not list it → needs another source). Home shows ONE token-style row
+  "Unverified tokens N ⌄" that expands the list (amount + symbol, no $, no logo, not in the total, cannot be sent).
+  Receiving one → **YELLOW** notification "Received X SYM (unverified token) from …" (`--color-warning`, low contrast
+  on white ~2.1:1 - owner asked for yellow), not tappable; zero-value transfers ignored (address poisoning).
+  Unverified rows are filtered OUT of History (txInfo would value them at $1 each). Receipt cache bumped to
+  `ez_tx_transfers_v2` (empty v1 entries dropped so those txs are re-read); token symbol/decimals cached in `ez_token_meta`.
+- **Auto-convert on send (owner 2026-10-03 answers):** one PIN if possible ("not enough USDC, X EURC will be converted"
+  → confirm), 0.5% buffer, Send's "available" = the TOTAL, converting verified tokens to USDC when short. Order: AFTER
+  the unverified-tokens work; needs swap re-enabled on mainnet first = fix audit C5 + H2 → write the spec, owner approves.
+
 **Owner answers (2026-10-03, do NOT offer these again):**
 - Contact photo sync to other devices: **NO** - photos stay per-device.
 - Wrapping button labels in a <span> for cap-height trim: **NO**.

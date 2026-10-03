@@ -5,7 +5,7 @@ import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
 import { getDisplayCurrency, fmtDisplay, GAS_RESERVE_USDC } from '../data'
-import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates } from '../chain'
+import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates, getUnverifiedTokens } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import NotifArea, { NOTIF_FS } from '../components/NotifArea'
 import { GRADIENT } from '../brandBg'
@@ -102,6 +102,9 @@ export default function HomeSend() {
   const [showToken, setShowToken] = useState(false)
   // Which token's 24h-change popup is open (holds the token so the popup keeps working even if the list refreshes)
   const [pctPopup, setPctPopup] = useState(null)
+  // Tokens the wallet holds that this app does not list - view only, never in the total (src/chain.js).
+  const [unverified, setUnverified] = useState([])
+  const [showUnverified, setShowUnverified] = useState(false)   // collapsed by default - tap the row's arrow to open
 
   // Reading balances: on failure RETRY, and NEVER fall back to 0.
   // Bug 07-16: `.catch(console.error).finally(() => setLoading(false))` - a failed fetch with no cache yet
@@ -117,6 +120,8 @@ export default function HomeSend() {
         .then(ts => { if (!cancelled) { setTokens(ts); setLoading(false) } })
         .catch(() => { if (!cancelled) timer = setTimeout(load, 3000) })
       load()
+      // Best effort: a failure just leaves the section hidden - it never touches the verified balances.
+      getUnverifiedTokens().then(us => { if (!cancelled) setUnverified(us) }).catch(() => {})
     })
     getDisplayRates().then(setRates).catch(() => setRates(r => r || { USDC: 1, EURC: 1.08 }))
     return () => { cancelled = true; clearTimeout(timer) }
@@ -201,6 +206,36 @@ export default function HomeSend() {
                       <TrendArrow pct={tk.change24h} />
                     </button>
                   )}
+                </span>
+              </div>
+            ))}
+          </>
+        )}
+        {/* UNVERIFIED TOKENS (owner 2026-10-03) - ONE token-style row "Unverified tokens" with a down arrow; tapping it
+            opens the list underneath. View only: amount + symbol, no $ value, no logo (the contract's own name/symbol
+            is untrusted, so it is truncated and never linked). */}
+        {!loading && unverified.length > 0 && (
+          <>
+            <button onClick={() => setShowUnverified(v => !v)} aria-expanded={showUnverified} style={{
+              display: 'flex', alignItems: 'center', gap: 'calc(8 * var(--u))', flexShrink: 0, width: '100%', cursor: 'pointer',
+              height: 'calc(40 * var(--u))', borderRadius: 16, background: 'var(--color-white)', padding: '0 calc(16 * var(--u))', border: 'none', fontFamily: 'inherit',
+            }}>
+              <div className="token-icon" style={{ width: 'calc(26.325 * var(--u))', height: 'calc(26.325 * var(--u))', background: 'var(--color-muted-2)', flexShrink: 0, display: 'flex' }}>?</div>
+              <span style={TOKEN_TEXT_STYLE}>Unverified tokens</span>
+              <span style={{ ...TOKEN_TEXT_STYLE, color: 'var(--color-muted-2)', marginLeft: 'auto' }}>{unverified.length}</span>
+              <span style={{ display: 'flex', transform: showUnverified ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }}>
+                <Icon name="down2" size="var(--is-content-1)" color="var(--color-brand)" />
+              </span>
+            </button>
+            {showUnverified && unverified.map(tk => (
+              <div key={tk.address} title={tk.address} style={{
+                display: 'flex', alignItems: 'center', gap: 'calc(8 * var(--u))', flexShrink: 0,
+                height: 'calc(40 * var(--u))', borderRadius: 16, background: 'var(--color-white)', padding: '0 calc(16 * var(--u))',
+              }}>
+                <div className="token-icon" style={{ width: 'calc(26.325 * var(--u))', height: 'calc(26.325 * var(--u))', background: 'var(--color-muted-2)', flexShrink: 0, display: 'flex' }}>{tk.symbol.slice(0, 2)}</div>
+                <span style={{ ...TOKEN_TEXT_STYLE, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '50%' }}>{tk.symbol.slice(0, 16)}</span>
+                <span style={{ ...TOKEN_TEXT_STYLE, color: 'var(--color-muted-2)', marginLeft: 'auto', whiteSpace: 'nowrap' }}>
+                  {tk.amount.toLocaleString('en-US', { maximumFractionDigits: 4 })}
                 </span>
               </div>
             ))}

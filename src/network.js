@@ -29,10 +29,13 @@ export const NETWORKS = {
     // v1 scope (owner, 2026-09-27): send/receive only. Swap waits for C5/H2 and for
     // @circle-fin/adapter-circle-wallets to map 'ARC' (1.8.0 maps only 'ARC-TESTNET').
     swap: false,
-    // v1 scope (MAINNET-SPEC.md): USDC + EURC only - no cirBTC.
+    // The VERIFIED tokens. v1 shipped USDC + EURC; cirBTC added back by the owner 2026-10-03 (address from
+    // docs.arc.io contract-addresses; read on chain 2026-10-03: "Circle Wrapped Bitcoin", cirBTC, 8 decimals).
+    // Any other token the wallet holds is listed as "unverified" (view only) - src/chain.js getUnverifiedTokens.
     tokens: {
       USDC: { address: '0x3600000000000000000000000000000000000000', decimals: 6 },
       EURC: { address: '0xbEf5f6d51CB62b58e6A8f77868681825C6fe21c1', decimals: 6 },
+      cirBTC: { address: '0x171A4217b86A807A64eB94757Db6849fb4bDbAA0', decimals: 8 },
     },
     contracts: {
       memo:           '0x5294E9927c3306DcBaDb03fe70b92e01cCede505',

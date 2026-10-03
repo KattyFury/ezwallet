@@ -1,7 +1,7 @@
 import { createPublicClient, http, decodeEventLog, parseAbiItem, parseAbi, encodeFunctionData, parseUnits, stringToHex } from 'viem'
 import { defineChain } from 'viem'
-import { MOCK, MOCK_AMOUNTS, MOCK_RATES, MOCK_CHANGE_24H, MOCK_TX } from './mock'
-import { fetchHistory } from './circle'
+import { MOCK, MOCK_AMOUNTS, MOCK_RATES, MOCK_CHANGE_24H, MOCK_TX, MOCK_UNVERIFIED } from './mock'
+import { fetchHistory, fetchAllBalances } from './circle'
 // The chain id is declared in qr.js (a module that does NOT depend on viem) so screens that only draw/read QRs - ShowQR,
 // SavedQRList - can use it without pulling all of viem into their chunk. ONE source of truth: changing chains means
 // editing exactly one place over there, and this file follows.
@@ -157,6 +157,22 @@ export async function getTokenBalances(walletAddress) {
   return out
 }
 
+// UNVERIFIED tokens = anything the wallet holds that this network does not list (meme coins, airdrops, spam).
+// Owner 2026-10-03: shown under the verified tokens as VIEW ONLY - no $ value, not in the total, cannot be sent.
+// Source = Circle's balance list with includeAll (there is no on-chain way to discover unknown tokens; the
+// explorer API answers a Cloudflare challenge). Name/symbol come from the token contract, i.e. from whoever deployed
+// it - React escapes them and the row truncates them, but they are still untrusted text.
+export async function getUnverifiedTokens() {
+  if (MOCK) return MOCK_UNVERIFIED
+  const walletId = localStorage.getItem('ez_wallet_id')
+  if (!walletId) return []
+  const listed = new Set(Object.values(NET.tokens).map(t => t.address.toLowerCase()))
+  const all = await fetchAllBalances(walletId)
+  return all
+    .filter(t => !t.isNative && t.address && !listed.has(t.address.toLowerCase()) && Number(t.amount) > 0)
+    .map(t => ({ address: t.address, symbol: t.symbol || '?', name: t.name || '', amount: Number(t.amount) }))
+}
+
 // The USD price of one token (USD per unit). USDC = 1. Falls back to the offline usdRate.
 export async function getUsdRate(symbol = 'USDC') {
   if (MOCK) return MOCK_RATES[symbol] ?? 1
@@ -266,11 +282,22 @@ async function readMemoOnChain(hash) {
 // measured again 2026-10-01 with a 20-call batch). The memo of the same receipt is stored too → no second read.
 const SYSTEM_EMITTER = '0xfffffffffffffffffffffffffffffffffffffffe'
 const TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
-const TRANSFERS_KEY = 'ez_tx_transfers'
+// v2 (2026-10-03): rows now include UNVERIFIED tokens. v1 stored a tx that only moved an unknown token as [] - those
+// empty entries are dropped on migration (so they are read again); every non-empty entry is carried over.
+const TRANSFERS_KEY = 'ez_tx_transfers_v2'
+const TRANSFERS_KEY_V1 = 'ez_tx_transfers'
 const TRANSFERS_MAX = 1500
 let _transfers = null
 function transferStore() {
-  if (!_transfers) { try { _transfers = JSON.parse(localStorage.getItem(TRANSFERS_KEY) || '{}') } catch { _transfers = {} } }
+  if (!_transfers) {
+    try { _transfers = JSON.parse(localStorage.getItem(TRANSFERS_KEY) || 'null') } catch { _transfers = null }
+    if (!_transfers) {
+      let v1 = {}
+      try { v1 = JSON.parse(localStorage.getItem(TRANSFERS_KEY_V1) || '{}') } catch {}
+      _transfers = Object.fromEntries(Object.entries(v1).filter(([, rows]) => Array.isArray(rows) && rows.length))
+      try { localStorage.setItem(TRANSFERS_KEY, JSON.stringify(_transfers)); localStorage.removeItem(TRANSFERS_KEY_V1) } catch {}
+    }
+  }
   return _transfers
 }
 function rememberTransfers(hash, rows) {
@@ -279,6 +306,24 @@ function rememberTransfers(hash, rows) {
   try { localStorage.setItem(TRANSFERS_KEY, JSON.stringify(_transfers)) } catch {}
 }
 const topicAddr = t => '0x' + t.slice(26)
+
+// symbol + decimals of an UNVERIFIED token, read from its contract once and remembered. Untrusted text: cut to 16 chars.
+const META_KEY = 'ez_token_meta'
+async function unverifiedMeta(address) {
+  let store = {}
+  try { store = JSON.parse(localStorage.getItem(META_KEY) || '{}') } catch {}
+  if (store[address]) return store[address]
+  try {
+    const abi = parseAbi(['function symbol() view returns (string)', 'function decimals() view returns (uint8)'])
+    const [symbol, decimals] = await Promise.all([
+      publicClient.readContract({ address, abi, functionName: 'symbol' }),
+      publicClient.readContract({ address, abi, functionName: 'decimals' }),
+    ])
+    store[address] = { symbol: String(symbol).slice(0, 16) || '?', decimals: Number(decimals) }
+    try { localStorage.setItem(META_KEY, JSON.stringify(store)) } catch {}
+    return store[address]
+  } catch { return null }
+}
 
 // → [{ from, to, value, contractAddress, tokenSymbol, tokenDecimal }] (every token transfer in the tx), or null when the
 // receipt could not be read (NOT remembered → asked again next time).
@@ -297,12 +342,21 @@ async function readTransfersOnChain(hash) {
     for (const log of r.logs) {
       if (log.topics[0] !== TRANSFER_TOPIC || log.topics.length !== 3) continue
       const a = log.address.toLowerCase()
-      const value = BigInt(log.data)
+      let value
+      try { value = BigInt(log.data) } catch { continue }   // a non-standard token's empty/odd data must not break the receipt
       if (a === SYSTEM_EMITTER) {
         rows.push({ from: topicAddr(log.topics[1]), to: topicAddr(log.topics[2]), value: (value / 10n ** 12n).toString(), contractAddress: usdc, tokenSymbol: 'USDC', tokenDecimal: '6' })
       } else if (a !== usdc) {
         const t = bySym.find(x => x.address === a)
         if (t) rows.push({ from: topicAddr(log.topics[1]), to: topicAddr(log.topics[2]), value: value.toString(), contractAddress: a, tokenSymbol: t.sym, tokenDecimal: String(t.decimals) })
+        else if (value > 0n) {
+          // UNVERIFIED token (owner 2026-10-03: notify it, in yellow). Zero-value transfers are skipped - that is the
+          // "address poisoning" trick (fake 0-token transfers from a look-alike address). Symbol/decimals come from the
+          // token contract itself; if they cannot be read, the receipt counts as unread (null → retried later).
+          const meta = await unverifiedMeta(a)
+          if (!meta) return null
+          rows.push({ from: topicAddr(log.topics[1]), to: topicAddr(log.topics[2]), value: value.toString(), contractAddress: a, tokenSymbol: meta.symbol, tokenDecimal: String(meta.decimals), unverified: true })
+        }
       }
     }
   }

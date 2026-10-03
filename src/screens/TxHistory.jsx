@@ -224,8 +224,11 @@ export default function TxHistory() {
     // The rows come back sorted newest first (07-31 rule: never trust an API order - duplicate DateHeaders drop rows).
     let cancelled = false
     let timer = null
-    const load = () => loadHistoryRows({ onProgress: rows => { if (!cancelled && rows.length) { setTxs(rows); setLoading(false) } } })
-      .then(list => { if (!cancelled) { setTxs(list); setLoading(false) } })
+    // UNVERIFIED tokens stay out of History (owner 2026-10-03: view only) - they have no price, and txInfo would value
+    // them at $1 each (1,000,000 meme tokens as "+$1,000,000"). They only get a yellow notification + the Home list.
+    const verified = rows => rows.filter(r => !r.unverified)
+    const load = () => loadHistoryRows({ onProgress: rows => { rows = verified(rows); if (!cancelled && rows.length) { setTxs(rows); setLoading(false) } } })
+      .then(list => { if (!cancelled) { setTxs(verified(list)); setLoading(false) } })
       .catch(() => { if (!cancelled) timer = setTimeout(load, 3000) })
     load()
     return () => { cancelled = true; clearTimeout(timer) }
