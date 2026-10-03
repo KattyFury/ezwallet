@@ -87,15 +87,16 @@ function TxRow({ tx, walletAddr, contacts, onClick, cur, rates, memo, isSwap, sw
         <div style={{ fontSize: 'var(--fs-content-2)', fontWeight: 'var(--fw-medium)', color: 'var(--color-content)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {isSwap ? swapTitle : `${isSend ? 'Sent to' : 'Received from'} ${who}`}
         </div>
-        {/* row 2: status/time + the [+ Add] button. Swap → "Swap completed · At <time>" (user decision 07-20d) */}
+        {/* row 2: status/time + the [Add contacts] button. Swap → "Swap completed · <time>" (user decision 07-20d;
+            "At" dropped 2026-10-03 - with the bigger type it wrapped the time onto 2 lines) */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 'calc(8 * var(--u))', marginTop: 'calc(2 * var(--u))' }}>
-          <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)' }}>
-            {isSwap ? 'Swap completed · ' : ''}At <span className="num">{timeLabel(tx.timeStamp)}</span>
+          <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', whiteSpace: 'nowrap' }}>
+            {isSwap ? 'Swap completed · ' : ''}<span className="num">{timeLabel(tx.timeStamp)}</span>
           </span>
           {!isSwap && !name && counter && (
             <span onClick={e => { e.stopPropagation(); onAdd(counter) }}
               style={{ flexShrink: 0, fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-medium)', color: 'var(--color-brand)', border: '1px solid var(--color-brand)', borderRadius: 16, padding: 'calc(1 * var(--u)) calc(8 * var(--u))', whiteSpace: 'nowrap', background: 'var(--color-white)' }}>
-              Add to Contacts
+              Add contacts
             </span>
           )}
         </div>

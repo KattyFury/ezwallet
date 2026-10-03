@@ -75,7 +75,9 @@ TARGET: public mainnet launch within October 2026.**
   (tested, no effect) - it would need the label wrapped in a <span>.
 - **Exit screens: no more blue row 10** (owner). ScreenSheet with no tab now covers the whole screen; ExitBar = red
   (--color-error) text filling row 10 (91.71dvh / 8.29dvh), flex-centred - measured centre 809px = row 10's centre.
-  Applies to all 13 ExitBar screens. NavBar screens (Home/Receive/Menu/ServiceHub) unchanged. All of today's `test` work (prices,
+  Applies to all 13 ExitBar screens. NavBar screens (Home/Receive/Menu/ServiceHub) unchanged.
+- TxHistory row 2: "At " dropped before the time (it wrapped with the bigger type), time nowrap, button "Add to Contacts" →
+  "Add contacts" (owner). All of today's `test` work (prices,
   test-only apple icon) merged to `main` - `COINGECKO_API` secret was added by the owner to BOTH Pages projects.
 
 ## 2026-10-03 - Prices via /api/prices (option C) + test.ezwallet.cash opened to the public (on `test`)
