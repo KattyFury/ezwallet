@@ -66,6 +66,15 @@ Pre-launch rule in force: every change → commit on `test`, `git checkout main 
   risk the old scheme existed for). Format in `src/qrFormat.js` (pure, `test/qr.test.mjs`); old `ezwallet:` QRs and
   bare addresses are still read. NOT yet confirmed by scanning with a real MetaMask.
 
+- **💡 IDEA, not decided / not built (owner 2026-10-03): rescue money sent on the WRONG chain.** Now that the QR is
+  EIP-681, a sender may still pay on Base (or another EVM chain) to the same address. Feature: detect USDC on other
+  chains for the user's address, and one button bridges it to USDC on Arc - via **CCTP v2** (Circle, native USDC
+  burn/mint, Bridge Kit / App Kit) or **LI.FI** (aggregator, also non-USDC tokens). Questions to answer from the
+  official docs BEFORE offering options: (1) can the user's Circle user-controlled wallet sign on that chain at the
+  SAME address (EOA vs SCA, does a wallet on BASE have to be created first)? (2) who pays source-chain gas (the user
+  holds no ETH there - Gas Station / SCA / CCTP Forwarding Service?) (3) Bridge Kit's `adapter-circle-wallets`
+  chain support (it lagged on Arc mainnet before) (4) LI.FI fees + whether it reaches Arc mainnet at all.
+
 **Owner answers (2026-10-03, do NOT offer these again):**
 - Contact photo sync to other devices: **NO** - photos stay per-device.
 - Wrapping button labels in a <span> for cap-height trim: **NO**.
