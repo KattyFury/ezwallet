@@ -32,6 +32,12 @@ TARGET: public mainnet launch within October 2026.**
 > Specs: `MAINNET-V1-PLAN.md` (mainnet v1, owner-approved), `admin/SPEC.md` (admin). Older: `MAINNET-SPEC.md`,
 > `MAINNET-AUDIT.md`. Secrets: `D:\Files\Claude\.secrets\keys.env` (never in the repo).
 
+## 2026-10-03 - test.ezwallet.cash has its own apple-touch-icon (owner request)
+- Builds with `CF_PAGES_BRANCH=test` (Pages `ezwallet-test`) swap the apple-touch-icon to `public/icon-test.png`
+  (blue tile, white mark; source `design/logo-pfp-test.svg` = `logo-pfp.svg` with colours inverted). Done in a small
+  plugin in `vite.config.js`, so `main` builds keep `icon.png` even after `test` is merged. Favicon/manifest unchanged.
+  iOS caches home-screen icons: remove the old shortcut and add it again to see the new one.
+
 ## ▶▶▶▶▶▶▶▶ 2026-10-03 - Deposit / Withdraw, link preview, audit + docs (LIVE on main + test since 2026-10-03)
 
 - **Fiat on/off-ramp DROPPED (owner 2026-10-03):** Arc's Onramp Kit (`@circle-fin/onramp-kit`, Transak behind it)
