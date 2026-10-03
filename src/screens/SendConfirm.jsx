@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
-import { getDisplayCurrency, displaySymbol, shortenAddr } from '../data'
+import { getDisplayCurrency, displaySymbol, shortenAddr, fmtFee } from '../data'
 import { getDisplayRates, estimateSendFeeUsd } from '../chain'
 import { getSDK, executeChallenge, refreshSession, circleErrorMessage } from '../circle'
 import ScreenSheet from '../components/ScreenSheet'
@@ -64,12 +64,7 @@ export default function SendConfirm() {
   const displayCur = getDisplayCurrency()
   function feeEl() {
     if (feeUsd === null) return 'Calculating...'
-    // THE REAL FEE, AT MOST 3 DECIMALS (owner rule 2026-09-29: "0.002 thì hiển là 0.002 ... không thêm số thập phân
-    // nào nữa"). Rounded to the nearest 0.001, trailing zeros trimmed; below half of that → "< 0.001".
-    const v = feeUsd / (feeRates[displayCur] || 1)
-    const r = Math.round(v * 1000) / 1000
-    const sym = displaySymbol(displayCur)
-    return r === 0 ? `< ${sym}0.001` : `${sym}${String(r)}`
+    return fmtFee(feeUsd, feeRates, displayCur)   // ≤ 3 decimals - see fmtFee in src/data.js
   }
 
   // The attempt this screen created (refId + timestamps) - see src/txTracker.js.
@@ -80,7 +75,7 @@ export default function SendConfirm() {
   function finishOk(tx) {
     clearPending(attemptRef.current?.refId)
     setDone(true)
-    navigate('SendReceipt', { address, name, amount, amountStr: sendAmountStr, memo, currency, tokenAmount: sendUnits, txHash: tx?.txHash || null, timestamp: Date.now() })
+    navigate('SendReceipt', { address, name, amount, amountStr: sendAmountStr, memo, currency, tokenAmount: sendUnits, txHash: tx?.txHash || null, feeUsd, timestamp: Date.now() })
   }
   function fail(msg) {
     setLoading(false); setStatus(''); setError(msg); addNotif(msg, 'error')

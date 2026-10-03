@@ -1,9 +1,10 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNav } from '../nav'
 import Icon from '../components/Icon'
-import { fmtMoney, shortenAddr } from '../data'
+import { fmtMoney, shortenAddr, fmtFee, getDisplayCurrency } from '../data'
 import { addNotif } from '../notif'
-import { saveImageToPhotos } from '../saveImage'
+import { saveImageFile } from '../saveImage'
+import { getTxFeeUsd, getDisplayRates } from '../chain'
 import logoLong from '../../design/logo.svg'
 import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
@@ -46,11 +47,23 @@ export default function SendReceipt() {
     addNotif(`Sent ${amountText} to ${to}`, 'sent', txHash || null, `sent-${timestamp}`)
   }, [])
 
+  // NETWORK FEE (owner 2026-10-03: the receipt had none). Starts from SendConfirm's estimate, then switches to what the
+  // transaction ACTUALLY paid (its on-chain receipt). Same ≤3-decimal format + display currency as SendConfirm (fmtFee).
+  const [feeUsd, setFeeUsd] = useState(params.feeUsd ?? null)
+  const [rates, setRates] = useState({})
+  const displayCur = getDisplayCurrency()
+  useEffect(() => {
+    getDisplayRates().then(setRates).catch(() => {})
+    getTxFeeUsd(txHash).then(f => { if (f != null) setFeeUsd(f) }).catch(() => {})
+  }, [txHash])
+  const feeText = feeUsd == null ? '…' : fmtFee(feeUsd, rates, displayCur)
+
   // Draw the receipt onto a canvas, then save it to the photo library
   async function saveReceipt() {
     // Height = bottom of the last row + 50 breathing space + logo + 22 margin (user decision 07-23: the logo used to
-    // touch the last row's divider). 3 fixed rows = 590; the Address row (only when named) / Note row add 60 each.
-    const W = 620, H = 590 + (name && address ? 60 : 0) + (memo ? 60 : 0)
+    // touch the last row's divider). 4 fixed rows (Send to, Amount, Network fee, Time) = 650; Address (only when
+    // named) / Note add 60 each.
+    const W = 620, H = 650 + (name && address ? 60 : 0) + (memo ? 60 : 0)
     const cv = document.createElement('canvas')
     cv.width = W; cv.height = H
     const x = cv.getContext('2d')
@@ -74,6 +87,7 @@ export default function SendReceipt() {
     if (name && address) row('Address', shortenAddr(address))   // shortened; only when Send to = a contact name
     row('Amount', realAmountText)
     if (memo) row('Note', memo)
+    row('Network fee', feeText)
     row('Time', fmtTime(timestamp))
     // The ezwallet logo (the standard branding - design/logo.svg, brand-blue EZ + black wallet) at the bottom -
     // anchored to the canvas BOTTOM, H already reserves 50px of breathing space after the last row (keep the logo off the divider)
@@ -82,7 +96,7 @@ export default function SendReceipt() {
     img.src = logoLong
     try { await img.decode() } catch {}
     x.drawImage(img, (W - lw) / 2, H - 22 - lh, lw, lh)
-    saveImageToPhotos(cv, `receipt-${timestamp}.png`)
+    saveImageFile(cv, `receipt-${timestamp}.png`)   // phone → share sheet (Save Image → Photos), computer → download
   }
 
   return (
@@ -90,33 +104,26 @@ export default function SendReceipt() {
       <ScreenSheet />
       <div className="sheet-title">Transaction completed</div>
 
-      {/* Check icon - node 1:238: centre 24.53dvh (= row 3's centre exactly). */}
-      <div style={{ position: 'absolute', left: '50%', top: '24.53dvh', transform: 'translate(-50%, -50%)' }}>
+      {/* HEADER + CARD AS ONE COLUMN (owner 2026-10-03). The card used to be a FIXED 3-row box (28.67dvh = 242px,
+          centre 55.09dvh) while a receipt has 4-6 rows → the first (Send to) and last (Time) rows were clipped, leaving
+          their dividers as stray lines, and the fee was missing. Now: the card grows with its rows exactly like
+          SendConfirm's (same .confirm-box/.confirm-row, same row ORDER: Send to, Address, Amount, Note, Network fee,
+          + Time), and the header sits above it, so nothing can overlap. Starts at row 2 (86px = 10.19dvh, the same
+          top every sheet card uses); the 6-row worst case still ends above the buttons. */}
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '10.19dvh', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
         <CheckIcon />
-      </div>
-
-      {/* "Sent successfully" - node 1:234: top-anchored (no vertical centring in the Figma layer), 18px
-          semibold (was --fs-body 19 medium). */}
-      <span style={{ position: 'absolute', left: '50%', top: '30.08dvh', transform: 'translateX(-50%)', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)' }}>
-        Sent successfully
-      </span>
-
-      {/* Amount - node 1:237: top-anchored, 48px semibold (was --fs-amount 52) - its box ends exactly
-          where the card below begins (344px = card top). */}
-      <span className="num" style={{ position: 'absolute', left: '50%', top: '33.29dvh', transform: 'translateX(-50%)', fontSize: 'var(--fs-amount-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>
-        {amountText}
-      </span>
-
-      {/* Card - node 1:236: centre 55.09dvh, 339×242 (the familiar 3-row-tall card: 3×70+2×16=242),
-          radius 16 (fixed on the shared .confirm-box class). */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '55.09dvh', height: '28.67dvh', transform: 'translateY(-50%)' }}>
-        <div className="confirm-box" style={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <span style={{ marginTop: 'calc(8 * var(--u))', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-content)', lineHeight: 1.2 }}>
+          Sent successfully
+        </span>
+        <span className="num" style={{ fontSize: 'var(--fs-amount-2)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)', lineHeight: 1.2 }}>
+          {amountText}
+        </span>
+        <div className="confirm-box" style={{ marginTop: 'calc(16 * var(--u))' }}>
           <div className="confirm-row">
             <span className="confirm-label">Send to</span>
             <span className="confirm-value">{to}</span>
           </div>
-          {/* SHORTENED wallet address 0x1234…5678 (user decision 07-23: not the full one, it is long and ugly). Shown ONLY when
-              Send to is a contact NAME - without a name, Send to is already the shortened address, so this would repeat it. */}
+          {/* SHORTENED address, only when Send to is a contact NAME (otherwise Send to already is the address). */}
           {name && address ? (
             <div className="confirm-row">
               <span className="confirm-label">Address</span>
@@ -134,8 +141,12 @@ export default function SendReceipt() {
             </div>
           ) : null}
           <div className="confirm-row">
+            <span className="confirm-label">Network fee</span>
+            <span className="confirm-value num">{feeText}</span>
+          </div>
+          <div className="confirm-row">
             <span className="confirm-label">Time</span>
-            <span className="confirm-value" style={{ fontSize: 'var(--fs-content-1)' }}>{fmtTime(timestamp)}</span>
+            <span className="confirm-value">{fmtTime(timestamp)}</span>
           </div>
         </div>
       </div>

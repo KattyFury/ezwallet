@@ -62,7 +62,17 @@ TARGET: public mainnet launch within October 2026.**
   a tall card (name + note). Now anchored 16px under the card's bottom edge, brand blue; errors stay red, same spot.
 - **Grey text-input boxes = 5/6 of the 70px row too** (`--input-h` = `--btn-h`, 58.33px; were 40-48): .address-input
   (Contacts form, SavedQRList, SendAmount note + note popup, PasteAddress), .memo-row (CreateQR name), the email-login
-  field, FundsPopup address/amount/token fields, and the ⋮ button beside the SendAmount note so the row stays level. All of today's `test` work (prices,
+  field, FundsPopup address/amount/token fields, and the ⋮ button beside the SendAmount note so the row stays level.
+- **SendReceipt rebuilt** (owner: rows not matching SendConfirm, stray lines, no fee): the card was a FIXED 3-row box
+  (28.67dvh) holding 4-6 rows → Send to / Time were clipped, only their dividers showed. Now header + card are one
+  column from 10.19dvh, the card grows like SendConfirm's, same row order + a **Network fee** row = the tx's REAL fee
+  (`getTxFeeUsd`: receipt gasUsed × effectiveGasPrice), starting from SendConfirm's estimate (`feeUsd` param).
+  `fmtFee` (src/data.js) is the one ≤3-decimal formatter for both screens. Receipt image gained the fee row too.
+- **Save receipt: phone → share sheet (Save Image → Photos), computer → downloads the PNG** (`saveImageFile` in
+  src/saveImage.js; on a PC the share path opened the OS share dialog / nothing). QR sharing still uses saveImageToPhotos.
+- Button text centring measured 2026-10-03: text-only .btn labels sit ≤1px below centre (flex-centred already; the
+  rest is font metrics). CSS `text-box: trim-both cap alphabetic` does NOT apply to bare text in a flex button
+  (tested, no effect) - it would need the label wrapped in a <span>. All of today's `test` work (prices,
   test-only apple icon) merged to `main` - `COINGECKO_API` secret was added by the owner to BOTH Pages projects.
 
 ## 2026-10-03 - Prices via /api/prices (option C) + test.ezwallet.cash opened to the public (on `test`)

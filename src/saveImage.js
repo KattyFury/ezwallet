@@ -38,6 +38,29 @@ export async function brandedQrCanvas(qrCanvas) {
 // can disappear). The user KNOWS and ACCEPTED that trade-off for the Receive screen: "as long as it shares 2 things,
 // not 1" - the wallet address has to travel with the image. Do NOT drop `text` to "fix" the app list.
 // The ShowQR screen passes NO text (image only) - also the user's call.
+// Phone or tablet (where the share sheet offers "Save Image" into Photos) vs a computer.
+export function isMobileDevice() {
+  const ua = navigator.userAgent || ''
+  if (navigator.userAgentData && typeof navigator.userAgentData.mobile === 'boolean' && navigator.userAgentData.mobile) return true
+  return /Android|iPhone|iPad|iPod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1)   // iPadOS says "Macintosh"
+}
+
+// SAVE an image (the receipt) - owner 2026-10-03: "PC = lưu về máy, mobile = lưu vào kho ảnh". On a computer the share
+// path opened the OS share dialog (or nothing) instead of saving, so computers DOWNLOAD the PNG straight away; phones
+// keep the share sheet (its "Save Image" puts it in Photos). Sharing a QR still uses saveImageToPhotos below.
+export function saveImageFile(canvas, filename) {
+  if (isMobileDevice()) return saveImageToPhotos(canvas, filename)
+  canvas.toBlob(blob => { if (blob) downloadBlob(blob, filename) }, 'image/png')
+}
+
+function downloadBlob(blob, filename) {
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url; a.download = filename
+  document.body.appendChild(a); a.click(); a.remove()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 export function saveImageToPhotos(canvas, filename, text) {
   canvas.toBlob(async (blob) => {
     if (!blob) return
@@ -47,9 +70,6 @@ export function saveImageToPhotos(canvas, filename, text) {
     if (navigator.canShare && navigator.canShare(payload)) {
       try { await navigator.share(payload); return } catch (e) { if (e?.name === 'AbortError') return }
     }
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url; a.download = filename; a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
+    downloadBlob(blob, filename)
   }, 'image/png')
 }

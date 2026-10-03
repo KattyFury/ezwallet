@@ -385,6 +385,19 @@ export async function estimateSendFeeUsd({ from, token, to, amountStr, memo }) {
   return estimateFeeUsd(gas)
 }
 
+// The fee a FINISHED transaction actually paid (receipt: gasUsed × effectiveGasPrice, native USDC = 18 decimals, $1),
+// for the receipt screen. null when the receipt cannot be read (the caller keeps the estimate it already has).
+export async function getTxFeeUsd(hash) {
+  if (MOCK || !hash) return null
+  for (let i = 0; i < 3; i++) {
+    try {
+      const r = await publicClient.getTransactionReceipt({ hash })
+      return Number(r.gasUsed * r.effectiveGasPrice) / 1e18
+    } catch { await new Promise(ok => setTimeout(ok, 700 * (i + 1))) }
+  }
+  return null
+}
+
 export async function estimateFeeUsd(gasUnits = 65000) {
   if (MOCK) return 0.002   // a small fake fee
   try {

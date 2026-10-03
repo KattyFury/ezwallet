@@ -20,6 +20,16 @@ export function isOwnAddress(addr) {
   const me = (localStorage.getItem('ez_wallet_addr') || '').trim().toLowerCase()
   return !!me && !!addr && addr.trim().toLowerCase() === me
 }
+// A network fee as text, in the display currency: THE REAL FEE, AT MOST 3 DECIMALS (owner rule 2026-09-29: "0.002 thì
+// hiển là 0.002 ... không thêm số thập phân nào nữa"). Rounded to the nearest 0.001, trailing zeros trimmed; below half
+// of that → "< 0.001". rates = USD per unit of each currency (getDisplayRates). Shared by SendConfirm + SendReceipt.
+export function fmtFee(feeUsd, rates, cur) {
+  const v = feeUsd / ((rates && rates[cur]) || 1)
+  const r = Math.round(v * 1000) / 1000
+  const sym = displaySymbol(cur)
+  return r === 0 ? `< ${sym}0.001` : `${sym}${String(r)}`
+}
+
 export function spendableOf(symbol, balance) {
   const b = balance || 0
   return symbol === 'USDC' ? Math.max(0, b - GAS_RESERVE_USDC) : b
