@@ -18,7 +18,8 @@ const CG_IDS = { EURC: 'euro-coin', cirBTC: 'bitcoin', ETH: 'ethereum' }
 const BN_PAIRS = { EURC: 'EURUSDT', cirBTC: 'BTCUSDT', ETH: 'ETHUSDT' }
 
 async function getJson(url, headers) {
-  const res = await fetch(url, { headers, signal: AbortSignal.timeout(4000) })
+  // User-Agent: CoinGecko answers 403 "Please add a descriptive User-Agent" to Cloudflare Functions without one (measured 2026-10-03).
+  const res = await fetch(url, { headers: { 'User-Agent': 'ezwallet.cash price service', ...headers }, signal: AbortSignal.timeout(4000) })
   if (!res.ok) throw new Error(`HTTP ${res.status} ${(await res.text()).slice(0, 160)}`)
   return res.json()
 }
@@ -36,9 +37,19 @@ async function fromCoinGecko(key) {
   return out
 }
 
+// Binance's official REST hosts, tried in order. data-api.binance.vision answered 403 to Cloudflare Functions
+// (measured 2026-10-03, fine from a home PC) → the others are tried before giving up.
+const BN_HOSTS = ['data-api.binance.vision', 'api.binance.com', 'api-gcp.binance.com', 'api1.binance.com', 'api4.binance.com']
+
 async function fromBinance() {
   const symbols = encodeURIComponent(JSON.stringify([...Object.values(BN_PAIRS), 'USDCUSDT']))
-  const rows = await getJson(`https://data-api.binance.vision/api/v3/ticker/24hr?symbols=${symbols}&type=MINI`)
+  let rows
+  const fails = []
+  for (const host of BN_HOSTS) {
+    try { rows = await getJson(`https://${host}/api/v3/ticker/24hr?symbols=${symbols}&type=MINI`); break }
+    catch (e) { fails.push(`${host}: ${e.message.slice(0, 40)}`) }
+  }
+  if (!rows) throw new Error(fails.join(' | '))
   const by = Object.fromEntries(rows.map(r => [r.symbol, r]))
   const usdc = Number(by.USDCUSDT?.lastPrice)
   if (!(usdc > 0)) throw new Error('no USDCUSDT')
