@@ -230,21 +230,22 @@ export default function SendConfirm() {
             </span>
           </div>
         </div>
+        {/* Status / error line - ANCHORED TO THE CARD'S BOTTOM EDGE, 16px below it (owner 2026-10-03). It used to sit
+            at a fixed top:52dvh, so a taller card (name + note rows) ran over it. Absolute inside the card wrapper so
+            it never shifts the centred card. Working status = brand blue (was grey), errors stay red. */}
+        {(loading || error) && (
+          <div style={{ position: 'absolute', left: 0, right: 0, top: '100%', marginTop: 'calc(16 * var(--u))', textAlign: 'center', fontSize: 'var(--fs-caption)' }}>
+            {loading
+              ? <span style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-medium)' }}>{status || 'Working…'}</span>
+              : <span style={{ color: 'var(--color-error)' }}>{error}</span>}
+          </div>
+        )}
       </div>
 
       {/* The "cannot be undone" warning box is GONE - the user (2026-09-10) called it out as invented
           drama ("vẽ chuyện ra cho rắc rối") for a wallet with no bank-style reversal in the first place,
           and the re-fetched Figma (node 1:215) agrees: the frame no longer has ANY warning node at all,
           not just a redrawn one. Nothing replaces it - the card sits alone above the buttons now. */}
-
-      {/* Status text - Figma has nothing here (it only draws the idle state); flows right under the
-          card's bottom edge (49.05dvh) now that the warning box above it is gone. */}
-      {(loading || (error && !loading)) && (
-        <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '52dvh' }}>
-          {loading && <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted)', textAlign: 'center', display: 'block' }}>{status || 'Working…'}</span>}
-          {error && !loading && <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-error)', textAlign: 'center', display: 'block' }}>{error}</span>}
-        </div>
-      )}
 
       {/* Back/Confirm PIN - node 58:298/58:294: ~166px each, i.e. (340 − 8) / 2 - flex:1 with an 8px gap.
           Centre 85.66dvh, glow shadow. "Back" (was "Edit") per the exact Figma label - functionally
