@@ -1,0 +1,62 @@
+# Swap on mainnet + auto-convert on send - PLAN (2026-10-03)
+
+Status: **draft, waiting for owner decisions** (section 5). No code written yet. Real money - every step below
+has a measurement or a doc line behind it; keep it that way.
+
+## 1. What already exists (code kept from testnet, OFF on mainnet)
+- `functions/api/swap.js` + `_swapCore.js`: `estimate` (Kit `/quote`), `simulate` (eth_simulateV1 bundle, checks the
+  wallet's tokenOut balance RISES and the 0.1% fee arrives), `execute` (Kit `/swap` signed intent → ONE Circle
+  contractExecution through **Multicall3From**: `[approve(tokenIn→adapter), adapter.execute(params, tokenInputs, sig)]`
+  = one PIN). `src/screens/Swap.jsx` (558 lines). C3 double-payment tracker already covers swap (`src/txTracker.js`).
+- Gate: `NET.swap = false` (src/network.js) → `/api/swap` answers 503, the Exchange tab shows "Coming soon".
+
+## 2. Measured on Arc MAINNET (2026-10-03)
+| Check | Result |
+|---|---|
+| Swap Adapter `0x7FB8…a845` (adapter-viem-v2 ADAPTER_CONTRACT_EVM_MAINNET) | has code (813 bytes) |
+| Multicall3From `0x522f…47D0`, Permit2 | have code |
+| Kit `GET /v1/stablecoinKits/quote` USDC→EURC, Arc, 1 USDC, slippage 50 bps | **works**: 0.889118 EURC (min 0.884672), route LI.FI / "Fly", gas ≈ $0.0031. Market (EURC ≈ $1.12) ≈ 0.8929 → quote ≈ 0.4% under market |
+| Kit key | the working key is stored as `CIRCLE_TEST_KIT_KEY` in keys.env (kit keys are shared by both networks); `CIRCLE_LIVE_KIT_KEY` is EMPTY. Pages `ezwallet-mainnet` + `ezwallet-test` both have `KIT_KEY` set |
+| `eth_simulateV1` | `rpc.mainnet.arc.io` ✗ (method not supported) · QuickNode ✗ · Blockdaemon ✗ (filtered) · **dRPC `rpc.drpc.mainnet.arc.io` ✓** |
+| From a Cloudflare Function to dRPC | NOT measured (the public Arc RPC rate-limits Functions - may hit dRPC too → fallback: simulate in the browser) |
+
+## 3. Docs (docs.arc.io, read 2026-10-03)
+- `/app-kit/references/supported-blockchains`: Arc mainnet = Send, Bridge, **Swap**, …; adapters Viem / Ethers /
+  Circle Wallets. "Swap is available on mainnet only, with the exception of Arc testnet."
+- `/app-kit/concepts/swap-fees`: custom fee (ours, 10 bps today) → 90% to our recipient, 10% to Arc; **provider fee
+  2 bps always**, taken after the custom fee.
+- `/app-kit/tutorials/swap/set-slippage-tolerance-or-stop-limit`: `slippageBps` default **300**; `stopLimit` = exact
+  minimum out, wins over slippage when both are set.
+
+## 4. Plan
+### Phase 1 - Swap screen live on mainnet (fixes MAINNET-AUDIT C5 + H2)
+1. **Validate the intent server-side before any challenge (C5):** every `tokens[].beneficiary` = the user's wallet;
+   tokenIn/tokenOut/amount = the request; adapter = `net.contracts.swapAdapter`; `deadline` in the future; refuse
+   anything else.
+2. **Simulate before the PIN (C5):** eth_simulateV1 through dRPC (new `net.simRpc`), same bundle as today
+   (wallet tokenOut rises, fee arrives). If Functions → dRPC is rate-limited, run the simulation in the browser.
+3. **Price shown = price executed (H2):** slippage 300 → **50 bps**, and `stopLimit` = the minimum the screen showed,
+   so the chain reverts (nothing moves, only gas) rather than fill worse than displayed.
+4. `NET.swap = true`; owner tests real swaps ≤ $1 each direction (USDC↔EURC, USDC↔cirBTC), we check every tx with
+   `verify-swap.mjs` (receipt: user received tokenOut, fee arrived, adapter holds nothing).
+
+### Phase 2 - Auto-convert on send (owner answers 2026-10-03)
+- SendAmount "available" = the wallet TOTAL in USD (verified tokens).
+- Typing more than the USDC balance → the confirm screen says "Not enough USDC: X EURC will be converted" → ONE PIN.
+- ONE Circle contractExecution through Multicall3From:
+  `[approve(EURC→adapter), adapter.execute(swap EURC→USDC, stopLimit = shortfall × 1.005), USDC.transfer(to, amount)]`
+  (or the Memo contract call when there is a note). Atomic: if the swap fills short, the whole tx reverts and no money
+  moves. The 0.5% buffer stays in the user's wallet as USDC.
+- Same C5 validation + simulation as Phase 1 (the bundle must show the recipient's USDC rising by exactly `amount`).
+- Send fee estimate includes the swap gas.
+
+### Phase 3 - polish
+- History: an auto-convert send shows as ONE row ("Sent $19 to Mom · 8.5 EURC converted"), not 3 legs.
+- Receipt shows the converted amount + rate.
+
+## 5. Decisions needed from the owner (OPEN)
+1. Keep our 0.1% app fee on swaps? On auto-convert sends too?
+2. Roll-out: enable on test.ezwallet.cash first for real-money tests (an exception to the "both branches" rule), or
+   both at once?
+3. Auto-convert source when several verified tokens: EURC first, then cirBTC? Or never auto-sell cirBTC (volatile)?
+4. Swap pairs on the Exchange screen: all directions between USDC / EURC / cirBTC?
