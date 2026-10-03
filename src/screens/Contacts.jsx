@@ -175,9 +175,11 @@ export default function Contacts() {
                     <Icon name={copiedId === c.id ? 'check' : 'copy'} size="var(--is-caption)" color={copiedId === c.id ? 'var(--color-primary)' : 'var(--color-muted-2)'} />
                   </button>
                 </div>
+                {/* Owner 2026-10-03: the "Send" text pill took too much of the row → a round paper-plane button */}
                 <button onClick={() => navigate('SendAmount', { address: c.address, name: c.name, back: 'Contacts' })}
-                  className="btn btn-primary" style={{ height: 'calc(40 * var(--u))', minHeight: 'calc(40 * var(--u))', padding: '0 calc(22 * var(--u))', fontSize: 'var(--fs-content-2)' }}>
-                  Send
+                  aria-label={`Send to ${c.name}`}
+                  className="btn btn-primary" style={{ width: 'calc(44 * var(--u))', height: 'calc(44 * var(--u))', minHeight: 'calc(44 * var(--u))', padding: 0, borderRadius: '50%', flexShrink: 0 }}>
+                  <Icon name="send" size="calc(20 * var(--u))" color="var(--color-white)" />
                 </button>
                 <button onClick={() => openEdit(c)}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0 calc(4 * var(--u))', flexShrink: 0, display: 'flex' }}>

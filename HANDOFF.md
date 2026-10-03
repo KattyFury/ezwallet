@@ -35,7 +35,8 @@ TARGET: public mainnet launch within October 2026.**
 > `MAINNET-AUDIT.md`. Secrets: `D:\Files\Claude\.secrets\keys.env` (never in the repo).
 
 ## 2026-10-03 - Contacts: name one size smaller; prices + test icon now on main too
-- Contacts list name `--fs-h2` (22) → `--fs-content-1` (19) (owner request). All of today's `test` work (prices,
+- Contacts list name `--fs-h2` (22) → `--fs-content-1` (19) (owner request). The "Send" text pill on each row
+  became a 44px round blue button with Lucide `Send` (paper plane, new `send` icon in Icon.jsx) - owner: too wide. All of today's `test` work (prices,
   test-only apple icon) merged to `main` - `COINGECKO_API` secret was added by the owner to BOTH Pages projects.
 
 ## 2026-10-03 - Prices via /api/prices (option C) + test.ezwallet.cash opened to the public (on `test`)

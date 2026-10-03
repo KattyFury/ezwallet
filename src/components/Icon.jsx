@@ -39,6 +39,7 @@ import {
   Shield,           // shield
   ArrowUpDown as TradeArrows, // trade - the same up/down pair as `exchange`, drawn heavier
   ArrowUp,          // up        - a plain up arrow (money sent)
+  Send,             // send      - a paper plane (the Send button on each Contacts row, 2026-10-03)
   CircleAlert,      // warning   - an exclamation mark inside a circle
   X,                // x         - a plain cross
   // New with the 2026-09-23 redesign - the fake iOS share sheet on the Add screen needs Apple's own
@@ -73,6 +74,7 @@ const ICONS = {
   qr: QrCode,
   right2: ChevronRight,
   scan: Scan,
+  send: Send,
   share: Share2,
   shield: Shield,
   trade: TradeArrows,
