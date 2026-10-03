@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
 import Numpad from '../components/Numpad'
 import Icon from '../components/Icon'
@@ -8,6 +8,8 @@ import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
 import { NET } from '../clientNet'
+import { getTokenInfo } from '../chain'
+import { ensureWalletAddress } from '../circle'
 
 // Consistent with the Send screen: USD (friendly label, backed by USDC) by default + this network's tokens.
 // 'USD' + exactly the tokens this network lists (src/network.js) - never a hard-coded token list.
@@ -26,6 +28,22 @@ export default function CreateQR() {
   const [typingText, setTypingText] = useState(false)
   // From the QR library → creating also SAVES it to the library (with a NAME); from Receive → only shown to share, NOT saved.
   const fromLibrary = params?.from === 'SavedQRList'
+
+  // Real balance of the selected token (USD → USDC) - was a hard-coded "20.00" copied from Figma. Same read as
+  // SendAmount, but the FULL balance (this screen receives, nothing is held back for fees). A failed read keeps
+  // null ("…") and retries after 3s - never a fake 0 (bug 07-17).
+  const [balance, setBalance] = useState(null)
+  useEffect(() => {
+    const tok = cur === 'USD' ? 'USDC' : cur
+    setBalance(null)
+    let alive = true, retry
+    const load = () => ensureWalletAddress()
+      .then(a => (a ? getTokenInfo(a, tok) : Promise.reject(new Error('no wallet address'))))
+      .then(i => { if (alive) setBalance(i.balance) })
+      .catch(() => { if (alive) retry = setTimeout(load, 3000) })
+    load()
+    return () => { alive = false; clearTimeout(retry) }
+  }, [cur])
 
   const amount = parseFloat(digits || '0')
   const amountStr = (cur === 'USD' ? displaySymbol('USDC') : '') + digits
@@ -64,7 +82,7 @@ export default function CreateQR() {
       {/* node 18:87: "Balance:" (not "Available:" - Receive's own wording, verbatim from Figma). */}
       <span style={{ position: 'absolute', left: '8.46%', top: '35.47dvh', transform: 'translateY(-50%)', fontSize: 'var(--fs-content-2)', whiteSpace: 'nowrap' }}>
         <span style={{ color: 'var(--color-muted-2)' }}>Balance: </span>
-        <span className="num" style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>20.00 {cur === 'USD' ? 'USDC' : cur}</span>
+        <span className="num" style={{ fontWeight: 'var(--fw-semibold)', color: 'var(--color-brand)' }}>{balance !== null ? Number(balance).toFixed(cur === 'cirBTC' ? 8 : 2) : '…'} {cur === 'USD' ? 'USDC' : cur}</span>
       </span>
 
       {/* Amount - node 18:93: top-anchored at 26.92dvh, right-aligned to the same 8.46% inset, 44px Light
