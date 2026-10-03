@@ -171,6 +171,11 @@ body {
   -webkit-user-select: none;
   user-select: none;
   -webkit-touch-callout: none;
+  /* NO TAP HIGHLIGHT, app-wide (owner 2026-10-03: "Hold to show tokens" went grey/blue while held). Mobile browsers
+     paint their own overlay on a pressed element - a separate thing from text selection, so user-select alone did
+     not stop it. The property inherits, so this one line covers every button. Pressed states the app WANTS (numpad
+     :active) are drawn by our own CSS and are unaffected. */
+  -webkit-tap-highlight-color: transparent;
   font-family: var(--font-base);
   font-size: var(--fs-content-1);
   color: var(--color-content);
