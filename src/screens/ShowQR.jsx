@@ -74,7 +74,7 @@ export default function ShowQR() {
           library's "return to where I came from" need is covered by Exit below instead. */}
       <div className="row10-dual">
         <button className="btn btn-secondary" onClick={shareQR} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 'calc(8 * var(--u))' }}>
-          <Icon name="share" size="var(--is-content-1)" />
+          <Icon name="share" size="var(--ib-content-1)" />
           Share
         </button>
         {/* Done = navigate(back), not a hardcoded HomeReceive (user decision 2026-09-24: no separate Exit -

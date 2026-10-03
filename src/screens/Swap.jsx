@@ -541,7 +541,7 @@ export default function Swap() {
               explicitly decided (2026-09-08) to keep "enter" regardless of what Figma draws -
               this is a deliberate standing override, not an oversight, so it is NOT changed to match. */}
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'calc(6 * var(--u))', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%', ...(needAmount ? { fontSize: 'var(--fs-content-2)' } : null) }}>
-            {success && <Icon name="check" size="var(--is-content-1)" color="var(--color-white)" />}
+            {success && <Icon name="check" size="var(--ib-content-1)" color="var(--color-white)" />}
             {error || status || (needAmount ? 'Slide or tap here to enter' : 'Swap')}
           </span>
         </button>

@@ -48,7 +48,11 @@ TARGET: public mainnet launch within October 2026.**
   **`test/fontScale.test.mjs` fails on any literal font size or a token under 14** - add a token, never a number.
 - **Same day, owner: every font size is a MULTIPLE OF 2** (layout = multiples of 8, but 8-steps make text too big →
   text uses 2). 19/17/15 rounded UP → content-1 20, content-2 18, caption 16 (+ their --is-* icon pairs). Home action
-  tiles (Paste/Contacts/Copy/Share) 14 → 16. 14 = notification area + small hints only. The test also fails on an odd size. All of today's `test` work (prices,
+  tiles (Paste/Contacts/Copy/Share) 14 → 16. 14 = notification area + small hints only. The test also fails on an odd size.
+- **Icon inside a button next to its label = 1.2 × the label size** (owner, "thử xem sao"): tokens `--ib-content-1/
+  -content-2/-caption` in :root. Applied: Home tiles (Paste/Contacts/QR storage/Share 19.7→19.2, Scan QR/Create QR
+  27→24), Menu Withdraw/Deposit 27→24, Menu row icons 18→24 (incl. Sign out), ShowQR Share, Swap success check.
+  NOT applied to chevrons/carets (Menu ›, About ›, Security ⌄) - direction marks, not pictures. All of today's `test` work (prices,
   test-only apple icon) merged to `main` - `COINGECKO_API` secret was added by the owner to BOTH Pages projects.
 
 ## 2026-10-03 - Prices via /api/prices (option C) + test.ezwallet.cash opened to the public (on `test`)

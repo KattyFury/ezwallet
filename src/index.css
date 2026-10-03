@@ -117,6 +117,11 @@
   --is-content-1: calc(20 * var(--u));   /* pairs with --fs-content-1 20 */
   --is-content-2: calc(18 * var(--u));   /* pairs with --fs-content-2 18 */
   --is-caption:   calc(16 * var(--u));   /* pairs with --fs-caption   16 */
+  /* ICON INSIDE A BUTTON, NEXT TO ITS LABEL = 1.2 × the label's font size (owner 2026-10-03, "to hơn chữ 1.2 lần").
+     Chevrons/carets (›, ⌄) are direction marks, not pictures - they keep the --is-* / their own size. */
+  --ib-content-1: calc(var(--fs-content-1) * 1.2);   /* 24 */
+  --ib-content-2: calc(var(--fs-content-2) * 1.2);   /* 21.6 */
+  --ib-caption:   calc(var(--fs-caption) * 1.2);     /* 19.2 */
 
   /* ── SCREEN WIDTH ──
      .screen = min(100vw, --screen-max). To size something as a % OF THE SCREEN (not a % of a parent

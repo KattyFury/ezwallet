@@ -43,8 +43,8 @@ const ROW_STYLE = { position: 'absolute', left: '6.41%', right: '6.41%', transfo
 // resolved what they mean, 2026-09-23: LEFT = a per-row symbolic icon (different per row), RIGHT = one
 // shared right-chevron icon on every row (tap-to-open). Built 2026-09-24. Sized to the marker's own
 // footprint (18 ≈ 17.436) rather than a token, since nothing asked for a different size.
-function RowIcon({ name, color }) {
-  return <Icon name={name} size="calc(18 * var(--u))" color={color} />
+function RowIcon({ name, color, size = 'calc(18 * var(--u))' }) {
+  return <Icon name={name} size={size} color={color} />
 }
 
 export default function MenuScreen() {
@@ -117,7 +117,7 @@ export default function MenuScreen() {
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
       }}>
-        <Icon name="up" size="calc(27 * var(--u))" color="var(--color-black)" />
+        <Icon name="up" size="var(--ib-content-1)" color="var(--color-black)" />
         Withdraw
       </button>
       {/* Deposit / Withdraw open FundsPopup (owner spec 2026-10-03): Deposit = this wallet's Arc address, Withdraw =
@@ -129,7 +129,7 @@ export default function MenuScreen() {
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
         fontFamily: 'inherit', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
       }}>
-        <Icon name="down" size="calc(27 * var(--u))" color="var(--color-white)" />
+        <Icon name="down" size="var(--ib-content-1)" color="var(--color-white)" />
         Deposit
       </button>
 
@@ -137,7 +137,7 @@ export default function MenuScreen() {
         <div key={id}>
           <button style={{ ...ROW_STYLE, top, opacity: disabled ? 0.4 : 1, cursor: disabled ? 'not-allowed' : 'pointer', border: 'none', background: 'none' }}
             disabled={disabled} onClick={disabled ? undefined : () => navigate(id, { title: label })}>
-            <RowIcon name={icon} color="var(--color-black)" />
+            <RowIcon name={icon} size="var(--ib-content-1)" color="var(--color-black)" />
             <span style={{ flex: 1, fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)', textAlign: 'left' }}>{label}</span>
             <RowIcon name="right2" color="var(--color-black)" />
           </button>
@@ -158,7 +158,7 @@ export default function MenuScreen() {
         sessionStorage.removeItem('ez_sync_token')
         window.location.reload()
       }}>
-        <RowIcon name="out" color="var(--color-error)" />
+        <RowIcon name="out" size="var(--ib-content-1)" color="var(--color-error)" />
         <span style={{ flex: 1, fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-error)', textAlign: 'left' }}>Sign out</span>
         <RowIcon name="right2" color="var(--color-error)" />
       </button>

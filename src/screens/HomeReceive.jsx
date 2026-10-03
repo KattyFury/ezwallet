@@ -148,7 +148,7 @@ export default function HomeReceive() {
         fontFamily: 'inherit', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
-        <Icon name="download" size="calc(19.709 * var(--u))" />
+        <Icon name="download" size="var(--ib-caption)" />
         <span>QR storage</span>
       </button>
 
@@ -160,7 +160,7 @@ export default function HomeReceive() {
         fontFamily: 'inherit', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
-        <Icon name="qr" size="calc(27 * var(--u))" color="var(--color-white)" />
+        <Icon name="qr" size="var(--ib-content-1)" color="var(--color-white)" />
         <span>Create QR</span>
       </button>
 
@@ -172,7 +172,7 @@ export default function HomeReceive() {
         fontFamily: 'inherit', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
-        <Icon name="share" size="calc(19.709 * var(--u))" />
+        <Icon name="share" size="var(--ib-caption)" />
         <span>{copied ? 'Copied' : 'Share'}</span>
       </button>
 

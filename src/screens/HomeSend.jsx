@@ -251,7 +251,7 @@ export default function HomeSend() {
         fontFamily: 'inherit', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
-        <Icon name="copy" size="calc(19.709 * var(--u))" />
+        <Icon name="copy" size="var(--ib-caption)" />
         <span>Paste</span>
       </button>
 
@@ -263,7 +263,7 @@ export default function HomeSend() {
         fontFamily: 'inherit', fontSize: 'var(--fs-content-1)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-white)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
-        <Icon name="scan" size="calc(27 * var(--u))" color="var(--color-white)" />
+        <Icon name="scan" size="var(--ib-content-1)" color="var(--color-white)" />
         <span>Scan QR</span>
       </button>
 
@@ -275,7 +275,7 @@ export default function HomeSend() {
         fontFamily: 'inherit', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
-        <Icon name="human" size="calc(19.709 * var(--u))" />
+        <Icon name="human" size="var(--ib-caption)" />
         <span>Contacts</span>
       </button>
 
