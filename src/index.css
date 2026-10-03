@@ -20,6 +20,9 @@
   /* STANDARD BUTTON HEIGHT = 5/6 of the 70px grid row (owner 2026-10-03; was 48 ≈ 2/3). Every Back/Add/Paste/
      Contacts-style button uses this - change it here, not per screen. */
   --btn-h: calc(70 * 5 / 6 * var(--u));
+  /* GREY TEXT-INPUT BOXES = the same 5/6 of the 70px row (owner 2026-10-03; were 40-48). .address-input, .memo-row,
+     the email-login field, FundsPopup's fields. */
+  --input-h: var(--btn-h);
 
   /* ── THE 7 BRAND-GUIDELINE COLOURS ──
      Brand #0B53BF · white · black · text phụ #757575 · box/input #E3E3E3 · danger #EC221F ·
@@ -701,6 +704,8 @@ body {
 /* ── Send flow ── */
 .memo-row {
   display: flex;
+  height: var(--input-h);
+  box-sizing: border-box;
   align-items: center;
   gap: calc(8 * var(--u));
   /* The Swap standard: input fields = a surface fill with no border (user decision 07-17); small fields keep radius 10 */
@@ -797,6 +802,9 @@ body {
 
 .address-input {
   width: 100%;
+  height: var(--input-h);
+  box-sizing: border-box;
+  display: flex; align-items: center;   /* for the one <div> styled as a field (SavedQRList amount) - inputs centre their text anyway */
   /* The Swap standard: input fields = a surface fill with no border (user decision 07-17); small fields keep radius 10 */
   border: none;
   background: var(--color-surface);

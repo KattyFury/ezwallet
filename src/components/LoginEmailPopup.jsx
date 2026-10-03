@@ -241,7 +241,7 @@ export default function LoginEmailPopup({ onClose }) {
         autoFocus
         style={{
           position: 'absolute', left: '50%', top: '22.04dvh', transform: 'translateX(-50%)',
-          width: '78.96%', height: 'calc(40 * var(--u))',
+          width: '78.96%', height: 'var(--input-h)',
           background: '#D2DCE6', border: 'none', borderRadius: 16,
           // The browser draws a BLACK FOCUS RING on an autofocused input. The design has no such line
           // anywhere, so it read as a drawing mistake rather than as focus. Killed here, not app-wide.

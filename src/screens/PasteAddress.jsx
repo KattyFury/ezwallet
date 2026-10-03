@@ -50,7 +50,7 @@ export default function PasteAddress() {
           placeholder="0x..."
           value={address}
           onChange={e => { setAddress(e.target.value); setDirty(true) }}
-          style={{ width: '100%', height: 'calc(40 * var(--u))', fontSize: 'var(--fs-content-1)', borderRadius: 16, background: 'var(--color-card)' }}
+          style={{ width: '100%', height: 'var(--input-h)', fontSize: 'var(--fs-content-1)', borderRadius: 16, background: 'var(--color-card)' }}
         />
         {showError && (
           <span style={{ display: 'block', marginTop: 'calc(8 * var(--u))', fontSize: 'var(--fs-caption)', color: 'var(--color-error)' }}>

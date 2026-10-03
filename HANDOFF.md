@@ -59,7 +59,10 @@ TARGET: public mainnet launch within October 2026.**
   20 Gwei (floor), send ~65k gas / memo ~110k → fee ~0.0013-0.0022, max-fee cover ~0.0026-0.0044 → 2x headroom.
   The Home "Out of USDC for transaction fees" warning now fires under GAS_RESERVE_USDC (was a hardcoded < 1).
 - SendConfirm status line ("Opening PIN confirmation…", our text, not Circle's) was fixed at top:52dvh and overlapped
-  a tall card (name + note). Now anchored 16px under the card's bottom edge, brand blue; errors stay red, same spot. All of today's `test` work (prices,
+  a tall card (name + note). Now anchored 16px under the card's bottom edge, brand blue; errors stay red, same spot.
+- **Grey text-input boxes = 5/6 of the 70px row too** (`--input-h` = `--btn-h`, 58.33px; were 40-48): .address-input
+  (Contacts form, SavedQRList, SendAmount note + note popup, PasteAddress), .memo-row (CreateQR name), the email-login
+  field, FundsPopup address/amount/token fields, and the ⋮ button beside the SendAmount note so the row stays level. All of today's `test` work (prices,
   test-only apple icon) merged to `main` - `COINGECKO_API` secret was added by the owner to BOTH Pages projects.
 
 ## 2026-10-03 - Prices via /api/prices (option C) + test.ezwallet.cash opened to the public (on `test`)

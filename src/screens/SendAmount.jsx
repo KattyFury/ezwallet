@@ -252,10 +252,10 @@ export default function SendAmount() {
           onBlur={() => setTypingText(false)}
           onChange={e => { setMemo(e.target.value); setNoteTouched(true) }}
           maxLength={100}
-          style={{ flex: 1, minWidth: 0, height: 'calc(40 * var(--u))', borderRadius: 16, fontSize: 'var(--fs-content-1)', background: 'var(--color-card)' }}
+          style={{ flex: 1, minWidth: 0, height: 'var(--input-h)', borderRadius: 16, fontSize: 'var(--fs-content-1)', background: 'var(--color-card)' }}
         />
         <button onClick={openNotePopup} aria-label={'Set your default note'}
-          style={{ flexShrink: 0, width: 'calc(33 * var(--u))', height: 'calc(40 * var(--u))', borderRadius: 16, border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          style={{ flexShrink: 0, width: 'calc(33 * var(--u))', height: 'var(--input-h)', borderRadius: 16, border: 'none', background: 'var(--color-white)', boxShadow: '0 0 8px rgba(0, 0, 0, 0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Icon name="option" size="var(--is-caption)" color="var(--color-muted)" />
         </button>
       </div>

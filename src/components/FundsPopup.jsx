@@ -16,7 +16,7 @@ import { NET } from '../clientNet'
 
 const field = {
   display: 'flex', alignItems: 'center', gap: 'calc(8 * var(--u))',
-  height: 'calc(48 * var(--u))', padding: '0 calc(12 * var(--u))',
+  height: 'var(--input-h)', padding: '0 calc(12 * var(--u))',
   background: 'var(--color-card)', borderRadius: 16,
 }
 const input = {
