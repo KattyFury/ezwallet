@@ -1,6 +1,6 @@
 # HANDOFF – ezwallet
 
-**Updated:** 2026-10-03 (Deposit/Withdraw popups, audit + docs refresh) · **Repo:** `KattyFury/ezwallet` (the ONLY ezwallet repo) · **Local:** `D:\Files\Claude\Big projects\ezwallet`
+**Updated:** 2026-10-03 evening (UI polish day: type scale, buttons/inputs 5/6, receipt, Exit screens, prices) · **Repo:** `KattyFury/ezwallet` (the ONLY ezwallet repo) · **Local:** `D:\Files\Claude\Big projects\ezwallet`
 **Status: ezwallet.cash SERVES MAINNET (since 2026-10-01). Owner is testing mainnet and reporting bugs one by one.
 TARGET: public mainnet launch within October 2026.**
 
@@ -33,6 +33,35 @@ TARGET: public mainnet launch within October 2026.**
 | 6 | Circle PIN window on ezwallet.cash - is the domain needed in the Circle Console? | Unchecked |
 > Specs: `MAINNET-V1-PLAN.md` (mainnet v1, owner-approved), `admin/SPEC.md` (admin). Older: `MAINNET-SPEC.md`,
 > `MAINNET-AUDIT.md`. Secrets: `D:\Files\Claude\.secrets\keys.env` (never in the repo).
+
+## ▶▶▶▶▶▶▶▶▶ 2026-10-03 (afternoon/evening) - SESSION SUMMARY - read this first
+Everything below is LIVE on **both** `main` (ezwallet.cash) and `test` (test.ezwallet.cash), same commit (`git log -1`).
+Pre-launch rule in force: every change → commit on `test`, `git checkout main && git merge --ff-only test`, push both.
+
+**Current state of the things touched today (details in the dated notes underneath, oldest at the bottom):**
+- **test.ezwallet.cash is PUBLIC** (Access policy → Bypass/Everyone; still mainnet, real money). Its home-screen icon
+  is the inverted one (blue tile, white mark) via a branch-based Vite plugin; main keeps the normal icon.
+- **Prices:** `/api/prices` = CoinGecko (Demo key `COINGECKO_API`, set by the owner on BOTH Pages projects) primary,
+  Binance backup + 2% cross-check, 5-min KV cache; ETH returned too. Browser no longer calls CoinGecko.
+- **Type scale (`--fs-*`, src/index.css):** 52/48/40/28/26/24/24/22/20/18/16/14 - multiples of 2, min 14, text only
+  (layout stays on 8s). `test/fontScale.test.mjs` fails on any literal, odd or <14 size. Icon inside a button next to
+  its label = 1.2× the label (`--ib-*`); chevrons/carets excluded.
+- **Heights:** buttons `--btn-h` and grey input boxes `--input-h` = 70 × 5/6 = 58.33px.
+- **Screens:** Contacts (smaller names, paper-plane send button); Menu Withdraw/Deposit icons = arrow-from/to-line;
+  SendConfirm status line under the card in brand blue; **SendReceipt rebuilt** (card grows, SendConfirm row order,
+  real network fee from the tx receipt); **Save receipt = download on PC, share sheet on phones**; **Exit screens
+  (13) are full white incl. row 10, red Exit centred**; History drops "At", button "Add contacts"; no tap highlight.
+- **Money:** USDC fee reserve 0.1 → **0.01** (fees measured ~0.002); Home "out of USDC for fees" warning uses it.
+- **Decided / not built:** seed / private-key import SHELVED (Circle has no import). Contact photos stay per-device
+  by design (owner asked why; offered thumbnail sync + toggle, NOT decided).
+
+**Next session - open, ask the owner before starting:**
+1. Contact photo sync (thumbnail ~100px + on/off switch) - owner has not decided.
+2. Button label visual trim: only possible by wrapping each label in a `<span>` (CSS text-box) - offered, not chosen.
+   Measured offsets today are ≤1px for text-only buttons.
+3. Real-device checks the owner still owes: Save receipt on iPhone/Android (share sheet → Save Image), the inverted
+   test icon on iPhone (delete + re-add the shortcut), Hold-to-show-tokens with no highlight.
+4. Bugs table above is unchanged by today's work (1, 3b, 5, 6 still open).
 
 ## 2026-10-03 - Contacts: name one size smaller; prices + test icon now on main too
 - Contacts list name `--fs-h2` (22) → `--fs-content-1` (19) (owner request). The "Send" text pill on each row
@@ -208,7 +237,7 @@ không muốn repo riêng hay testnet riêng nữa". Picked: separate data, invi
 | Site | Pages project | Branch | Notes |
 |---|---|---|---|
 | ezwallet.cash + www + ezwallet-mainnet.pages.dev | `ezwallet-mainnet` | `main` | mainnet, LIVE Circle key (`LIVE_API_KEY:18394…`), KV `EZ_SYNC_MAINNET`, previews off |
-| test.ezwallet.cash | `ezwallet-test` | `test` | SAME mainnet + LIVE key (real money), KV `EZ_SYNC_STAGING`, behind Cloudflare Access (invited emails) |
+| test.ezwallet.cash | `ezwallet-test` | `test` | SAME mainnet + LIVE key (real money), KV `EZ_SYNC_STAGING`, PUBLIC since 2026-10-03 (Access policy = Bypass/Everyone) |
 | admin.ezwallet.cash | `ezwallet-admin` (root dir `admin/`) | `main` | behind Cloudflare Access (owner email only) + own JWT check |
 | (no domain) | `ezwallet`, `ezwallet-testnet` (OLD) | - | old testnet builds - the owner can delete them |
 
