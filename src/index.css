@@ -87,7 +87,10 @@
      number displays (the balance, amount-entry, receipt amount), which keep their own Figma-measured
      per-screen size + --fw-light, a separate system below. */
   /* THE TYPE SCALE (owner-approved 2026-10-03) - supersedes the notes above. EVERY font size in the app is one
-     of these; no literal sizes anywhere else (test/fontScale.test.mjs fails on one). Smallest allowed = 14.
+     of these; no literal sizes anywhere else (test/fontScale.test.mjs fails on one). Smallest allowed = 14, and
+     every size is a MULTIPLE OF 2 (owner 2026-10-03: 19/17/15 rounded UP to 20/18/16). WHY 2 AND NOT 8: the
+     layout (spacing, button heights, radii) is on multiples of 8, but 8-steps make text far too big, so TEXT
+     alone uses multiples of 2. Do not "fix" font sizes to the 8-grid.
      px = on a 390x844 iPhone, where 1u = 1px. Only auto-fitting amounts (useFitFontSize) compute their own
      size: typed amount 44→18, balance header 40→24. */
   --fs-amount:    calc(52 * var(--u));   /* big money amount */
@@ -98,10 +101,10 @@
   --fs-title:     calc(24 * var(--u));   /* screen titles (.sheet-title) + the big Login button */
   --fs-num:       calc(24 * var(--u));   /* numbers in lists (token amounts) */
   --fs-h2:        calc(22 * var(--u));   /* Header 2 - popup titles, emphasis inside a row, the Exit bar */
-  --fs-content-1: calc(19 * var(--u));   /* Nội dung 1 - default text, buttons, labels, menu rows (old 18/20 folded in) */
-  --fs-content-2: calc(17 * var(--u));   /* Nội dung 2 - nav bar, "Label: value" lines (old 16 folded in) */
-  --fs-caption:   calc(15 * var(--u));   /* Chú thích - notes, toasts, address/memo inputs */
-  --fs-small:     calc(14 * var(--u));   /* SMALLEST ALLOWED - Home action tiles, notification area (old 13/11 raised) */
+  --fs-content-1: calc(20 * var(--u));   /* Nội dung 1 - default text, buttons, labels, menu rows */
+  --fs-content-2: calc(18 * var(--u));   /* Nội dung 2 - nav bar, "Label: value" lines */
+  --fs-caption:   calc(16 * var(--u));   /* Chú thích - notes, toasts, address/memo inputs, Home action tiles (Paste/Contacts/Copy/Share) */
+  --fs-small:     calc(14 * var(--u));   /* SMALLEST ALLOWED - notification area, small hints */
 
   /* ── ICON SIZES - ALWAYS TIED TO THE TEXT BESIDE THEM ──
      User decision 2026-07-16: "icons must match the text, big text with a small icon is wrong".
@@ -111,9 +114,9 @@
      check at 76, the Contacts avatar, the QR delete button, the Swap reverse button, the numpad erase key. */
   --is-num:       calc(24 * var(--u));   /* pairs with --fs-num       24 */
   --is-h2:        calc(22 * var(--u));   /* pairs with --fs-h2        22 */
-  --is-content-1: calc(19 * var(--u));   /* pairs with --fs-content-1 19 */
-  --is-content-2: calc(17 * var(--u));   /* pairs with --fs-content-2 17 */
-  --is-caption:   calc(15 * var(--u));   /* pairs with --fs-caption   15 */
+  --is-content-1: calc(20 * var(--u));   /* pairs with --fs-content-1 20 */
+  --is-content-2: calc(18 * var(--u));   /* pairs with --fs-content-2 18 */
+  --is-caption:   calc(16 * var(--u));   /* pairs with --fs-caption   16 */
 
   /* ── SCREEN WIDTH ──
      .screen = min(100vw, --screen-max). To size something as a % OF THE SCREEN (not a % of a parent

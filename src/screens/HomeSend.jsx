@@ -248,7 +248,7 @@ export default function HomeSend() {
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
-        fontFamily: 'inherit', fontSize: 'var(--fs-small)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        fontFamily: 'inherit', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
         <Icon name="copy" size="calc(19.709 * var(--u))" />
@@ -272,7 +272,7 @@ export default function HomeSend() {
         background: 'var(--color-white)', border: 'none', borderRadius: 16,
         boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'calc(2 * var(--u))',
-        fontFamily: 'inherit', fontSize: 'var(--fs-small)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
+        fontFamily: 'inherit', fontSize: 'var(--fs-caption)', fontWeight: 'var(--fw-semibold)', color: 'var(--color-black)',
         cursor: 'pointer', WebkitTapHighlightColor: 'transparent',
       }}>
         <Icon name="human" size="calc(19.709 * var(--u))" />

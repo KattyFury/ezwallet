@@ -31,9 +31,12 @@ test('every font size uses a --fs-* token', () => {
   assert.deepEqual(bad, [], 'literal font sizes found - use a --fs-* token from src/index.css')
 })
 
-test('no font token below 14px', () => {
+test('no font token below 14px, all multiples of 2', () => {
   const css = readFileSync('src/index.css', 'utf8')
   const sizes = [...css.matchAll(/--fs-([a-z0-9-]+):\s*calc\(([0-9.]+) \* var\(--u\)\)/g)].map(m => [m[1], Number(m[2])])
   assert.ok(sizes.length >= 12)
-  for (const [name, px] of sizes) assert.ok(px >= 14, `--fs-${name} is ${px}px`)
+  for (const [name, px] of sizes) {
+    assert.ok(px >= 14, `--fs-${name} is ${px}px`)
+    assert.ok(px % 2 === 0, `--fs-${name} is ${px}px - sizes are multiples of 2 (owner 2026-10-03)`)
+  }
 })

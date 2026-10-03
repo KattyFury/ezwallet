@@ -45,7 +45,10 @@ TARGET: public mainnet launch within October 2026.**
   tokens in `src/index.css` :root (52/48/40/28/26/24 title/24 num/22/19/17/15/14). Folded: 18+20→19, 16→17,
   13 (notification area)+11 (token-icon fallback)→14, the 2 popup titles 24→22 (Deposit/Withdraw, email login).
   Screen titles (.sheet-title) stay 24 (`--fs-title`). Auto-fit amounts keep their own range (44→18, balance 40→24).
-  **`test/fontScale.test.mjs` fails on any literal font size or a token under 14** - add a token, never a number. All of today's `test` work (prices,
+  **`test/fontScale.test.mjs` fails on any literal font size or a token under 14** - add a token, never a number.
+- **Same day, owner: every font size is a MULTIPLE OF 2** (layout = multiples of 8, but 8-steps make text too big →
+  text uses 2). 19/17/15 rounded UP → content-1 20, content-2 18, caption 16 (+ their --is-* icon pairs). Home action
+  tiles (Paste/Contacts/Copy/Share) 14 → 16. 14 = notification area + small hints only. The test also fails on an odd size. All of today's `test` work (prices,
   test-only apple icon) merged to `main` - `COINGECKO_API` secret was added by the owner to BOTH Pages projects.
 
 ## 2026-10-03 - Prices via /api/prices (option C) + test.ezwallet.cash opened to the public (on `test`)
