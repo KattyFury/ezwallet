@@ -59,13 +59,11 @@ Pre-launch rule in force: every change → commit on `test`, `git checkout main 
   `addNotif(..., memo)` (src/notif.js) + NotifArea reads it with `getTxMemo` (already cached by loadHistoryRows' receipt
   read - no extra RPC). Owner: no length cap, rows wrap - the notification design already allows multi-line.
 
-**Next session - open, ask the owner before starting:**
-1. Contact photo sync (thumbnail ~100px + on/off switch) - owner has not decided.
-2. Button label visual trim: only possible by wrapping each label in a `<span>` (CSS text-box) - offered, not chosen.
-   Measured offsets today are ≤1px for text-only buttons.
-3. Real-device checks the owner still owes: Save receipt on iPhone/Android (share sheet → Save Image), the inverted
-   test icon on iPhone (delete + re-add the shortcut), Hold-to-show-tokens with no highlight.
-4. Bugs table above is unchanged by today's work (1, 3b, 5, 6 still open).
+**Owner answers (2026-10-03, do NOT offer these again):**
+- Contact photo sync to other devices: **NO** - photos stay per-device.
+- Wrapping button labels in a <span> for cap-height trim: **NO**.
+- Real-device testing: the owner is testing live on the phone and reporting fixes as they go.
+- Bugs table above is unchanged by today's work (1, 3b, 5, 6 still open).
 
 ## 2026-10-03 - Contacts: name one size smaller; prices + test icon now on main too
 - Contacts list name `--fs-h2` (22) → `--fs-content-1` (19) (owner request). The "Send" text pill on each row
