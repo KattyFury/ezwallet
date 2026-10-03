@@ -1,6 +1,6 @@
 # Swap on mainnet + auto-convert on send - PLAN (2026-10-03)
 
-Status: **draft, waiting for owner decisions** (section 5). No code written yet. Real money - every step below
+Status: **decided (section 5), not built yet.** Real money - every step below
 has a measurement or a doc line behind it; keep it that way.
 
 ## 1. What already exists (code kept from testnet, OFF on mainnet)
@@ -54,9 +54,12 @@ has a measurement or a doc line behind it; keep it that way.
 - History: an auto-convert send shows as ONE row ("Sent $19 to Mom · 8.5 EURC converted"), not 3 legs.
 - Receipt shows the converted amount + rate.
 
-## 5. Decisions needed from the owner (OPEN)
-1. Keep our 0.1% app fee on swaps? On auto-convert sends too?
-2. Roll-out: enable on test.ezwallet.cash first for real-money tests (an exception to the "both branches" rule), or
-   both at once?
-3. Auto-convert source when several verified tokens: EURC first, then cirBTC? Or never auto-sell cirBTC (volatile)?
-4. Swap pairs on the Exchange screen: all directions between USDC / EURC / cirBTC?
+## 5. Owner decisions (2026-10-03, DECIDED - do not re-ask)
+1. **No app fee.** Remove `config.customFee` from the Kit `/swap` call (`FEE_BPS`/`FEE_RECIPIENT` in `_swapCore.js`)
+   and the fee checks in `simulateSwap`; only the provider's 2 bps remain.
+2. **Roll-out: both branches at once** (test + main), per the pre-launch rule. → Phase 1 must be fully validated +
+   simulated before `NET.swap = true` is pushed, since ezwallet.cash users see it immediately.
+3. **Auto-convert source order: EURC first, then cirBTC.** Send "available" = USDC + EURC + cirBTC in USD.
+   A shortfall larger than the EURC balance converts all needed EURC, then cirBTC for the rest (two swaps in the same
+   batch, still one PIN).
+4. **Exchange pairs: every direction between USDC / EURC / cirBTC** (6).
