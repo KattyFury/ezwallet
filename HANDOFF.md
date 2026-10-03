@@ -59,6 +59,13 @@ Pre-launch rule in force: every change → commit on `test`, `git checkout main 
   `addNotif(..., memo)` (src/notif.js) + NotifArea reads it with `getTxMemo` (already cached by loadHistoryRows' receipt
   read - no extra RPC). Owner: no length cap, rows wrap - the notification design already allows multi-line.
 
+- **QR = EIP-681 since 2026-10-03** (owner: MetaMask could not scan the private `ezwallet:` QR; "send on Arc only"
+  warning already lives in the notifications). Plain: `ethereum:<addr>@5042`; with amount:
+  `ethereum:<USDC|EURC>@5042/transfer?address=<addr>&uint256=<base units>`. The `@5042` chain id is what makes a
+  standard wallet switch the sender to Arc (only if Arc is already added there; wallets that ignore it remain the
+  risk the old scheme existed for). Format in `src/qrFormat.js` (pure, `test/qr.test.mjs`); old `ezwallet:` QRs and
+  bare addresses are still read. NOT yet confirmed by scanning with a real MetaMask.
+
 **Owner answers (2026-10-03, do NOT offer these again):**
 - Contact photo sync to other devices: **NO** - photos stay per-device.
 - Wrapping button labels in a <span> for cap-height trim: **NO**.
