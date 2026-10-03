@@ -39,6 +39,9 @@ TARGET: public mainnet launch within October 2026.**
   `prices:v1` for everyone. Binance = `data-api.binance.vision` (USDT pairs ÷ USDCUSDT). cirBTC = BTC price. ETH is
   returned too (price only, no ETH token in the wallet). The browser no longer calls CoinGecko (removed from CSP).
   Response field `up` shows which source answered; `src` per symbol shows which one was used. Tests: `test/prices.test.mjs`.
+- Measured from Cloudflare 2026-10-03: CoinGecko keyless → 403 "add a descriptive User-Agent" (fixed: UA header);
+  Binance `data-api.binance.vision` → 403 nginx, so the function falls through api.binance.com / api-gcp / api1 / api4.
+  After the fixes test.ezwallet.cash/api/prices = `up: {coingecko: true, binance: true}`, all 3 prices within 0.5%.
 - **TODO (owner):** add `COINGECKO_API` (secret) to Pages `ezwallet-test` and, before merging to main, `ezwallet-mainnet`
   - Claude's auto mode refused to write secrets to Cloudflare. Without it CoinGecko is called keyless (shared IP limit).
 - **test.ezwallet.cash is PUBLIC since 2026-10-03** (owner: "ai truy cập cũng được"): the Access policy "invited
