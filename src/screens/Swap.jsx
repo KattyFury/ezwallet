@@ -529,7 +529,7 @@ export default function Swap() {
           return (
         <button className={`btn ${error ? 'btn-secondary' : success ? 'btn-success' : 'btn-primary'}`}
           style={{
-            width: '100%', height: 'calc(48 * var(--u))', minHeight: 0, borderRadius: 38, overflow: 'hidden',
+            width: '100%', height: 'var(--btn-h)', minHeight: 0, borderRadius: 38, overflow: 'hidden',
             boxShadow: error || success ? undefined : '0 0 20px rgba(0, 0, 0, 0.32)',
             ...(error ? { color: 'var(--color-error)', borderColor: 'var(--color-error)' } : null),
             ...(success ? { opacity: confirmed ? 1 : 0.6 } : null),

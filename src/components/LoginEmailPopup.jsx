@@ -280,7 +280,7 @@ export default function LoginEmailPopup({ onClose }) {
           rather than navigating anywhere - the popup never was a screen. */}
       <button onClick={back}
         style={{
-          position: 'absolute', left: '10.54%', top: '50.95dvh', width: '38.43%', height: 'calc(48 * var(--u))',
+          position: 'absolute', left: '10.54%', top: '50.95dvh', width: '38.43%', height: 'var(--btn-h)',
           background: 'var(--color-white)', color: 'var(--color-black)', border: 'none', borderRadius: 16,
           boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
           fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)', cursor: 'pointer',
@@ -289,7 +289,7 @@ export default function LoginEmailPopup({ onClose }) {
       </button>
       <button onClick={handleSubmit} disabled={!valid || loading}
         style={{
-          position: 'absolute', left: '51.03%', top: '50.95dvh', width: '38.46%', height: 'calc(48 * var(--u))',
+          position: 'absolute', left: '51.03%', top: '50.95dvh', width: '38.46%', height: 'var(--btn-h)',
           background: 'var(--color-brand)', color: 'var(--color-white)', border: 'none', borderRadius: 16,
           boxShadow: '0 0 8px rgba(0, 0, 0, 0.48)',
           fontFamily: 'inherit', fontSize: 'calc(18 * var(--u))', fontWeight: 'var(--fw-semibold)',

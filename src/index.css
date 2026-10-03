@@ -17,6 +17,9 @@
      Applied APP-WIDE (user: "toàn bộ thiết kế đều là co giãn"): every font size, box/button height,
      icon, padding and gap is written in --u; only radii, borders, shadows and 0.5px hairlines stay fixed. */
   --u: min(1px, calc(100dvh / 844), calc(100vw / 390));   /* also shrinks on a narrower-than-390 phone */
+  /* STANDARD BUTTON HEIGHT = 5/6 of the 70px grid row (owner 2026-10-03; was 48 ≈ 2/3). Every Back/Add/Paste/
+     Contacts-style button uses this - change it here, not per screen. */
+  --btn-h: calc(70 * 5 / 6 * var(--u));
 
   /* ── THE 7 BRAND-GUIDELINE COLOURS ──
      Brand #0B53BF · white · black · text phụ #757575 · box/input #E3E3E3 · danger #EC221F ·
@@ -365,8 +368,8 @@ body {
      "Button height: 48/40/32 — bội số của 8" - and every button measured this session confirms 48.
      This is the SAME class of bug the user caught on Exchange's CTA (height:'100%' instead of a fixed
      48px); fixing it here at the shared-class level closes it for every .btn in the app at once. */
-  height: calc(48 * var(--u));      /* 48 design px - shrinks with a short viewport (see --u) */
-  min-height: calc(48 * var(--u));        /* the minimum touch area for older users - now equal to height, kept as a safety net */
+  height: var(--btn-h);      /* 5/6 of the 70px row (was 48) - shrinks with a short viewport (see --u) */
+  min-height: var(--btn-h);        /* the minimum touch area for older users - now equal to height, kept as a safety net */
   transition: opacity 0.15s;
 }
 

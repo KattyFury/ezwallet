@@ -20,7 +20,7 @@ import { GRADIENT } from '../brandBg'
 // Gaps: 16 design px, never below 8px on a very short screen (user rule 2026-09-27).
 const GAP = 'max(8px, calc(16 * var(--u)))'
 const BIG_BTN = { top: `calc(79.62dvh + ${GAP})`, height: `calc(12.09dvh - 2 * ${GAP})` }
-const SIDE_BTN = { top: 'calc(85.665dvh - 24 * var(--u))', height: 'calc(48 * var(--u))' }
+const SIDE_BTN = { top: 'calc(85.665dvh - var(--btn-h) / 2)', height: 'var(--btn-h)' }
 
 export default function HomeReceive() {
   const { navigate } = useNav()

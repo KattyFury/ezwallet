@@ -125,7 +125,7 @@ export default function Security() {
 
       {/* Done - node 58:334/58:337: brand-blue pill, full card width, 48px tall. */}
       <button className="btn btn-primary" onClick={() => navigate('MenuScreen')}
-        style={{ position: 'absolute', left: '6.41%', width: '87.18%', top: 'calc(85.665dvh - 24 * var(--u))', height: 'calc(48 * var(--u))', minHeight: 0 }}>
+        style={{ position: 'absolute', left: '6.41%', width: '87.18%', top: 'calc(85.665dvh - var(--btn-h) / 2)', height: 'var(--btn-h)', minHeight: 0 }}>
         Done
       </button>
 

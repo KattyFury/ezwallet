@@ -36,7 +36,11 @@ TARGET: public mainnet launch within October 2026.**
 
 ## 2026-10-03 - Contacts: name one size smaller; prices + test icon now on main too
 - Contacts list name `--fs-h2` (22) → `--fs-content-1` (19) (owner request). The "Send" text pill on each row
-  became a 44px round blue button with Lucide `Send` (paper plane, new `send` icon in Icon.jsx) - owner: too wide. All of today's `test` work (prices,
+  became a 44px round blue button with Lucide `Send` (paper plane, new `send` icon in Icon.jsx) - owner: too wide.
+- **Standard button height 48 (≈ 2/3 of the 70px row) → `--btn-h` = 70 × 5/6 = 58.33px** (owner). One variable in
+  `:root`; `.btn` + every inline 48px button (Home Paste/Contacts/Copy/Share, About/Security Done, Login email popup
+  Back/Continue, Deposit/Withdraw, Swap) use it. Buttons centred on row 9 stay centred (top = 85.665dvh − btn-h/2).
+  The 48px address FIELD in FundsPopup is an input, not a button - unchanged. All of today's `test` work (prices,
   test-only apple icon) merged to `main` - `COINGECKO_API` secret was added by the owner to BOTH Pages projects.
 
 ## 2026-10-03 - Prices via /api/prices (option C) + test.ezwallet.cash opened to the public (on `test`)

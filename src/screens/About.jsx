@@ -56,7 +56,7 @@ export default function About() {
       ))}
 
       <button className="btn btn-primary" onClick={() => navigate('MenuScreen')}
-        style={{ position: 'absolute', left: '6.41%', width: '87.18%', top: 'calc(85.665dvh - 24 * var(--u))', height: 'calc(48 * var(--u))', minHeight: 0 }}>
+        style={{ position: 'absolute', left: '6.41%', width: '87.18%', top: 'calc(85.665dvh - var(--btn-h) / 2)', height: 'var(--btn-h)', minHeight: 0 }}>
         Done
       </button>
 
