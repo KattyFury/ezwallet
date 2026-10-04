@@ -113,7 +113,12 @@ export default function Swap() {
 
   // ── AMOUNT = % × available, UNLESS a round number was just tapped (snapAmt) ──
   // floorTo (not toFixed): toFixed rounds UP → 100% can produce more than the balance → the Kit answers "over balance".
-  const amountNum = snapAmt !== null ? snapAmt : (hasBal ? floorTo(available * pct / 100, decimalsFor(fromSym)) : 0)
+  // 100% = "swap everything" → the FULL available amount to the token's own decimals (6 USDC/EURC, 8 cirBTC). Flooring it
+  // to the 2 display decimals left dust behind (owner 2026-10-04: "0.01 EURC left over" - 1.009 EURC swapped only 1.00).
+  // USDC's GAS_RESERVE_USDC is already out of `available`. Other percentages stay on round 2-decimal amounts.
+  const amountNum = snapAmt !== null ? snapAmt : (!hasBal ? 0
+    : pct >= 100 ? Number(toAmountString(available, NET.tokens[fromSym]?.decimals ?? 6))
+    : floorTo(available * pct / 100, decimalsFor(fromSym)))
 
   // ── Converting to DISPLAY MONEY ($/€) ── rate = USD per token; display money = usd / rate[cur]
   const rateOf = sym => (rates && rates[sym]) || null
