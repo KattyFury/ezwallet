@@ -47,9 +47,9 @@ export default function SendReceipt() {
     addNotif(`Sent ${amountText} to ${to}`, 'sent', txHash || null, `sent-${timestamp}`)
   }, [])
 
-  // NETWORK FEE (owner 2026-10-03: the receipt had none). Starts from SendConfirm's estimate, then switches to what the
-  // transaction ACTUALLY paid (its on-chain receipt). Same ≤3-decimal format + display currency as SendConfirm (fmtFee).
-  const [feeUsd, setFeeUsd] = useState(params.feeUsd ?? null)
+  // NETWORK FEE (owner 2026-10-03: the receipt had none) = what the transaction ACTUALLY paid (its on-chain receipt),
+  // "…" until it is read - never SendConfirm's estimate, which is a maximum, not the charge (owner 2026-10-04).
+  const [feeUsd, setFeeUsd] = useState(null)
   const [rates, setRates] = useState({})
   const displayCur = getDisplayCurrency()
   useEffect(() => {

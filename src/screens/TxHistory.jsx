@@ -44,7 +44,8 @@ function txInfo(tx, walletAddr, contacts, rates) {
   const amount = parseFloat(tx.value) / Math.pow(10, decimals)
   const isSend = tx.from?.toLowerCase() === walletAddr?.toLowerCase()
   const symbol = tx.tokenSymbol || token?.symbol || '?'
-  const usd = amount * (rates?.[symbol] ?? token?.usdRate ?? 1)
+  const rate = symbol === 'USDC' ? 1 : rates?.[symbol]
+  const usd = rate > 0 ? amount * rate : null   // no live price → "…" (no offline fallback)
   const counter = isSend ? tx.to : tx.from
   const name = contacts[counter?.toLowerCase()] || null
   return { isSend, amount, symbol, usd, counter, name }
@@ -143,7 +144,7 @@ export default function TxHistory() {
   const [copied, setCopied] = useState(false)
   const cur = getDisplayCurrency()
   const [rates, setRates] = useState(null)  // USD→display-currency rates (fetched), null until they arrive
-  useEffect(() => { getDisplayRates().then(setRates).catch(() => setRates({ USDC: 1, EURC: 1.08 })) }, [])
+  useEffect(() => { getDisplayRates().then(setRates).catch(() => setRates({ USDC: 1 })) }, [])
 
   function copyCounter(addr) {
     navigator.clipboard.writeText(addr)

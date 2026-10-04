@@ -3,7 +3,7 @@ import ScreenSheet from '../components/ScreenSheet'
 import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
 import FundsPopup from '../components/FundsPopup'
-import { getTokenBalances, cachedBalances } from '../chain'
+import { getTokenBalances, cachedBalances, sumUsd } from '../chain'
 import { useState, useEffect } from 'react'
 import { useNav } from '../nav'
 import { GRADIENT } from '../brandBg'
@@ -49,10 +49,10 @@ function RowIcon({ name, color, size = 'calc(18 * var(--u))' }) {
 
 export default function MenuScreen() {
   const { navigate } = useNav()
-  const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? c.reduce((s, t) => s + t.usd, 0) : null })
+  const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? sumUsd(c) : null })
   useEffect(() => {
     const addr = localStorage.getItem('ez_wallet_addr')
-    if (addr) getTokenBalances(addr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0))).catch(() => {})
+    if (addr) getTokenBalances(addr).then(ts => setTotalUsd(sumUsd(ts))).catch(() => {})
   }, [])
 
   // Same source + truncation Security.jsx already uses for this exact data - kept identical rather than

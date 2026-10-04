@@ -10,7 +10,7 @@ export default function BalanceHeader({ totalUsd, loading }) {
   const [rates, setRates] = useState(cachedRates)   // seeded from cache → no "..." when switching screens
 
   useEffect(() => {
-    getDisplayRates().then(setRates).catch(() => setRates(r => r || { USDC: 1, EURC: 1.08 }))
+    getDisplayRates().then(setRates).catch(() => {})
   }, [])
 
   // BALANCE NOT KNOWN YET → '…', NEVER draw "$0.00" (that is inventing a balance - bug 07-16).

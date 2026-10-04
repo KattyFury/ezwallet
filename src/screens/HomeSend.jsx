@@ -5,7 +5,7 @@ import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
 import { useNav } from '../nav'
 import { getDisplayCurrency, fmtDisplay, GAS_RESERVE_USDC } from '../data'
-import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates, getUnverifiedTokens } from '../chain'
+import { getTokenBalances, getDisplayRates, cachedBalances, cachedRates, getUnverifiedTokens, sumUsd } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import NotifArea, { NOTIF_FS } from '../components/NotifArea'
 import { GRADIENT } from '../brandBg'
@@ -123,11 +123,11 @@ export default function HomeSend() {
       // Best effort: a failure just leaves the section hidden - it never touches the verified balances.
       getUnverifiedTokens().then(us => { if (!cancelled) setUnverified(us) }).catch(() => {})
     })
-    getDisplayRates().then(setRates).catch(() => setRates(r => r || { USDC: 1, EURC: 1.08 }))
+    getDisplayRates().then(setRates).catch(() => {})
     return () => { cancelled = true; clearTimeout(timer) }
   }, [])
 
-  const totalUsd = tokens.reduce((s, t) => s + t.usd, 0)
+  const totalUsd = sumUsd(tokens)
   // Only tokens the user actually HOLDS are listed (owner 2026-09-29: an EURC row at 0 when you have no EURC
   // "looks odd"). Display only - totals, the low-USDC warning and other screens still use the full `tokens`.
   const heldTokens = tokens.filter(t => t.amount > 0)

@@ -303,6 +303,20 @@ export async function estimateSwap({ walletAddress, tokenIn, tokenOut, amountIn 
   return res.json()
 }
 
+// Circle's fee estimate for THIS send (functions/api/send.js action 'fee') → { feeMax, feeNow } in USDC (= USD).
+export async function estimateSendFee({ toAddress, token, amountDecimal, memo }) {
+  if (MOCK) return { feeMax: '0.004', feeNow: '0.002' }
+  const walletId = localStorage.getItem('ez_wallet_id')
+  const ask = userToken => fetch('/api/send', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'fee', userToken, walletId, toAddress, token, amountDecimal, memo }),
+  }).then(r => r.json())
+  let data = await ask(localStorage.getItem('ez_user_token'))
+  if (data.error && isTokenExpiredError({ code: data.code, message: data.error })) data = await ask((await forceFreshSession()).userToken)
+  if (data.error) throw new Error(data.error)
+  return data
+}
+
 // Circle's fee estimate for THIS swap (functions/api/swap.js 'fee') → { feeMax, feeNow } in USDC (= USD).
 // Same expired-token retry as fetchHistory.
 export async function estimateSwapFee({ walletId, walletAddress, tokenIn, tokenOut, amountIn }) {

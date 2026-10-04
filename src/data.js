@@ -24,9 +24,12 @@ export function isOwnAddress(addr) {
 // hiển là 0.002 ... không thêm số thập phân nào nữa"). Rounded to the nearest 0.001, trailing zeros trimmed; below half
 // of that → "< 0.001". rates = USD per unit of each currency (getDisplayRates). Shared by SendConfirm + SendReceipt.
 export function fmtFee(feeUsd, rates, cur) {
-  const v = feeUsd / ((rates && rates[cur]) || 1)
+  // The fee is paid in USDC (= $). Without a live rate for the display currency it is shown in $ - its real unit.
+  const rate = cur === 'USDC' ? 1 : rates?.[cur]
+  const useCur = rate > 0 ? cur : 'USDC'
+  const v = feeUsd / (rate > 0 ? rate : 1)
   const r = Math.round(v * 1000) / 1000
-  const sym = displaySymbol(cur)
+  const sym = displaySymbol(useCur)
   return r === 0 ? `< ${sym}0.001` : `${sym}${String(r)}`
 }
 
@@ -85,6 +88,7 @@ export function shortenAddr(addr) { return addr ? addr.slice(0, 6) + '…' + add
 export function fmtDisplay(usd, cur, rates) {
   const c = cfgOf(cur)
   const n = displayNum(usd, cur, rates)
+  if (n === '…') return '…'   // no live price / no value - never a made-up number
   return c.after ? `${n} ${c.symbol}` : `${c.symbol}${n}`
 }
 
@@ -127,7 +131,9 @@ export function getDisplayCurrency() {
 // usd = the USD value (from token.usd / getDisplayRates, the same source). rates = { USDC:1, EURC:~1.08, cirBTC } (USD per unit).
 // Converting = usd / rate[cur]: cur=USDC → the usd itself ($); cur=EURC → usd/1.08 (€). Stablecoins come out EXACTLY 1:1.
 export function displayNum(usd, cur, rates) {
-  const rate = (rates && rates[cur]) || 1
+  // USDC is the dollar (1). Any other display currency needs its LIVE rate - the old "|| 1" showed euros as dollars.
+  const rate = cur === 'USDC' ? 1 : rates?.[cur]
+  if (usd == null || Number.isNaN(usd) || !(rate > 0)) return '…'
   const c = cfgOf(cur)
   return ((usd || 0) / rate).toLocaleString(c.locale, { minimumFractionDigits: c.dec, maximumFractionDigits: c.dec })
 }

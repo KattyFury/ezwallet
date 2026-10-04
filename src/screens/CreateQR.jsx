@@ -8,7 +8,7 @@ import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
 import { NET } from '../clientNet'
-import { getTokenInfo, getTokenBalances } from '../chain'
+import { getTokenInfo, getTokenBalances, sumUsd } from '../chain'
 import { ensureWalletAddress } from '../circle'
 
 // Consistent with the Send screen: USD (friendly label, backed by USDC) by default + this network's tokens.
@@ -38,7 +38,7 @@ export default function CreateQR() {
     setBalance(null)
     let alive = true, retry
     const read = a => (cur === 'USD'
-      ? getTokenBalances(a).then(ts => ts.reduce((s, t) => s + t.usd, 0))
+      ? getTokenBalances(a).then(ts => sumUsd(ts))
       : getTokenInfo(a, cur).then(i => i.balance))
     const load = () => ensureWalletAddress()
       .then(a => (a ? read(a) : Promise.reject(new Error('no wallet address'))))

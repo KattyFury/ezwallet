@@ -404,12 +404,14 @@ export default function Swap() {
   // "13,00 ₫" (nobody writes VND with decimals). The symbol is left to fmtDisplay too, because ₫ goes AFTER the number.
   const feeTxt = (() => {
     if (feeUsd === null) return '…'
-    const rc = rateOf(cur) || 1
-    const min = 10 ** -decimalsOfCurrency(cur)      // 0.01 for USD/EUR · 1 for VND
+    // The fee is paid in USDC (= $): no live rate for the display currency → show it in $, its real unit (no "|| 1" guess).
+    const fc = cur === 'USDC' || rateOf(cur) ? cur : 'USDC'
+    const rc = fc === 'USDC' ? 1 : rateOf(fc)
+    const min = 10 ** -decimalsOfCurrency(fc)       // 0.01 for USD/EUR · 1 for VND
     const v = feeUsd / rc                            // the fee converted into the display currency
     // Circle's estimate is the MAXIMUM this swap can cost (networkFee) - the real charge is lower, so say "up to".
-    if (v <= 0) return `up to ${fmtDisplay(0, cur, rates)}`
-    return v < min ? `<${fmtDisplay(min * rc, cur, rates)}` : `up to ${fmtDisplay(feeUsd, cur, rates)}`
+    if (v <= 0) return `up to ${fmtDisplay(0, fc, rates)}`
+    return v < min ? `<${fmtDisplay(min * rc, fc, rates)}` : `up to ${fmtDisplay(feeUsd, fc, rates)}`
   })()
 
   const estNum = estAmt !== null ? parseFloat(estAmt) : null

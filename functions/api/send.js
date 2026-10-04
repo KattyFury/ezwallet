@@ -45,13 +45,14 @@ export async function onRequestPost(ctx) {
   let net
   try { net = netFrom(ctx) } catch (e) { return netError(e) }
   const apiKey = ctx.env.API_KEY || ctx.env.CIRCLE_API_KEY
-  const { userToken, walletId, toAddress, token, amountDecimal, memo, idempotencyKey, refId } = await ctx.request.json()
+  const { action, userToken, walletId, toAddress, token, amountDecimal, memo, idempotencyKey, refId } = await ctx.request.json()
+  const isFee = action === 'fee'
   // A fixed idempotencyKey from the client → Circle dedupes, so a repeated call does not create 2 transactions
   const idemKey = idempotencyKey || crypto.randomUUID()
 
   // refId = the client's confirmation id (a UUID). Circle stores it on the transaction, so after the PIN the client
   // can find THIS transaction and learn its real state - the basis of "no double send" (MAINNET-AUDIT C3/C4).
-  if (!refId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(refId)) {
+  if (!isFee && (!refId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(refId))) {
     return new Response(JSON.stringify({ error: 'refId (uuid) required' }), { status: 400, headers: JSON_HEADERS })
   }
   if (!userToken || !walletId || !toAddress || !token || !amountDecimal) {
@@ -95,6 +96,21 @@ export async function onRequestPost(ctx) {
       feeLevel: 'MEDIUM',
       refId,
     }
+  }
+
+  // 'fee' = THE NETWORK FEE OF THIS EXACT SEND (owner 2026-10-04: no guessed numbers). Same contract call as below,
+  // asked to Circle POST /v1/w3s/transactions/contractExecution/estimateFee (user-controlled-wallets OpenAPI) - no
+  // challenge, no PIN. feeMax = medium.networkFee (gasLimit × maxFee, "the maximum … you will pay"), feeNow =
+  // networkFeeRaw. Measured 2026-10-04 on the owner's wallet: 0.1 USDC 0.0031 / with a note 0.0043 / EURC 0.0041.
+  if (isFee) {
+    const { idempotencyKey: _i, refId: _r, feeLevel: _f, ...call } = execBody
+    const est = await circleReq('POST', '/transactions/contractExecution/estimateFee', call, apiKey, userToken)
+    const m = est?.data?.medium   // the send itself uses feeLevel MEDIUM
+    if (!m?.networkFee) {
+      console.error('[send fee] estimateFee failed:', JSON.stringify(est))
+      return new Response(JSON.stringify({ error: est?.message || 'could not estimate the fee', code: est?.code }), { status: 502, headers: JSON_HEADERS })
+    }
+    return new Response(JSON.stringify({ feeMax: m.networkFee, feeNow: m.networkFeeRaw || null }), { headers: JSON_HEADERS })
   }
 
   const txResp = await circleReq('POST', '/user/transactions/contractExecution', execBody, apiKey, userToken)

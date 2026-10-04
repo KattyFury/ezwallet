@@ -103,6 +103,18 @@ Pre-launch rule in force: every change → commit on `test`, `git checkout main 
   real wallet (mock skips it). Offered and NOT picked (do not redo without asking): persist balances / history rows in
   localStorage for an instant first paint; long cache headers for /assets/*.
 
+- **NO GUESSED NUMBERS (owner 2026-10-04, after the swap fee was shown ~10x too low).**
+  - Fees come from Circle `POST /transactions/contractExecution/estimateFee` for the EXACT call (MEDIUM): Swap →
+    `/api/swap` action `fee`, Send → `/api/send` action `fee`. Screens say "up to $X" (Circle's networkFee is a maximum).
+    Measured on the owner's wallet: swap ≈ 0.040-0.045 max (real swaps paid 0.0155-0.016); send 0.1 USDC 0.0031,
+    with a note 0.0043, EURC 0.0041. A failed estimate shows "Unavailable" (it used to become 0 → "< $0.001").
+    The receipt shows only the fee the tx actually paid. The chain-side 65k/110k gas guess is deleted.
+  - Swap holds back Circle's max fee from USDC; EURC/cirBTC swaps are blocked when USDC < fee. **Send keeps the flat
+    0.01 USDC reserve on purpose** (owner: "chừa 0.01 USDC luôn luôn"; the measured max send fee is < 0.005).
+  - **No offline fallback prices** (EURC 1.08 / cirBTC 65000 / VND 26300 deleted). USDC = $1 always; any other token
+    without a live price has usd = null → "…" (and totals via `sumUsd` → "…"). `displayNum`/`fmtDisplay` return "…"
+    without a live display rate; fees fall back to $ (their real unit). Locked by `test/noGuess.test.mjs`.
+
 **Owner answers (2026-10-03, do NOT offer these again):**
 - Contact photo sync to other devices: **NO** - photos stay per-device.
 - Wrapping button labels in a <span> for cap-height trim: **NO**.

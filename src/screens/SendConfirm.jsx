@@ -2,8 +2,8 @@ import { useState, useEffect, useRef } from 'react'
 import { addNotif } from '../notif'
 import { useNav } from '../nav'
 import { getDisplayCurrency, displaySymbol, shortenAddr, fmtFee } from '../data'
-import { getDisplayRates, estimateSendFeeUsd } from '../chain'
-import { getSDK, executeChallenge, refreshSession, circleErrorMessage } from '../circle'
+import { getDisplayRates } from '../chain'
+import { getSDK, executeChallenge, refreshSession, circleErrorMessage, estimateSendFee } from '../circle'
 import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
@@ -19,9 +19,10 @@ export default function SendConfirm() {
   const { navigate, params } = useNav()
   // currency = 'USD' (the friendly label, USDC is sent) or a real token (USDC/EURC/cirBTC) - comes from SendAmount.
   const { address, name, amount, amountStr, memo, currency = 'USD' } = params
-  const [feeUsd, setFeeUsd] = useState(null)      // the real gas fee (USD, null = still calculating)
+  const [feeUsd, setFeeUsd] = useState(null)      // Circle's MAXIMUM fee for this send (USD, null = still asking)
+  const [feeFailed, setFeeFailed] = useState(false)
   // A separate rate for the FEE (USD per unit of the display currency - USDC:1, EURC:~1.08)
-  const [feeRates, setFeeRates] = useState({ USDC: 1, EURC: 1.08, VND: 1 / 26300 })
+  const [feeRates, setFeeRates] = useState({ USDC: 1 })   // live rates only - no guessed EURC/VND
   const [loading, setLoading] = useState(false)
   const [done, setDone] = useState(false)         // sent successfully → locked, no resending
   const [error, setError] = useState('')          // a terminal error (cancel/network...) shown in place
@@ -44,9 +45,12 @@ export default function SendConfirm() {
     // getDisplayRates (not the per-token getUsdRate) - it includes VND, and VND is not a token
     // so getUsdRate looking through TOKENS would not find it.
     getDisplayRates().then(setFeeRates).catch(() => {})
-    // The fee of THIS send, estimated on chain (MAINNET-V1-PLAN item 4) - see estimateSendFeeUsd.
-    estimateSendFeeUsd({ from: localStorage.getItem('ez_wallet_addr'), token, to: address, amountStr: sendAmountStr, memo })
-      .then(setFeeUsd).catch(() => setFeeUsd(0))
+    // The fee of THIS send from Circle (estimateFee on the exact call /api/send will make). A failure says so - it used
+    // to become a fee of 0 ("< $0.001"), a number nobody measured.
+    setFeeFailed(false)
+    estimateSendFee({ toAddress: address, token, amountDecimal: sendAmountStr, memo })
+      .then(f => { const v = Number(f.feeMax); if (v > 0) setFeeUsd(v); else setFeeFailed(true) })
+      .catch(() => setFeeFailed(true))
   }, [memo, token, address, sendAmountStr])
 
   const mainEl = currency === 'USD' ? <>{displaySymbol('USDC')}{sendAmountStr}</>
@@ -57,14 +61,16 @@ export default function SendConfirm() {
   // $100 needs one more explicit "yes" before the PIN. A forged or swapped QR is the easiest way to trick someone
   // into a big payment.
   const QR_CHECK_OVER_USD = 100
-  const usdValue = Number(sendAmountStr) * (token === 'USDC' ? 1 : (feeRates[token] || 1))
+  // Unknown live price → treat as over the limit (one extra "yes"), never as $1 per token.
+  const usdValue = token === 'USDC' ? Number(sendAmountStr) : feeRates[token] > 0 ? Number(sendAmountStr) * feeRates[token] : Infinity
   const needsQrCheck = !!params.qrAmount && usdValue > QR_CHECK_OVER_USD && !qrChecked
 
   // Network fee in the DEFAULT CURRENCY from Settings (USDC/EURC/VND)
   const displayCur = getDisplayCurrency()
   function feeEl() {
-    if (feeUsd === null) return 'Calculating...'
-    return fmtFee(feeUsd, feeRates, displayCur)   // ≤ 3 decimals - see fmtFee in src/data.js
+    if (feeUsd === null) return feeFailed ? 'Unavailable' : 'Calculating...'
+    // Circle's figure is the MAXIMUM (networkFee) - the real charge is lower and the receipt shows it.
+    return `up to ${fmtFee(feeUsd, feeRates, displayCur)}`   // ≤ 3 decimals - see fmtFee in src/data.js
   }
 
   // The attempt this screen created (refId + timestamps) - see src/txTracker.js.
@@ -75,7 +81,7 @@ export default function SendConfirm() {
   function finishOk(tx) {
     clearPending(attemptRef.current?.refId)
     setDone(true)
-    navigate('SendReceipt', { address, name, amount, amountStr: sendAmountStr, memo, currency, tokenAmount: sendUnits, txHash: tx?.txHash || null, feeUsd, timestamp: Date.now() })
+    navigate('SendReceipt', { address, name, amount, amountStr: sendAmountStr, memo, currency, tokenAmount: sendUnits, txHash: tx?.txHash || null, timestamp: Date.now() })
   }
   function fail(msg) {
     setLoading(false); setStatus(''); setError(msg); addNotif(msg, 'error')

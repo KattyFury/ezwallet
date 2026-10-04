@@ -1,4 +1,4 @@
-import { createPublicClient, http, decodeEventLog, parseAbiItem, parseAbi, encodeFunctionData, parseUnits, stringToHex } from 'viem'
+import { createPublicClient, http, decodeEventLog, parseAbiItem, parseAbi, encodeFunctionData } from 'viem'
 import { defineChain } from 'viem'
 import { MOCK, MOCK_AMOUNTS, MOCK_RATES, MOCK_CHANGE_24H, MOCK_TX, MOCK_UNVERIFIED } from './mock'
 import { fetchHistory, fetchHistoryPage, fetchAllBalances } from './circle'
@@ -33,15 +33,16 @@ const ERC20_ABI = [
   { name: 'balanceOf', type: 'function', stateMutability: 'view', inputs: [{ name: 'account', type: 'address' }], outputs: [{ type: 'uint256' }] },
 ]
 
-// PRICES IN USD (the app's unit of account), live from /api/prices (fetchPrices below); usdRate: the offline fallback
-// (USD per unit). USDC is ALWAYS pinned to 1 (it IS the dollar) → stablecoins show exactly 1:1, without the old
-// "$5"→"$4.99" drift (which came from routing through VND + CoinGecko noise).
+// PRICES IN USD (the app's unit of account), live from /api/prices (fetchPrices below). USDC is ALWAYS 1 (it IS the
+// dollar) → stablecoins show exactly 1:1. NO OFFLINE FALLBACK PRICES (owner 2026-10-04: the old EURC 1.08 / cirBTC 65000
+// were silently shown as real when /api/prices failed) - a token without a live price has usd = null and every screen
+// shows "…" for it and for any total that includes it.
 // Display-only metadata per symbol. Addresses/decimals come from the network config, so a token the network
 // does not list (e.g. cirBTC on mainnet v1) simply does not exist in this build.
 const TOKEN_UI = {
-  USDC:   { color: '#2775CA', usdRate: 1 },
-  EURC:   { color: '#1A56DB', usdRate: 1.08 },
-  cirBTC: { color: '#F7931A', usdRate: 65000 },
+  USDC:   { color: '#2775CA' },
+  EURC:   { color: '#1A56DB' },
+  cirBTC: { color: '#F7931A' },
 }
 export const TOKENS = Object.entries(NET.tokens).map(([symbol, t]) => ({ symbol, address: t.address, decimals: t.decimals, ...TOKEN_UI[symbol] }))
 
@@ -57,7 +58,7 @@ let _ratesCache = null  // the most recent { USDC, EURC, cirBTC }
 // MOCK MODE: build fake balances from TOKENS + MOCK_AMOUNTS (no RPC reads).
 function mockBalances() {
   return TOKENS
-    .map(t => { const amount = MOCK_AMOUNTS[t.symbol] || 0; return { ...t, amount, usd: amount * (MOCK_RATES[t.symbol] ?? t.usdRate), change24h: MOCK_CHANGE_24H[t.symbol] ?? null } })
+    .map(t => { const amount = MOCK_AMOUNTS[t.symbol] || 0; return { ...t, amount, usd: amount * (MOCK_RATES[t.symbol] ?? 0), change24h: MOCK_CHANGE_24H[t.symbol] ?? null } })
     .filter(t => t.amount > 0)
 }
 
@@ -66,10 +67,6 @@ export function cachedBalances(addr) {
   return addr ? (_balCache[addr.toLowerCase()] || null) : null
 }
 export function cachedRates() { return MOCK ? MOCK_RATES : _ratesCache }
-
-// Fallback USD→VND rate for when CoinGecko does not answer (offline / rate limited). Being a few % off beats
-// showing NO number at all - but do NOT treat this as the primary source, it goes stale over the years.
-const VND_PER_USD_FALLBACK = 26300
 
 async function fetchPrices() {
   if (Date.now() - lastFetch < 60000) return priceCache
@@ -87,7 +84,7 @@ async function fetchPrices() {
     // VND is stored as "USD per 1 VND" to MATCH every other rate (rates[cur] = USD per unit),
     // which is what lets displayNum(usd, cur, rates) = usd / rates[cur] be shared with no special case.
     // vndPerUsd = the number of VND per USDC (~26,300) → inverted, ~0.000038.
-    priceCache['VND'] = 1 / (data.vndPerUsd > 0 ? data.vndPerUsd : VND_PER_USD_FALLBACK)
+    if (data.vndPerUsd > 0) priceCache['VND'] = 1 / data.vndPerUsd
     lastFetch = Date.now()
   } catch {}
   return priceCache
@@ -141,8 +138,7 @@ export async function getTokenBalances(walletAddress) {
   if (MOCK) return mockBalances()
   if (!walletAddress) return []
   // Prices and balances run IN PARALLEL (it used to await the prices before reading balances → twice as slow).
-  // A failed price fetch is fine: fetchPrices swallows its own errors and the rate falls back to the offline usdRate - a price
-  // being a few % off is acceptable, a wrong BALANCE is not.
+  // A failed price fetch does not fail the balances: that token's usd is null ("…" on screen), the amounts stay real.
   const [prices, amounts] = await Promise.all([
     fetchPrices(),
     readAllBalances(walletAddress),   // 1 request for all 3 tokens (Multicall3) - do not split it up again
@@ -150,8 +146,10 @@ export async function getTokenBalances(walletAddress) {
   // Show EVERY supported token (including a REAL zero balance) - the wallet always lists USDC/EURC/cirBTC (user decision 07-15)
   const out = TOKENS.map((token, i) => {
     const amount = amounts[i]
-    const rate = prices[token.symbol] ?? token.usdRate
-    return { ...token, amount, usd: amount * rate, change24h: priceCache24h[token.symbol] ?? null }   // the USD value (NOT rounded - the cents matter)
+    const rate = token.symbol === 'USDC' ? 1 : (prices[token.symbol] ?? null)
+    // the USD value (NOT rounded - the cents matter); null = no live price. A real 0 balance is worth 0 either way.
+    const usd = amount === 0 ? 0 : rate == null ? null : amount * rate
+    return { ...token, amount, usd, change24h: priceCache24h[token.symbol] ?? null }
   })
   _balCache[walletAddress.toLowerCase()] = out   // only reached when all 3 tokens were genuinely read
   return out
@@ -173,24 +171,31 @@ export async function getUnverifiedTokens() {
     .map(t => ({ address: t.address, symbol: t.symbol || '?', name: t.name || '', amount: Number(t.amount) }))
 }
 
-// The USD price of one token (USD per unit). USDC = 1. Falls back to the offline usdRate.
-export async function getUsdRate(symbol = 'USDC') {
-  if (MOCK) return MOCK_RATES[symbol] ?? 1
-  const prices = await fetchPrices()
-  const token = TOKENS.find(t => t.symbol === symbol)
-  return prices[symbol] ?? token?.usdRate ?? 1
+// The USD total of a token list, or null when a token the wallet HOLDS has no live price (adding null would count it as
+// 0 and show a smaller balance than the real one).
+export function sumUsd(tokens) {
+  let s = 0
+  for (const t of tokens || []) { if (t.usd == null) { if (t.amount > 0) return null } else s += t.usd }
+  return s
 }
 
-// Rates for the display currency: USD per unit {USDC:1, EURC:~1.08, cirBTC:~the BTC price}.
+// The USD price of one token (USD per unit). USDC = 1. null = no live price (no offline fallback any more).
+export async function getUsdRate(symbol = 'USDC') {
+  if (MOCK) return MOCK_RATES[symbol] ?? null
+  if (symbol === 'USDC') return 1
+  const prices = await fetchPrices()
+  return prices[symbol] ?? null
+}
+
+// Rates for the display currency: USD per unit {USDC:1, EURC, cirBTC, VND} - a missing live price is null.
 // USDC pinned to 1 → stablecoins show exactly 1:1 (5 USDC = $5.00). cirBTC is included so TxHistory converts cirBTC
 // transactions using the SAME rate source as the display column (avoiding a source mismatch).
 export async function getDisplayRates() {
   if (MOCK) { _ratesCache = MOCK_RATES; return MOCK_RATES }
   const [u, e, b] = await Promise.all([getUsdRate('USDC'), getUsdRate('EURC'), getUsdRate('cirBTC')])
-  // VND: not a token, so it does not go through getUsdRate (which looks through TOKENS) - it is taken straight from
-  // the priceCache that fetchPrices filled in the 3 calls above. Missing (the first call failed) → use the fallback.
+  // VND: not a token - taken straight from the priceCache fetchPrices filled. Missing → null (no fallback).
   const prices = await fetchPrices()
-  _ratesCache = { USDC: u, EURC: e, cirBTC: b, VND: prices.VND || 1 / VND_PER_USD_FALLBACK }
+  _ratesCache = { USDC: u, EURC: e, cirBTC: b, VND: prices.VND ?? null }
   return _ratesCache
 }
 
@@ -198,7 +203,7 @@ export async function getDisplayRates() {
 export async function getTokenInfo(addr, symbol = 'USDC') {
   const [balances, rate] = await Promise.all([getTokenBalances(addr), getUsdRate(symbol)])
   const t = balances.find(b => b.symbol === symbol)
-  return { balance: t?.amount ?? 0, usd: t?.usd ?? 0, rate }
+  return { balance: t?.amount ?? 0, usd: t?.usd ?? null, rate }
 }
 
 // Read the memo (Arc Transaction Memos) of one transaction from the on-chain Memo event → text
@@ -434,28 +439,9 @@ export async function loadHistoryRows({ limit, onProgress } = {}) {
   return all
 }
 
-// The real gas fee: Arc prices gas in USDC (18 decimals internally). USDC = $1 → the USD fee IS feeUsdc.
-// gasUnits: ~65k for a plain transfer, ~110k for a transfer with a memo. NOT rounded (the fee is tiny, cents matter).
-// THE FEE OF THIS EXACT SEND (MAINNET-V1-PLAN item 4): ask the chain how much gas the very call /api/send will make
-// (a plain transfer, or the Memo contract when there is a note - same encoding as functions/api/send.js) instead of a
-// fixed 65k/110k guess. If the chain cannot estimate it (e.g. the amount is above the balance) fall back to the guess.
-const ERC20_TRANSFER = parseAbi(['function transfer(address to, uint256 amount)'])
-const MEMO_ABI = parseAbi(['function memo(address target, bytes data, bytes32 memoId, bytes memoData)'])
-export async function estimateSendFeeUsd({ from, token, to, amountStr, memo }) {
-  const note = (memo || '').trim()
-  const guess = note ? 110000 : 65000
-  const t = NET.tokens[token]
-  if (MOCK || !from || !t) return estimateFeeUsd(guess)
-  let gas = BigInt(guess)
-  try {
-    const transfer = encodeFunctionData({ abi: ERC20_TRANSFER, functionName: 'transfer', args: [to, parseUnits(String(amountStr), t.decimals)] })
-    const call = note
-      ? { to: NET.contracts.memo, data: encodeFunctionData({ abi: MEMO_ABI, functionName: 'memo', args: [t.address, transfer, `0x${'11'.repeat(32)}`, stringToHex(note)] }) }
-      : { to: t.address, data: transfer }
-    gas = await publicClient.estimateGas({ account: from, ...call })
-  } catch { /* keep the guess */ }
-  return estimateFeeUsd(gas)
-}
+// The fee of a send BEFORE it is signed now comes from Circle itself (src/circle.js estimateSendFee → /api/send 'fee'):
+// the old chain-side estimate here multiplied gas by the BASE price only (Circle adds a priority fee) and fell back to a
+// guessed 65k/110k gas - owner 2026-10-04: no guessed numbers in the app.
 
 // The fee a FINISHED transaction actually paid (receipt: gasUsed × effectiveGasPrice, native USDC = 18 decimals, $1),
 // for the receipt screen. null when the receipt cannot be read (the caller keeps the estimate it already has).
@@ -470,12 +456,3 @@ export async function getTxFeeUsd(hash) {
   return null
 }
 
-export async function estimateFeeUsd(gasUnits = 65000) {
-  if (MOCK) return 0.002   // a small fake fee
-  try {
-    const gasPrice = await publicClient.getGasPrice()
-    return Number(gasPrice * BigInt(gasUnits)) / 1e18
-  } catch {
-    return 0
-  }
-}

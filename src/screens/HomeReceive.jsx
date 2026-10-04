@@ -7,7 +7,7 @@ import BalanceHeader from '../components/BalanceHeader'
 import Icon from '../components/Icon'
 import NotifArea from '../components/NotifArea'
 import { useNav } from '../nav'
-import { getTokenBalances, cachedBalances } from '../chain'
+import { getTokenBalances, cachedBalances, sumUsd } from '../chain'
 import { ensureWalletAddress } from '../circle'
 import { buildQR } from '../qr'
 import { HALF_OVAL_STYLE } from './HomeSend'
@@ -29,7 +29,7 @@ export default function HomeReceive() {
   const qrRef = useRef(null)   // hidden canvas used to export the QR image for Share
   // Seed the total balance from cache → no "..." when switching screens. NO cache yet → null (NOT KNOWN YET),
   // NOT 0 - see the note about the same bug in MenuScreen (07-16: the screen drew "$0.00" while loading).
-  const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? c.reduce((s, t) => s + t.usd, 0) : null })
+  const [totalUsd, setTotalUsd] = useState(() => { const c = cachedBalances(localStorage.getItem('ez_wallet_addr')); return c ? sumUsd(c) : null })
   const [walletAddr, setWalletAddr] = useState(localStorage.getItem('ez_wallet_addr') || '')
 
   // Re-fetch the wallet address if missing (wallet created but Circle provisioning is slow)
@@ -41,7 +41,7 @@ export default function HomeReceive() {
   useEffect(() => {
     if (!walletAddr) return
     // catch: on a failed read KEEP the old number, never let it collapse to 0 (getTokenBalances now throws instead of inventing 0)
-    getTokenBalances(walletAddr).then(ts => setTotalUsd(ts.reduce((s, t) => s + t.usd, 0))).catch(() => {})
+    getTokenBalances(walletAddr).then(ts => setTotalUsd(sumUsd(ts))).catch(() => {})
   }, [walletAddr])
 
   // Share = the QR IMAGE (with logo + the "Only Arc" label) **PLUS the WALLET ADDRESS AS TEXT** - user decision
