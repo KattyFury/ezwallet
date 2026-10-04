@@ -77,3 +77,12 @@ has a measurement or a doc line behind it; keep it that way.
    every verified token in USD. A shortfall larger than one source's balance takes that source fully and moves to the
    next (several swaps in the same batch, still one PIN).
 4. **Exchange pairs: every direction between USDC / EURC / cirBTC** (6).
+
+## 4c. Live checks after the flip (2026-10-04)
+- First live call answered "KIT_KEY not configured": the Pages secret `KIT_KEY` existed but was EMPTY on both
+  projects. Set from keys.env (`CIRCLE_TEST_KIT_KEY` = the working kit key, shared by both networks) via the Pages API,
+  then retried the production deployments.
+- After that, on BOTH test.ezwallet.cash and ezwallet.cash: `estimate` 0.5 USDC→EURC = 0.444582 (min 0.442359);
+  `simulate` 6/6 ok from Cloudflare → dRPC (delta ≈ 0.4445 EURC = the estimate). Cloudflare → dRPC is NOT rate-limited
+  at this volume.
+- Next: the owner's first real swap ≤ $1; check its receipt (wallet received tokenOut, adapter kept nothing).
