@@ -30,7 +30,7 @@ export async function onRequestPost(ctx) {
 
     const fromAddr = tokenOf(net, tokenIn)?.address
     const toAddr   = tokenOf(net, tokenOut)?.address
-    if (action === 'estimate' || action === 'simulate' || action === 'execute') {
+    if (action === 'estimate' || action === 'simulate' || action === 'execute' || action === 'fee') {
       if (!fromAddr || !toAddr) return err('unknown token', null, 400)
       const problem = amountProblem(amountIn, net.tokens[tokenIn].decimals)
       if (problem) return err(problem, null, 400)
@@ -55,6 +55,32 @@ export async function onRequestPost(ctx) {
       // minOut = the least the user can receive at SLIPPAGE_BPS; the screen sends it back on execute → stopLimit (H2).
       const minOut = q?.minAmount ? fromBase(net, q.minAmount, tokenOut) : null
       return new Response(JSON.stringify({ estimate: data?.data || data, amountOut, minOut }), { headers: JSON_HEADERS })
+    }
+
+    // THE NETWORK FEE OF THIS EXACT SWAP (owner 2026-10-04: no guessed numbers). Builds the same batch execute would
+    // send and asks Circle POST /v1/w3s/transactions/contractExecution/estimateFee (user-controlled-wallets OpenAPI).
+    // feeMax = medium.networkFee = "the maximum amount … you will pay" (gasLimit × maxFee) - the wallet must HOLD it in
+    // USDC for Circle to accept the tx, so it is also the USDC reserve. Measured 2026-10-04 on the owner's wallet:
+    // 0.5 USDC→EURC gasLimit 961922, networkFee 0.0399, networkFeeRaw 0.0207; real swaps paid 0.0155-0.0160.
+    if (action === 'fee') {
+      if (!kitKey) return err('KIT_KEY not configured')
+      if (!userToken || !walletId || !walletAddress) return err('missing params', null, 400)
+      const amountBase = toBase(net, amountIn, tokenIn)
+      const intent = await fetchSwapIntent(net, kitKey, fromAddr, toAddr, walletAddress, amountBase)
+      if (!intent.ok) return err(`Stablecoin Kit ${intent.status}: ${intent.data?.message || 'swap failed'}`, intent.data)
+      const bad = validateIntent(net, intent.data, { fromAddr, toAddr, walletAddress, amountBase })
+      if (bad) return err('This swap could not be verified.', { bad }, 502)
+      const built = buildSwapBatch(net, intent.data, fromAddr, amountBase)
+      if (built.error) return err(built.error, built.swapData)
+      const r = await fetch(`${W3S_API}/transactions/contractExecution/estimateFee`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json', 'X-User-Token': userToken },
+        body: JSON.stringify({ walletId, contractAddress: net.contracts.multicall3From, callData: built.batchData }),
+      })
+      let fd; try { fd = await r.json() } catch { fd = {} }
+      const m = fd?.data?.medium   // execute uses feeLevel MEDIUM
+      if (!r.ok || !m?.networkFee) return err(fd?.message || `Circle estimateFee ${r.status}`, fd, r.status === 401 ? 401 : 502)
+      return new Response(JSON.stringify({ feeMax: m.networkFee, feeNow: m.networkFeeRaw || null, code: fd?.code }), { headers: JSON_HEADERS })
     }
 
     // The verify gate: only allow a swap when the wallet's tokenOut balance RISES (HANDOFF: never trust tx status=1).

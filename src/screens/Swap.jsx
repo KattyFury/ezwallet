@@ -6,9 +6,9 @@ import Numpad from '../components/Numpad'
 import ScreenSheet from '../components/ScreenSheet'
 import ExitBar from '../components/ExitBar'
 import { GRADIENT } from '../brandBg'
-import { estimateSwap, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress, circleErrorMessage } from '../circle'
-import { getTokenBalances, getDisplayRates, cachedRates, cachedBalances, estimateFeeUsd } from '../chain'
-import { spendableOf, floorTo, getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency } from '../data'
+import { estimateSwap, estimateSwapFee, executeSwap, getSDK, executeChallenge, refreshSession, ensureWalletAddress, circleErrorMessage } from '../circle'
+import { getTokenBalances, getDisplayRates, cachedRates, cachedBalances } from '../chain'
+import { spendableOf, floorTo, getDisplayCurrency, displaySymbol, fmtDisplay, decimalsOfCurrency, GAS_RESERVE_USDC } from '../data'
 import { useFitFontSize } from '../useFitFontSize'
 import { roundHints, fmtHint } from '../roundHint'
 import { addNotif } from '../notif'
@@ -107,15 +107,20 @@ export default function Swap() {
   useEffect(() => { if (!walletAddress) ensureWalletAddress().then(a => a && setWalletAddress(a)).catch(() => {}) }, [])
   const walletId = localStorage.getItem('ez_wallet_id')
 
-  // Available: USDC holds GAS_RESERVE_USDC back for network fees (Arc gas = USDC) - you cannot swap every last cent
+  // Available: the network fee is paid in USDC (Arc gas = USDC), so a USDC swap holds back the MAXIMUM fee Circle quoted
+  // for this swap (feeUsd, Circle estimateFee - owner 2026-10-04: no guessed numbers; ~0.04 measured, the old flat 0.01
+  // was too little and a 100% USDC swap could be refused). Until a quote exists the app-wide GAS_RESERVE_USDC applies.
   const hasBal = balances[fromSym] !== undefined
-  const available = spendableOf(fromSym, balances[fromSym])
+  const feeReserve = Math.max(GAS_RESERVE_USDC, feeUsd ?? 0)
+  const available = fromSym === 'USDC' ? Math.max(0, (balances.USDC || 0) - feeReserve) : spendableOf(fromSym, balances[fromSym])
+  // Swapping EURC/cirBTC still needs USDC for the fee.
+  const usdcShort = feeUsd !== null && fromSym !== 'USDC' && balances.USDC !== undefined && balances.USDC < feeUsd
 
   // ── AMOUNT = % × available, UNLESS a round number was just tapped (snapAmt) ──
   // floorTo (not toFixed): toFixed rounds UP → 100% can produce more than the balance → the Kit answers "over balance".
   // 100% = "swap everything" → the FULL available amount to the token's own decimals (6 USDC/EURC, 8 cirBTC). Flooring it
   // to the 2 display decimals left dust behind (owner 2026-10-04: "0.01 EURC left over" - 1.009 EURC swapped only 1.00).
-  // USDC's GAS_RESERVE_USDC is already out of `available`. Other percentages stay on round 2-decimal amounts.
+  // USDC's fee reserve (feeReserve) is already out of `available`. Other percentages stay on round 2-decimal amounts.
   const amountNum = snapAmt !== null ? snapAmt : (!hasBal ? 0
     : pct >= 100 ? Number(toAmountString(available, NET.tokens[fromSym]?.decimals ?? 6))
     : floorTo(available * pct / 100, decimalsFor(fromSym)))
@@ -139,7 +144,7 @@ export default function Swap() {
     ? roundHints(amountNum, available, decimalsFor(fromSym)) : []
 
   const overBalance = hasBal && amountNum > available + 1e-9
-  const canSwap = SWAP_ENABLED && amountNum > 0 && !overBalance && !loading
+  const canSwap = SWAP_ENABLED && amountNum > 0 && !overBalance && !loading && feeUsd !== null && !usdcShort
 
   // ⚠️ A failed read writes NOTHING into balances (keeping "unknown" → showing "…"), never falling back to 0:
   // a fake 0 = "Available: 0" while the wallet has money (bug 07-17). Retry after 3s so it recovers once the RPC unclogs.
@@ -156,7 +161,6 @@ export default function Swap() {
 
   // Rate + fee (shown in the Rate/Fee block, which the spec requires to be ALWAYS visible)
   useEffect(() => { getDisplayRates().then(setRates).catch(() => {}) }, [])
-  useEffect(() => { estimateFeeUsd().then(setFeeUsd).catch(() => {}) }, [])
 
   // Estimated output (debounced 600ms) - dragging the slider fires constantly, so it MUST be debounced or it floods the Kit API
   useEffect(() => {
@@ -166,7 +170,13 @@ export default function Swap() {
       try {
         const res = await estimateSwap({ walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: toAmountString(amountNum, NET.tokens[fromSym]?.decimals ?? 6) })
         // amountOut = the real token decimal (the server already converted from base units - the raw estimatedAmount is base units, do NOT show it directly)
-        if (res?.amountOut) { setEstAmt(res.amountOut); setMinOut(res.minOut || null); setError('') }
+        if (res?.amountOut) {
+          setEstAmt(res.amountOut); setMinOut(res.minOut || null); setError('')
+          // The real fee of this swap, from Circle (not a guess). No fee → the Swap button stays off.
+          estimateSwapFee({ walletId, walletAddress, tokenIn: fromSym, tokenOut: toSym, amountIn: toAmountString(amountNum, NET.tokens[fromSym]?.decimals ?? 6) })
+            .then(f => setFeeUsd(Number(f.feeMax) > 0 ? Number(f.feeMax) : null))
+            .catch(e => { setFeeUsd(null); setError(`Could not get the network fee: ${e.message}`) })
+        }
         else if (res?.error) { setEstAmt(null); setMinOut(null); setError(res.error) }
         else { setEstAmt(null); setMinOut(null) }
       } catch (e) { setEstAmt(null); setMinOut(null); setError(e.message) }
@@ -175,6 +185,8 @@ export default function Swap() {
   }, [amountNum, fromSym, toSym])
 
   function resetAmount() { setPct(0); setSnapAmt(null); setEstAmt(null); setMinOut(null); setError(''); setTyped('') }
+  // Not enough USDC left to pay the fee of an EURC/cirBTC swap → say so on the button instead of a refused transaction.
+  useEffect(() => { if (usdcShort) setError(`Not enough USDC for the network fee (up to ${feeUsd.toFixed(3)})`) }, [usdcShort, feeUsd])
 
   // ── NUMPAD bottom sheet: tap the You pay amount → open it; whatever is typed applies immediately (snapAmt + the slider follows) ──
   function openPad() {
@@ -376,7 +388,7 @@ export default function Swap() {
             {/* balLabel: You receive = "Balance", You pay = null (hidden - user decision 07-22f: the Available line was
                 dropped from You pay). A balance that cannot be read yet → "…", NEVER a drawn 0 (bug 07-17). */}
             {balLabel ? <>{balLabel}: <span className="num" style={{ color: 'var(--color-brand)', fontWeight: 'var(--fw-semibold)' }}>
-              {balKnown ? `${spendableOf(sym, balances[sym]).toFixed(decimalsFor(sym))} ${sym}` : '…'}
+              {balKnown ? `${(balances[sym] || 0).toFixed(decimalsFor(sym))} ${sym}` : '…'}
             </span></> : null}
           </span>
           <span className="num" style={{ fontSize: 'var(--fs-content-2)', color: 'var(--color-muted-2)', whiteSpace: 'nowrap' }}>{disp !== null ? `~ ${fmtDisp(disp)}` : ''}</span>
@@ -395,8 +407,9 @@ export default function Swap() {
     const rc = rateOf(cur) || 1
     const min = 10 ** -decimalsOfCurrency(cur)      // 0.01 for USD/EUR · 1 for VND
     const v = feeUsd / rc                            // the fee converted into the display currency
-    if (v <= 0) return `~${fmtDisplay(0, cur, rates)}`
-    return v < min ? `<${fmtDisplay(min * rc, cur, rates)}` : `~${fmtDisplay(feeUsd, cur, rates)}`
+    // Circle's estimate is the MAXIMUM this swap can cost (networkFee) - the real charge is lower, so say "up to".
+    if (v <= 0) return `up to ${fmtDisplay(0, cur, rates)}`
+    return v < min ? `<${fmtDisplay(min * rc, cur, rates)}` : `up to ${fmtDisplay(feeUsd, cur, rates)}`
   })()
 
   const estNum = estAmt !== null ? parseFloat(estAmt) : null
@@ -475,8 +488,8 @@ export default function Swap() {
       {/* Rate + Fee - node 1:83/10:123: raw Figma reading was 13px, rounded up to Chú thích (15px) - the
           new 5-tier scale (2026-09-10) has no tier below 15, absorbing the old --fs-tiny. Label colour
           --color-muted-2 #667085, figures BLACK semibold. Alone in row 6, centred at 51.4dvh. */}
-      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '51.4dvh', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 'calc(8 * var(--u))', padding: '0 calc(11 * var(--u))' }}>
-        <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted-2)', whiteSpace: 'nowrap', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+      <div style={{ position: 'absolute', left: '6.41%', right: '6.41%', top: '51.4dvh', transform: 'translateY(-50%)', display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between', columnGap: 'calc(8 * var(--u))', rowGap: 'calc(2 * var(--u))', padding: '0 calc(11 * var(--u))' }}>
+        <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted-2)', whiteSpace: 'nowrap' }}>
           Rate: <span className="num" style={{ color: 'var(--color-content)', fontWeight: 'var(--fw-semibold)' }}>{rateTxt}</span>
         </span>
         <span style={{ fontSize: 'var(--fs-caption)', color: 'var(--color-muted-2)', whiteSpace: 'nowrap' }}>

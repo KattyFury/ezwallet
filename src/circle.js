@@ -303,6 +303,20 @@ export async function estimateSwap({ walletAddress, tokenIn, tokenOut, amountIn 
   return res.json()
 }
 
+// Circle's fee estimate for THIS swap (functions/api/swap.js 'fee') → { feeMax, feeNow } in USDC (= USD).
+// Same expired-token retry as fetchHistory.
+export async function estimateSwapFee({ walletId, walletAddress, tokenIn, tokenOut, amountIn }) {
+  if (MOCK) return { feeMax: '0.04', feeNow: '0.02' }
+  const ask = userToken => fetch('/api/swap', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'fee', userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn }),
+  }).then(r => r.json())
+  let data = await ask(localStorage.getItem('ez_user_token'))
+  if (data.error && isTokenExpiredError({ code: data.code, message: data.error })) data = await ask((await forceFreshSession()).userToken)
+  if (data.error) throw new Error(data.error)
+  return data
+}
+
 // The userToken is passed in from refreshSession() (do not read localStorage directly - a 60' token may be dead)
 // minOut = the 'estimate' minimum the screen showed → the server makes it the swap's stopLimit (MAINNET-AUDIT H2).
 export async function executeSwap({ userToken, walletId, walletAddress, tokenIn, tokenOut, amountIn, minOut, refId }) {
