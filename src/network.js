@@ -26,9 +26,12 @@ export const NETWORKS = {
     circleBlockchain: 'ARC',
     circleAppId: '5ffb6dbb-ea01-5758-8780-2eb6b8cb2996',   // Circle Console (Mainnet) → User Controlled → App ID
     kitChain: 'Arc',                   // @circle-fin/adapter-viem-v2: SwapChain["Arc"]
-    // v1 scope (owner, 2026-09-27): send/receive only. Swap waits for C5/H2 and for
-    // @circle-fin/adapter-circle-wallets to map 'ARC' (1.8.0 maps only 'ARC-TESTNET').
-    swap: false,
+    // Swap ON since 2026-10-04 (owner, docs/SWAP-PLAN.md Phase 1) after C5 (intent validation + simulation) and H2
+    // (50 bps + stopLimit = the amount shown). The server builds the swap itself (functions/api/_swapCore.js) - it does
+    // not need @circle-fin/adapter-circle-wallets' 'ARC' mapping.
+    swap: true,
+    // eth_simulateV1 (swap pre-check). rpc.mainnet.arc.io answers "method not supported"; dRPC supports it (2026-10-03).
+    simRpc: 'https://rpc.drpc.mainnet.arc.io',
     // The VERIFIED tokens. v1 shipped USDC + EURC; cirBTC added back by the owner 2026-10-03 (address from
     // docs.arc.io contract-addresses; read on chain 2026-10-03: "Circle Wrapped Bitcoin", cirBTC, 8 decimals).
     // Any other token the wallet holds is listed as "unverified" (view only) - src/chain.js getUnverifiedTokens.
